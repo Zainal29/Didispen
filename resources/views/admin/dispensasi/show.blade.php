@@ -9,7 +9,7 @@
         <div class="flex justify-between items-start mb-6">
             <div>
                 <h3 class="text-2xl font-bold text-gray-800">{{ $dispensasi->nomor_surat }}</h3>
-                <p class="text-sm text-gray-500">Diajukan: {{ $dispensasi->created_at->format('d M Y, H:i') }}</p>
+                <p class="text-sm text-gray-500">Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB</p>
             </div>
             @php
                 $statusColors = [
@@ -67,13 +67,24 @@
                     </div>
                     <div>
                         <span class="text-gray-500">Jam Keluar:</span>
-                        {{-- ✅ PERBAIKAN: Langsung echo, TANPA ->format() --}}
-                        <p class="font-semibold text-indigo-700">{{ $dispensasi->jam_keluar }}</p>
+                        {{-- jam_keluar disimpan sebagai string jam (bukan timestamp), jadi tetap echo langsung --}}
+                        <p class="font-semibold text-indigo-700">
+                            {{ $dispensasi->jam_keluar }}
+                            <span class="text-xs text-gray-500 block mt-1 font-normal">
+                                <i class="far fa-clock mr-1"></i>
+                                {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar) }}
+                            </span>
+                        </p>
                     </div>
                     <div>
                         <span class="text-gray-500">Jam Kembali:</span>
-                        {{-- ✅ PERBAIKAN: Langsung echo, TANPA ->format() --}}
-                        <p class="font-semibold text-indigo-700">{{ $dispensasi->jam_kembali }}</p>
+                        <p class="font-semibold text-indigo-700">
+                            {{ $dispensasi->jam_kembali }}
+                            <span class="text-xs text-gray-500 block mt-1 font-normal">
+                                <i class="far fa-clock mr-1"></i>
+                                {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali) }}
+                            </span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -105,7 +116,7 @@
                     <div>
                         <p class="font-semibold text-gray-800">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? '-' }}</p>
                         <p class="text-sm text-gray-500">
-                            Shift: {{ ucfirst($dispensasi->guruPiket->shift ?? '-') }} | 
+                            Shift: {{ ucfirst($dispensasi->guruPiket->shift ?? '-') }} |
                             Tanggal: {{ $dispensasi->guruPiket->tanggal ? \Carbon\Carbon::parse($dispensasi->guruPiket->tanggal)->format('d M Y') : '-' }}
                         </p>
                     </div>

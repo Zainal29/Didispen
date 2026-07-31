@@ -5,11 +5,29 @@
 
 @section('content')
 <div class="max-w-3xl mx-auto">
+
+    {{-- ✅ REAL-TIME CLOCK CARD (sama seperti tampilan guru) --}}
+    <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-indigo-100 text-sm mb-1">Waktu Saat Ini</p>
+                <h2 class="text-4xl font-bold font-mono" id="realTimeClock">00:00:00</h2>
+                <p class="text-indigo-100 mt-2" id="realTimeDate">Loading...</p>
+            </div>
+            <div class="text-6xl opacity-30">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-start mb-6">
             <div>
                 <h3 class="text-2xl font-bold text-gray-800">{{ $dispensasi->nomor_surat }}</h3>
-                <p class="text-sm text-gray-500">Diajukan: {{ $dispensasi->created_at->format('d M Y, H:i') }}</p>
+                <p class="text-sm text-gray-500">
+                    <i class="far fa-calendar-plus mr-1"></i>
+                    Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB
+                </p>
             </div>
             @php
                 $statusColors = [
@@ -42,14 +60,29 @@
                 <span class="text-gray-500">Tujuan:</span>
                 <p class="font-semibold">{{ $dispensasi->tujuan }}</p>
             </div>
-           <div>
-    <span class="text-gray-500">Jam Keluar:</span>
-    <p class="font-semibold">{{ $dispensasi->jam_keluar }}</p>
-</div>
-<div>
-    <span class="text-gray-500">Jam Kembali:</span>
-    <p class="font-semibold">{{ $dispensasi->jam_kembali }}</p>
-</div>
+
+            {{-- ✅ Jam Keluar & Kembali + Waktu Aktual (pakai TimeHelper, konsisten dgn tampilan guru) --}}
+            <div>
+                <span class="text-gray-500">Jam Keluar:</span>
+                <p class="font-semibold text-indigo-700">
+                    {{ $dispensasi->jam_keluar }}
+                    <span class="text-xs text-gray-500 block mt-1 font-normal">
+                        <i class="far fa-clock mr-1"></i>
+                        {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar) }}
+                    </span>
+                </p>
+            </div>
+            <div>
+                <span class="text-gray-500">Jam Kembali:</span>
+                <p class="font-semibold text-indigo-700">
+                    {{ $dispensasi->jam_kembali }}
+                    <span class="text-xs text-gray-500 block mt-1 font-normal">
+                        <i class="far fa-clock mr-1"></i>
+                        {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali) }}
+                    </span>
+                </p>
+            </div>
+
             @if($dispensasi->catatan_admin)
             <div class="col-span-2 bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
                 <span class="text-gray-500 text-xs">Catatan Guru:</span>
@@ -70,4 +103,32 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+// ✅ REAL-TIME CLOCK FUNCTION (sama seperti tampilan guru)
+function updateRealTimeClock() {
+    const now = new Date();
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timeString = `${hours}:${minutes}:${seconds}`;
+
+    const options = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+    const dateString = now.toLocaleDateString('id-ID', options);
+
+    document.getElementById('realTimeClock').textContent = timeString + ' WIB';
+    document.getElementById('realTimeDate').textContent = dateString;
+}
+
+setInterval(updateRealTimeClock, 1000);
+updateRealTimeClock();
+</script>
+@endpush
 @endsection

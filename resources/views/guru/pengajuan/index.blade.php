@@ -58,9 +58,15 @@
                         <td class="p-3 text-sm">{{ $d->siswa->kelas->nama_kelas }}</td>
                         <td class="p-3 text-sm capitalize">{{ str_replace('_', ' ', $d->kategori) }}</td>
                         
-                        {{-- ✅ PERBAIKAN: Langsung tampilkan string, JANGAN gunakan ->format() --}}
-                        <td class="p-3 text-sm font-medium text-gray-700">
-                            {{ $d->jam_keluar }} - {{ $d->jam_kembali }}
+                        {{-- Kolom Waktu dengan Helper --}}
+                        <td class="p-3 text-sm">
+                            <div class="font-medium text-gray-800">
+                                {{ $d->jam_keluar }} s.d {{ $d->jam_kembali }}
+                            </div>
+                            <div class="text-xs text-indigo-600 font-semibold mt-1 flex items-center">
+                                <i class="far fa-clock mr-1.5"></i>
+                                {{ \App\Helpers\TimeHelper::getWaktuAktual($d->jam_keluar) }}
+                            </div>
                         </td>
                         
                         <td class="p-3">
@@ -146,4 +152,5 @@ function rejectDispensasi(id) {
 }
 </script>
 @endpush
+
 @endsection
