@@ -33,21 +33,21 @@
         <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl mr-3"></i>
         <div>
             <h3 class="text-yellow-800 font-semibold mb-1">Tidak Ada Jadwal Piket</h3>
-            <p class="text-yellow-700 text-sm">Anda tidak memiliki jadwal piket hari ini. Hubungi admin untuk informasi lebih lanjut.</p>
+            <p class="text-yellow-700 text-sm">Anda tidak memiliki jadwal piket hari ini.</p>
         </div>
     </div>
 </div>
 @endif
 
-{{-- NOTIFIKASI SISWA SEDANG KELUAR (BARU) --}}
+{{-- NOTIFIKASI SISWA SEDANG KELUAR --}}
 @if(isset($siswaKeluar) && $siswaKeluar->count() > 0)
-<div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-lg shadow-lg p-6 mb-6 text-white animate-pulse">
+<div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-lg shadow-lg p-6 mb-6 text-white">
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center">
             <i class="fas fa-exclamation-triangle text-3xl mr-4"></i>
             <div>
                 <h3 class="text-xl font-bold">⚠️ PERHATIAN: Ada Siswa Sedang Keluar!</h3>
-                <p class="text-orange-100 text-sm mt-1">{{ $siswaKeluar->count() }} siswa sedang di luar area sekolah</p>
+                <p class="text-orange-100 text-sm mt-1">{{ $siswaKeluar->count() }} siswa sedang di luar area sekolah (Menunggu scan Satpam)</p>
             </div>
         </div>
         <div class="text-5xl opacity-30">
@@ -58,23 +58,20 @@
     <div class="bg-white bg-opacity-20 rounded-lg p-4 mt-4">
         <h4 class="font-semibold mb-3">Daftar Siswa yang Sedang Keluar:</h4>
         <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
-            @foreach($siswaKeluar as $siswa)
+            @foreach($siswaKeluar as $item)
             <div class="flex flex-col md:flex-row md:justify-between md:items-center bg-white bg-opacity-10 rounded p-3 border border-white border-opacity-20">
                 <div class="mb-2 md:mb-0">
-                    <p class="font-bold text-lg">{{ $siswa->siswa->nama_lengkap }}</p>
+                    <p class="font-bold text-lg">{{ $item->siswa->nama_lengkap }}</p>
                     <p class="text-sm text-orange-100">
-                        {{ $siswa->siswa->kelas->nama_kelas ?? '-' }} - {{ $siswa->siswa->kelas->jurusan->nama_jurusan ?? '-' }}
+                        {{ $item->siswa->kelas->nama_kelas ?? '-' }} - {{ $item->siswa->kelas->jurusan->nama_jurusan ?? '-' }}
                     </p>
                 </div>
                 <div class="text-right flex flex-col md:items-end gap-1">
-                    <p class="text-sm font-semibold">Keluar: {{ $siswa->jam_keluar }}</p>
-                    <p class="text-sm font-semibold">Kembali: {{ $siswa->jam_kembali }}</p>
-                    <form method="POST" action="{{ route('guru.konfirmasi.kembali', $siswa) }}" class="inline mt-1">
-                        @csrf
-                        <button type="submit" class="px-4 py-1.5 bg-white text-red-600 rounded text-xs font-bold hover:bg-red-50 transition shadow-sm" onclick="return confirm('Konfirmasi siswa ini telah kembali ke sekolah?')">
-                            <i class="fas fa-check-circle mr-1"></i>Konfirmasi Kembali
-                        </button>
-                    </form>
+                    <p class="text-sm font-semibold">Keluar: {{ $item->jam_keluar }}</p>
+                    <p class="text-sm font-semibold text-yellow-200">Batas Kembali: {{ $item->jam_kembali }}</p>
+                    <span class="mt-1 px-3 py-1 bg-white text-orange-600 rounded text-xs font-bold shadow-sm">
+                        <i class="fas fa-clock mr-1"></i>Menunggu Satpam
+                    </span>
                 </div>
             </div>
             @endforeach
@@ -141,7 +138,7 @@
             <i class="fas fa-list mr-2 text-blue-600"></i>
             Pengajuan Menunggu Persetujuan
         </h3>
-        @if(($pendingDispensasi ?? collect())->count() > 0)
+        @if(isset($pendingDispensasi) && $pendingDispensasi->count() > 0)
         <a href="{{ route('guru.pengajuan.index') }}" class="text-sm text-blue-600 hover:underline font-medium">
             Lihat Semua &rarr;
         </a>
@@ -149,26 +146,26 @@
     </div>
 
     <div class="p-5">
-        @if(($pendingDispensasi ?? collect())->count() > 0)
+        @if(isset($pendingDispensasi) && $pendingDispensasi->count() > 0)
         <div class="space-y-3">
-            @foreach($pendingDispensasi->take(5) as $dispensasi)
+            @foreach($pendingDispensasi->take(5) as $item)
             <div class="border rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50">
                 <div class="flex justify-between items-start mb-2">
                     <div>
-                        <h4 class="font-semibold text-gray-800">{{ $dispensasi->siswa->nama_lengkap }}</h4>
-                        <p class="text-sm text-gray-600">{{ $dispensasi->siswa->kelas->nama_kelas }} - {{ $dispensasi->siswa->kelas->jurusan->nama_jurusan }}</p>
+                        <h4 class="font-semibold text-gray-800">{{ $item->siswa->nama_lengkap }}</h4>
+                        <p class="text-sm text-gray-600">{{ $item->siswa->kelas->nama_kelas }} - {{ $item->siswa->kelas->jurusan->nama_jurusan }}</p>
                     </div>
                     <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">
                         Menunggu
                     </span>
                 </div>
                 <div class="text-sm text-gray-600 space-y-1">
-                    <p><strong>Kategori:</strong> {{ ucfirst(str_replace('_', ' ', $dispensasi->kategori)) }}</p>
-                    <p><strong>Tujuan:</strong> {{ $dispensasi->tujuan }}</p>
-                    <p><strong>Waktu:</strong> {{ $dispensasi->jam_keluar }} - {{ $dispensasi->jam_kembali }}</p>
+                    <p><strong>Kategori:</strong> {{ ucfirst(str_replace('_', ' ', $item->kategori)) }}</p>
+                    <p><strong>Tujuan:</strong> {{ $item->tujuan }}</p>
+                    <p><strong>Waktu:</strong> {{ $item->jam_keluar }} - {{ $item->jam_kembali }}</p>
                 </div>
                 <div class="mt-3 flex space-x-2">
-                    <a href="{{ route('guru.pengajuan.show', $dispensasi) }}" class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                    <a href="{{ route('guru.pengajuan.show', $item) }}" class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
                         <i class="fas fa-eye mr-1"></i> Lihat Detail
                     </a>
                 </div>
@@ -185,41 +182,3 @@
     </div>
 </div>
 @endsection
-
-{{-- Toast Notification Script --}}
-@push('scripts')
-<script>
-    @if(isset($siswaKeluar) && $siswaKeluar->count() > 0)
-    document.addEventListener('DOMContentLoaded', function() {
-        const toast = document.createElement('div');
-        toast.className = 'fixed top-4 right-4 bg-red-600 text-white px-6 py-4 rounded-lg shadow-2xl z-50 flex items-center transition-all duration-500 transform translate-x-full';
-        toast.innerHTML = `
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-2xl mr-3"></i>
-                <div>
-                    <p class="font-bold">Perhatian!</p>
-                    <p class="text-sm">{{ $siswaKeluar->count() }} siswa sedang keluar</p>
-                </div>
-                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-        document.body.appendChild(toast);
-
-        // Slide in animation
-        setTimeout(() => {
-            toast.classList.remove('translate-x-full');
-        }, 100);
-
-        // Auto hide after 8 seconds
-        setTimeout(() => {
-            toast.classList.add('translate-x-full', 'opacity-0');
-            setTimeout(() => {
-                if (toast.parentElement) toast.remove();
-            }, 500);
-        }, 8000);
-    });
-    @endif
-</script>
-@endpush

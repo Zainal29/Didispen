@@ -24,6 +24,38 @@
     </div>
 </div>
 
+{{-- ✅ KARTU QR CODE AKTIF (Hanya muncul jika ada dispensasi aktif) --}}
+@if(isset($dispensasiAktif) && $dispensasiAktif->qr_code)
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-6 mb-6 text-white border border-blue-400">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex-1">
+            <div class="flex items-center mb-3">
+                <span class="bg-white text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mr-3 animate-pulse">
+                    {{ $dispensasiAktif->status === 'selesai' ? 'SELESAI' : 'AKTIF' }}
+                </span>
+                <h3 class="text-xl font-bold"><i class="fas fa-qrcode mr-2"></i>QR Code Dispensasi Anda</h3>
+            </div>
+            <p class="text-blue-100 mb-4 text-sm">
+                Tunjukkan layar ini kepada Petugas Satpam saat <strong>keluar</strong> dan <strong>kembali</strong> ke sekolah.
+            </p>
+            <div class="space-y-2 text-sm bg-white bg-opacity-10 p-3 rounded-lg backdrop-blur-sm">
+                <p><i class="fas fa-file-alt w-5 text-center"></i> <strong>No. Surat:</strong> {{ $dispensasiAktif->nomor_surat }}</p>
+                <p><i class="fas fa-clock w-5 text-center"></i> <strong>Waktu:</strong> {{ $dispensasiAktif->jam_keluar }} s.d {{ $dispensasiAktif->jam_kembali }}</p>
+                <p><i class="fas fa-user-tie w-5 text-center"></i> <strong>Guru Piket:</strong> {{ $dispensasiAktif->guruPiket->guru->nama_lengkap ?? '-' }}</p>
+            </div>
+        </div>
+        
+        <div class="bg-white p-3 rounded-xl shadow-inner flex-shrink-0 text-center">
+            <img src="{{ asset('storage/' . $dispensasiAktif->qr_code) }}" alt="QR Code Dispensasi" class="w-48 h-48 mx-auto object-contain">
+            <p class="text-center text-xs text-gray-500 mt-2 font-mono">Scan di Pos Satpam</p>
+            <a href="{{ asset('storage/' . $dispensasiAktif->qr_code) }}" download class="mt-3 inline-block px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition shadow-sm">
+                <i class="fas fa-download mr-1"></i> Simpan Gambar
+            </a>
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- Statistik Cards --}}
 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
     <div class="bg-white rounded-lg shadow p-5 border-l-4 border-gray-500">

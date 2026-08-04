@@ -42,7 +42,7 @@
                     <th class="p-3 text-left">Tujuan</th>
                     <th class="p-3 text-left">Waktu</th>
                     <th class="p-3 text-left">Status</th>
-                    <th class="p-3 text-center">Aksi</th>
+                    <th class="p-3 text-center">QR Code</th>
                 </tr>
             </thead>
             <tbody class="divide-y">
@@ -52,34 +52,26 @@
                     <td class="p-3 text-sm">{{ $p->created_at->format('d/m/Y') }}</td>
                     <td class="p-3 text-sm capitalize">{{ str_replace('_', ' ', $p->kategori) }}</td>
                     <td class="p-3 text-sm">{{ $p->tujuan }}</td>
-                    
-                    {{-- KOLOM WAKTU YANG SUDAH DIPERBAIKI (Tanpa ->format) --}}
-                    <td class="p-3 text-sm font-medium text-gray-700">
-                        {{ $p->jam_keluar }} - {{ $p->jam_kembali }}
-                    </td>
-                    
+                    <td class="p-3 text-sm">{{ $p->jam_keluar }} - {{ $p->jam_kembali }}</td>
                     <td class="p-3">
-                        @php
-                            $colors = [
-                                'menunggu' => 'bg-yellow-100 text-yellow-800',
-                                'disetujui' => 'bg-green-100 text-green-800',
-                                'ditolak' => 'bg-red-100 text-red-800',
-                                'keluar' => 'bg-blue-100 text-blue-800',
-                                'selesai' => 'bg-gray-100 text-gray-800',
-                            ];
-                        @endphp
-                        <span class="px-2 py-1 rounded text-xs font-bold {{ $colors[$p->status] ?? 'bg-gray-100 text-gray-800' }}">
+                        <span class="px-2 py-1 rounded text-xs font-bold 
+                            @if($p->status == 'menunggu') bg-yellow-100 text-yellow-800
+                            @elseif($p->status == 'disetujui') bg-green-100 text-green-800
+                            @elseif($p->status == 'ditolak') bg-red-100 text-red-800
+                            @elseif($p->status == 'keluar') bg-blue-100 text-blue-800
+                            @else bg-gray-100 text-gray-800 @endif">
                             {{ ucfirst($p->status) }}
                         </span>
                     </td>
-                    <td class="p-3 text-center space-x-2">
-                        <a href="{{ route('siswa.pengajuan.show', $p) }}" class="text-indigo-600 hover:text-indigo-800" title="Lihat Detail">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        @if(in_array($p->status, ['disetujui', 'selesai']))
-                        <a href="{{ route('siswa.cetak', $p) }}" class="text-green-600 hover:text-green-800" title="Cetak Surat">
-                            <i class="fas fa-print"></i>
-                        </a>
+                    <td class="p-3 text-center">
+                        @if($p->qr_code && $p->status == 'disetujui')
+                            <button onclick="showQRCode({{ $p->id }})" class="text-indigo-600 hover:text-indigo-800 transition" title="Lihat QR Code">
+                                <i class="fas fa-qrcode text-2xl"></i>
+                            </button>
+                        @elseif($p->status == 'keluar' || $p->status == 'selesai')
+                            <span class="text-gray-400 text-xs">Sudah Digunakan</span>
+                        @else
+                            <span class="text-gray-300">-</span>
                         @endif
                     </td>
                 </tr>
@@ -101,4 +93,62 @@
     </div>
     @endif
 </div>
+
+{{-- Modal QR Code --}}
+<div id="qrModal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 text-center">
+        <div class="mb-4">
+            <h3 class="text-lg font-bold text-gray-800">QR Code Dispensasi</h3>
+            <p class="text-sm text-gray-600 mt-1">Tunjukkan layar ini ke Petugas Satpam</p>
+        </div>
+        
+        <div id="qrContent" class="flex justify-center items-center bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 mb-4 min-h-[200px]">
+            <p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat...</p>
+        </div>
+        
+        <button onclick="closeQRModal()" class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-medium">
+            Tutup
+        </button>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+function showQRCode(dispensasiId) {
+    const modal = document.getElementById('qrModal');
+    const content = document.getElementById('qrContent');
+    
+    // Tampilkan modal dengan status loading
+    modal.classList.remove('hidden');
+    content.innerHTML = '<p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat QR Code...</p>';
+
+    fetch(`/siswa/qr-code/${dispensasiId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Gagal memuat data');
+            return response.json();
+        })
+        .then(data => {
+            if (data.qr_code) {
+                // Tambahkan /storage/ di depan path dari database
+                content.innerHTML = `<img src="/storage/${data.qr_code}" alt="QR Code" class="w-56 h-56 object-contain">`;
+            } else {
+                content.innerHTML = '<p class="text-red-500 text-sm">QR Code belum tersedia. Mohon hubungi guru piket.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            content.innerHTML = '<p class="text-red-500 text-sm">Gagal memuat QR Code. Coba refresh halaman.</p>';
+        });
+}
+
+function closeQRModal() {
+    document.getElementById('qrModal').classList.add('hidden');
+}
+
+// Tutup modal jika klik di area hitam (luar kotak putih)
+document.getElementById('qrModal').addEventListener('click', function(e) {
+    if (e.target === this) closeQRModal();
+});
+</script>
+@endpush
 @endsection

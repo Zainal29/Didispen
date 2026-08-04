@@ -7,7 +7,7 @@
 <div class="max-w-3xl mx-auto">
 
     {{-- ✅ REAL-TIME CLOCK CARD (sama seperti tampilan guru) --}}
-    <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+    {{-- <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg shadow-lg p-6 mb-6 text-white">
         <div class="flex justify-between items-center">
             <div>
                 <p class="text-indigo-100 text-sm mb-1">Waktu Saat Ini</p>
@@ -18,7 +18,7 @@
                 <i class="fas fa-clock"></i>
             </div>
         </div>
-    </div>
+    </div> --}}
 
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-start mb-6">

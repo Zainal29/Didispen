@@ -58,7 +58,7 @@
                         <td class="p-3 text-sm">{{ $d->siswa->kelas->nama_kelas }}</td>
                         <td class="p-3 text-sm capitalize">{{ str_replace('_', ' ', $d->kategori) }}</td>
                         
-                        {{-- Kolom Waktu dengan Helper --}}
+                        {{-- Kolom Waktu --}}
                         <td class="p-3 text-sm">
                             <div class="font-medium text-gray-800">
                                 {{ $d->jam_keluar }} s.d {{ $d->jam_kembali }}
@@ -83,8 +83,10 @@
                                 {{ ucfirst($d->status) }}
                             </span>
                         </td>
+                        
+                        {{-- ✅ PERBAIKAN: Hapus tombol konfirmasi guru, ganti dengan info status --}}
                         <td class="p-3 text-center space-x-2">
-                            <a href="{{ route('guru.pengajuan.show', $d) }}" class="text-blue-600 hover:text-blue-800" title="Lihat Detail">
+                            <a href="{{ route('guru.pengajuan.show', $d) }}" class="text-blue-600 hover:text-blue-800" title="Lihat Detail & QR Code">
                                 <i class="fas fa-eye"></i>
                             </a>
                             
@@ -98,20 +100,10 @@
                                 <button onclick="rejectDispensasi({{ $d->id }})" class="text-red-600 hover:text-red-800" title="Tolak">
                                     <i class="fas fa-times"></i>
                                 </button>
-                            @elseif($d->status === 'disetujui')
-                                <form method="POST" action="{{ route('guru.konfirmasi.keluar', $d) }}" class="inline">
-                                    @csrf
-                                    <button type="submit" class="text-blue-600 hover:text-blue-800" title="Konfirmasi Keluar" onclick="return confirm('Konfirmasi siswa keluar?')">
-                                        <i class="fas fa-door-open"></i>
-                                    </button>
-                                </form>
-                            @elseif($d->status === 'keluar')
-                                <form method="POST" action="{{ route('guru.konfirmasi.kembali', $d) }}" class="inline">
-                                    @csrf
-                                    <button type="submit" class="text-indigo-600 hover:text-indigo-800" title="Konfirmasi Kembali" onclick="return confirm('Konfirmasi siswa kembali?')">
-                                        <i class="fas fa-door-closed"></i>
-                                    </button>
-                                </form>
+                            @elseif(in_array($d->status, ['disetujui', 'keluar', 'selesai']))
+                                <span class="text-xs text-gray-500 italic" title="Konfirmasi keluar/kembali dilakukan oleh Satpam via Scan QR">
+                                    <i class="fas fa-info-circle mr-1"></i>Menunggu Satpam
+                                </span>
                             @endif
                         </td>
                     </tr>
@@ -152,5 +144,4 @@ function rejectDispensasi(id) {
 }
 </script>
 @endpush
-
 @endsection

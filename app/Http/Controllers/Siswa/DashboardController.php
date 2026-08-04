@@ -12,6 +12,13 @@ class DashboardController extends Controller
     {
         $siswa = auth()->user()->siswa;
 
+        // ✅ TAMBAHKAN INI: Cari dispensasi aktif terbaru (untuk ditampilkan QR Code-nya di dashboard)
+        $dispensasiAktif = Dispensasi::with(['guruPiket.guru', 'siswa.kelas.jurusan'])
+            ->where('siswa_id', $siswa->id)
+            ->whereIn('status', ['disetujui', 'keluar', 'selesai'])
+            ->latest()
+            ->first();
+
         // Statistik pengajuan
         $stats = [
             'total' => Dispensasi::where('siswa_id', $siswa->id)->count(),
@@ -33,6 +40,11 @@ class DashboardController extends Controller
             ->where('is_read', false)
             ->count();
 
-        return view('siswa.dashboard', compact('stats', 'pengajuanTerbaru', 'notifikasiBelumDibaca'));
+        return view('siswa.dashboard', compact(
+            'stats', 
+            'pengajuanTerbaru', 
+            'notifikasiBelumDibaca',
+            'dispensasiAktif' // ✅ Kirim variabel ini ke view
+        ));
     }
 }

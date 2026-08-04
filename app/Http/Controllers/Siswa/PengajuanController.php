@@ -85,4 +85,23 @@ class PengajuanController extends Controller
         $random = strtoupper(substr(md5(uniqid()), 0, 6));
         return "DISP/{$tanggal}/{$random}";
     }
+
+
+    public function getQRCode(Dispensasi $dispensasi)
+{
+    // Pastikan hanya pemilik yang bisa lihat
+    if ($dispensasi->siswa_id !== auth()->user()->siswa->id) {
+        abort(403);
+    }
+
+    return response()->json([
+        'qr_code' => $dispensasi->qr_code,
+        'nomor_surat' => $dispensasi->nomor_surat,
+        'jam_keluar' => $dispensasi->jam_keluar,
+        'jam_kembali' => $dispensasi->jam_kembali
+    ]);
+}
+
+
+
 }

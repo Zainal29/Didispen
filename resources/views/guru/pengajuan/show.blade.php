@@ -3,20 +3,7 @@
 @section('page-title', 'Detail Pengajuan')
 
 @section('content')
-
-{{-- ✅ REAL-TIME CLOCK CARD --}}
-<div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg shadow-lg p-6 mb-6 text-white">
-    <div class="flex justify-between items-center">
-        <div>
-            <p class="text-indigo-100 text-sm mb-1">Waktu Saat Ini</p>
-            <h2 class="text-4xl font-bold font-mono" id="realTimeClock">00:00:00</h2>
-            <p class="text-indigo-100 mt-2" id="realTimeDate">Loading...</p>
-        </div>
-        <div class="text-6xl opacity-30">
-            <i class="fas fa-clock"></i>
-        </div>
-    </div>
-</div>
+@include('components.alert')
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     {{-- Detail Dispensasi --}}
@@ -49,7 +36,6 @@
             <div class="col-span-2"><span class="text-gray-500">Alasan:</span><br><strong>{{ $dispensasi->alasan }}</strong></div>
             <div class="col-span-2"><span class="text-gray-500">Tujuan:</span><br><strong>{{ $dispensasi->tujuan }}</strong></div>
 
-            {{-- Jam Keluar & Kembali dengan Waktu Aktual --}}
             <div>
                 <span class="text-gray-500">Jam Keluar:</span><br>
                 <strong class="text-indigo-700">
@@ -77,35 +63,54 @@
                 <strong>{{ $dispensasi->catatan_admin }}</strong>
             </div>
             @endif
+
+            {{-- ✅ TAMBAHKAN BAGIAN INI: Tampilan QR Code yang Mencolok --}}
+            @if($dispensasi->qr_code && in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
+            <div class="col-span-2 mt-6 p-6 bg-indigo-50 border-2 border-dashed border-indigo-300 rounded-xl text-center">
+                <h4 class="text-lg font-bold text-indigo-800 mb-2">
+                    <i class="fas fa-qrcode mr-2"></i>QR Code Dispensasi
+                </h4>
+                <p class="text-sm text-indigo-600 mb-4">Tunjukkan atau cetak QR Code ini agar dapat discan oleh Petugas Satpam.</p>
+                
+                <div class="bg-white p-4 rounded-lg shadow-sm inline-block mx-auto border border-gray-200">
+                    <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code" class="w-64 h-64 mx-auto object-contain">
+                </div>
+                
+                <p class="text-xs text-gray-500 mt-4 font-mono">No. Surat: {{ $dispensasi->nomor_surat }}</p>
+                
+                <div class="mt-4 flex justify-center gap-3">
+                    <a href="{{ asset('storage/' . $dispensasi->qr_code) }}" download class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition shadow-sm">
+                        <i class="fas fa-download mr-1"></i> Download QR
+                    </a>
+                    <button onclick="window.print()" class="px-4 py-2 bg-gray-700 text-white text-sm rounded hover:bg-gray-800 transition shadow-sm">
+                        <i class="fas fa-print mr-1"></i> Cetak Halaman
+                    </button>
+                </div>
+            </div>
+            @endif
         </div>
 
-        {{-- Action Buttons --}}
+              {{-- Action Buttons --}}
         <div class="border-t pt-4 flex space-x-3">
             @if($dispensasi->status === 'menunggu')
             <form method="POST" action="{{ route('guru.pengajuan.approve', $dispensasi) }}" class="inline">
                 @csrf
                 <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                    <i class="fas fa-check mr-2"></i>Setujui
+                    <i class="fas fa-check mr-2"></i>Setujui & Generate QR
                 </button>
             </form>
             <button onclick="rejectForm()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
                 <i class="fas fa-times mr-2"></i>Tolak
             </button>
-            @elseif($dispensasi->status === 'disetujui')
-            <form method="POST" action="{{ route('guru.konfirmasi.keluar', $dispensasi) }}">
-                @csrf
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                    <i class="fas fa-door-open mr-2"></i>Konfirmasi Keluar
-                </button>
-            </form>
-            @elseif($dispensasi->status === 'keluar')
-            <form method="POST" action="{{ route('guru.konfirmasi.kembali', $dispensasi) }}">
-                @csrf
-                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                    <i class="fas fa-door-closed mr-2"></i>Konfirmasi Kembali
-                </button>
-            </form>
+            @else
+            {{-- Jika sudah disetujui, keluarkan, atau selesai, guru hanya bisa melihat --}}
+            <div class="px-4 py-2 bg-gray-100 text-gray-600 rounded text-sm flex items-center">
+                <i class="fas fa-info-circle mr-2"></i> 
+                Status saat ini: <strong class="ml-1 capitalize">{{ $dispensasi->status }}</strong>. 
+                <span class="ml-2 text-xs text-gray-500">(Konfirmasi keluar/kembali dilakukan oleh Satpam via Scan QR)</span>
+            </div>
             @endif
+
             <a href="{{ route('guru.pengajuan.index') }}" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
                 <i class="fas fa-arrow-left mr-2"></i>Kembali
             </a>
@@ -123,7 +128,7 @@
                 </div>
                 <div>
                     <span class="text-gray-500">NIS:</span>
-                    <p class="font-mono">{{ $dispensasi->siswa->user->nis_nip }}</p>
+                    <p class="font-mono">{{ $dispensasi->siswa->user->nis_nip ?? '-' }}</p>
                 </div>
                 <div>
                     <span class="text-gray-500">Kelas:</span>
@@ -131,7 +136,7 @@
                 </div>
                 <div>
                     <span class="text-gray-500">Jurusan:</span>
-                    <p>{{ $dispensasi->siswa->kelas->jurusan->nama_jurusan }}</p>
+                    <p>{{ $dispensasi->siswa->kelas->jurusan->nama_jurusan ?? '-' }}</p>
                 </div>
                 <div>
                     <span class="text-gray-500">No. Telepon:</span>
@@ -145,7 +150,7 @@
             <div class="space-y-3 text-sm">
                 <div>
                     <span class="text-gray-500">Nama:</span>
-                    <p class="font-semibold">{{ $dispensasi->guruPiket->guru->nama_lengkap }}</p>
+                    <p class="font-semibold">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? '-' }}</p>
                 </div>
                 <div>
                     <span class="text-gray-500">Tanggal:</span>
@@ -153,7 +158,7 @@
                 </div>
                 <div>
                     <span class="text-gray-500">Shift:</span>
-                    <p class="capitalize">{{ $dispensasi->guruPiket->shift }}</p>
+                    <p class="capitalize">{{ $dispensasi->guruPiket->shift ?? '-' }}</p>
                 </div>
             </div>
         </div>
@@ -180,30 +185,6 @@
 
 @push('scripts')
 <script>
-// ✅ REAL-TIME CLOCK FUNCTION
-function updateRealTimeClock() {
-    const now = new Date();
-
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const timeString = `${hours}:${minutes}:${seconds}`;
-
-    const options = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    };
-    const dateString = now.toLocaleDateString('id-ID', options);
-
-    document.getElementById('realTimeClock').textContent = timeString + ' WIB';
-    document.getElementById('realTimeDate').textContent = dateString;
-}
-
-setInterval(updateRealTimeClock, 1000);
-updateRealTimeClock();
-
 function rejectForm() {
     document.getElementById('rejectModal').classList.remove('hidden');
 }

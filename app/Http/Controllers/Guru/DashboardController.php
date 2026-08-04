@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
-use App\Models\Notifikasi;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -48,13 +47,14 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // ✅ TAMBAHKAN: Siswa yang sedang keluar
+        // Siswa yang sedang keluar (untuk notifikasi)
         $siswaKeluar = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
             ->where('guru_piket_id', $piketHariIni->id)
             ->where('status', 'keluar')
             ->latest()
             ->get();
 
+        // ✅ Kirim variabel dengan nama yang PERSIS sama ke view
         return view('guru.dashboard', compact('stats', 'pendingDispensasi', 'siswaKeluar'));
     }
 }
