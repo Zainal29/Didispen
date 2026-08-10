@@ -22,7 +22,7 @@
                 </span>
             </div>
         </div>
-        <div class="text-6xl opacity-20">
+        <div class="text-5xl opacity-20">
             <i class="fas fa-calendar-check"></i>
         </div>
     </div>

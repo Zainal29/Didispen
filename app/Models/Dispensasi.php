@@ -13,6 +13,7 @@ class Dispensasi extends Model
     protected $fillable = [
         'siswa_id',
         'guru_piket_id',
+        'nomor_surat',
         'kategori',
         'alasan',
         'tujuan',
@@ -21,10 +22,11 @@ class Dispensasi extends Model
         'jam_kembali',
         'status',
         'catatan_admin',
-        'nomor_surat',
-        'bukti_file',       // ✅ Ditambahkan
+        'qr_code', // ✅ PASTIKAN BARIS INI ADA!
+        'bukti_file',
         'print_count',
-        'max_print_limit',  // ✅ Ditambahkan
+        'max_print_limit',
+        'printed_at',
     ];
 
     // PASTIKAN TIDAK ADA $casts untuk jam_keluar/jam_kembali di sini

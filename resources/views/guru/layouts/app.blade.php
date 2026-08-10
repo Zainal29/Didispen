@@ -15,7 +15,7 @@
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen overflow-hidden">
-        
+
         {{-- SIDEBAR --}}
         <aside class="w-64 bg-white shadow-lg flex flex-col flex-shrink-0">
             <div class="p-5 border-b">
@@ -24,31 +24,31 @@
                 </h1>
                 <p class="text-xs text-gray-500 mt-1">Panel Guru</p>
             </div>
-            
+
             <nav class="flex-1 overflow-y-auto p-3 space-y-1">
-                <a href="{{ route('guru.dashboard') }}" 
+                <a href="{{ route('guru.dashboard') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('guru.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt w-5 mr-3"></i> Dashboard
                 </a>
 
-                <a href="{{ route('guru.checklog.index') }}" 
+                <a href="{{ route('guru.checklog.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('guru.checklog.*') ? 'active' : '' }}">
                     <i class="fas fa-door-open w-5 mr-3"></i> Keluar/Masuk
                 </a>
 
                 <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Dispensasi</p>
-                <a href="{{ route('guru.pengajuan.index') }}" 
+                <a href="{{ route('guru.pengajuan.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('guru.pengajuan.*') ? 'active' : '' }}">
-                    <i class="fas fa-file-signature w-5 mr-3"></i> 
+                    <!--<i class="fas fa-file-signature w-5 mr-3"></i>-->
                     <span class="flex-1">Verifikasi</span>
-                    
+
                     {{-- ✅ BADGE: Jumlah Pengajuan Menunggu --}}
                     @if(isset($stats) && ($stats['pending'] ?? 0) > 0)
                         <span class="bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                             {{ $stats['pending'] }}
                         </span>
                     @endif
-                    
+
                     {{-- ✅ BADGE: Jumlah Siswa Sedang Keluar (Animate Pulse) --}}
                     @if(isset($siswaKeluar) && $siswaKeluar->count() > 0)
                         <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-1 animate-pulse">
@@ -57,12 +57,8 @@
                     @endif
                 </a>
 
-                <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Profil & Data</p>
-                <a href="{{ route('guru.tanda-tangan.index') }}" 
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('guru.tanda-tangan.*') ? 'active' : '' }}">
-                    <i class="fas fa-signature w-5 mr-3"></i> Tanda Tangan
-                </a>
-                <a href="{{ route('guru.laporan.index') }}" 
+
+                <a href="{{ route('guru.laporan.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('guru.laporan.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-bar w-5 mr-3"></i> Laporan
                 </a>
@@ -116,7 +112,7 @@
         });
     </script>
     @endif
-    
+
     @if(session('error'))
     <script>
         Swal.fire({

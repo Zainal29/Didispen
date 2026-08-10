@@ -65,7 +65,21 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // 'timezone' => 'UTC',
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the default timezone for your application, which
+    | will be used by the PHP date and date-time functions.
+    |
+    */
+
+    'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'), // ✅ UBAH DARI 'UTC' MENJADI INI
+
 
     /*
     |--------------------------------------------------------------------------

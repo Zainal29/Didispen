@@ -58,10 +58,12 @@
 
         <div class="mt-8 p-4 bg-gray-50 rounded text-xs text-gray-600 border border-gray-200">
             <p class="font-semibold mb-2">Akun Demo (Password: <span class="font-mono text-red-600">password</span>):</p>
+            <p class="font-semibold mb-2">Akun Demo (Password satpam: <span class="font-mono text-red-600">satpam123</span>):</p>
             <ul class="space-y-1">
                 <li>👨‍💼 Admin: <span class="font-mono">admin@sch.id</span></li>
                 <li>👨‍🏫 Guru: <span class="font-mono">budi@sch.id</span></li>
                 <li>👨‍🎓 Siswa: <span class="font-mono">ahmad@sch.id</span></li>
+                <li>Satpam: <span class="font-mono">satpam@smk.sch.id</span></li>
             </ul>
         </div>
     </div>

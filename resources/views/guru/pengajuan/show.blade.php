@@ -17,16 +17,16 @@
                 </p>
             </div>
             @php
+                $displayStatus = $dispensasi->status === 'keluar' ? 'disetujui' : $dispensasi->status;
                 $statusColors = [
                     'menunggu' => 'bg-yellow-100 text-yellow-800',
                     'disetujui' => 'bg-green-100 text-green-800',
                     'ditolak' => 'bg-red-100 text-red-800',
-                    'keluar' => 'bg-blue-100 text-blue-800',
                     'selesai' => 'bg-gray-100 text-gray-800',
                 ];
             @endphp
-            <span class="px-3 py-1 rounded-full text-sm font-bold {{ $statusColors[$dispensasi->status] }}">
-                {{ ucfirst($dispensasi->status) }}
+            <span class="px-3 py-1 rounded-full text-sm font-bold {{ $statusColors[$displayStatus] }}">
+                {{ ucfirst($displayStatus) }}
             </span>
         </div>
 
@@ -64,34 +64,34 @@
             </div>
             @endif
 
-            {{-- ✅ TAMBAHKAN BAGIAN INI: Tampilan QR Code yang Mencolok --}}
-            @if($dispensasi->qr_code && in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
+            {{-- QR Code Section --}}
+            <!--@if($dispensasi->qr_code && in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
             <div class="col-span-2 mt-6 p-6 bg-indigo-50 border-2 border-dashed border-indigo-300 rounded-xl text-center">
                 <h4 class="text-lg font-bold text-indigo-800 mb-2">
                     <i class="fas fa-qrcode mr-2"></i>QR Code Dispensasi
                 </h4>
                 <p class="text-sm text-indigo-600 mb-4">Tunjukkan atau cetak QR Code ini agar dapat discan oleh Petugas Satpam.</p>
-                
+
                 <div class="bg-white p-4 rounded-lg shadow-sm inline-block mx-auto border border-gray-200">
                     <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code" class="w-64 h-64 mx-auto object-contain">
                 </div>
-                
+
                 <p class="text-xs text-gray-500 mt-4 font-mono">No. Surat: {{ $dispensasi->nomor_surat }}</p>
-                
+
                 <div class="mt-4 flex justify-center gap-3">
                     <a href="{{ asset('storage/' . $dispensasi->qr_code) }}" download class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition shadow-sm">
                         <i class="fas fa-download mr-1"></i> Download QR
                     </a>
-                    <button onclick="window.print()" class="px-4 py-2 bg-gray-700 text-white text-sm rounded hover:bg-gray-800 transition shadow-sm">
-                        <i class="fas fa-print mr-1"></i> Cetak Halaman
-                    </button>
+                    <a href="{{ route('guru.cetak-struk', $dispensasi) }}" target="_blank" class="px-4 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition shadow-sm">
+                        <i class="fas fa-print mr-1"></i> Cetak Struk Thermal
+                    </a>
                 </div>
             </div>
-            @endif
+            @endif-->
         </div>
 
-              {{-- Action Buttons --}}
-        <div class="border-t pt-4 flex space-x-3">
+        {{-- Action Buttons --}}
+        <div class="border-t pt-4 flex space-x-3 flex-wrap">
             @if($dispensasi->status === 'menunggu')
             <form method="POST" action="{{ route('guru.pengajuan.approve', $dispensasi) }}" class="inline">
                 @csrf
@@ -103,10 +103,9 @@
                 <i class="fas fa-times mr-2"></i>Tolak
             </button>
             @else
-            {{-- Jika sudah disetujui, keluarkan, atau selesai, guru hanya bisa melihat --}}
             <div class="px-4 py-2 bg-gray-100 text-gray-600 rounded text-sm flex items-center">
-                <i class="fas fa-info-circle mr-2"></i> 
-                Status saat ini: <strong class="ml-1 capitalize">{{ $dispensasi->status }}</strong>. 
+                <i class="fas fa-info-circle mr-2"></i>
+                Status: <strong class="ml-1 capitalize">{{ $displayStatus }}</strong>.
                 <span class="ml-2 text-xs text-gray-500">(Konfirmasi keluar/kembali dilakukan oleh Satpam via Scan QR)</span>
             </div>
             @endif

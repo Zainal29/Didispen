@@ -18,6 +18,20 @@
     </div>
 @else
 
+    {{-- Info Piket Hari Ini --}}
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow p-4 mb-6 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="font-semibold">Jadwal Piket Hari Ini</h3>
+                <p class="text-sm text-blue-100">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm">Shift: <strong>{{ ucfirst($piketHariIni->shift) }}</strong></p>
+                <p class="text-xs text-blue-100">{{ $piketHariIni->guru->nama_lengkap }}</p>
+            </div>
+        </div>
+    </div>
+
     {{-- Filter --}}
     <div class="bg-white rounded-lg shadow mb-6 p-4">
         <form method="GET" class="flex flex-wrap gap-3 items-end">
@@ -28,9 +42,12 @@
                     <option value="menunggu" {{ request('status') == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
                     <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                     <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-                    <option value="keluar" {{ request('status') == 'keluar' ? 'selected' : '' }}>Sedang Keluar</option>
                     <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                 </select>
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cari Siswa</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama atau NIS..." class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
         </form>
     </div>
@@ -54,10 +71,13 @@
                     @forelse($dispensasi as $d)
                     <tr class="hover:bg-gray-50 transition">
                         <td class="p-3 font-mono text-sm">{{ $d->nomor_surat }}</td>
-                        <td class="p-3 font-semibold">{{ $d->siswa->nama_lengkap }}</td>
+                        <td class="p-3">
+                            <div class="font-semibold text-gray-800">{{ $d->siswa->nama_lengkap }}</div>
+                            <div class="text-xs text-gray-500">{{ $d->siswa->user->nis_nip ?? '-' }}</div>
+                        </td>
                         <td class="p-3 text-sm">{{ $d->siswa->kelas->nama_kelas }}</td>
                         <td class="p-3 text-sm capitalize">{{ str_replace('_', ' ', $d->kategori) }}</td>
-                        
+
                         {{-- Kolom Waktu --}}
                         <td class="p-3 text-sm">
                             <div class="font-medium text-gray-800">
@@ -68,28 +88,28 @@
                                 {{ \App\Helpers\TimeHelper::getWaktuAktual($d->jam_keluar) }}
                             </div>
                         </td>
-                        
+
                         <td class="p-3">
                             @php
+                                $displayStatus = $d->status === 'keluar' ? 'disetujui' : $d->status;
                                 $colors = [
                                     'menunggu' => 'bg-yellow-100 text-yellow-800',
                                     'disetujui' => 'bg-green-100 text-green-800',
                                     'ditolak' => 'bg-red-100 text-red-800',
-                                    'keluar' => 'bg-blue-100 text-blue-800',
                                     'selesai' => 'bg-gray-100 text-gray-800',
                                 ];
                             @endphp
-                            <span class="px-2 py-1 rounded text-xs font-bold {{ $colors[$d->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                {{ ucfirst($d->status) }}
+                            <span class="px-2 py-1 rounded text-xs font-bold {{ $colors[$displayStatus] ?? 'bg-gray-100 text-gray-800' }}">
+                                {{ ucfirst($displayStatus) }}
                             </span>
                         </td>
-                        
-                        {{-- ✅ PERBAIKAN: Hapus tombol konfirmasi guru, ganti dengan info status --}}
+
+                        {{-- Kolom Aksi --}}
                         <td class="p-3 text-center space-x-2">
-                            <a href="{{ route('guru.pengajuan.show', $d) }}" class="text-blue-600 hover:text-blue-800" title="Lihat Detail & QR Code">
+                            <a href="{{ route('guru.pengajuan.show', $d) }}" class="text-blue-600 hover:text-blue-800" title="Lihat Detail">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            
+
                             @if($d->status === 'menunggu')
                                 <form method="POST" action="{{ route('guru.pengajuan.approve', $d) }}" class="inline">
                                     @csrf
@@ -101,8 +121,11 @@
                                     <i class="fas fa-times"></i>
                                 </button>
                             @elseif(in_array($d->status, ['disetujui', 'keluar', 'selesai']))
-                                <span class="text-xs text-gray-500 italic" title="Konfirmasi keluar/kembali dilakukan oleh Satpam via Scan QR">
-                                    <i class="fas fa-info-circle mr-1"></i>Menunggu Satpam
+                                <a href="{{ route('guru.cetak-struk', $d) }}" target="_blank" class="text-purple-600 hover:text-purple-800" title="Cetak Struk Thermal">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                                <span class="text-xs text-gray-500 italic ml-1" title="Konfirmasi keluar/kembali dilakukan oleh Satpam">
+                                    <i class="fas fa-info-circle mr-1"></i>Satpam
                                 </span>
                             @endif
                         </td>
@@ -118,7 +141,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         @if($dispensasi->hasPages())
         <div class="p-4 border-t bg-gray-50">
             {{ $dispensasi->links() }}

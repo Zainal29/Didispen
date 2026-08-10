@@ -53,7 +53,7 @@
         <p style="margin-top: 20px;">Demikian surat dispensasi ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
     </div>
 
-    <div class="signature">
+    {{-- <div class="signature">
         <p>Jakarta, {{ now()->format('d F Y') }}<br>Guru Piket</p>
         
         @if(isset($dispensasi->guruPiket) && $dispensasi->guruPiket->guru && $dispensasi->guruPiket->guru->digital_signature)
@@ -64,7 +64,7 @@
         
         <span class="signature-name">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? 'Nama Guru Piket' }}</span>
         <span>NIP. {{ $dispensasi->guruPiket->guru->nip ?? '-' }}</span>
-    </div>
+    </div> --}}
 
     <div class="footer">
         Dokumen ini dicetak secara otomatis oleh sistem. | 

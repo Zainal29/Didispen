@@ -24,7 +24,7 @@
                     <option value="menunggu" {{ request('status') == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
                     <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                     <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-                    <option value="keluar" {{ request('status') == 'keluar' ? 'selected' : '' }}>Sedang Keluar</option>
+                    {{-- ✅ DIHAPUS: Opsi "Sedang Keluar" --}}
                     <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
                 </select>
             </div>
@@ -54,22 +54,27 @@
                     <td class="p-3 text-sm">{{ $p->tujuan }}</td>
                     <td class="p-3 text-sm">{{ $p->jam_keluar }} - {{ $p->jam_kembali }}</td>
                     <td class="p-3">
-                        <span class="px-2 py-1 rounded text-xs font-bold 
-                            @if($p->status == 'menunggu') bg-yellow-100 text-yellow-800
-                            @elseif($p->status == 'disetujui') bg-green-100 text-green-800
-                            @elseif($p->status == 'ditolak') bg-red-100 text-red-800
-                            @elseif($p->status == 'keluar') bg-blue-100 text-blue-800
-                            @else bg-gray-100 text-gray-800 @endif">
-                            {{ ucfirst($p->status) }}
+                        @php
+                            // ✅ PERBAIKAN: Status 'keluar' ditampilkan sebagai 'Disetujui' agar lebih sederhana
+                            $displayStatus = $p->status === 'keluar' ? 'disetujui' : $p->status;
+                            
+                            $colors = [
+                                'menunggu' => 'bg-yellow-100 text-yellow-800',
+                                'disetujui' => 'bg-green-100 text-green-800',
+                                'ditolak' => 'bg-red-100 text-red-800',
+                                'selesai' => 'bg-gray-100 text-gray-800',
+                            ];
+                        @endphp
+                        <span class="px-2 py-1 rounded text-xs font-bold {{ $colors[$displayStatus] ?? 'bg-gray-100 text-gray-800' }}">
+                            {{ ucfirst($displayStatus) }}
                         </span>
                     </td>
                     <td class="p-3 text-center">
-                        @if($p->qr_code && $p->status == 'disetujui')
+                        {{-- QR Code tetap bisa dilihat jika statusnya disetujui, keluar, atau selesai --}}
+                        @if($p->qr_code && in_array($p->status, ['disetujui', 'keluar', 'selesai']))
                             <button onclick="showQRCode({{ $p->id }})" class="text-indigo-600 hover:text-indigo-800 transition" title="Lihat QR Code">
                                 <i class="fas fa-qrcode text-2xl"></i>
                             </button>
-                        @elseif($p->status == 'keluar' || $p->status == 'selesai')
-                            <span class="text-gray-400 text-xs">Sudah Digunakan</span>
                         @else
                             <span class="text-gray-300">-</span>
                         @endif
@@ -102,6 +107,7 @@
             <p class="text-sm text-gray-600 mt-1">Tunjukkan layar ini ke Petugas Satpam</p>
         </div>
         
+        {{-- ✅ DIPERBAIKI: Menghapus karakter '@' yang tidak sengaja tertulis --}}
         <div id="qrContent" class="flex justify-center items-center bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 mb-4 min-h-[200px]">
             <p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat...</p>
         </div>
@@ -118,7 +124,6 @@ function showQRCode(dispensasiId) {
     const modal = document.getElementById('qrModal');
     const content = document.getElementById('qrContent');
     
-    // Tampilkan modal dengan status loading
     modal.classList.remove('hidden');
     content.innerHTML = '<p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat QR Code...</p>';
 
@@ -129,15 +134,14 @@ function showQRCode(dispensasiId) {
         })
         .then(data => {
             if (data.qr_code) {
-                // Tambahkan /storage/ di depan path dari database
                 content.innerHTML = `<img src="/storage/${data.qr_code}" alt="QR Code" class="w-56 h-56 object-contain">`;
             } else {
-                content.innerHTML = '<p class="text-red-500 text-sm">QR Code belum tersedia. Mohon hubungi guru piket.</p>';
+                content.innerHTML = '<p class="text-red-500 text-sm">QR Code belum tersedia.</p>';
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            content.innerHTML = '<p class="text-red-500 text-sm">Gagal memuat QR Code. Coba refresh halaman.</p>';
+            content.innerHTML = '<p class="text-red-500 text-sm">Gagal memuat QR Code.</p>';
         });
 }
 
@@ -145,7 +149,6 @@ function closeQRModal() {
     document.getElementById('qrModal').classList.add('hidden');
 }
 
-// Tutup modal jika klik di area hitam (luar kotak putih)
 document.getElementById('qrModal').addEventListener('click', function(e) {
     if (e.target === this) closeQRModal();
 });
