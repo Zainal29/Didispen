@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -8,12 +9,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class GuruPiket extends Model
 {
     protected $table = 'guru_piket';
-    protected $fillable = ['guru_id', 'tanggal', 'shift'];
+    
+    protected $fillable = [
+        'guru_id',
+        'tanggal',
+        'shift',
+    ];
 
-    protected function casts(): array
-    {
-        return ['tanggal' => 'date'];
-    }
+    // Casting agar 'tanggal' otomatis menjadi objek Carbon
+    protected $casts = [
+        'tanggal' => 'date',
+    ];
 
     public function guru(): BelongsTo
     {

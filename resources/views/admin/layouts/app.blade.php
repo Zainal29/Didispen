@@ -44,6 +44,10 @@
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
                     <i class="fas fa-user-graduate w-5 mr-3"></i> Siswa
                 </a>
+                <a href="{{ route('admin.satpam.index') }}" 
+                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.satpam.*') ? 'active' : '' }}">
+                    <i class="fas fa-user-shield w-5 mr-3"></i> Satpam
+                </a>
                 <a href="{{ route('admin.guru.index') }}" 
    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ (request()->routeIs('admin.guru.index') || request()->routeIs('admin.guru.create') || request()->routeIs('admin.guru.edit')) ? 'active' : '' }}">
     <i class="fas fa-chalkboard-teacher w-5 mr-3"></i> Guru

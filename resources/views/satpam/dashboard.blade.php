@@ -105,7 +105,8 @@
                     <td class="p-3 font-semibold">{{ $s->siswa->nama_lengkap }}</td>
                     <td class="p-3 text-sm">{{ $s->siswa->kelas->nama_kelas }} - {{ $s->siswa->kelas->jurusan->nama_jurusan }}</td>
                     <td class="p-3 text-sm">
-                        {{ $s->waktu_keluar_aktual ? $s->waktu_keluar_aktual->format('H:i') : '-' }}
+                        {{-- 🔥 DIPERBAIKI: Menggunakan Carbon::parse agar aman jika data berupa string --}}
+                        {{ $s->waktu_keluar_aktual ? \Carbon\Carbon::parse($s->waktu_keluar_aktual)->format('H:i') : '-' }}
                     </td>
                     <td class="p-3 font-semibold text-indigo-600">{{ $s->jam_kembali }}</td>
                     <td class="p-3 text-sm">{{ $s->guruPiket->guru->nama_lengkap ?? '-' }}</td>

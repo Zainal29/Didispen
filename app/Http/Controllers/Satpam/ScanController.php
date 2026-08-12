@@ -27,7 +27,7 @@ class ScanController extends Controller
             return response()->json(['success' => false, 'message' => 'QR Code tidak valid!'], 400);
         }
 
-        $dispensasi = Dispensasi::with('siswa')->find($qrData['id']);
+        $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->find($qrData['id']);
 
         if (!$dispensasi) {
             return response()->json(['success' => false, 'message' => 'Dispensasi tidak ditemukan!'], 404);
@@ -55,7 +55,7 @@ class ScanController extends Controller
                 'success' => true,
                 'message' => 'Siswa keluar tercatat',
                 'action' => 'keluar',
-                'data' => $dispensasi
+                'data' => $dispensasi->load(['siswa.kelas.jurusan'])
             ]);
         } elseif ($dispensasi->status === 'keluar') {
             // Scan kedua: siswa kembali
@@ -69,7 +69,7 @@ class ScanController extends Controller
                 'success' => true,
                 'message' => 'Siswa kembali tercatat',
                 'action' => 'kembali',
-                'data' => $dispensasi
+                'data' => $dispensasi->load(['siswa.kelas.jurusan'])
             ]);
         }
 

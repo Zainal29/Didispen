@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
+use App\Models\GuruPiket;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -12,20 +13,19 @@ class DashboardController extends Controller
     {
         $guru = auth()->user()->guru;
 
-        // Cek jadwal piket hari ini
-        $piketHariIni = $guru->piket()
-            ->where('tanggal', today())
+        // 1. Tentukan shift berdasarkan waktu saat ini
+        $shiftIni = now()->hour < 12 ? 'pagi' : 'siang';
+        $tanggalIni = today();
+
+        // 2. ✅ Cari jadwal piket berdasarkan tanggal dan shift
+        $piketHariIni = GuruPiket::with('guru')
+            ->where('tanggal', $tanggalIni)
+            ->where('shift', $shiftIni)
             ->first();
 
         if (!$piketHariIni) {
             return view('guru.dashboard', [
-                'stats' => [
-                    'piket_hari_ini' => null,
-                    'pending' => 0,
-                    'keluar' => 0,
-                    'selesai' => 0,
-                    'total' => 0,
-                ],
+                'stats' => ['piket_hari_ini' => null, 'pending' => 0, 'keluar' => 0, 'selesai' => 0, 'total' => 0],
                 'pendingDispensasi' => collect(),
                 'siswaKeluar' => collect(),
             ]);
@@ -40,21 +40,18 @@ class DashboardController extends Controller
             'total' => Dispensasi::where('guru_piket_id', $piketHariIni->id)->whereDate('created_at', today())->count(),
         ];
 
-        // Pengajuan menunggu
         $pendingDispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
             ->where('guru_piket_id', $piketHariIni->id)
             ->where('status', 'menunggu')
             ->latest()
             ->get();
 
-        // Siswa yang sedang keluar (untuk notifikasi)
         $siswaKeluar = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
             ->where('guru_piket_id', $piketHariIni->id)
             ->where('status', 'keluar')
             ->latest()
             ->get();
 
-        // ✅ Kirim variabel dengan nama yang PERSIS sama ke view
         return view('guru.dashboard', compact('stats', 'pendingDispensasi', 'siswaKeluar'));
     }
 }

@@ -1,0 +1,28 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Kelas;
+use App\Models\Jurusan;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class KelasFactory extends Factory
+{
+    protected $model = Kelas::class;
+
+    public function definition(): array
+    {
+        // Ambil jurusan acak dari database
+        $jurusan = Jurusan::inRandomOrder()->first();
+        $kodeJurusan = $jurusan ? $jurusan->kode_jurusan : 'UMUM';
+        
+        $tingkat = $this->faker->randomElement(['X', 'XI', 'XII']);
+        $nomorKelas = $this->faker->numberBetween(1, 4);
+
+        return [
+            'jurusan_id' => $jurusan ? $jurusan->id : 1,
+            'nama_kelas' => "$tingkat $kodeJurusan $nomorKelas", // Contoh output: XII RPL 2
+            'tingkat' => $tingkat,
+        ];
+    }
+}

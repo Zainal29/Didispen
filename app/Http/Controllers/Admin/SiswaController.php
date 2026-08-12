@@ -35,7 +35,7 @@ class SiswaController extends Controller
     {
         DB::transaction(function () use ($request) {
             $user = User::create([
-                'name' => $request->name,
+                'name' => $request->nama_lengkap,
                 'email' => $request->email,
                 'password' => Hash::make($request->password ?? 'password'),
                 'role' => 'siswa',
@@ -56,6 +56,11 @@ class SiswaController extends Controller
         });
 
         return redirect()->route('admin.siswa.index')->with('success', 'Siswa berhasil ditambahkan.');
+    }
+
+    public function edit(Siswa $siswa)
+    {
+        return response()->json($siswa->load('user'));
     }
 
     public function update(StoreSiswaRequest $request, Siswa $siswa)

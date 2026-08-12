@@ -9,17 +9,16 @@ return new class extends Migration {
     {
         Schema::create('guru_piket', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('guru_id')->constrained('guru')->cascadeOnDelete(); // Guru yang dijadwalkan
+            $table->foreignId('guru_id')->constrained('guru')->cascadeOnDelete();
             
+            // ✅ DIKEMBALIKAN: Menggunakan tanggal dan shift
             $table->date('tanggal');
             $table->enum('shift', ['pagi', 'siang']);
             
-            // ✅ FITUR BARU: Digabung dalam 1 tabel
-            $table->enum('status_kehadiran', ['hadir', 'tidak_hadir', 'izin', 'sakit'])->default('hadir');
-            $table->string('keterangan')->nullable(); // Alasan jika tidak hadir
-            $table->foreignId('pengganti_guru_id')->nullable()->constrained('guru')->nullOnDelete(); // Guru pengganti
-            
             $table->timestamps();
+            
+            // Mencegah duplikasi jadwal di tanggal dan shift yang sama
+            $table->unique(['tanggal', 'shift']);
         });
     }
 

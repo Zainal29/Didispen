@@ -1,12 +1,15 @@
 <?php
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory; // Tambahkan ini
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Siswa extends Model
 {
+    use HasFactory; // Tambahkan ini
+
     protected $table = 'siswa';
     protected $fillable = ['user_id', 'jurusan_id', 'kelas_id', 'nama_lengkap', 'tanggal_lahir', 'alamat', 'no_telepon'];
 

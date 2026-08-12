@@ -25,9 +25,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', Admin\DashboardController::class)->name('dashboard');
     Route::resource('jurusan', Admin\JurusanController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('kelas', Admin\KelasController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('siswa', Admin\SiswaController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('siswa', Admin\SiswaController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
     Route::resource('guru', Admin\GuruController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('piket', Admin\GuruPiketController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('satpam', Admin\SatpamController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::get('semua-pengajuan', [Admin\DispensasiController::class, 'index'])->name('semua.pengajuan');
     Route::get('semua-pengajuan/{dispensasi}', [Admin\DispensasiController::class, 'show'])->name('semua.pengajuan.show');

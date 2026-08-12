@@ -9,13 +9,14 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            SatpamSeeder::class,      // (Opsional) Tambahkan agar akun satpam terbuat
             JurusanSeeder::class,
             KelasSeeder::class,
-            SiswaSeeder::class,
             GuruSeeder::class,
-            GuruPiketSeeder::class,
+            GuruPiketSeeder::class,   // 🔥 TAMBAHKAN INI: Wajib jalan sebelum DispensasiSeeder
+            SiswaSeeder::class,
             SettingsSeeder::class,
-            DispensasiSeeder::class,
+            DispensasiSeeder::class,  // Sekarang ini akan aman!
         ]);
     }
 }

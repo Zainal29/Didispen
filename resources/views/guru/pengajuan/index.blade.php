@@ -157,7 +157,8 @@ function rejectDispensasi(id) {
     if (alasan && alasan.trim() !== "") {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `/guru/pengajuan/${id}/reject`;
+        // Menggunakan helper url() agar path dinamis dan tidak error saat hosting berubah
+        form.action = `{{ url('guru/pengajuan') }}/${id}/reject`;
         form.innerHTML = `@csrf <input type="hidden" name="catatan_admin" value="${alasan}">`;
         document.body.appendChild(form);
         form.submit();
