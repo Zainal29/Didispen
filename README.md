@@ -1,59 +1,89 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📘 Panduan Penggunaan Sistem Dispensasi Digital (DIDISPEN)
+**SMKN 1 Bangsri**
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+---
 
-## About Laravel
+## 👨‍🎓 1. Panduan untuk SISWA
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### A. Cara Membuat Pengajuan Dispensasi
+1. **Login ke Aplikasi**
+   - Buka aplikasi DIDISPEN dan login menggunakan **NIS** dan **Password** Anda.
+2. **Buka Menu Buat Pengajuan**
+   - Klik tombol **"+" (Buat Pengajuan)** pada navigasi bawah (Mobile) atau di bagian kanan atas (Desktop).
+3. **Isi Form Dispensasi**
+   - **Kategori**: Pilih alasan dispensasi (*Sakit, Tugas Sekolah, Izin Keluar Lingkungan Sekolah, dll.*).
+   - **Lokasi & Tujuan**: Isi tempat dan keperluan tujuan Anda keluar.
+   - **Alasan**: Jelaskan alasan dispensasi secara rinci.
+   - **Waktu Keluar & Kembali**: Pilih **Jam Pelajaran** saat Anda mulai keluar dan rencana jam kembali.
+4. **Kirim Pengajuan**
+   - Klik tombol **"Kirim Pengajuan"**.
+   - Status pengajuan awal Anda adalah **"Menunggu Persetujuan Guru Piket"**.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### B. Cara Mengecek Persetujuan & Mendapatkan QR Code
+1. Buka menu **"Riwayat"** atau cek **"Notifikasi"**.
+2. Jika pengajuan telah disetujui oleh Guru Piket, status akan berubah menjadi **"Disetujui"** (Warna Hijau).
+3. Klik pengajuan tersebut untuk melihat **Kode QR Dispensasi** Anda.
+4. **Perhatian**: QR Code hanya aktif saat status **Disetujui** dan belum di-scan oleh Satpam.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### C. Cara Keluar & Kembali di Pos Satpam
+1. **Saat Keluar Sekolah**:
+   - Tunjukkan layar HP yang menampilkan **Kode QR Dispensasi** kepada Satpam di gerbang.
+   - Setelah Satpam melakukan scan, status akan otomatis berubah menjadi **"Keluar"** dan QR Code akan menjadi tidak aktif (tidak bisa di-scan ulang).
+2. **Saat Kembali ke Sekolah**:
+   - Laporkan diri Anda kepada Satpam di gerbang bahwa Anda sudah kembali ke lingkungan sekolah.
+   - Satpam akan mengonfirmasi kepulangan Anda di sistem, dan status dispensasi Anda berubah menjadi **"Selesai"**.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 👨‍🏫 2. Panduan untuk GURU PIKET
 
-## Agentic Development
+### A. Cara Memverifikasi & Memproses Pengajuan Siswa
+1. **Login ke Panel Guru**
+   - Login menggunakan akun Guru Piket.
+2. **Mengecek Pengajuan Masuk**
+   - Masuk ke menu **"Verifikasi"** atau lihat daftar di **Dashboard Guru Piket**.
+   - Jika terdapat pengajuan baru, akan muncul badge angka notifikasi pada menu **Verifikasi**.
+3. **Memeriksa Detail Pengajuan**
+   - Klik tombol **"Proses"** / **"Lihat Detail"** pada siswa yang mengajukan dispensasi.
+   - Periksa data siswa, alasan, lokasi tujuan, dan jam pelajaran keluar/kembali.
+4. **Menyetujui atau Menolak Pengajuan**:
+   - **Menyetujui**: Klik tombol **"Setujui Dispensasi"**. Sistem akan otomatis menerbitkan Kode QR resmi untuk siswa dan mengirim notifikasi ke HP siswa.
+   - **Menolak**: Klik tombol **"Tolak"**, masukkan **Alasan Penolakan**, lalu simpan. Status akan berubah menjadi **Ditolak** dan siswa mendapat notifikasi.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
 
-```bash
-composer require laravel/boost --dev
+### B. Memantau & Mencetak Laporan
+1. Buka menu **"Laporan"**.
+2. Atur filter berdasarkan rentang tanggal atau status pengajuan.
+3. Klik **"Export PDF"** untuk mengunduh laporan siap cetak (dilengkapi format tanda tangan) atau **"Export Excel"** untuk merekap data.
 
-php artisan boost:install
-```
+---
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## 👮‍♂️ 3. Panduan untuk SATPAM
 
-## Contributing
+### A. Cara Scan QR Code Siswa Keluar
+1. **Login ke Panel Satpam**
+   - Login menggunakan akun Satpam.
+2. **Buka Menu Scan**
+   - Klik tombol **"Scan QR Code Siswa"** di Dashboard atau buka menu **"Scan QR"**.
+3. **Proses Scanning**:
+   - Arahkan kamera HP/Perangkat ke **Kode QR** di layar HP siswa (atau masukkan nomor surat jika diketik manual).
+4. **Hasil Verifikasi**:
+   - **Berhasil (Hijau)**: Sistem menampilkan nama siswa, foto, dan status **"Siswa Keluar Tercatat"**. Status berubah menjadi **Keluar**.
+   - **Gagal/Peringatan (Merah)**: Jika QR Code sudah pernah di-scan sebelumnya atau belum disetujui, sistem akan memblokir dan menampilkan peringatan **"QR Code Tidak Valid / Sudah Pernah Di-scan"**.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+### B. Cara Mengonfirmasi Siswa Kembali
+1. Pada Dashboard Satpam, lihat tabel **"Daftar Siswa Sedang Keluar"**.
+2. Ketika siswa kembali ke sekolah, cari nama siswa tersebut.
+3. Klik tombol **"Konfirmasi Kembali"**.
+4. Waktu kepulangan aktual akan tercatat otomatis di sistem dan status berubah menjadi **"Selesai"**.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# Didispen
+> 💡 *Catatan: Pastikan koneksi internet stabil saat melakukan scanning QR Code di pos gerbang.*

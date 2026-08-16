@@ -63,8 +63,11 @@ class PengajuanController extends Controller
         }
 
         try {
-            // ✅ QR Code berisi URL verifikasi (bisa di-scan langsung dari HP Satpam)
-            $qrContent = url('/verifikasi/' . $dispensasi->nomor_surat);
+            // ✅ QR Code berisi format data JSON aman (tidak berupa URL web publik)
+            $qrContent = json_encode([
+                'id' => $dispensasi->id,
+                'nomor_surat' => $dispensasi->nomor_surat,
+            ]);
             $qrCodePath = 'qr_codes/dispensasi_' . $dispensasi->id . '.svg';
 
             if (!Storage::disk('public')->exists('qr_codes')) {

@@ -69,6 +69,9 @@
                         <span class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $notif }}</span>
                     @endif
                 </a>
+                <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
+                    <i class="fas fa-book-open w-5 mr-3 text-center"></i> Panduan
+                </a>
             </div>
         </nav>
 
@@ -207,6 +210,10 @@
                 </div>
             </div>
 
+            <a href="{{ route('panduan') }}" @click="sheet = false"
+               class="w-full flex items-center justify-center px-4 py-3 mb-2.5 rounded-xl text-sm font-bold text-gray-700 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+                <i class="fas fa-book-open text-blue-600 mr-2"></i> Panduan Penggunaan
+            </a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="w-full flex items-center justify-center px-4 py-3 rounded-xl text-sm font-bold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 transition-colors">
@@ -222,11 +229,11 @@
 
 @stack('scripts')
 
-@if(session('success'))
+{{-- @if(session('success'))
 <script>Swal.fire({ icon:'success', title:'Berhasil!', text:'{{ session('success') }}', timer:3000, showConfirmButton:false, position:'top-end', toast:true });</script>
 @endif
 @if(session('error'))
 <script>Swal.fire({ icon:'error', title:'Gagal!', text:'{{ session('error') }}', timer:4000, showConfirmButton:false, position:'top-end', toast:true });</script>
-@endif
+@endif --}}
 </body>
 </html>

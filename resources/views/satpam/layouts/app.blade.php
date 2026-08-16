@@ -53,6 +53,9 @@
                 <i class="fas fa-qrcode w-5 mr-3 text-center text-base"></i> Scan QR Code
                 <i class="fas fa-arrow-right ml-auto text-[11px]"></i>
             </a>
+            <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
+                <i class="fas fa-book-open w-5 mr-3 text-center"></i> Panduan
+            </a>
         </nav>
 
         <div class="p-4 border-t border-gray-100">
@@ -123,7 +126,7 @@
     {{-- ================================================== --}}
     <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(220,38,38,0.08)]"
          style="padding-bottom: env(safe-area-inset-bottom);">
-        <div class="grid grid-cols-3 h-16">
+        <div class="grid grid-cols-4 h-16">
 
             {{-- Beranda --}}
             <a href="{{ route('satpam.dashboard') }}" class="flex flex-col items-center justify-center gap-0.5 {{ request()->routeIs('satpam.dashboard') ? $mobOn : $mobOff }}">
@@ -139,6 +142,12 @@
                 </a>
                 <span class="text-[10px] font-bold {{ request()->routeIs('satpam.scan') ? $mobOn : $mobOff }}">Scan</span>
             </div>
+
+            {{-- Panduan --}}
+            <a href="{{ route('panduan') }}" class="flex flex-col items-center justify-center gap-0.5 {{ request()->routeIs('panduan') ? $mobOn : $mobOff }}">
+                <i class="fas fa-book-open text-lg"></i>
+                <span class="text-[10px] font-bold">Panduan</span>
+            </a>
 
             {{-- Akun (Bottom Sheet) --}}
             <button @click="sheet = true" class="flex flex-col items-center justify-center gap-1 text-gray-400">
@@ -167,6 +176,10 @@
                     <p class="text-xs text-gray-500">Petugas Keamanan • Pos Gerbang</p>
                 </div>
             </div>
+            <a href="{{ route('panduan') }}" @click="sheet = false"
+               class="w-full flex items-center justify-center px-4 py-3 mb-2.5 rounded-xl text-sm font-bold text-gray-700 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+                <i class="fas fa-book-open text-red-600 mr-2"></i> Panduan Penggunaan
+            </a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="w-full flex items-center justify-center px-4 py-3 rounded-xl text-sm font-bold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 transition-colors">
@@ -181,7 +194,7 @@
 @stack('scripts')
 
 {{-- GLOBAL SWEETALERT NOTIFICATION --}}
-@if(session('success'))
+{{-- @if(session('success'))
 <script>
     Swal.fire({
         icon: 'success',
@@ -211,6 +224,6 @@
         color: '#991b1b'
     });
 </script>
-@endif
+@endif --}}
 </body>
 </html>

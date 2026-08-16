@@ -185,19 +185,11 @@
                 <div class="space-y-2.5 text-xs">
                     <div>
                         <span class="text-gray-400 font-medium">Nama Guru</span>
-                        <p class="font-bold text-gray-800 text-sm mt-0.5">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? '-' }}</p>
+                        <p class="font-bold text-gray-800 text-sm mt-0.5">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? 'GURU PIKET UTAMA' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-400 font-medium">Tanggal Piket</span>
-                        <p class="text-gray-800 font-semibold mt-0.5">{{ $dispensasi->guruPiket->tanggal ? \Carbon\Carbon::parse($dispensasi->guruPiket->tanggal)->format('d M Y') : '-' }}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-400 font-medium">Shift</span>
-                        <p class="capitalize text-gray-800 font-bold mt-0.5">
-                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                                {{ $dispensasi->guruPiket->shift ?? '-' }}
-                            </span>
-                        </p>
+                        <p class="text-gray-800 font-semibold mt-0.5">{{ $dispensasi->created_at ? $dispensasi->created_at->format('d M Y') : '-' }}</p>
                     </div>
                 </div>
             </div>

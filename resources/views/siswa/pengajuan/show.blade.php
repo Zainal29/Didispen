@@ -118,11 +118,11 @@
                         <div class="space-y-1.5 text-xs">
                             <div class="flex justify-between gap-2">
                                 <span class="text-gray-500">Nama</span>
-                                <span class="font-bold text-gray-800 text-right">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? '-' }}</span>
+                                <span class="font-bold text-gray-800 text-right">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? 'GURU PIKET UTAMA' }}</span>
                             </div>
                             <div class="flex justify-between gap-2">
                                 <span class="text-gray-500">Tanggal</span>
-                                <span class="text-gray-800">{{ $dispensasi->guruPiket->tanggal ? \Carbon\Carbon::parse($dispensasi->guruPiket->tanggal)->format('d M Y') : '-' }}</span>
+                                <span class="text-gray-800">{{ $dispensasi->created_at ? $dispensasi->created_at->format('d M Y') : '-' }}</span>
                             </div>
                         </div>
                     </div>

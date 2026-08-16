@@ -32,11 +32,6 @@
                 <h2 class="text-base sm:text-lg font-black text-white tracking-tight mt-0.5">Jadwal Piket Hari Ini</h2>
                 <p class="text-blue-100 text-[11px] mt-1 truncate">{{ $piketHariIni->guru->nama_lengkap }}</p>
             </div>
-            <div class="text-right flex-shrink-0">
-                <span class="inline-block px-3 py-1.5 rounded-full bg-white/15 border border-white/20 text-white text-xs font-bold">
-                    Shift {{ ucfirst($piketHariIni->shift) }}
-                </span>
-            </div>
         </div>
     </div>
 

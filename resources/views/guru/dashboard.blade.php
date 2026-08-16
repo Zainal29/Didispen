@@ -25,11 +25,8 @@
             <p class="text-blue-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
             <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">Halo, {{ $firstName }}! 👋</h2>
             <div class="mt-2.5 flex items-center space-x-2">
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-white/15 border border-white/20 text-white text-[11px] font-bold">
-                    <i class="fas fa-clock mr-1.5 text-amber-300"></i>Shift {{ ucfirst($stats['piket_hari_ini']->shift) }}
-                </span>
                 <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-white/15 border border-white/20 text-white text-[11px] font-semibold">
-                    <i class="fas fa-user-shield mr-1.5 text-sky-200"></i>Guru Piket
+                    <i class="fas fa-user-shield mr-1.5 text-sky-200"></i>Guru Piket Utama
                 </span>
             </div>
         </div>

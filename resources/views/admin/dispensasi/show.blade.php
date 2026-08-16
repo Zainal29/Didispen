@@ -114,10 +114,9 @@
                         {{ substr($dispensasi->guruPiket->guru->nama_lengkap ?? 'G', 0, 1) }}
                     </div>
                     <div>
-                        <p class="font-semibold text-gray-800">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? '-' }}</p>
+                        <p class="font-semibold text-gray-800">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? 'GURU PIKET UTAMA' }}</p>
                         <p class="text-sm text-gray-500">
-                            Shift: {{ ucfirst($dispensasi->guruPiket->shift ?? '-') }} |
-                            Tanggal: {{ $dispensasi->guruPiket->tanggal ? \Carbon\Carbon::parse($dispensasi->guruPiket->tanggal)->format('d M Y') : '-' }}
+                            Tanggal Piket: {{ $dispensasi->created_at ? $dispensasi->created_at->format('d M Y') : '-' }}
                         </p>
                     </div>
                 </div>

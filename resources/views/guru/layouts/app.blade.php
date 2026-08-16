@@ -65,6 +65,9 @@
                 <a href="{{ route('guru.laporan.index') }}" class="{{ request()->routeIs('guru.laporan.*') ? $navOn : $navOff }}">
                     <i class="fas fa-chart-bar w-5 mr-3 text-center"></i> Laporan
                 </a>
+                <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
+                    <i class="fas fa-book-open w-5 mr-3 text-center"></i> Panduan
+                </a>
             </div>
         </nav>
 
@@ -186,7 +189,7 @@
                     <p class="text-xs text-gray-500">Guru Piket</p>
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-2 mb-3">
+            <div class="grid grid-cols-3 gap-2 mb-3">
                 <a href="{{ route('guru.laporan.index') }}" @click="sheet = false"
                    class="px-3 py-2.5 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 text-center">
                     <i class="fas fa-chart-bar mr-1"></i> Laporan
@@ -194,6 +197,10 @@
                 <a href="{{ route('guru.pengajuan.index') }}" @click="sheet = false"
                    class="px-3 py-2.5 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 text-center">
                     <i class="fas fa-file-signature mr-1"></i> Verifikasi
+                </a>
+                <a href="{{ route('panduan') }}" @click="sheet = false"
+                   class="px-3 py-2.5 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 text-center">
+                    <i class="fas fa-book-open mr-1"></i> Panduan
                 </a>
             </div>
             <form method="POST" action="{{ route('logout') }}">
@@ -210,7 +217,7 @@
 @stack('scripts')
 
 {{-- ✅ GLOBAL SWEETALERT NOTIFICATION --}}
-@if(session('success'))
+{{-- @if(session('success'))
 <script>
     Swal.fire({
         icon: 'success',
@@ -240,6 +247,6 @@
         color: '#991b1b'
     });
 </script>
-@endif
+@endif --}}
 </body>
 </html>

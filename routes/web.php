@@ -110,13 +110,11 @@ Route::middleware(['auth', 'role:satpam'])->prefix('satpam')->name('satpam.')->g
     Route::post('konfirmasi/{dispensasi}/keluar', [\App\Http\Controllers\Satpam\DashboardController::class, 'konfirmasiKeluar'])->name('konfirmasi.keluar');
     Route::post('konfirmasi/{dispensasi}/kembali', [\App\Http\Controllers\Satpam\DashboardController::class, 'konfirmasiKembali'])->name('konfirmasi.kembali');
 });
-
-
 // ==========================================
-// PUBLIC VERIFICATION (Akses via Scan QR)
+// PANDUAN PENGGUNAAN (Akses Semua User Login)
 // ==========================================
-Route::get('/verifikasi/{nomorSurat}', [App\Http\Controllers\VerifikasiController::class, 'show'])
-    ->name('verifikasi.show');
+Route::get('/panduan', fn() => view('panduan.index'))->middleware('auth')->name('panduan');
+
 
 // ==========================================
 // TESTING & DEBUG ROUTES (Tanpa Auth)
