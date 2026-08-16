@@ -6,6 +6,7 @@ use App\Models\Guru;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
+use Faker\Factory as FakerFactory; // <-- Tambahkan import ini
 
 class GuruFactory extends Factory
 {
@@ -13,13 +14,16 @@ class GuruFactory extends Factory
 
     public function definition(): array
     {
-        $namaLengkap = $this->faker->name();
-        $nip = $this->faker->unique()->numerify('198#########');
+        // Buat instance Faker khusus locale Indonesia (id_ID)
+        $fakerID = FakerFactory::create('id_ID');
+
+        $namaLengkap = $fakerID->name(); // Menghasilkan nama Indonesia
+        $nip = $fakerID->unique()->numerify('198#########');
 
         // 1. Generate otomatis akun User untuk guru
         $user = User::create([
             'name' => $namaLengkap,
-            'email' => $this->faker->unique()->safeEmail(),
+            'email' => $fakerID->unique()->safeEmail(),
             'password' => Hash::make('password'),
             'role' => 'guru',
             'nis_nip' => $nip,
@@ -30,7 +34,7 @@ class GuruFactory extends Factory
             'user_id' => $user->id,
             'nip' => $nip,
             'nama_lengkap' => $namaLengkap,
-            'mata_pelajaran' => $this->faker->randomElement(['Matematika', 'B. Indonesia', 'B. Inggris', 'Produktif', 'Penjasorkes', 'Sejarah']),
+            'mata_pelajaran' => $fakerID->randomElement(['Matematika', 'B. Indonesia', 'B. Inggris', 'Produktif', 'Penjasorkes', 'Sejarah']),
         ];
     }
 }

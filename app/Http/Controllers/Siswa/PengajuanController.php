@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
 use App\Models\GuruPiket;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PengajuanController extends Controller
 {
@@ -19,7 +20,6 @@ class PengajuanController extends Controller
         $query = Dispensasi::with(['guruPiket.guru'])
             ->where('siswa_id', $siswa->id);
 
-        // Filter status jika ada
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -36,8 +36,23 @@ class PengajuanController extends Controller
     {
         $siswa = auth()->user()->siswa;
 
-        // ✅ OTOMATIS: Ambil 1 guru piket yang bertugas hari ini
-        $guruPiketHariIni = GuruPiket::with('guru')->where('tanggal', today())->first();
+        // ✅ REVISI: Gunakan scope hariIni() alih-alih where('tanggal', today())
+        $guruPiketHariIni = GuruPiket::with('guru')->hariIni()->first();
+
+        if (!$guruPiketHariIni) {
+            return redirect()->route('siswa.dashboard')
+                ->with('error', 'Maaf, tidak ada guru piket yang dijadwalkan hari ini. Silakan hubungi Admin.');
+        }
+
+        // ✅ Tambahan: Cegah siswa membuat pengajuan baru jika yang lama masih "menunggu"
+        $pendingDispensasi = Dispensasi::where('siswa_id', $siswa->id)
+            ->where('status', 'menunggu')
+            ->first();
+
+        if ($pendingDispensasi) {
+            return redirect()->route('siswa.pengajuan.index')
+                ->with('warning', 'Anda masih memiliki pengajuan yang belum diproses (No. ' . $pendingDispensasi->nomor_surat . '). Tunggu persetujuan terlebih dahulu.');
+        }
 
         return view('siswa.pengajuan.create', compact('siswa', 'guruPiketHariIni'));
     }
@@ -47,37 +62,63 @@ class PengajuanController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $validated = $request->validate([
             'kategori' => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
-            'alasan' => 'required|string|min:10',
+            'alasan' => 'required|string|min:10|max:500',
             'tujuan' => 'required|string|max:255',
             'lokasi' => 'nullable|string|max:255',
             'jam_keluar' => 'required|integer|between:1,10',
             'jam_kembali' => 'required|integer|between:1,10|gt:jam_keluar',
+        ], [
+            'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
+            'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',
         ]);
 
         $siswa = auth()->user()->siswa;
 
-        // ✅ OTOMATIS: Ambil ID guru piket hari ini
-        $guruPiket = GuruPiket::where('tanggal', today())->first();
+        // ✅ REVISI: Gunakan scope hariIni() untuk mendapatkan ID guru piket hari ini
+        $guruPiket = GuruPiket::hariIni()->first();
 
         if (!$guruPiket) {
-            return redirect()->back()->with('error', 'Maaf, tidak ada guru piket yang dijadwalkan hari ini. Hubungi Admin.');
+            return redirect()->back()
+                ->with('error', 'Maaf, tidak ada guru piket yang dijadwalkan hari ini. Hubungi Admin.');
         }
 
-        $data['siswa_id'] = $siswa->id;
-        $data['guru_piket_id'] = $guruPiket->id; // Langsung diisi otomatis oleh sistem
-        $data['nomor_surat'] = $this->generateNomorSurat();
-        $data['status'] = 'menunggu';
+        // Cegah spam pengajuan (double check)
+        $pendingExists = Dispensasi::where('siswa_id', $siswa->id)
+            ->where('status', 'menunggu')
+            ->exists();
 
-        // Format jam pelajaran menjadi teks
-        $data['jam_keluar'] = 'Jam Pelajaran ke-' . $data['jam_keluar'];
-        $data['jam_kembali'] = 'Jam Pelajaran ke-' . $data['jam_kembali'];
+        if ($pendingExists) {
+            return redirect()->route('siswa.pengajuan.index')
+                ->with('error', 'Anda masih memiliki pengajuan yang belum diproses.');
+        }
 
-        Dispensasi::create($data);
+        // Susun data untuk disimpan dengan rapi
+        $dataToSave = [
+            'siswa_id' => $siswa->id,
+            'guru_piket_id' => $guruPiket->id, // ✅ Diisi otomatis dari jadwal hari ini
+            'nomor_surat' => $this->generateNomorSurat(),
+            'status' => 'menunggu',
+            'kategori' => $validated['kategori'],
+            'alasan' => $validated['alasan'],
+            'tujuan' => $validated['tujuan'],
+            'lokasi' => $validated['lokasi'] ?? null,
+            'jam_keluar' => 'Jam Pelajaran ke-' . $validated['jam_keluar'],
+            'jam_kembali' => 'Jam Pelajaran ke-' . $validated['jam_kembali'],
+        ];
 
-        return redirect()->route('siswa.pengajuan.index')
-            ->with('success', 'Pengajuan dispensasi berhasil dibuat. Menunggu persetujuan guru piket.');
+        try {
+            Dispensasi::create($dataToSave);
+
+            return redirect()->route('siswa.pengajuan.index')
+                ->with('success', 'Pengajuan dispensasi berhasil dibuat. Menunggu persetujuan guru piket.');
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat dispensasi: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menyimpan pengajuan. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -85,7 +126,6 @@ class PengajuanController extends Controller
      */
     public function show(Dispensasi $dispensasi)
     {
-        // Pastikan hanya pemilik yang bisa melihat
         if ($dispensasi->siswa_id !== auth()->user()->siswa->id) {
             abort(403, 'Akses ditolak.');
         }
@@ -99,9 +139,15 @@ class PengajuanController extends Controller
      */
     public function getQRCode(Dispensasi $dispensasi)
     {
-        // Pastikan hanya pemilik yang bisa melihat
         if ($dispensasi->siswa_id !== auth()->user()->siswa->id) {
             abort(403, 'Akses ditolak.');
+        }
+
+        if ($dispensasi->status !== 'disetujui') {
+            return response()->json([
+                'success' => false,
+                'message' => 'QR Code ini sudah pernah di-scan atau tidak aktif lagi.'
+            ], 400);
         }
 
         return response()->json([

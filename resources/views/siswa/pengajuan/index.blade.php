@@ -4,115 +4,153 @@
 @section('page-title', 'Riwayat Pengajuan Dispensasi')
 
 @section('content')
+
 @include('components.alert')
 
-<div class="bg-white rounded-lg shadow">
-    <div class="p-5 border-b flex justify-between items-center">
-        <h3 class="text-lg font-bold text-gray-800">Riwayat Pengajuan</h3>
-        <a href="{{ route('siswa.pengajuan.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm transition">
-            <i class="fas fa-plus mr-1"></i> Buat Pengajuan Baru
-        </a>
-    </div>
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
-    {{-- Filter --}}
-    <div class="p-4 bg-gray-50 border-b">
-        <form method="GET" class="flex flex-wrap gap-3 items-end">
-            <div class="flex-1 min-w-[200px]">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Filter Status</label>
-                <select name="status" onchange="this.form.submit()" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+    {{-- Header + Filter --}}
+    <div class="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+            <h3 class="text-sm font-bold text-gray-900"><i class="fas fa-clock-rotate-left mr-1.5 text-blue-600"></i>Riwayat Pengajuan</h3>
+            <p class="text-[11px] text-gray-500 mt-0.5">Pantau seluruh pengajuan dispensasi Anda.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <form method="GET" class="flex-1 sm:flex-none">
+                <select name="status" onchange="this.form.submit()"
+                        class="w-full sm:w-auto h-10 px-3 rounded-xl border-2 border-gray-200 bg-white text-xs font-bold text-gray-600 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all">
                     <option value="">Semua Status</option>
-                    <option value="menunggu" {{ request('status') == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
+                    <option value="menunggu"  {{ request('status') == 'menunggu'  ? 'selected' : '' }}>Menunggu</option>
                     <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
-                    <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-                    {{-- ✅ DIHAPUS: Opsi "Sedang Keluar" --}}
-                    <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                    <option value="ditolak"   {{ request('status') == 'ditolak'   ? 'selected' : '' }}>Ditolak</option>
+                    <option value="selesai"   {{ request('status') == 'selesai'   ? 'selected' : '' }}>Selesai</option>
                 </select>
-            </div>
-        </form>
+            </form>
+            <a href="{{ route('siswa.pengajuan.create') }}"
+               class="inline-flex items-center px-3.5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg shadow-blue-500/30 flex-shrink-0">
+                <i class="fas fa-plus mr-1.5"></i>Buat
+            </a>
+        </div>
     </div>
 
-    {{-- Table --}}
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-50 text-xs uppercase text-gray-600">
+    {{-- ===== MOBILE: Kartu Riwayat ===== --}}
+    <div class="md:hidden divide-y divide-gray-100">
+        @forelse($pengajuan as $p)
+            @php
+                $badges = [
+                    'menunggu'  => 'bg-amber-100 text-amber-700 border-amber-200',
+                    'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                    'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
+                    'keluar'    => 'bg-sky-100 text-sky-700 border-sky-200',
+                    'selesai'   => 'bg-gray-100 text-gray-600 border-gray-200',
+                ];
+            @endphp
+            <div class="p-4">
+                <div class="flex justify-between items-start gap-2 mb-1.5">
+                    <p class="font-mono font-bold text-gray-800 text-xs">{{ $p->nomor_surat }}</p>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex-shrink-0 {{ $badges[$p->status] ?? 'bg-gray-100 text-gray-600 border-gray-200' }}">
+                        {{ ucfirst($p->status) }}
+                    </span>
+                </div>
+                <p class="text-[11px] text-gray-500">{{ $p->created_at->format('d/m/Y') }} • <span class="capitalize">{{ str_replace('_', ' ', $p->kategori) }}</span></p>
+                <p class="text-[11px] text-gray-500 mt-0.5 truncate"><i class="far fa-clock mr-1"></i>{{ $p->jam_keluar }} – {{ $p->jam_kembali }} • {{ $p->tujuan }}</p>
+                <div class="flex items-center justify-between mt-3">
+                    <a href="{{ route('siswa.pengajuan.show', $p) }}"
+                       class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-transform">
+                        <i class="fas fa-eye mr-1.5"></i>Lihat Detail
+                    </a>
+                    @if($p->qr_code && $p->status === 'disetujui')
+                        <button onclick="showQRCode({{ $p->id }})" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 active:bg-blue-600 active:text-white transition-colors" title="Lihat QR Code">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
+                    @endif
+                </div>
+            </div>
+        @empty
+            <div class="p-10 text-center">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-50 text-blue-300 flex items-center justify-center text-2xl mb-3"><i class="fas fa-inbox"></i></div>
+                <p class="text-gray-500 font-semibold text-sm">Belum ada pengajuan dispensasi</p>
+            </div>
+        @endforelse
+    </div>
+
+    {{-- ===== DESKTOP: Tabel ===== --}}
+    <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500">
                 <tr>
-                    <th class="p-3 text-left">No. Surat</th>
-                    <th class="p-3 text-left">Tanggal</th>
-                    <th class="p-3 text-left">Kategori</th>
-                    <th class="p-3 text-left">Tujuan</th>
-                    <th class="p-3 text-left">Waktu</th>
-                    <th class="p-3 text-left">Status</th>
-                    <th class="p-3 text-center">QR Code</th>
+                    <th class="p-4 text-left">No. Surat</th>
+                    <th class="p-4 text-left">Tanggal</th>
+                    <th class="p-4 text-left">Kategori</th>
+                    <th class="p-4 text-left">Tujuan</th>
+                    <th class="p-4 text-left">Waktu</th>
+                    <th class="p-4 text-left">Status</th>
+                    <th class="p-4 text-center">QR Code</th>
                 </tr>
             </thead>
-            <tbody class="divide-y">
+            <tbody class="divide-y divide-gray-100">
                 @forelse($pengajuan as $p)
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="p-3 font-mono text-sm">{{ $p->nomor_surat }}</td>
-                    <td class="p-3 text-sm">{{ $p->created_at->format('d/m/Y') }}</td>
-                    <td class="p-3 text-sm capitalize">{{ str_replace('_', ' ', $p->kategori) }}</td>
-                    <td class="p-3 text-sm">{{ $p->tujuan }}</td>
-                    <td class="p-3 text-sm">{{ $p->jam_keluar }} - {{ $p->jam_kembali }}</td>
-                    <td class="p-3">
-                        @php
-                            // ✅ PERBAIKAN: Status 'keluar' ditampilkan sebagai 'Disetujui' agar lebih sederhana
-                            $displayStatus = $p->status === 'keluar' ? 'disetujui' : $p->status;
-                            
-                            $colors = [
-                                'menunggu' => 'bg-yellow-100 text-yellow-800',
-                                'disetujui' => 'bg-green-100 text-green-800',
-                                'ditolak' => 'bg-red-100 text-red-800',
-                                'selesai' => 'bg-gray-100 text-gray-800',
-                            ];
-                        @endphp
-                        <span class="px-2 py-1 rounded text-xs font-bold {{ $colors[$displayStatus] ?? 'bg-gray-100 text-gray-800' }}">
-                            {{ ucfirst($displayStatus) }}
-                        </span>
-                    </td>
-                    <td class="p-3 text-center">
-                        {{-- QR Code tetap bisa dilihat jika statusnya disetujui, keluar, atau selesai --}}
-                        @if($p->qr_code && in_array($p->status, ['disetujui', 'keluar', 'selesai']))
-                            <button onclick="showQRCode({{ $p->id }})" class="text-indigo-600 hover:text-indigo-800 transition" title="Lihat QR Code">
-                                <i class="fas fa-qrcode text-2xl"></i>
-                            </button>
-                        @else
-                            <span class="text-gray-300">-</span>
-                        @endif
-                    </td>
-                </tr>
+                    @php
+                        $badges = [
+                            'menunggu'  => 'bg-amber-100 text-amber-700 border-amber-200',
+                            'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                            'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
+                            'keluar'    => 'bg-sky-100 text-sky-700 border-sky-200',
+                            'selesai'   => 'bg-gray-100 text-gray-600 border-gray-200',
+                        ];
+                    @endphp
+                    <tr class="hover:bg-blue-50/40 transition-colors">
+                        <td class="p-4 font-mono font-bold text-gray-800 text-xs">{{ $p->nomor_surat }}</td>
+                        <td class="p-4 text-gray-500">{{ $p->created_at->format('d/m/Y') }}</td>
+                        <td class="p-4 capitalize text-gray-600">{{ str_replace('_', ' ', $p->kategori) }}</td>
+                        <td class="p-4 text-gray-600">{{ $p->tujuan }}</td>
+                        <td class="p-4 text-gray-500 text-xs">{{ $p->jam_keluar }} – {{ $p->jam_kembali }}</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border {{ $badges[$p->status] ?? 'bg-gray-100 text-gray-600 border-gray-200' }}">
+                                {{ ucfirst($p->status) }}
+                            </span>
+                        </td>
+                        <td class="p-4 text-center">
+                            @if($p->qr_code && $p->status === 'disetujui')
+                                <button onclick="showQRCode({{ $p->id }})" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all inline-flex items-center justify-center" title="Lihat QR Code">
+                                    <i class="fas fa-qrcode"></i>
+                                </button>
+                            @else
+                                <span class="text-gray-300">—</span>
+                            @endif
+                        </td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="7" class="p-8 text-center text-gray-500">
-                        <i class="fas fa-inbox text-4xl mb-2 text-gray-300"></i>
-                        <p>Belum ada pengajuan dispensasi</p>
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="7" class="p-12 text-center">
+                            <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-50 text-blue-300 flex items-center justify-center text-2xl mb-3"><i class="fas fa-inbox"></i></div>
+                            <p class="text-gray-500 font-semibold text-sm">Belum ada pengajuan dispensasi</p>
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
     @if($pengajuan->hasPages())
-    <div class="p-4 border-t bg-gray-50">
-        {{ $pengajuan->links() }}
-    </div>
+        <div class="p-4 border-t border-gray-100 bg-gray-50/50">{{ $pengajuan->links() }}</div>
     @endif
 </div>
 
-{{-- Modal QR Code --}}
-<div id="qrModal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center backdrop-blur-sm">
-    <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 text-center">
-        <div class="mb-4">
-            <h3 class="text-lg font-bold text-gray-800">QR Code Dispensasi</h3>
-            <p class="text-sm text-gray-600 mt-1">Tunjukkan layar ini ke Petugas Satpam</p>
+{{-- ============ MODAL QR CODE ============ --}}
+<div id="qrModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-5 max-w-sm w-full text-center">
+        <div class="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center text-xl shadow-lg shadow-blue-500/30 mb-3">
+            <i class="fas fa-qrcode"></i>
         </div>
-        
-        {{-- ✅ DIPERBAIKI: Menghapus karakter '@' yang tidak sengaja tertulis --}}
-        <div id="qrContent" class="flex justify-center items-center bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 mb-4 min-h-[200px]">
-            <p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat...</p>
+        <h3 class="text-base font-bold text-gray-900">QR Code Dispensasi</h3>
+        <p class="text-xs text-gray-500 mt-1 mb-4">Tunjukkan layar ini ke Petugas Satpam</p>
+
+        <div id="qrContent" class="flex justify-center items-center bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 mb-4 min-h-[200px]">
+            <p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat...</p>
         </div>
-        
-        <button onclick="closeQRModal()" class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-medium">
+
+        <button onclick="closeQRModal()" class="w-full px-4 py-2.5 rounded-xl text-sm font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors">
             Tutup
         </button>
     </div>
@@ -123,9 +161,9 @@
 function showQRCode(dispensasiId) {
     const modal = document.getElementById('qrModal');
     const content = document.getElementById('qrContent');
-    
+
     modal.classList.remove('hidden');
-    content.innerHTML = '<p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat QR Code...</p>';
+    content.innerHTML = '<p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat QR Code...</p>';
 
     fetch(`/siswa/qr-code/${dispensasiId}`)
         .then(response => {
@@ -134,7 +172,7 @@ function showQRCode(dispensasiId) {
         })
         .then(data => {
             if (data.qr_code) {
-                content.innerHTML = `<img src="/storage/${data.qr_code}" alt="QR Code" class="w-56 h-56 object-contain">`;
+                content.innerHTML = `<img src="/storage/${data.qr_code}" alt="QR Code" class="w-52 h-52 object-contain rounded-lg">`;
             } else {
                 content.innerHTML = '<p class="text-red-500 text-sm">QR Code belum tersedia.</p>';
             }

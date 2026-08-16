@@ -12,10 +12,10 @@ class DashboardController extends Controller
     {
         $siswa = auth()->user()->siswa;
 
-        // ✅ Cari dispensasi aktif terbaru untuk ditampilkan QR Code-nya di dashboard
+        // ✅ Cari dispensasi disetujui yang belum di-scan untuk ditampilkan QR Code-nya di dashboard
         $dispensasiAktif = Dispensasi::with(['guruPiket.guru', 'siswa.kelas.jurusan'])
             ->where('siswa_id', $siswa->id)
-            ->whereIn('status', ['disetujui', 'keluar', 'selesai'])
+            ->where('status', 'disetujui')
             ->latest()
             ->first();
 

@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
             JurusanSeeder::class,
             KelasSeeder::class,
             GuruSeeder::class,
-            GuruPiketSeeder::class,   // 🔥 TAMBAHKAN INI: Wajib jalan sebelum DispensasiSeeder
+            // GuruPiketSeeder::class,   // 🔥 TAMBAHKAN INI: Wajib jalan sebelum DispensasiSeeder
             SiswaSeeder::class,
             SettingsSeeder::class,
             DispensasiSeeder::class,  // Sekarang ini akan aman!

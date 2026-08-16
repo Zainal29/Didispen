@@ -6,6 +6,7 @@ use App\Http\Controllers\Guru;
 use App\Http\Controllers\Guru\PengajuanController as GuruPengajuanController;
 use App\Http\Controllers\Guru\CetakStrukController;
 use App\Http\Controllers\Guru\PrintBluetoothController;
+use App\Http\Controllers\Admin\GuruPiketController;
 use App\Http\Controllers\Siswa;
 use App\Http\Controllers\Satpam;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('siswa', Admin\SiswaController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
     Route::resource('guru', Admin\GuruController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('piket', Admin\GuruPiketController::class)->only(['index', 'store', 'destroy']);
+  // ✅ Tambahkan 'update' agar form di view bisa mengirim data
+    Route::resource('piket', Admin\GuruPiketController::class)->only(['index', 'update', 'destroy']);
     Route::resource('satpam', Admin\SatpamController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::get('semua-pengajuan', [Admin\DispensasiController::class, 'index'])->name('semua.pengajuan');
@@ -63,6 +66,8 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::post('pengajuan/{dispensasi}/print-thermal', [PrintBluetoothController::class, 'print'])
         ->name('print-thermal');
 
+    Route::get('/pengajuan/{dispensasi}/print-data', [PrintBluetoothController::class, 'getData'])
+    ->name('guru.dispensasi.print-data');
 
     // Laporan
     Route::get('laporan', [Guru\LaporanController::class, 'index'])->name('laporan.index');
@@ -101,11 +106,17 @@ Route::middleware(['auth', 'role:satpam'])->prefix('satpam')->name('satpam.')->g
     Route::get('dashboard', [\App\Http\Controllers\Satpam\DashboardController::class, 'index'])->name('dashboard');
     Route::get('scan', [\App\Http\Controllers\Satpam\ScanController::class, 'index'])->name('scan');
     Route::post('scan/verify', [\App\Http\Controllers\Satpam\ScanController::class, 'verify'])->name('scan.verify');
-
     // Konfirmasi Manual
     Route::post('konfirmasi/{dispensasi}/keluar', [\App\Http\Controllers\Satpam\DashboardController::class, 'konfirmasiKeluar'])->name('konfirmasi.keluar');
     Route::post('konfirmasi/{dispensasi}/kembali', [\App\Http\Controllers\Satpam\DashboardController::class, 'konfirmasiKembali'])->name('konfirmasi.kembali');
 });
+
+
+// ==========================================
+// PUBLIC VERIFICATION (Akses via Scan QR)
+// ==========================================
+Route::get('/verifikasi/{nomorSurat}', [App\Http\Controllers\VerifikasiController::class, 'show'])
+    ->name('verifikasi.show');
 
 // ==========================================
 // TESTING & DEBUG ROUTES (Tanpa Auth)

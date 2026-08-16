@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class LaporanController extends Controller
@@ -17,7 +18,7 @@ class LaporanController extends Controller
 
         // Query dasar: hanya dispensasi yang diproses oleh guru yang login
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru'])
-            ->whereHas('guruPiket', function($q) use ($guru) {
+            ->whereHas('guruPiket', function ($q) use ($guru) {
                 $q->where('guru_id', $guru->id);
             });
 
@@ -52,80 +53,110 @@ class LaporanController extends Controller
     public function exportPdf(Request $request)
     {
         $guru = auth()->user()->guru;
-        
+
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru'])
-            ->whereHas('guruPiket', function($q) use ($guru) {
+            ->whereHas('guruPiket', function ($q) use ($guru) {
                 $q->where('guru_id', $guru->id);
             });
 
         // Terapkan filter yang sama dengan method index
-        if ($request->filled('tanggal_dari')) $query->whereDate('created_at', '>=', $request->tanggal_dari);
-        if ($request->filled('tanggal_sampai')) $query->whereDate('created_at', '<=', $request->tanggal_sampai);
-        if ($request->filled('status')) $query->where('status', $request->status);
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('created_at', '>=', $request->tanggal_dari);
+        }
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('created_at', '<=', $request->tanggal_sampai);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
         $dispensasi = $query->latest()->get();
 
-        // Pastikan nama view PDF sesuai dengan yang Anda buat
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.laporan-dispensasi', compact('dispensasi', 'guru'));
-        
-        return $pdf->download('Laporan_Dispensasi_Guru_' . now()->format('Y-m-d') . '.pdf');
+        // Menggunakan DomPDF untuk generate tampilan cetak yang rapi
+        $pdf = Pdf::loadView('pdf.laporan-dispensasi', compact('dispensasi', 'guru'))
+            ->setPaper('a4', 'landscape'); // Menggunakan format Landscape agar tabel muat
+
+        return $pdf->download('Laporan_Dispensasi_Guru_'.now()->format('Y-m-d').'.pdf');
     }
 
     /**
-     * Export Laporan ke Excel (CSV)
+     * Export Laporan ke Excel (.xls) Native
      */
     public function exportExcel(Request $request)
     {
         $guru = auth()->user()->guru;
-        
+
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru'])
-            ->whereHas('guruPiket', function($q) use ($guru) {
+            ->whereHas('guruPiket', function ($q) use ($guru) {
                 $q->where('guru_id', $guru->id);
             });
 
-        // Terapkan filter yang sama dengan method index
-        if ($request->filled('tanggal_dari')) $query->whereDate('created_at', '>=', $request->tanggal_dari);
-        if ($request->filled('tanggal_sampai')) $query->whereDate('created_at', '<=', $request->tanggal_sampai);
-        if ($request->filled('status')) $query->where('status', $request->status);
+        // Terapkan filter
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('created_at', '>=', $request->tanggal_dari);
+        }
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('created_at', '<=', $request->tanggal_sampai);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
         $dispensasi = $query->latest()->get();
 
-        $filename = 'Laporan_Dispensasi_Guru_' . now()->format('Y-m-d') . '.csv';
+        // Ekstensi diubah menjadi .xls
+        $filename = 'Laporan_Dispensasi_Guru_'.now()->format('Y-m-d').'.xls';
+
+        // Header khusus untuk memicu download format Excel
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
-        $callback = function() use ($dispensasi) {
-            echo "\xEF\xBB\xBF"; // BOM untuk memastikan karakter UTF-8 terbaca benar di Excel
-            $file = fopen('php://output', 'w');
-            
-            // Header Kolom
-            fputcsv($file, [
-                'No', 'No. Surat', 'Tanggal', 'Nama Siswa', 'Kelas', 
-                'Jam Keluar', 'Jam Kembali', 'Status', 'Tanda Tangan Digital'
-            ]);
+        // Format data menggunakan struktur tabel HTML agar dibaca rapi oleh Excel
+        $callback = function () use ($dispensasi) {
+            echo '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
+            echo '<head><meta charset="UTF-8"></head>';
+            echo '<body>';
+            echo '<table border="1">';
+            echo '<thead style="background-color: #f2f2f2;">';
+            echo '<tr>';
+            echo '<th><b>No</b></th>';
+            echo '<th><b>No. Surat</b></th>';
+            echo '<th><b>Tanggal Pengajuan</b></th>';
+            echo '<th><b>Kategori</b></th>';
+            echo '<th><b>Nama Siswa</b></th>';
+            echo '<th><b>Kelas</b></th>';
+            echo '<th><b>Alasan</b></th>';
+            echo '<th><b>Jam Keluar</b></th>';
+            echo '<th><b>Jam Kembali</b></th>';
+            echo '<th><b>Status</b></th>';
+            echo '</tr>';
+            echo '</thead>';
+            echo '<tbody>';
 
             $no = 1;
             foreach ($dispensasi as $row) {
-                // Cek apakah guru piket punya tanda tangan digital
-                $hasSignature = ($row->guruPiket && $row->guruPiket->guru && $row->guruPiket->guru->digital_signature) 
-                    ? 'Ada (Valid)' 
-                    : 'Belum Diupload';
-
-                fputcsv($file, [
-                    $no++,
-                    $row->nomor_surat,
-                    $row->created_at->format('d-m-Y'),
-                    $row->siswa->nama_lengkap,
-                    $row->siswa->kelas->nama_kelas ?? '-',
-                    $row->jam_keluar,      // Langsung string, tanpa ->format()
-                    $row->jam_kembali,     // Langsung string, tanpa ->format()
-                    ucfirst($row->status),
-                    $hasSignature
-                ]);
+                echo '<tr>';
+                echo '<td>'.$no++.'</td>';
+                echo '<td>'.$row->nomor_surat.'</td>';
+                echo '<td>'.$row->created_at->format('d/m/Y H:i').'</td>';
+                echo '<td>'.str_replace('_', ' ', strtoupper($row->kategori)).'</td>';
+                echo '<td>'.($row->siswa->nama_lengkap ?? '-').'</td>';
+                echo '<td>'.($row->siswa->kelas->nama_kelas ?? '-').'</td>';
+                echo '<td>'.$row->alasan.'</td>';
+                echo '<td>'.$row->jam_keluar.'</td>';
+                echo '<td>'.$row->jam_kembali.'</td>';
+                echo '<td>'.strtoupper($row->status).'</td>';
+                echo '</tr>';
             }
-            fclose($file);
+
+            echo '</tbody>';
+            echo '</table>';
+            echo '</body></html>';
         };
 
         return response()->stream($callback, 200, $headers);

@@ -11,8 +11,8 @@ class JurusanSeeder extends Seeder
     {
         $jurusans = [
             [
-                'kode_jurusan' => 'RPL',
-                'nama_jurusan' => 'Rekayasa Perangkat Lunak',
+                'kode_jurusan' => 'PPLG',
+                'nama_jurusan' => 'pengembangan Perangkat Lunak dan Gim',
             ],
             [
                 'kode_jurusan' => 'AKL',

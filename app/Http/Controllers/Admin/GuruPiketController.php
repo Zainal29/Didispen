@@ -9,15 +9,11 @@ use Illuminate\Http\Request;
 
 class GuruPiketController extends Controller
 {
-    /**
-     * Tampilkan daftar jadwal piket
-     */
     public function index()
     {
-        // Urutkan berdasarkan tanggal terdekat, lalu berdasarkan shift (pagi/siang)
+        // Tampilkan 7 hari (Senin-Minggu)
         $piket = GuruPiket::with('guru.user')
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('shift', 'asc')
+            ->orderByRaw("FIELD(hari, 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu')")
             ->get();
             
         $gurus = Guru::with('user')->get();
@@ -25,49 +21,15 @@ class GuruPiketController extends Controller
         return view('admin.piket.index', compact('piket', 'gurus'));
     }
 
-    /**
-     * Simpan jadwal piket baru (Fungsi yang baru ditambahkan)
-     */
-    public function store(Request $request)
-    {
-        // Validasi input dari form
-        $request->validate([
-            'tanggal' => ['required', 'date'],
-            'shift' => ['required', 'in:pagi,siang'],
-            'guru_id' => ['required', 'exists:guru,id'],
-        ]);
-
-        // Menggunakan updateOrCreate untuk mencegah duplikasi. 
-        // Jika di tanggal dan shift tersebut sudah ada jadwal, maka akan di-update (ditimpa).
-        GuruPiket::updateOrCreate(
-            [
-                'tanggal' => $request->tanggal,
-                'shift' => $request->shift,
-            ],
-            [
-                'guru_id' => $request->guru_id,
-            ]
-        );
-
-        return redirect()->route('admin.piket.index')
-            ->with('success', 'Jadwal piket baru berhasil ditambahkan!');
-    }
-
-    /**
-     * Update guru yang bertugas di hari/shift tertentu
-     */
+    // Admin hanya update guru yang bertugas di hari tertentu
     public function update(Request $request, $id)
     {
         $request->validate([
-            'guru_id' => ['required', 'exists:guru,id'],
+            'guru_id' => 'required|exists:guru,id',
         ]);
 
         $jadwal = GuruPiket::findOrFail($id);
-        
-        // Ganti guru yang bertugas di jadwal tersebut
-        $jadwal->update([
-            'guru_id' => $request->guru_id,
-        ]);
+        $jadwal->update(['guru_id' => $request->guru_id]);
 
         return redirect()->route('admin.piket.index')
             ->with('success', 'Jadwal piket berhasil diperbarui!');

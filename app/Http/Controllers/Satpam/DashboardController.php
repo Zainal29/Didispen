@@ -36,21 +36,12 @@ class DashboardController extends Controller
     }
 
     /**
-     * Konfirmasi manual siswa KELUAR (tanpa scan QR)
+     * Konfirmasi manual siswa KELUAR (Diharuskan via Scan QR)
      */
     public function konfirmasiKeluar(Dispensasi $dispensasi)
     {
-        if ($dispensasi->status !== 'disetujui') {
-            return redirect()->back()->with('error', 'Dispensasi harus dalam status disetujui untuk dikonfirmasi keluar.');
-        }
-
-        $dispensasi->update([
-            'status' => 'keluar',
-            'waktu_keluar_aktual' => now(),
-            'satpam_keluar_id' => auth()->id()
-        ]);
-
-        return redirect()->back()->with('success', "Siswa {$dispensasi->siswa->nama_lengkap} berhasil dikonfirmasi KELUAR.");
+        return redirect()->route('satpam.scan')
+            ->with('warning', 'Konfirmasi siswa keluar wajib dilakukan dengan meng-scan QR Code dispensasi siswa.');
     }
 
     /**
@@ -67,6 +58,13 @@ class DashboardController extends Controller
             'waktu_kembali_aktual' => now(),
             'satpam_kembali_id' => auth()->id()
         ]);
+
+        // Kirim notifikasi ke siswa bahwa status dispensasi telah SELESAI
+        app(\App\Services\NotifikasiService::class)->send(
+            $dispensasi->siswa->user_id,
+            "🏁 Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI. Terima kasih sudah kembali ke sekolah tepat waktu.",
+            route('siswa.pengajuan.show', $dispensasi)
+        );
 
         return redirect()->back()->with('success', "Siswa {$dispensasi->siswa->nama_lengkap} berhasil dikonfirmasi KEMBALI.");
     }

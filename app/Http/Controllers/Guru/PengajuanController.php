@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
+use App\Models\GuruPiket;
 use App\Services\DispensasiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,11 +18,16 @@ class PengajuanController extends Controller
     public function index(Request $request)
     {
         $guru = auth()->user()->guru;
-        $piketHariIni = $guru->piket()->where('tanggal', today())->first();
+        
+        // ✅ REVISI: Gunakan scope 'hariIni()' alih-alih where('tanggal', today())
+        $piketHariIni = GuruPiket::with('guru')
+            ->where('guru_id', $guru->id)
+            ->hariIni() // <-- INI KUNCINYA: Otomatis mencari hari ini (senin, selasa, dst)
+            ->first();
 
         if (!$piketHariIni) {
             return redirect()->route('guru.dashboard')
-                ->with('error', 'Anda tidak memiliki jadwal piket hari ini.');
+                ->with('error', 'Anda tidak memiliki jadwal piket hari ini. Hubungi admin untuk penugasan.');
         }
 
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru'])
@@ -40,6 +46,7 @@ class PengajuanController extends Controller
     {
         $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru']);
 
+        // Keamanan: Pastikan guru yang login adalah guru yang dijadwalkan di dispensasi ini
         if (!$dispensasi->guruPiket || $dispensasi->guruPiket->guru_id !== auth()->user()->guru->id) {
             abort(403, 'Akses ditolak. Anda bukan guru piket yang menangani dispensasi ini.');
         }
@@ -49,7 +56,6 @@ class PengajuanController extends Controller
 
     public function approve(Request $request, Dispensasi $dispensasi)
     {
-        // Load relasi yang dibutuhkan untuk data QR
         $dispensasi->load(['guruPiket', 'siswa.kelas']);
 
         if (!$dispensasi->guruPiket || $dispensasi->guruPiket->guru_id !== auth()->user()->guru->id) {
@@ -57,45 +63,37 @@ class PengajuanController extends Controller
         }
 
         try {
-            // 1. Siapkan data untuk QR Code
-            $qrData = [
-                'id' => $dispensasi->id,
-                'nomor_surat' => $dispensasi->nomor_surat,
-                'siswa' => $dispensasi->siswa->nama_lengkap ?? 'Siswa',
-                'kelas' => $dispensasi->siswa->kelas->nama_kelas ?? '-',
-                'jam_keluar' => $dispensasi->jam_keluar,
-                'jam_kembali' => $dispensasi->jam_kembali,
-                'berlaku_sampai' => now()->endOfDay()->toIso8601String(),
-                'token' => md5($dispensasi->id . $dispensasi->nomor_surat . 'SECRET_KEY_DISPENSI')
-            ];
-
+            // ✅ QR Code berisi URL verifikasi (bisa di-scan langsung dari HP Satpam)
+            $qrContent = url('/verifikasi/' . $dispensasi->nomor_surat);
             $qrCodePath = 'qr_codes/dispensasi_' . $dispensasi->id . '.svg';
 
-            // 2. Pastikan folder penyimpanan ada
             if (!Storage::disk('public')->exists('qr_codes')) {
                 Storage::disk('public')->makeDirectory('qr_codes');
             }
 
-            // 3. Generate dan simpan QR Code (Format SVG agar tajam & ringan)
             Storage::disk('public')->put(
                 $qrCodePath,
-                QrCode::format('svg')->size(300)->generate(json_encode($qrData))
+                QrCode::format('svg')->size(300)->generate($qrContent)
             );
 
-            // 4. Update status DAN path qr_code sekaligus (Hanya 1x query ke database)
             $dispensasi->update([
                 'status' => 'disetujui',
                 'qr_code' => $qrCodePath
             ]);
 
+            // Kirim notifikasi ke siswa
+            app(\App\Services\NotifikasiService::class)->send(
+                $dispensasi->siswa->user_id,
+                "✅ Pengajuan dispensasi ({$dispensasi->nomor_surat}) telah DISETUJUI oleh Guru Piket.",
+                route('siswa.pengajuan.show', $dispensasi)
+            );
+
             return redirect()->route('guru.pengajuan.show', $dispensasi)
                 ->with('success', "Dispensasi {$dispensasi->nomor_surat} berhasil disetujui. QR Code telah dibuat.");
 
         } catch (\Exception $e) {
-            // Catat error di log Laravel untuk debugging
             Log::error('Gagal generate QR Code Dispensasi: ' . $e->getMessage());
-
-            return redirect()->back()->with('error', 'Gagal membuat QR Code. Silakan coba lagi atau hubungi admin.');
+            return redirect()->back()->with('error', 'Gagal membuat QR Code. Silakan coba lagi.');
         }
     }
 
@@ -116,11 +114,4 @@ class PengajuanController extends Controller
         return redirect()->route('guru.pengajuan.index')
             ->with('success', "Dispensasi {$dispensasi->nomor_surat} ditolak.");
     }
-
-    /*
-     * ✅ CATATAN PENTING:
-     * Method `konfirmasiKeluar` dan `konfirmasiKembali` sengaja DIHAPUS dari controller ini.
-     * Alasannya: Konfirmasi fisik keluar/masuk siswa sekarang sepenuhnya menjadi
-     * tanggung jawab SATPAM melalui fitur Scan QR Code, bukan Guru Piket.
-     */
 }

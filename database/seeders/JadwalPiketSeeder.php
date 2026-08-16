@@ -10,9 +10,16 @@ class JadwalPiketSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ambil guru pertama yang ada (atau guru piket shared account)
-        $defaultGuru = Guru::first();
+        // Cari guru berdasarkan email user terkait (gurupiket@smkn1bangsri.sch.id)
+        $defaultGuru = Guru::whereHas('user', function ($query) {
+            $query->where('email', 'gurupiket@smkn1bangsri.sch.id');
+        })->first();
         
+        // Jika tidak ketemu berdasarkan email, fallback ambil guru pertama agar seeder tidak error
+        if (!$defaultGuru) {
+            $defaultGuru = Guru::first();
+        }
+
         if (!$defaultGuru) {
             $this->command->error('Tidak ada data guru. Jalankan GuruSeeder terlebih dahulu!');
             return;
@@ -29,6 +36,6 @@ class JadwalPiketSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ Jadwal piket Senin-Jumat berhasil dibuat!');
+        $this->command->info('✅ Jadwal piket Senin-Jumat berhasil dibuat menggunakan akun guru piket default!');
     }
 }

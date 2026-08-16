@@ -22,44 +22,35 @@
             font-size: 10px; 
             color: #666; 
         }
-        table { 
+        .data-table { 
             width: 100%; 
             border-collapse: collapse; 
             margin-top: 10px; 
         }
-        th, td { 
+        .data-table th, .data-table td { 
             border: 1px solid #ccc; 
             padding: 6px 8px; 
             text-align: left; 
             vertical-align: top; 
         }
-        th { 
+        .data-table th { 
             background-color: #f3f4f6; 
             font-weight: bold; 
             text-align: center; 
         }
         .text-center { text-align: center; }
-        .footer {
+        .capitalize { text-transform: capitalize; }
+        
+        /* Layout Footer Tanda Tangan */
+        .footer-table {
+            width: 100%;
             margin-top: 40px;
-            text-align: right;
             font-size: 11px;
-            page-break-inside: avoid; /* Mencegah tanda tangan terpotong antar halaman */
+            page-break-inside: avoid; /* Mencegah terpotong antar halaman */
         }
-        .signature-box {
-            margin-top: 10px;
-            display: inline-block;
+        .footer-table td {
             text-align: center;
-            min-width: 200px;
-        }
-        .signature-img {
-            max-height: 60px;
-            max-width: 150px;
-            margin-bottom: 5px;
-        }
-        .signature-line {
-            border-top: 1px solid #000;
-            padding-top: 5px;
-            font-weight: bold;
+            vertical-align: top;
         }
     </style>
 </head>
@@ -67,7 +58,7 @@
     <h2>Laporan Dispensasi Siswa</h2>
     <p class="sub-header">Dicetak oleh: {{ $guru->nama_lengkap ?? 'Administrator' }} | Tanggal: {{ now()->format('d F Y, H:i') }} WIB</p>
     
-    <table>
+    <table class="data-table">
         <thead>
             <tr>
                 <th width="4%">No</th>
@@ -92,7 +83,7 @@
                 <td class="text-center">{{ $d->jam_keluar ?? '-' }}</td>
                 <td class="text-center">{{ $d->jam_kembali ?? '-' }}</td>
                 <td>{{ $d->tujuan }}</td>
-                <td class="text-center" style="text-transform: capitalize;">{{ $d->status }}</td>
+                <td class="text-center capitalize">{{ $d->status }}</td>
             </tr>
             @empty
             <tr>
@@ -104,25 +95,19 @@
         </tbody>
     </table>
 
-    {{-- BAGIAN TANDA TANGAN DIGITAL --}}
-    <div class="footer">
-        <p>Mengetahui,</p>
-        <p>Guru Piket / Administrator</p>
-        
-        @if(isset($guru) && $guru->digital_signature)
-            {{-- ✅ INI KUNCINYA: Gunakan public_path() agar DomPDF bisa membaca gambar --}}
-            <img src="{{ public_path('storage/' . $guru->digital_signature) }}" class="signature-img" alt="Tanda Tangan Digital">
-            <div class="signature-line">
-                {{ $guru->nama_lengkap }}<br>
-                <small style="font-weight: normal;">NIP. {{ $guru->nip ?? '-' }}</small>
-            </div>
-        @else
-            <div class="signature-line" style="margin-top: 50px;">
-                {{ $guru->nama_lengkap ?? '________________' }}<br>
-                <small style="font-weight: normal;">NIP. {{ $guru->nip ?? '-' }}</small>
-            </div>
-            <p style="font-size: 9px; color: red; margin-top: 5px;">* Tanda tangan digital belum diupload</p>
-        @endif
-    </div>
+    {{-- BAGIAN TANDA TANGAN MANUAL (Rapi di Kanan Bawah) --}}
+    <table class="footer-table" border="0">
+        <tr>
+            <td width="65%"></td> <!-- Spacer Kosong di Kiri -->
+            <td width="35%">
+                Jepara, {{ now()->format('d F Y') }}<br>
+                Mengetahui,<br>
+                Guru Piket<br>
+                <br><br><br><br><br> <!-- Space untuk tanda tangan pulpen -->
+                <strong><u>{{ $guru->nama_lengkap ?? '________________________' }}</u></strong><br>
+                @if(!empty($guru->nip)) NIP. {{ $guru->nip }} @endif
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

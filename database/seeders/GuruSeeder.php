@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Guru;
+use App\Models\GuruPiket;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -11,29 +12,44 @@ class GuruSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Hardcode 1 Akun Guru Utama (Untuk testing login)
+        $emailPiket = 'gurupiket@smkn1bangsri.sch.id';
+        $passwordPiket = 'gurupiket2026';
+
+        // 1. Buat SATU akun shared untuk Guru Piket Utama
         $user = User::firstOrCreate(
-            ['email' => 'gurupiket@smkn1bangsri.sch.id'],
+            ['email' => $emailPiket],
             [
                 'name' => 'Guru Piket Utama',
-                'password' => Hash::make('gurupiket2026'),
+                'password' => Hash::make($passwordPiket),
                 'role' => 'guru',
-                'nis_nip' => 'PIKET001',
             ]
         );
 
-        Guru::firstOrCreate(
+        // 2. Buat data Guru untuk akun shared
+        $guru = Guru::firstOrCreate(
             ['user_id' => $user->id],
             [
                 'nip' => 'PIKET001',
-                'nama_lengkap' => 'Guru Piket Utama',
+                'nama_lengkap' => 'GURU PIKET UTAMA',
                 'mata_pelajaran' => '-',
             ]
         );
 
-        // 2. Generate 15 Guru Dinamis tambahan via Factory
-        Guru::factory()->count(15)->create();
+        // 3. Buat jadwal piket 7 hari otomatis untuk Guru Piket Utama
+        $hariList = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
+        foreach ($hariList as $hari) {
+            GuruPiket::updateOrCreate(
+                ['hari' => $hari], 
+                ['guru_id' => $guru->id]
+            );
+        }
 
-        $this->command->info('✅ GuruSeeder selesai. (1 Guru Statis + 15 Guru Dinamis dibuat)');
+        // 4. TAMBAHAN: Generate 5 Guru dummy tambahan menggunakan GuruFactory
+        Guru::factory()->count(5)->create();
+
+        $this->command->info('✅ Akun Guru Piket (Shared) & 5 Guru Tambahan siap digunakan!');
+        $this->command->info('📧 Email    : ' . $emailPiket);
+        $this->command->info('🔑 Password : ' . $passwordPiket);
+        $this->command->info('📅 Jadwal 7 hari otomatis dibuat.');
     }
 }

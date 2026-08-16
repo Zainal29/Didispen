@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\User;
-use App\Models\Jurusan;
-use App\Models\Kelas;
+use Faker\Factory as FakerFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 
@@ -15,26 +15,29 @@ class SiswaFactory extends Factory
 
     public function definition(): array
     {
-        $namaLengkap = $this->faker->name();
+        // Gunakan instance Faker lokal Indonesia (id_ID) untuk nama realistis
+        $fakerID = FakerFactory::create('id_ID');
 
-        // 1. Generate otomatis akun User untuk siswa ini
+        $namaLengkap = $fakerID->name();
+        $nomorInduk = $fakerID->unique()->numerify('2026####'); // Nomor induk siswa
+
+        // 1. Buat otomatis akun User untuk siswa ini (menyimpan nis_nip sesuai struktur tabel users)
         $user = User::create([
             'name' => $namaLengkap,
-            'email' => $this->faker->unique()->safeEmail(),
-            'password' => Hash::make('password'), // Default password
+            'email' => $fakerID->unique()->safeEmail(),
+            'password' => Hash::make('password'),
             'role' => 'siswa',
-            'nis_nip' => $this->faker->unique()->numerify('2026####'), // NIS otomatis
+            'nis_nip' => $nomorInduk,
         ]);
 
-        // 2. Relasikan dengan tabel Siswa
+        // 2. Relasikan dengan tabel Siswa (berdasarkan struktur kolom foreign key di phpMyAdmin)
         return [
             'user_id' => $user->id,
-            'jurusan_id' => Jurusan::inRandomOrder()->first()->id ?? 1,
-            'kelas_id' => Kelas::inRandomOrder()->first()->id ?? 1,
+            'kelas_id' => Kelas::inRandomOrder()->first()?->id ?? 1,
             'nama_lengkap' => $namaLengkap,
-            'tanggal_lahir' => $this->faker->dateTimeBetween('-18 years', '-15 years')->format('Y-m-d'),
-            'alamat' => $this->faker->address(),
-            'no_telepon' => $this->faker->phoneNumber(),
+            'tanggal_lahir' => $fakerID->dateTimeBetween('-18 years', '-15 years')->format('Y-m-d'),
+            'alamat' => $fakerID->address(),
+            'no_telepon' => $fakerID->phoneNumber(),
         ];
     }
 }

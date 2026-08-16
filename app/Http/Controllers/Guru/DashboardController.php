@@ -13,25 +13,26 @@ class DashboardController extends Controller
     {
         $guru = auth()->user()->guru;
 
-        // 1. Tentukan shift berdasarkan waktu saat ini
-        $shiftIni = now()->hour < 12 ? 'pagi' : 'siang';
-        $tanggalIni = today();
+        // ✅ REVISI: Cari jadwal piket untuk HARI INI menggunakan scope 'hariIni'
+        // Scope ini otomatis menerjemahkan hari (misal: Friday) menjadi 'jumat' di database
+        $piketHariIni = GuruPiket::with('guru')->hariIni()->first();
 
-        // 2. ✅ Cari jadwal piket berdasarkan tanggal dan shift
-        $piketHariIni = GuruPiket::with('guru')
-            ->where('tanggal', $tanggalIni)
-            ->where('shift', $shiftIni)
-            ->first();
-
+        // Jika tidak ada jadwal piket yang diatur untuk hari ini
         if (!$piketHariIni) {
             return view('guru.dashboard', [
-                'stats' => ['piket_hari_ini' => null, 'pending' => 0, 'keluar' => 0, 'selesai' => 0, 'total' => 0],
+                'stats' => [
+                    'piket_hari_ini' => null,
+                    'pending' => 0,
+                    'keluar' => 0,
+                    'selesai' => 0,
+                    'total' => 0,
+                ],
                 'pendingDispensasi' => collect(),
                 'siswaKeluar' => collect(),
             ]);
         }
 
-        // Statistik
+        // Statistik berdasarkan guru_piket_id hari ini
         $stats = [
             'piket_hari_ini' => $piketHariIni,
             'pending' => Dispensasi::where('guru_piket_id', $piketHariIni->id)->where('status', 'menunggu')->count(),
@@ -40,12 +41,14 @@ class DashboardController extends Controller
             'total' => Dispensasi::where('guru_piket_id', $piketHariIni->id)->whereDate('created_at', today())->count(),
         ];
 
+        // Pengajuan yang masih menunggu persetujuan
         $pendingDispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
             ->where('guru_piket_id', $piketHariIni->id)
             ->where('status', 'menunggu')
             ->latest()
             ->get();
 
+        // Siswa yang sedang keluar (untuk monitoring)
         $siswaKeluar = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
             ->where('guru_piket_id', $piketHariIni->id)
             ->where('status', 'keluar')

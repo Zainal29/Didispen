@@ -11,14 +11,11 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('guru_id')->constrained('guru')->cascadeOnDelete();
             
-            // ✅ DIKEMBALIKAN: Menggunakan tanggal dan shift
-            $table->date('tanggal');
-            $table->enum('shift', ['pagi', 'siang']);
+            // ✅ 7 HARI: Senin sampai Minggu (otomatis, tidak perlu input manual)
+            $table->enum('hari', ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'])
+                  ->unique();
             
             $table->timestamps();
-            
-            // Mencegah duplikasi jadwal di tanggal dan shift yang sama
-            $table->unique(['tanggal', 'shift']);
         });
     }
 
