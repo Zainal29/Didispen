@@ -26,22 +26,37 @@ Sebelum melakukan installasi, pastikan lingkungan server/komputer Anda memenuhi 
 
 | Komponen | Persyaratan Minimum |
 | :--- | :--- |
-| **PHP Version** | `>= 8.2` |
+| **PHP Version** | `>= 8.2` (Disarankan PHP 8.3) |
 | **Framework** | `Laravel 11.x` |
 | **Database** | MySQL / MariaDB `>= 10.4` |
 | **Dependency Manager** | Composer `>= 2.5` |
 | **Web Server** | Nginx / Apache / Artisan Serve |
 | **Ekstensi PHP Wajib** | `php-gd` (untuk QR Code), `php-pdo`, `php-mbstring`, `php-xml`, `php-curl`, `php-zip` |
 
-### 📦 Package Dependencies Utama
-- `simplesoftwareio/simple-qrcode` — Generasi Kode QR Dispensasi (SVG)
-- `barryvdh/laravel-dompdf` — Generasi Laporan Cetak PDF
-- `Alpine.js` & `TailwindCSS` — Interaktivitas UI & Layout Responsif
-- `SweetAlert2` — Notifikasi & Alert Interaktif
+---
+
+## 📦 Daftar Package Utama & Cara Install Manual
+
+Jika Anda melakukan pengembangan baru atau perlu memasang kembali package yang dibutuhkan sistem secara manual, jalankan perintah berikut:
+
+### 1. Simple QR Code (Generasi Kode QR SVG)
+```bash
+composer require simplesoftwareio/simple-qrcode
+```
+
+### 2. Laravel DomPDF (Cetak Laporan PDF)
+```bash
+composer require barryvdh/laravel-dompdf
+```
+
+### 3. ESC/POS Printer (Thermal Printer Bluetooth/USB)
+```bash
+composer require mike42/escpos-php
+```
 
 ---
 
-## 🛠️ Panduan Instalasi (Setelah Clone / Download)
+## 🛠️ Panduan Instalasi (Setelah Clone / Download Proyek)
 
 Ikuti langkah-langkah di bawah ini untuk menjalankan proyek setelah berhasil melakukan `git clone` atau mengunduh source code:
 
@@ -51,7 +66,8 @@ git clone https://github.com/username/Digipen.git
 cd Digipen
 ```
 
-### 2. Install Dependensi Composer
+### 2. Install Seluruh Dependensi Package (Composer)
+Perintah ini akan otomatis meng-install seluruh package yang terdaftar di `composer.json` (`simple-qrcode`, `dompdf`, `escpos-php`, dll.):
 ```bash
 composer install
 ```
