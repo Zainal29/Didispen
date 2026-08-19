@@ -126,8 +126,8 @@
                                 <i class="fas fa-times"></i>
                             </button>
                         @elseif(in_array($d->status, ['disetujui', 'keluar', 'selesai']))
-                            <a href="{{ route('guru.cetak-struk', $d) }}" target="_blank"
-                               class="w-9 h-9 rounded-xl text-white bg-purple-600 hover:bg-purple-700 inline-flex items-center justify-center active:scale-95 transition-all" title="Cetak Struk">
+                            <a href="{{ route('guru.cetak-pdf', [$d, 'format' => 'thermal']) }}" target="_blank"
+                               class="w-9 h-9 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 inline-flex items-center justify-center active:scale-95 transition-all" title="Cetak PDF Thermal (58mm)">
                                 <i class="fas fa-print"></i>
                             </a>
                         @endif
@@ -205,8 +205,8 @@
                                             <i class="fas fa-times text-xs"></i>
                                         </button>
                                     @elseif(in_array($d->status, ['disetujui', 'keluar', 'selesai']))
-                                        <a href="{{ route('guru.cetak-struk', $d) }}" target="_blank"
-                                           class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white flex items-center justify-center transition-all shadow-sm" title="Cetak Struk">
+                                        <a href="{{ route('guru.cetak-pdf', [$d, 'format' => 'thermal']) }}" target="_blank"
+                                           class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition-all shadow-sm" title="Cetak PDF Thermal (58mm)">
                                             <i class="fas fa-print text-xs"></i>
                                         </a>
                                     @endif

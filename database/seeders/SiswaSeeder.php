@@ -39,7 +39,7 @@ class SiswaSeeder extends Seeder
         );
 
         // 2. Generate 50 Siswa dummy tambahan menggunakan Factory
-        Siswa::factory()->count(50)->create();
+        Siswa::factory()->count(10)->create();
 
         $this->command->info('✅ SiswaSeeder selesai. (Akun khusus zainal@gmail.com & 50 Siswa dinamis berhasil dibuat)');
     }

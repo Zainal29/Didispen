@@ -62,6 +62,9 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::get('pengajuan/{dispensasi}/cetak-struk', [CetakStrukController::class, 'index'])
         ->name('cetak-struk');
 
+    Route::get('pengajuan/{dispensasi}/cetak-pdf', [CetakStrukController::class, 'exportPdf'])
+        ->name('cetak-pdf');
+
     // ✅ PERBAIKAN: Hapus prefix '/guru/' karena sudah ada di group
     Route::post('pengajuan/{dispensasi}/print-thermal', [PrintBluetoothController::class, 'print'])
         ->name('print-thermal');

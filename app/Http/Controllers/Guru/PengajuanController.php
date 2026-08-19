@@ -88,7 +88,7 @@ class PengajuanController extends Controller
             app(\App\Services\NotifikasiService::class)->send(
                 $dispensasi->siswa->user_id,
                 "✅ Pengajuan dispensasi ({$dispensasi->nomor_surat}) telah DISETUJUI oleh Guru Piket.",
-                route('siswa.pengajuan.show', $dispensasi)
+                route('siswa.pengajuan.show', $dispensasi, false)
             );
 
             return redirect()->route('guru.pengajuan.show', $dispensasi)

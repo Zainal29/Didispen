@@ -69,7 +69,7 @@ class ScanController extends Controller
             app(\App\Services\NotifikasiService::class)->send(
                 $dispensasi->siswa->user_id,
                 "🚪 Dispensasi ({$dispensasi->nomor_surat}) telah DI-SCAN oleh Satpam di pos gerbang (Siswa Keluar).",
-                route('siswa.pengajuan.show', $dispensasi)
+                route('siswa.pengajuan.show', $dispensasi, false)
             );
 
             return response()->json([

@@ -72,7 +72,7 @@ class DispensasiService
         $this->notifikasiService->send(
             $dispensasi->siswa->user_id,
             "✅ Pengajuan Anda ({$dispensasi->nomor_surat}) telah DISETUJUI.",
-            route('siswa.pengajuan.show', $dispensasi->id)
+            route('siswa.pengajuan.show', $dispensasi->id, false)
         );
 
         $this->auditLogService->log($guru->user_id, 'approve', 'dispensasi', $dispensasi->id, null, [
@@ -91,7 +91,7 @@ class DispensasiService
         $this->notifikasiService->send(
             $dispensasi->siswa->user_id,
             "❌ Pengajuan Anda ({$dispensasi->nomor_surat}) DITOLAK. Alasan: {$catatan}",
-            route('siswa.pengajuan.show', $dispensasi->id)
+            route('siswa.pengajuan.show', $dispensasi->id, false)
         );
 
         $this->auditLogService->log($guru->user_id, 'reject', 'dispensasi', $dispensasi->id, null, [
@@ -118,7 +118,7 @@ class DispensasiService
         $this->notifikasiService->send(
             $dispensasi->siswa->user_id,
             "🏁 Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI.",
-            route('siswa.pengajuan.show', $dispensasi->id)
+            route('siswa.pengajuan.show', $dispensasi->id, false)
         );
 
         $this->auditLogService->log($guru->user_id, 'konfirmasi_kembali', 'dispensasi', $dispensasi->id);

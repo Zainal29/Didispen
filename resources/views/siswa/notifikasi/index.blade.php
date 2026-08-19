@@ -63,8 +63,14 @@
                         <p class="text-sm font-semibold text-gray-800 mt-1 leading-relaxed">{{ $notif->message }}</p>
 
                         @if($notif->link)
+                            @php
+                                $linkUrl = $notif->link;
+                                if (\Illuminate\Support\Str::startsWith($linkUrl, ['http://', 'https://'])) {
+                                    $linkUrl = parse_url($linkUrl, PHP_URL_PATH);
+                                }
+                            @endphp
                             <div class="mt-2.5 flex items-center gap-2">
-                                <a href="{{ $notif->link }}" class="inline-flex items-center text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline">
+                                <a href="{{ $linkUrl }}" class="inline-flex items-center text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline">
                                     Lihat Detail Pengajuan <i class="fas fa-arrow-right ml-1 text-[10px]"></i>
                                 </a>
                             </div>

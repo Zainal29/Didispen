@@ -89,32 +89,22 @@
                     </div>
                 @endif
 
-                {{-- QR Code Section (Muncul jika sudah disetujui/keluar/selesai) --}}
-                {{-- @if($dispensasi->qr_code && in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
-                <div class="mt-6 p-6 bg-indigo-50 border-2 border-dashed border-indigo-300 rounded-2xl text-center">
-                    <h4 class="text-base font-bold text-indigo-800 mb-2">
-                        <i class="fas fa-qrcode mr-2"></i>QR Code Dispensasi
+                {{-- Cetak PDF Thermal 58mm (Muncul jika sudah disetujui/keluar/selesai) --}}
+                @if(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
+                <div class="mt-4 p-5 bg-emerald-50/80 border-2 border-dashed border-emerald-200 rounded-2xl text-center">
+                    <h4 class="text-sm font-bold text-emerald-900 mb-1">
+                        <i class="fas fa-print mr-1.5"></i>Cetak Struk Dispensasi
                     </h4>
-                    <p class="text-xs text-indigo-600 mb-4">Tunjukkan atau cetak QR Code ini agar dapat discan oleh Petugas Satpam.</p>
+                    <p class="text-xs text-emerald-600 mb-3">Klik tombol di bawah untuk mencetak PDF Struk Thermal (Ukuran Kertas 58mm).</p>
 
-                    <div class="bg-white p-4 rounded-xl shadow-sm inline-block mx-auto border border-gray-200">
-                        <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code" class="w-48 h-48 mx-auto object-contain">
-                    </div>
-
-                    <p class="text-xs text-gray-500 mt-3 font-mono font-bold">No. Surat: {{ $dispensasi->nomor_surat }}</p>
-
-                    <div class="mt-4 flex justify-center gap-2.5">
-                        <a href="{{ asset('storage/' . $dispensasi->qr_code) }}" download class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition shadow-md shadow-indigo-500/20">
-                            <i class="fas fa-download mr-1.5"></i> Download QR
-                        </a> --}}
-                        
-                        {{-- TOMBOL CETAK OTOMATIS BERDASARKAN PERANGKAT (HP / PC) --}}
-                        {{-- <a href="#" id="btnCetakOtomatis" onclick="handleCetakOtomatis(event)" class="px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded-xl hover:bg-purple-700 transition shadow-md shadow-purple-500/20">
-                            <i class="fas fa-print mr-1.5" id="iconCetak"></i> <span id="textCetak">Cetak Struk / PDF</span>
+                    <div class="flex justify-center">
+                        <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" target="_blank"
+                           class="px-5 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition shadow-md shadow-emerald-500/20 inline-flex items-center">
+                            <i class="fas fa-file-pdf mr-2 text-sm"></i> Cetak PDF Thermal (58mm)
                         </a>
                     </div>
                 </div>
-                @endif --}}
+                @endif
 
                 {{-- Action Buttons --}}
                 <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-2.5">

@@ -63,7 +63,7 @@ class DashboardController extends Controller
         app(\App\Services\NotifikasiService::class)->send(
             $dispensasi->siswa->user_id,
             "🏁 Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI. Terima kasih sudah kembali ke sekolah tepat waktu.",
-            route('siswa.pengajuan.show', $dispensasi)
+            route('siswa.pengajuan.show', $dispensasi, false)
         );
 
         return redirect()->back()->with('success', "Siswa {$dispensasi->siswa->nama_lengkap} berhasil dikonfirmasi KEMBALI.");
