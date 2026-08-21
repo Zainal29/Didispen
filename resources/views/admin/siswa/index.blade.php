@@ -7,42 +7,47 @@
 @include('components.alert')
 
 <div class="bg-white rounded-lg shadow">
-    <div class="p-5 border-b flex justify-between items-center">
+    <div class="p-5 border-b flex justify-between items-center flex-wrap gap-2">
         <h3 class="text-lg font-bold text-gray-800">Daftar Siswa</h3>
-        <button onclick="openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm transition">
-            <i class="fas fa-plus mr-1"></i> Tambah Siswa
-        </button>
+        <div class="flex items-center gap-2">
+            <form action="{{ route('admin.sipintu.sync-siswa') }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=\'fas fa-spinner fa-spin mr-1\'></i> Menyinkronkan...';">
+                @csrf
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm font-medium transition shadow-sm flex items-center gap-1.5" title="Sinkronkan data siswa, kelas, dan jurusan dari SiPintu Gateway">
+                    <i class="fas fa-sync-alt"></i> Sinkronisasi SiPintu
+                </button>
+            </form>
+            <button onclick="openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm transition font-medium flex items-center gap-1.5">
+                <i class="fas fa-plus"></i> Tambah Siswa
+            </button>
+        </div>
     </div>
 
     {{-- Filter --}}
     <div class="p-4 bg-gray-50 border-b">
-        <form method="GET" class="flex flex-wrap gap-3 items-end">
-            <div class="flex-1 min-w-[200px]">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Cari Nama</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Masukkan nama siswa..." class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+        <form method="GET" id="filterForm" class="flex flex-wrap gap-3 items-end">
+            <div class="flex-1 min-w-[220px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cari Siswa</label>
+                <input type="text" name="search" id="searchInput" value="{{ request('search') }}" placeholder="Nama, NIS, atau email..." class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
             </div>
-            <div class="flex-1 min-w-[200px]">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Jurusan</label>
-                <select name="jurusan_id" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <option value="">Semua Jurusan</option>
-                    @foreach($jurusans as $j)
-                        <option value="{{ $j->id }}" {{ request('jurusan_id') == $j->id ? 'selected' : '' }}>{{ $j->nama_jurusan }}</option>
+            <div class="flex-1 min-w-[180px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Urutkan Berdasarkan</label>
+                <select name="sort" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    @foreach($sortable as $key => $label)
+                        <option value="{{ $key }}" {{ $sort == $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="flex-1 min-w-[200px]">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
-                <select name="kelas_id" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <option value="">Semua Kelas</option>
-                    @foreach($kelas as $k)
-                        <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
-                    @endforeach
+            <div class="flex-1 min-w-[120px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Arah</label>
+                <select name="dir" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <option value="asc" {{ $dir == 'asc' ? 'selected' : '' }}>A - Z / Lama</option>
+                    <option value="desc" {{ $dir == 'desc' ? 'selected' : '' }}>Z - A / Baru</option>
                 </select>
             </div>
-            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-medium">
                 <i class="fas fa-search mr-1"></i> Cari
             </button>
-            <a href="{{ route('admin.siswa.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Reset</a>
+            <a href="{{ route('admin.siswa.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 font-medium">Reset</a>
         </form>
     </div>
 
@@ -51,22 +56,32 @@
         <table class="w-full">
             <thead class="bg-gray-50 text-xs uppercase text-gray-600">
                 <tr>
-                    <th class="p-3 text-left">Nama</th>
+                    <th class="p-3 text-left">
+                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nis_nip', 'dir' => ($sort == 'nis_nip' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-indigo-600">
+                            NIS / NISN @if($sort == 'nis_nip')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }} ml-1"></i>@endif
+                        </a>
+                    </th>
+                    <th class="p-3 text-left">
+                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nama_lengkap', 'dir' => ($sort == 'nama_lengkap' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-indigo-600">
+                            Nama @if($sort == 'nama_lengkap')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }} ml-1"></i>@endif
+                        </a>
+                    </th>
                     <th class="p-3 text-left">Email</th>
-                    <th class="p-3 text-left">Jurusan</th>
-                    <th class="p-3 text-left">Kelas</th>
-                    <th class="p-3 text-left">Terdaftar</th>
+                    <th class="p-3 text-left">
+                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'dir' => ($sort == 'created_at' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-indigo-600">
+                            Terdaftar @if($sort == 'created_at')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }} ml-1"></i>@endif
+                        </a>
+                    </th>
                     <th class="p-3 text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y">
                 @forelse($siswas as $s)
                 <tr class="hover:bg-gray-50 transition">
+                    <td class="p-3 font-mono text-sm text-gray-700 font-medium">{{ $s->user->nis_nip ?? '-' }}</td>
                     <td class="p-3 font-semibold">{{ $s->nama_lengkap }}</td>
-                    <td class="p-3 text-sm">{{ $s->user->email }}</td>
-                    <td class="p-3 text-sm">{{ $s->jurusan->nama_jurusan }}</td>
-                    <td class="p-3 text-sm">{{ $s->kelas->nama_kelas }}</td>
-                    <td class="p-3 text-sm">{{ $s->created_at->format('d/m/Y') }}</td>
+                    <td class="p-3 text-sm text-gray-600">{{ $s->user->email }}</td>
+                    <td class="p-3 text-sm text-gray-500">{{ $s->created_at->format('d/m/Y') }}</td>
                     <td class="p-3 text-center">
                         <button onclick="editItem({{ $s->id }})" class="text-blue-600 hover:text-blue-800 mr-2" title="Edit">
                             <i class="fas fa-edit"></i>
@@ -78,7 +93,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="p-8 text-center text-gray-500">
+                    <td colspan="5" class="p-8 text-center text-gray-500">
                         <i class="fas fa-user-slash text-4xl mb-2 text-gray-300"></i>
                         <p>Belum ada data siswa</p>
                     </td>
@@ -130,29 +145,6 @@
                     <input type="password" id="password" name="password" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
                     <span class="text-red-600 text-sm" id="error_password"></span>
                     <p class="text-xs text-gray-500 mt-1" id="passwordHint">Minimal 6 karakter. Biarkan kosong saat edit.</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Jurusan *</label>
-                    <select id="jurusan_id" name="jurusan_id" required class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <option value="">-- Pilih Jurusan --</option>
-                        @foreach($jurusans as $j)
-                            <option value="{{ $j->id }}">{{ $j->nama_jurusan }}</option>
-                        @endforeach
-                    </select>
-                    <span class="text-red-600 text-sm" id="error_jurusan_id"></span>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Kelas *</label>
-                    <select id="kelas_id" name="kelas_id" required class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <option value="">-- Pilih Kelas --</option>
-                        @foreach($kelas as $k)
-                            <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
-                        @endforeach
-                    </select>
-                    <span class="text-red-600 text-sm" id="error_kelas_id"></span>
                 </div>
             </div>
 
@@ -268,8 +260,6 @@ function editItem(siswaId) {
             document.getElementById('nama_lengkap').value = data.nama_lengkap;
             document.getElementById('nis_nip').value = data.user.nis_nip;
             document.getElementById('email').value = data.user.email;
-            document.getElementById('jurusan_id').value = data.jurusan_id;
-            document.getElementById('kelas_id').value = data.kelas_id;
             document.getElementById('tanggal_lahir').value = data.tanggal_lahir;
             document.getElementById('alamat').value = data.alamat || '';
             document.getElementById('no_telepon').value = data.no_telepon || '';

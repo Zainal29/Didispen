@@ -28,8 +28,8 @@ class StoreSiswaRequest extends FormRequest
                 Rule::unique('users', 'email')->ignore($userId)
             ],
             'password'     => $this->isMethod('post') ? 'required|string|min:6' : 'nullable|string|min:6',
-            'jurusan_id'   => 'required|exists:jurusan,id',
-            'kelas_id'     => 'required|exists:kelas,id',
+            'jurusan_id'   => 'nullable|exists:jurusan,id',
+            'kelas_id'     => 'nullable|exists:kelas,id',
             'tanggal_lahir'=> 'nullable|date',
             'alamat'       => 'nullable|string|max:500',
             'no_telepon'   => 'nullable|string|max:15',
@@ -47,8 +47,6 @@ class StoreSiswaRequest extends FormRequest
             'email.unique'          => 'Email sudah terdaftar.',
             'password.required'     => 'Password wajib diisi.',
             'password.min'          => 'Password minimal 6 karakter.',
-            'jurusan_id.required'   => 'Jurusan wajib dipilih.',
-            'kelas_id.required'     => 'Kelas wajib dipilih.',
         ];
     }
 }

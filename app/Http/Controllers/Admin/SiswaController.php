@@ -3,8 +3,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSiswaRequest;
-use App\Models\Jurusan;
-use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\User;
 use App\Services\AuditLogService;
@@ -18,17 +16,39 @@ class SiswaController extends Controller
 
     public function index(Request $request)
     {
+        $sortable = [
+            'nama_lengkap' => 'Nama Siswa',
+            'nis_nip'      => 'NIS / NISN',
+            'created_at'   => 'Terdaftar',
+        ];
+        $sort = $request->get('sort', 'created_at');
+        $dir  = $request->get('dir', 'desc');
+        if (!array_key_exists($sort, $sortable)) $sort = 'created_at';
+        if (!in_array($dir, ['asc', 'desc'])) $dir = 'desc';
+
         $query = Siswa::with(['user', 'jurusan', 'kelas']);
-        if ($request->filled('jurusan_id')) $query->where('jurusan_id', $request->jurusan_id);
-        if ($request->filled('kelas_id')) $query->where('kelas_id', $request->kelas_id);
         if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where('nama_lengkap', 'like', "%{$s}%");
+            $s = trim($request->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('nama_lengkap', 'like', "%{$s}%")
+                  ->orWhereHas('user', function ($u) use ($s) {
+                      $u->where('nis_nip', 'like', "%{$s}%")
+                        ->orWhere('email', 'like', "%{$s}%")
+                        ->orWhere('name', 'like', "%{$s}%");
+                  });
+            });
         }
-        $siswas = $query->latest()->paginate(15);
-        $jurusans = Jurusan::all();
-        $kelas = Kelas::all();
-        return view('admin.siswa.index', compact('siswas', 'jurusans', 'kelas'));
+
+        if ($sort === 'nis_nip') {
+            $query->join('users', 'siswa.user_id', '=', 'users.id')
+                  ->orderBy('users.nis_nip', $dir)
+                  ->select('siswa.*');
+        } else {
+            $query->orderBy($sort, $dir);
+        }
+
+        $siswas = $query->paginate(15)->withQueryString();
+        return view('admin.siswa.index', compact('siswas', 'sortable', 'sort', 'dir'));
     }
 
     public function store(StoreSiswaRequest $request)

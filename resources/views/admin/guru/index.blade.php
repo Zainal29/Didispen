@@ -4,22 +4,76 @@
 
 @section('content')
 <div class="bg-white rounded-lg shadow">
-    <div class="p-5 border-b flex justify-between items-center">
-        <h3 class="text-lg font-bold">Daftar Guru ({{ $gurus->total() }})</h3>
-        <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
-            <i class="fas fa-plus mr-1"></i> Tambah Guru
-        </button>
-        @include('components.alert')
+    <div class="p-5 border-b flex justify-between items-center flex-wrap gap-2">
+        <h3 class="text-lg font-bold text-gray-800">Daftar Guru ({{ $gurus->total() }})</h3>
+        <div class="flex items-center gap-2">
+            <form action="{{ route('admin.sipintu.sync-guru') }}" method="POST" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<i class=\'fas fa-spinner fa-spin mr-1\'></i> Menyinkronkan...';">
+                @csrf
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm font-medium transition shadow-sm flex items-center gap-1.5" title="Sinkronkan data guru dari SiPintu Gateway">
+                    <i class="fas fa-sync-alt"></i> Sinkronisasi SiPintu
+                </button>
+            </form>
+            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition flex items-center gap-1.5">
+                <i class="fas fa-plus"></i> Tambah Guru
+            </button>
+        </div>
+    </div>
+    @include('components.alert')
+
+    {{-- Filter --}}
+    <div class="p-4 bg-gray-50 border-b">
+        <form method="GET" class="flex flex-wrap gap-3 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cari Nama / NIP / Mapel</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Masukkan kata kunci..." class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Urutkan</label>
+                <select name="sort" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    @foreach($sortable as $key => $label)
+                        <option value="{{ $key }}" {{ $sort == $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex-1 min-w-[120px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Arah</label>
+                <select name="dir" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="asc" {{ $dir == 'asc' ? 'selected' : '' }}>A - Z / Lama</option>
+                    <option value="desc" {{ $dir == 'desc' ? 'selected' : '' }}>Z - A / Baru</option>
+                </select>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <i class="fas fa-search mr-1"></i> Cari
+            </button>
+            <a href="{{ route('admin.guru.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Reset</a>
+        </form>
     </div>
 
     <div class="overflow-x-auto">
         <table class="w-full">
             <thead class="bg-gray-50 text-xs uppercase text-gray-600">
                 <tr>
-                    <th class="p-3 text-left">NIP</th>
-                    <th class="p-3 text-left">Nama</th>
-                    <th class="p-3 text-left">Mata Pelajaran</th>
+                    <th class="p-3 text-left">
+                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nip', 'dir' => ($sort == 'nip' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-blue-600">
+                            NIP @if($sort == 'nip')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }} ml-1"></i>@endif
+                        </a>
+                    </th>
+                    <th class="p-3 text-left">
+                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'nama_lengkap', 'dir' => ($sort == 'nama_lengkap' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-blue-600">
+                            Nama @if($sort == 'nama_lengkap')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }} ml-1"></i>@endif
+                        </a>
+                    </th>
+                    <th class="p-3 text-left">
+                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'mata_pelajaran', 'dir' => ($sort == 'mata_pelajaran' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-blue-600">
+                            Mata Pelajaran @if($sort == 'mata_pelajaran')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }} ml-1"></i>@endif
+                        </a>
+                    </th>
                     <th class="p-3 text-left">Email</th>
+                    <th class="p-3 text-left">
+                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'dir' => ($sort == 'created_at' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-blue-600">
+                            Terdaftar @if($sort == 'created_at')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }} ml-1"></i>@endif
+                        </a>
+                    </th>
                     <th class="p-3 text-center">Aksi</th>
                 </tr>
             </thead>
@@ -30,13 +84,14 @@
                     <td class="p-3 font-semibold">{{ $g->nama_lengkap }}</td>
                     <td class="p-3">{{ $g->mata_pelajaran ?? '-' }}</td>
                     <td class="p-3 text-sm text-gray-600">{{ $g->user->email }}</td>
+                    <td class="p-3 text-sm">{{ $g->created_at->format('d/m/Y') }}</td>
                     <td class="p-3 text-center whitespace-nowrap">
                         <button onclick='openModal(@json($g))' class="text-blue-600 hover:text-blue-800 mx-1"><i class="fas fa-edit"></i></button>
                         <button onclick="deleteItem({{ $g->id }}, '{{ $g->nama_lengkap }}')" class="text-red-600 hover:text-red-800 mx-1"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="p-5 text-center text-gray-500">Belum ada data guru.</td></tr>
+                <tr><td colspan="6" class="p-5 text-center text-gray-500">Belum ada data guru.</td></tr>
                 @endforelse
             </tbody>
         </table>

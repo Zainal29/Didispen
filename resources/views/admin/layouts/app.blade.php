@@ -32,14 +32,6 @@
                 </a>
 
                 <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Master Data</p>
-                <a href="{{ route('admin.jurusan.index') }}" 
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.jurusan.*') ? 'active' : '' }}">
-                    <i class="fas fa-graduation-cap w-5 mr-3"></i> Jurusan
-                </a>
-                <a href="{{ route('admin.kelas.index') }}" 
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.kelas.*') ? 'active' : '' }}">
-                    <i class="fas fa-chalkboard w-5 mr-3"></i> Kelas
-                </a>
                 <a href="{{ route('admin.siswa.index') }}" 
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
                     <i class="fas fa-user-graduate w-5 mr-3"></i> Siswa

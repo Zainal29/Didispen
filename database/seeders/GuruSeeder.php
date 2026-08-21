@@ -4,52 +4,31 @@ namespace Database\Seeders;
 
 use App\Models\Guru;
 use App\Models\GuruPiket;
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class GuruSeeder extends Seeder
 {
     public function run(): void
     {
-        $emailPiket = 'gurupiket@smkn1bangsri.sch.id';
-        $passwordPiket = 'gurupiket2026';
+        $jumlahGuru = 10;
 
-        // 1. Buat SATU akun shared untuk Guru Piket Utama
-        $user = User::firstOrCreate(
-            ['email' => $emailPiket],
-            [
-                'name' => 'Guru Piket Utama',
-                'password' => Hash::make($passwordPiket),
-                'role' => 'guru',
-            ]
-        );
+        // 1. Buat akun guru secara individual menggunakan Factory
+        Guru::factory()->count($jumlahGuru)->create();
 
-        // 2. Buat data Guru untuk akun shared
-        $guru = Guru::firstOrCreate(
-            ['user_id' => $user->id],
-            [
-                'nip' => 'PIKET001',
-                'nama_lengkap' => 'GURU PIKET UTAMA',
-                'mata_pelajaran' => '-',
-            ]
-        );
-
-        // 3. Buat jadwal piket 7 hari otomatis untuk Guru Piket Utama
+        // 2. PENTING: Isi tabel guru_piket minimal 1 guru untuk setiap hari (Placeholder)
+        // Ini WAJIB ada agar DispensasiSeeder tidak error (Foreign Key Constraint)
+        // dan agar fitur validasi "guru piket hari ini" bisa dites.
+        $guruPertama = Guru::first();
         $hariList = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
+
         foreach ($hariList as $hari) {
             GuruPiket::updateOrCreate(
-                ['hari' => $hari], 
-                ['guru_id' => $guru->id]
+                ['hari' => $hari],
+                ['guru_id' => $guruPertama ? $guruPertama->id : 1]
             );
         }
 
-        // 4. TAMBAHAN: Generate 5 Guru dummy tambahan menggunakan GuruFactory
-        Guru::factory()->count(5)->create();
-
-        $this->command->info('✅ Akun Guru Piket (Shared) & 5 Guru Tambahan siap digunakan!');
-        $this->command->info('📧 Email    : ' . $emailPiket);
-        $this->command->info('🔑 Password : ' . $passwordPiket);
-        $this->command->info('📅 Jadwal 7 hari otomatis dibuat.');
+        $this->command->info("✅ GuruSeeder selesai. {$jumlahGuru} Akun Guru & Jadwal Piket Dasar (Placeholder) berhasil dibuat.");
+        $this->command->info('ℹ️  Catatan: Jadwal piket di atas hanya placeholder agar database tidak error. Admin dapat mengubahnya nanti di menu Jadwal Piket sesuai jadwal WA.');
     }
 }

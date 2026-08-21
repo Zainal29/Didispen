@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -9,14 +10,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
-            SatpamSeeder::class,      // (Opsional) Tambahkan agar akun satpam terbuat
-            JurusanSeeder::class,
-            KelasSeeder::class,
+            SatpamSeeder::class,
+            JurusanSeeder::class,     // ⚠️ Wajib sebelum KelasSeeder & SiswaSeeder
+            KelasSeeder::class,       // ⚠️ Wajib sebelum SiswaSeeder
             GuruSeeder::class,
-            // GuruPiketSeeder::class,   // 🔥 TAMBAHKAN INI: Wajib jalan sebelum DispensasiSeeder
             SiswaSeeder::class,
             SettingsSeeder::class,
-            DispensasiSeeder::class,  // Sekarang ini akan aman!
+            DispensasiSeeder::class,
         ]);
     }
 }

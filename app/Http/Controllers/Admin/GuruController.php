@@ -7,6 +7,7 @@ use App\Models\Guru;
 use App\Models\GuruChecklog;
 use App\Models\User;
 use App\Services\AuditLogService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,10 +15,31 @@ class GuruController extends Controller
 {
     public function __construct(private AuditLogService $auditLog) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $gurus = Guru::with('user')->latest()->paginate(15);
-        return view('admin.guru.index', compact('gurus'));
+        $sortable = [
+            'nip'             => 'NIP',
+            'nama_lengkap'    => 'Nama',
+            'mata_pelajaran'  => 'Mata Pelajaran',
+            'created_at'      => 'Terdaftar',
+        ];
+        $sort = $request->get('sort', 'created_at');
+        $dir  = $request->get('dir', 'desc');
+        if (!array_key_exists($sort, $sortable)) $sort = 'created_at';
+        if (!in_array($dir, ['asc', 'desc'])) $dir = 'desc';
+
+        $query = Guru::with('user');
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('nama_lengkap', 'like', "%{$s}%")
+                  ->orWhere('nip', 'like', "%{$s}%")
+                  ->orWhere('mata_pelajaran', 'like', "%{$s}%")
+                  ->orWhereHas('user', fn ($u) => $u->where('email', 'like', "%{$s}%"));
+            });
+        }
+        $gurus = $query->orderBy($sort, $dir)->paginate(15)->withQueryString();
+        return view('admin.guru.index', compact('gurus', 'sortable', 'sort', 'dir'));
     }
 
     public function store(StoreGuruRequest $request)
