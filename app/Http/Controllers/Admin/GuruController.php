@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -18,17 +19,20 @@ class GuruController extends Controller
     public function index(Request $request)
     {
         $sortable = [
-            'nip'             => 'NIP',
-            'nama_lengkap'    => 'Nama',
-            'mata_pelajaran'  => 'Mata Pelajaran',
-            'created_at'      => 'Terdaftar',
+            'nip'            => 'NIP',
+            'nama_lengkap'   => 'Nama',
+            'mata_pelajaran' => 'Mata Pelajaran',
+            'created_at'     => 'Terdaftar',
         ];
+
         $sort = $request->get('sort', 'created_at');
         $dir  = $request->get('dir', 'desc');
-        if (!array_key_exists($sort, $sortable)) $sort = 'created_at';
-        if (!in_array($dir, ['asc', 'desc'])) $dir = 'desc';
+
+        if (! array_key_exists($sort, $sortable)) $sort = 'created_at';
+        if (! in_array($dir, ['asc', 'desc'])) $dir = 'desc';
 
         $query = Guru::with('user');
+
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
@@ -38,62 +42,77 @@ class GuruController extends Controller
                   ->orWhereHas('user', fn ($u) => $u->where('email', 'like', "%{$s}%"));
             });
         }
+
         $gurus = $query->orderBy($sort, $dir)->paginate(15)->withQueryString();
+
         return view('admin.guru.index', compact('gurus', 'sortable', 'sort', 'dir'));
     }
 
     public function store(StoreGuruRequest $request)
     {
         DB::transaction(function () use ($request) {
+            // ✅ REVISI SIPINTU: Password dikelola SiPintu (sudah di-hash saat sinkronisasi).
+            // Untuk pembuatan manual oleh admin, gunakan password acak yang tidak dapat ditekan.
             $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password ?? 'password'),
-                'role' => 'guru',
-                'nis_nip' => $request->nip,
+                'name'                 => $request->name,
+                'email'                => $request->email,
+                'password'             => Hash::make(bin2hex(random_bytes(16))),
+                'role'                 => 'guru',
+                'nis_nip'              => $request->nip,
+                'must_change_password' => false,
             ]);
+
             Guru::create([
-                'user_id' => $user->id,
-                'nip' => $request->nip,
-                'nama_lengkap' => $request->nama_lengkap,
+                'user_id'        => $user->id,
+                'nip'            => $request->nip,
+                'nama_lengkap'   => $request->nama_lengkap,
                 'mata_pelajaran' => $request->mata_pelajaran,
             ]);
+
             $this->auditLog->log(auth()->id(), 'create_guru', 'guru', $user->id);
         });
-        return redirect()->route('admin.guru.index')->with('success', 'Guru berhasil ditambahkan.');
+
+        return redirect()->route('admin.guru.index')
+            ->with('success', 'Guru berhasil ditambahkan. Password akun dikelola oleh SiPintu/Sijuna.');
     }
 
     public function update(StoreGuruRequest $request, Guru $guru)
     {
         DB::transaction(function () use ($request, $guru) {
             $guru->user->update([
-                'name' => $request->name,
-                'email' => $request->email,
+                'name'    => $request->name,
+                'email'   => $request->email,
                 'nis_nip' => $request->nip,
             ]);
-            if ($request->filled('password')) {
-                $guru->user->update(['password' => Hash::make($request->password)]);
-            }
+
+            // ✅ REVISI SIPINTU: Password TIDAK diubah dari sini (dikelola SiPintu).
+
             $guru->update($request->only(['nip', 'nama_lengkap', 'mata_pelajaran']));
         });
-        return redirect()->route('admin.guru.index')->with('success', 'Guru berhasil diperbarui.');
+
+        return redirect()->route('admin.guru.index')
+            ->with('success', 'Guru berhasil diperbarui.');
     }
 
     public function destroy(Guru $guru)
     {
         $guru->user->delete();
-        return redirect()->route('admin.guru.index')->with('success', 'Guru berhasil dihapus.');
+        return redirect()->route('admin.guru.index')
+            ->with('success', 'Guru berhasil dihapus.');
     }
 
-
-     public function checklog()
+    public function checklog()
     {
         $logs = GuruChecklog::with('guru.user')
             ->orderByRaw("FIELD(status, 'keluar', 'selesai')")
             ->orderBy('jam_keluar', 'desc')
             ->paginate(15);
-            
+
         return view('admin.guru.checklog', compact('logs'));
     }
 
+    // ✅ REVISI SIPINTU: Semua metode manajemen password guru DIHAPUS
+    // (editPassword, updatePassword, resetPassword, generateTempPassword, showPasswordInfo).
+    // Password di-hash dan dikelola oleh SiPintu/Sijuna.
+    // Jika user lupa password, arahkan ke admin pusat SiPintu/Sijuna.
 }

@@ -16,11 +16,11 @@ class PrintBluetoothController extends Controller
 {
     public function print(Dispensasi $dispensasi)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru']);
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
 
         // ===== 1. OTORISASI =====
         if (auth()->user()->role !== 'admin') {
-            if (!$dispensasi->guruPiket || $dispensasi->guruPiket->guru_id !== auth()->user()->guru?->id) {
+            if (!$dispensasi->guru_id || $dispensasi->guru_id !== auth()->user()->guru?->id) {
                 abort(403, 'Anda tidak berhak mencetak dispensasi ini.');
             }
         }
@@ -69,16 +69,7 @@ class PrintBluetoothController extends Controller
 
             // ✅ Generate data QR Code dengan timestamp REAL-TIME (bukan dari waktu approve)
             $qrDataRealtime = json_encode([
-                'id' => $dispensasi->id,
-                'nomor_surat' => $dispensasi->nomor_surat,
-                'siswa' => $dispensasi->siswa->nama_lengkap,
-                'kelas' => $dispensasi->siswa->kelas->nama_kelas,
-                'jam_keluar' => $dispensasi->jam_keluar,
-                'jam_kembali' => $dispensasi->jam_kembali,
-                'status' => $dispensasi->status,
-                'dicetak_pada' => now()->toIso8601String(), // ✅ Timestamp real-time saat cetak
-                'berlaku_sampai' => now()->endOfDay()->toIso8601String(), // ✅ Diupdate saat cetak
-                'token' => md5($dispensasi->id . $dispensasi->nomor_surat . now()->format('Ymd') . 'SECRET_KEY_DISPENSI')
+                'token' => $dispensasi->qr_token,
             ], JSON_UNESCAPED_SLASHES);
 
             try {
@@ -93,7 +84,7 @@ class PrintBluetoothController extends Controller
             }
 
             // ===== 6. TANDA TANGAN =====
-            $guru = $dispensasi->guruPiket?->guru;
+            $guru = $dispensasi->guru;
             $printer->setJustification(Printer::JUSTIFY_CENTER);
             $printer->text("\nGuru Piket,\n\n\n\n");
             $printer->setEmphasis(true);
@@ -122,7 +113,7 @@ class PrintBluetoothController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Print thermal gagal: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal mencetak: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mencetak. Silakan coba lagi atau hubungi admin.');
         }
     }
 

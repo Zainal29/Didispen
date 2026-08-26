@@ -1,11 +1,12 @@
 @extends('satpam.layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', 'Dashboard Satpam')
 @section('page-title', 'Dashboard Satpam')
 
 @section('content')
+@include('components.alert')
 
-{{-- ============ HERO ============ --}}
+{{-- ============ HERO SECTION ============ --}}
 <div class="relative overflow-hidden rounded-2xl mb-4">
     <div class="absolute inset-0 bg-gradient-to-r from-red-700 via-red-600 to-rose-500"></div>
     <div class="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full"></div>
@@ -14,7 +15,7 @@
     <div class="relative z-10 p-4 sm:p-6 flex items-center justify-between gap-3">
         <div class="min-w-0">
             <p class="text-red-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">
-                {{ now()->format('d M Y') }} • Pos Gerbang
+                {{ now()->isoFormat('dddd, D MMMM Y') }} • Pos Gerbang
             </p>
             <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5 truncate">
                 Halo, {{ auth()->user()->name }} 👋
@@ -27,188 +28,279 @@
     </div>
 </div>
 
-{{-- ============ ALERT PERHATIAN SATPAM ============ --}}
-@if(isset($menungguKeluar) && $menungguKeluar->count() > 0)
-<div class="bg-white rounded-2xl border-2 border-amber-300 shadow-sm overflow-hidden mb-4">
-    <div class="p-4 bg-gradient-to-r from-amber-50 to-orange-50 flex items-center justify-between gap-3">
-        <div class="flex items-center space-x-3 min-w-0">
-            <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 animate-pulse shadow-md shadow-amber-500/30">
-                <i class="fas fa-exclamation-triangle text-sm"></i>
-            </div>
-            <div class="min-w-0">
-                <h3 class="text-sm font-bold text-amber-900">Perhatian: Ada Siswa Menunggu Keluar!</h3>
-                <p class="text-[11px] text-amber-700 truncate">{{ $menungguKeluar->count() }} siswa dispensasi telah disetujui guru piket dan menunggu di-scan QR Code-nya.</p>
-            </div>
-        </div>
-        <a href="{{ route('satpam.scan') }}" class="inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow-md shadow-amber-600/20 active:scale-95 transition-all flex-shrink-0">
-            <i class="fas fa-qrcode mr-1.5"></i>Scan QR
-        </a>
+{{-- ============ FILTER TABS ============ --}}
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm mb-4">
+    <div class="p-2 flex flex-wrap gap-2">
+        <button onclick="switchTab('all')" id="tab-all" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-red-600 text-white shadow-md">
+            <i class="fas fa-layer-group mr-1.5"></i>Semua
+        </button>
+        <button onclick="switchTab('menunggu')" id="tab-menunggu" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
+            <i class="fas fa-clock mr-1.5"></i>Menunggu <span id="badge-menunggu" class="px-2 py-0.5 bg-amber-500 text-white text-[10px] rounded-full ml-1">{{ $menungguKeluar->count() }}</span>
+        </button>
+        <button onclick="switchTab('keluar')" id="tab-keluar" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
+            <i class="fas fa-person-walking mr-1.5"></i>Keluar <span id="badge-keluar" class="px-2 py-0.5 bg-sky-500 text-white text-[10px] rounded-full ml-1">{{ $siswaKeluar->count() }}</span>
+        </button>
+        <button onclick="switchTab('terlambat')" id="tab-terlambat" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
+            <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat <span id="badge-terlambat" class="px-2 py-0.5 bg-red-500 text-white text-[10px] rounded-full ml-1">0</span>
+        </button>
+        <button onclick="switchTab('selesai')" id="tab-selesai" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
+            <i class="fas fa-check-circle mr-1.5"></i>Selesai <span id="badge-selesai" class="px-2 py-0.5 bg-emerald-500 text-white text-[10px] rounded-full ml-1">{{ $stats['selesai'] ?? 0 }}</span>
+        </button>
+        <button onclick="switchTab('dihubungi')" id="tab-dihubungi" class="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
+            <i class="fas fa-phone-alt mr-1.5"></i>Sudah Dihubungi <span id="badge-dihubungi" class="px-2 py-0.5 bg-purple-500 text-white text-[10px] rounded-full ml-1">0</span>
+        </button>
     </div>
 </div>
-@endif
 
-{{-- ============ STATISTIK (2 kolom di HP, 4 kolom di desktop) ============ --}}
-<div class="grid grid-cols-2 gap-2 sm:gap-4 mb-4 md:grid-cols-4">
-    @php
-        $cards = [
-            ['Menunggu Keluar', $stats['menunggu_keluar'] ?? 0, 'fa-door-open',     'bg-amber-100 text-amber-600',       'border-amber-400',    'Dispensasi disetujui'],
-            ['Sedang Keluar',   $stats['total_keluar'] ?? 0,    'fa-person-walking',    'bg-sky-100 text-sky-600',           'border-sky-400',      'Di luar sekolah'],
-            ['Sudah Kembali',   $stats['selesai'] ?? 0,         'fa-check-circle',      'bg-emerald-100 text-emerald-600',   'border-emerald-400',  'Hari ini'],
-            ['Total Hari Ini',  $stats['hari_ini'] ?? 0,        'fa-file-lines',        'bg-blue-100 text-blue-600',         'border-blue-400',     'Semua dispensasi'],
-        ];
-    @endphp
-    @foreach($cards as [$label, $value, $icon, $color, $border, $sub])
-        <div class="bg-white rounded-xl border border-gray-100 border-l-4 {{ $border }} shadow-sm p-3.5 sm:p-5">
-            <div class="flex items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <p class="text-gray-500 text-[11px] sm:text-xs font-semibold truncate">{{ $label }}</p>
-                    <h3 class="text-xl sm:text-3xl font-black text-gray-800 mt-0.5">{{ $value }}</h3>
-                    <p class="text-[10px] text-gray-400 mt-0.5 hidden sm:block">{{ $sub }}</p>
-                </div>
-                <div class="p-2 sm:p-3 rounded-lg sm:rounded-xl {{ $color }} flex-shrink-0 shadow-sm">
-                    <i class="fas {{ $icon }} text-sm sm:text-lg"></i>
-                </div>
-            </div>
-        </div>
+{{-- ============ CONTENT SECTIONS ============ --}}
+
+{{-- SECTION: MENUNGGU KELUAR --}}
+<div id="section-menunggu" class="space-y-3 {{ $menungguKeluar->count() === 0 ? 'hidden' : '' }}">
+    <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-clock text-amber-500 mr-1.5"></i>Menunggu Konfirmasi Keluar</h3>
+    @foreach($menungguKeluar as $dispensasi)
+        @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
     @endforeach
 </div>
 
-{{-- ============ GRID UTAMA: MENUNGGU KELUAR & SEDANG KELUAR (BERKUMPUL 2 KOLOM DI DESKTOP) ============ --}}
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-    {{-- KOTAK 1: MENUNGGU KONFIRMASI KELUAR --}}
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-        <div class="px-4 py-3.5 sm:p-5 border-b border-gray-100 bg-amber-50/60 flex items-center justify-between gap-2">
-            <div>
-                <h3 class="text-sm font-bold text-amber-800">
-                    <i class="fas fa-clock mr-1.5"></i>Menunggu Konfirmasi Keluar
-                </h3>
-                <p class="text-[11px] text-amber-600 mt-0.5">Disetujui guru piket, wajib scan QR Code untuk keluar gerbang.</p>
-            </div>
-            <span class="px-2.5 py-1 rounded-full bg-amber-500 text-white text-[10px] font-bold flex-shrink-0 shadow-sm">
-                {{ $menungguKeluar->count() }}
-            </span>
-        </div>
-
-        <div class="p-4 flex-1 space-y-3 overflow-y-auto max-h-[500px]">
-            @forelse($menungguKeluar as $s)
-                <div class="bg-gray-50 border border-gray-100 rounded-xl p-3.5 space-y-2.5 hover:border-amber-200 transition-colors">
-                    <div class="flex justify-between items-start gap-2">
-                        <p class="font-mono font-bold text-gray-800 text-xs">{{ $s->nomor_surat }}</p>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">Disetujui</span>
-                    </div>
-                    <div>
-                        <p class="font-bold text-gray-900 text-sm truncate">{{ $s->siswa->nama_lengkap }}</p>
-                        <p class="text-[11px] text-gray-500 truncate">{{ $s->siswa->kelas->nama_kelas }} • {{ $s->siswa->kelas->jurusan->nama_jurusan ?? '-' }}</p>
-                    </div>
-                    <div class="flex items-center justify-between text-[11px] bg-white p-2.5 rounded-lg border border-gray-200/60">
-                        <span class="text-blue-700 font-semibold"><i class="far fa-clock mr-1"></i>Keluar: {{ $s->jam_keluar }}</span>
-                        <span class="text-gray-300">|</span>
-                        <span class="text-amber-700 font-semibold">Batas: {{ $s->jam_kembali }}</span>
-                    </div>
-                    <a href="{{ route('satpam.scan') }}"
-                       class="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-red-600 to-rose-500 shadow-md shadow-red-500/20 active:scale-[0.98] transition-all">
-                        <i class="fas fa-qrcode mr-1.5"></i>Scan QR Code Siswa
-                    </a>
-                </div>
-            @empty
-                <div class="p-10 text-center my-auto">
-                    <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 text-emerald-300 flex items-center justify-center text-2xl mb-3 shadow-sm">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <p class="text-gray-500 text-xs font-semibold">Tidak ada siswa yang menunggu konfirmasi keluar</p>
-                </div>
-            @endforelse
-        </div>
-    </div>
-
-    {{-- KOTAK 2: SISWA SEDANG DI LUAR SEKOLAH --}}
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-        <div class="px-4 py-3.5 sm:p-5 border-b border-gray-100 bg-sky-50/60 flex items-center justify-between gap-2">
-            <div>
-                <h3 class="text-sm font-bold text-sky-800">
-                    <i class="fas fa-person-walking mr-1.5"></i>Siswa Sedang di Luar Sekolah
-                </h3>
-                <p class="text-[11px] text-sky-600 mt-0.5">Sudah keluar gerbang, belum kembali.</p>
-            </div>
-            <span class="px-2.5 py-1 rounded-full bg-sky-500 text-white text-[10px] font-bold flex-shrink-0 shadow-sm">
-                {{ $siswaKeluar->count() }}
-            </span>
-        </div>
-
-        <div class="p-4 flex-1 space-y-3 overflow-y-auto max-h-[500px]">
-            @forelse($siswaKeluar as $s)
-                <div class="bg-gray-50 border border-gray-100 rounded-xl p-3.5 space-y-2.5 hover:border-sky-200 transition-colors">
-                    <div class="flex justify-between items-start gap-2">
-                        <p class="font-mono font-bold text-gray-800 text-xs">{{ $s->nomor_surat }}</p>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700 border border-sky-200">Di Luar</span>
-                    </div>
-                    <div>
-                        <p class="font-bold text-gray-900 text-sm truncate">{{ $s->siswa->nama_lengkap }}</p>
-                        <p class="text-[11px] text-gray-500 truncate">{{ $s->siswa->kelas->nama_kelas }} • {{ $s->siswa->kelas->jurusan->nama_jurusan ?? '-' }}</p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2 text-[11px]">
-                        <div class="px-2.5 py-1.5 rounded-lg bg-white border border-gray-200/60">
-                            <p class="text-gray-400 text-[9px] font-bold uppercase">Keluar Aktual</p>
-                            <p class="font-bold text-gray-800 font-mono">{{ $s->waktu_keluar_aktual ? \Carbon\Carbon::parse($s->waktu_keluar_aktual)->format('H:i') : '-' }}</p>
-                        </div>
-                        <div class="px-2.5 py-1.5 rounded-lg bg-amber-50/70 border border-amber-100">
-                            <p class="text-amber-500 text-[9px] font-bold uppercase">Batas Kembali</p>
-                            <p class="font-bold text-amber-700 font-mono">{{ $s->jam_kembali }}</p>
-                        </div>
-                    </div>
-
-                    <p class="text-[11px] text-gray-500 truncate">
-                        <i class="fas fa-user-tie text-gray-400 mr-1"></i>Guru Piket: <strong class="text-gray-700">{{ $s->guruPiket?->guru?->nama_lengkap ?? '-' }}</strong>
-                    </p>
-
-                    <form method="POST" action="{{ route('satpam.konfirmasi.kembali', $s) }}">
-                        @csrf
-                        <button type="submit"
-                                data-confirm="Konfirmasi {{ $s->siswa->nama_lengkap }} KEMBALI ke sekolah?"
-                                class="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-500/20 active:scale-[0.98] transition-all">
-                            <i class="fas fa-door-closed mr-1.5"></i>Konfirmasi Kembali
-                        </button>
-                    </form>
-                </div>
-            @empty
-                <div class="p-10 text-center my-auto">
-                    <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 text-emerald-300 flex items-center justify-center text-2xl mb-3 shadow-sm">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <p class="text-gray-500 text-xs font-semibold">Tidak ada siswa yang sedang di luar sekolah</p>
-                </div>
-            @endforelse
-        </div>
-    </div>
-
+{{-- SECTION: SEDANG KELUAR --}}
+<div id="section-keluar" class="space-y-3 hidden">
+    <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-person-walking text-sky-500 mr-1.5"></i>Sedang Keluar</h3>
+    @foreach($siswaKeluar as $dispensasi)
+        @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp
+        @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue])
+    @endforeach
 </div>
+
+{{-- SECTION: TERLAMBAT --}}
+<div id="section-terlambat" class="space-y-3 hidden">
+    <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-exclamation-triangle text-red-500 mr-1.5"></i>Siswa Terlambat</h3>
+    @php $terlambatCount = 0; @endphp
+    @foreach($siswaKeluar as $dispensasi)
+        @php
+            $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
+            if($isOverdue) $terlambatCount++;
+        @endphp
+        @if($isOverdue)
+            @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'terlambat', 'isOverdue' => true])
+        @endif
+    @endforeach
+    @if($terlambatCount === 0)
+        <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+            <i class="fas fa-check-circle text-4xl text-emerald-300 mb-3"></i>
+            <p class="text-gray-500 text-sm">Tidak ada siswa yang terlambat hari ini</p>
+        </div>
+    @endif
+</div>
+
+{{-- SECTION: SELESAI (SUDAH KEMBALI) --}}
+<div id="section-selesai" class="space-y-3 hidden">
+    <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-check-circle text-emerald-500 mr-1.5"></i>Sudah Kembali</h3>
+    @if(isset($selesai) && $selesai->count() > 0)
+        @foreach($selesai as $dispensasi)
+            @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'selesai', 'isOverdue' => false])
+        @endforeach
+    @else
+        <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-300 flex items-center justify-center text-3xl mb-3"><i class="fas fa-check-circle"></i></div>
+            <p class="text-gray-500 text-sm font-semibold">Belum ada siswa yang kembali hari ini</p>
+        </div>
+    @endif
+</div>
+
+{{-- ✅ SECTION: SUDAH DIHUBUNGI (VERSI BERSIH & PESAN PERINGATAN) --}}
+<div id="section-dihubungi" class="space-y-3 hidden">
+    <h3 class="text-sm font-bold text-gray-700 mb-3">
+        <i class="fas fa-phone-alt text-purple-500 mr-1.5"></i>
+        Riwayat Siswa yang Sudah Dihubungi
+        <span class="text-xs font-normal text-gray-500 ml-2">({{ $dihubungi->count() }} siswa)</span>
+    </h3>
+    
+    @if($dihubungi->count() > 0)
+        @foreach($dihubungi as $dispensasi)
+            @php
+                $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
+                $waLink = '';
+                
+                if (!empty($dispensasi->siswa->no_telepon)) {
+                    $hp = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
+                    if (str_starts_with($hp, '0')) {
+                        $hp = '62' . substr($hp, 1);
+                    }
+                    
+                    // ✅ PESAN PERINGATAN KETERLAMBATAN
+                    $pesan = "⚠️ *PERINGATAN KETERLAMBATAN DISPENSASI* ⚠️\n\n" .
+                             "Yth. *{$dispensasi->siswa->nama_lengkap}*,\n\n" .
+                             "Berdasarkan data sistem, batas waktu kembali dispensasi Anda (No. *{$dispensasi->nomor_surat}*) telah **LEWAT** pada pukul *{$dispensasi->jam_kembali}*.\n\n" .
+                             "📍 Tujuan Dispensasi: {$dispensasi->tujuan}\n\n" .
+                             "⚠️ **SEGERA KEMBALI** ke lingkungan sekolah atau lapor ke Pos Satpam untuk menghindari sanksi administratif.\n\n" .
+                             "Terima kasih,\n*Petugas Satpam SMKN 1 Bangsri*";
+                             
+                    $waLink = "https://wa.me/{$hp}?text=" . urlencode($pesan);
+                }
+            @endphp
+            
+            <div class="bg-white rounded-2xl border-2 border-purple-200 shadow-sm overflow-hidden">
+                <div class="px-4 py-3.5 bg-purple-50 border-b border-purple-100">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <p class="font-mono font-bold text-gray-800 text-xs">{{ $dispensasi->nomor_surat }}</p>
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700 uppercase">
+                                    <i class="fas fa-phone-alt mr-1"></i>DIHUBUNGI
+                                </span>
+                                @if($isOverdue)
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 uppercase">TERLAMBAT</span>
+                                @endif
+                            </div>
+                            <p class="font-bold text-gray-900 text-sm truncate">{{ $dispensasi->siswa->nama_lengkap }}</p>
+                            <p class="text-[11px] text-gray-500 truncate">
+                                {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} • {{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}
+                            </p>
+                        </div>
+                        <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}" 
+                           class="inline-flex items-center justify-center w-9 h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors" title="Lihat Detail">
+                            <i class="fas fa-eye text-sm"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="p-4 space-y-3">
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="bg-white p-2.5 rounded-lg border border-gray-200">
+                            <p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Keluar</p>
+                            <p class="font-bold text-blue-700">{{ $dispensasi->jam_keluar }}</p>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-gray-200">
+                            <p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Kembali</p>
+                            <p class="font-bold {{ $isOverdue ? 'text-red-700' : 'text-amber-700' }}">{{ $dispensasi->jam_kembali }}</p>
+                        </div>
+                    </div>
+                    
+                    @if($dispensasi->warned_at)
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                        <p class="text-purple-700 text-xs font-bold">
+                            <i class="fas fa-clock mr-1"></i>
+                            Dihubungi pada: {{ $dispensasi->warned_at->isoFormat('D MMMM Y, HH:mm') }} WIB
+                        </p>
+                    </div>
+                    @endif
+                    
+                    @if(!empty($dispensasi->siswa->no_telepon))
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                            <p class="text-[10px] font-bold text-green-700 uppercase">Kontak</p>
+                            <p class="text-xs font-bold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
+                        </div>
+                      
+                    </div>
+                    @endif
+                    
+                    @if($dispensasi->status === 'keluar')
+                        <form method="POST" action="{{ route('satpam.konfirmasi.kembali', $dispensasi) }}">
+                            @csrf
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all">
+                                <i class="fas fa-door-closed mr-1.5"></i>Konfirmasi Kembali
+                            </button>
+                        </form>
+                    @elseif($dispensasi->status === 'selesai')
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+                            <p class="text-emerald-700 text-xs font-bold"><i class="fas fa-check-circle mr-1"></i>Siswa Sudah Kembali</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    @else
+        <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-purple-50 text-purple-300 flex items-center justify-center text-3xl mb-3"><i class="fas fa-phone-slash"></i></div>
+            <p class="text-gray-500 text-sm font-semibold">Belum ada siswa yang dihubungi</p>
+            <p class="text-gray-400 text-xs mt-1">Gunakan tombol "Tandai Sudah Dihubungi" pada kartu siswa</p>
+        </div>
+    @endif
+</div>
+
+{{-- SECTION: ALL (SEMUA) --}}
+<div id="section-all" class="space-y-3">
+    <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-layer-group text-gray-500 mr-1.5"></i>Semua Dispensasi Hari Ini</h3>
+    @foreach($menungguKeluar as $dispensasi)
+        @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
+    @endforeach
+    @foreach($siswaKeluar as $dispensasi)
+        @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp
+        @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue])
+    @endforeach
+</div>
+
+@endsection
 
 @push('scripts')
 <script>
-// Konfirmasi interaktif menggunakan SweetAlert
-document.querySelectorAll('[data-confirm]').forEach(btn => {
-    btn.addEventListener('click', function (e) {
-        e.preventDefault();
-        const form = this.closest('form');
-        const isKeluar = form.action.includes('keluar');
+function updateBadges() {
+    document.getElementById('badge-menunggu').textContent = document.querySelectorAll('[data-status="menunggu"]').length;
+    document.getElementById('badge-keluar').textContent = document.querySelectorAll('[data-status="keluar"]').length;
+    document.getElementById('badge-terlambat').textContent = document.querySelectorAll('[data-overdue="true"]').length;
+    document.getElementById('badge-dihubungi').textContent = document.querySelectorAll('[data-warned="true"]').length;
+}
 
-        Swal.fire({
-            title: 'Konfirmasi Aksi',
-            text: this.dataset.confirm,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: isKeluar ? '#2563eb' : '#059669',
-            cancelButtonColor: '#9ca3af',
-            confirmButtonText: 'Ya, Konfirmasi',
-            cancelButtonText: 'Batal',
-            reverseButtons: true
-        }).then(result => {
-            if (result.isConfirmed) form.submit();
-        });
+function switchTab(tabName) {
+    document.querySelectorAll('[id^="section-"]').forEach(section => section.classList.add('hidden'));
+    document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+        tab.classList.remove('bg-red-600', 'text-white', 'shadow-md');
+        tab.classList.add('bg-gray-100', 'text-gray-600');
     });
-});
+    
+    document.getElementById('section-' + tabName).classList.remove('hidden');
+    const activeTab = document.getElementById('tab-' + tabName);
+    activeTab.classList.remove('bg-gray-100', 'text-gray-600');
+    activeTab.classList.add('bg-red-600', 'text-white', 'shadow-md');
+}
+
+// ✅ FUNGSI BARU: Klik WA langsung tandai dihubungi & buka WA
+function handleWaContacted(dispensasiId, waLink) {
+    fetch(`/satpam/dispensasi/${dispensasiId}/wa-contacted`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        keepalive: true // Agar request tetap jalan meski tab baru terbuka
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 1. Update UI menjadi "Sudah Dihubungi"
+            const waSection = document.getElementById(`wa-section-${dispensasiId}`);
+            if (waSection) {
+                waSection.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <p class="text-[10px] font-bold text-green-700 uppercase">Kontak Darurat</p>
+                            <p class="text-sm font-bold text-gray-800 font-mono">${waSection.querySelector('.font-mono').textContent}</p>
+                        </div>
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed" title="Sudah dihubungi">
+                            <i class="fas fa-check text-xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-green-600">
+                        <i class="fas fa-check-circle mr-1"></i>Sudah dihubungi via WhatsApp
+                    </p>
+                `;
+            }
+            
+            // 2. Update badge jumlah di tab
+            if (typeof updateBadges === 'function') updateBadges();
+            
+            // 3. Buka WhatsApp di tab baru
+            window.open(waLink, '_blank');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Fallback: Tetap buka WhatsApp meski AJAX gagal
+        window.open(waLink, '_blank');
+    });
+}
+
+updateBadges();
 </script>
 @endpush
-@endsection

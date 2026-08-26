@@ -37,7 +37,7 @@
         <table class="table-data">
             <tr><td>Nama Siswa</td><td>: {{ $dispensasi->siswa->nama_lengkap }}</td></tr>
             <tr><td>NIS / NISN</td><td>: {{ $dispensasi->siswa->user->nis_nip ?? '-' }}</td></tr>
-            <tr><td>Kelas / Jurusan</td><td>: {{ $dispensasi->siswa->kelas->nama_kelas ?? '-' }} ({{ $dispensasi->siswa->kelas->jurusan->nama_jurusan ?? '-' }})</td></tr>
+            <tr><td>Kelas / Jurusan</td><td>: {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} ({{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }})</td></tr>
             <tr><td>Kategori Izin</td><td>: {{ ucfirst(str_replace('_', ' ', $dispensasi->kategori)) }}</td></tr>
             <tr><td>Alasan</td><td>: {{ $dispensasi->alasan }}</td></tr>
             <tr><td>Tujuan</td><td>: {{ $dispensasi->tujuan }}</td></tr>
@@ -53,18 +53,18 @@
         <p style="margin-top: 20px;">Demikian surat dispensasi ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
     </div>
 
-    {{-- <div class="signature">
-        <p>Jakarta, {{ now()->format('d F Y') }}<br>Guru Piket</p>
+    <div class="signature">
+        <p>Bangsri, {{ now()->isoFormat('D MMMM Y') }}<br>Guru Piket,</p>
         
-        @if(isset($dispensasi->guruPiket) && $dispensasi->guruPiket->guru && $dispensasi->guruPiket->guru->digital_signature)
-            <img src="{{ public_path('storage/' . $dispensasi->guruPiket->guru->digital_signature) }}" alt="Tanda Tangan Digital">
+        @if($dispensasi->guru?->digital_signature)
+            <img src="{{ public_path('storage/' . $dispensasi->guru->digital_signature) }}" alt="Tanda Tangan Digital">
         @else
             <div style="height: 60px;"></div>
         @endif
         
-        <span class="signature-name">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? 'Nama Guru Piket' }}</span>
-        <span>NIP. {{ $dispensasi->guruPiket->guru->nip ?? '-' }}</span>
-    </div> --}}
+        <span class="signature-name">{{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }}</span>
+        <span>NIP. {{ $dispensasi->guru?->nip ?? '-' }}</span>
+    </div>
 
     <div class="footer">
         Dokumen ini dicetak secara otomatis oleh sistem. | 

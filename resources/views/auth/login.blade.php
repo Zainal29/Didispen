@@ -30,7 +30,6 @@
             overflow-x: hidden;
         }
 
-        /* Watermark Background - Black & White */
         .watermark-bg {
             position: fixed;
             top: 0;
@@ -63,7 +62,6 @@
             pointer-events: none;
         }
 
-        /* Floating shapes */
         .shape {
             position: absolute;
             border-radius: 50%;
@@ -80,18 +78,14 @@
             50% { transform: translateY(-30px) scale(1.08); }
         }
 
-        /* Card styling */
         .login-card {
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(32px) saturate(180%);
             -webkit-backdrop-filter: blur(32px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.15),
-                0 0 0 1px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.03);
         }
 
-        /* Input styling */
         .form-input {
             background: #ffffff;
             border: 1.5px solid #e2e8f0;
@@ -105,7 +99,6 @@
         }
         .form-input::placeholder { color: #94a3b8; }
 
-        /* ROLE TABS - SLIDING INDICATOR ANIMATION */
         .role-tabs-wrapper {
             position: relative;
             background: #f1f5f9;
@@ -115,7 +108,6 @@
             overflow: hidden;
         }
 
-        /* Sliding background indicator (Lebar disesuaikan untuk 3 tab: 33.333%) */
         .role-tab-slider {
             position: absolute;
             top: 4px;
@@ -125,11 +117,10 @@
             background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
             border-radius: 0.5rem;
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4), 0 2px 4px rgba(37, 99, 235, 0.2);
-            transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s ease;
             z-index: 1;
         }
 
-        /* Tab buttons */
         .role-tab-btn {
             position: relative;
             z-index: 2;
@@ -144,14 +135,13 @@
 
         .role-tab-btn:not(.active) {
             color: #64748b;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .role-tab-btn:not(.active):hover {
             color: #334155;
         }
 
-        /* Submit button */
         .btn-submit {
             background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -176,7 +166,6 @@
         }
         .btn-submit:active { transform: translateY(0); }
 
-        /* Left panel - BLUE GRADIENT */
         .left-panel {
             background: linear-gradient(160deg, #1e3a8a 0%, #2563eb 40%, #3b82f6 100%);
             position: relative;
@@ -206,15 +195,6 @@
             border: 1px solid rgba(255, 255, 255, 0.25);
         }
 
-        .demo-box {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border: 1px solid #e2e8f0;
-        }
-
-        .form-panel {
-            transition: opacity 0.25s ease;
-        }
-
         .banner-glass {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
@@ -235,7 +215,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0.75rem;
+            padding: 1rem;
             position: relative;
         }
 
@@ -244,12 +224,12 @@
         }
 
         @media (max-width: 640px) {
-            .fullscreen-container { padding: 0.5rem; }
+            .fullscreen-container { padding: 0.75rem; }
             .login-card { max-width: 100%; }
         }
     </style>
 </head>
-<body class="bg-slate-50 font-sans antialiased">
+<body class="bg-slate-50 font-sans antialiased text-slate-800">
 
     <!-- Watermark Background -->
     <div class="watermark-bg">
@@ -268,85 +248,79 @@
     <div class="fullscreen-container" x-data="loginForm()">
 
         <!-- BANNER TAGLINE -->
-        <div class="relative z-10 w-full max-w-4xl mb-3 sm:mb-4 flex justify-center px-2">
-            <div class="banner-glass px-3 py-2 sm:px-5 sm:py-2.5 rounded-lg flex justify-center">
-                <img src="{{ asset('images/tagline.png') }}" alt="Banner SMK" class="w-[220px] sm:w-[350px] lg:w-[480px] h-auto object-contain">
+        <div class="relative z-10 w-full max-w-4xl mb-4 sm:mb-6 flex justify-center px-2">
+            <div class="banner-glass px-4 py-3 sm:px-6 sm:py-3.5 rounded-xl flex justify-center">
+                <img src="{{ asset('images/tagline.png') }}" alt="Banner SMK" class="w-[240px] sm:w-[380px] lg:w-[480px] h-auto object-contain">
             </div>
         </div>
 
         <!-- MAIN CARD -->
-        <div class="relative z-10 w-full max-w-4xl login-card rounded-xl overflow-hidden flex flex-col lg:flex-row shadow-2xl">
+        <div class="relative z-10 w-full max-w-4xl login-card rounded-2xl overflow-hidden flex flex-col lg:flex-row shadow-2xl">
 
             <!-- ===== LEFT PANEL: BRANDING (BLUE) ===== -->
-            <div class="left-panel px-4 py-6 sm:px-6 sm:py-8 flex flex-col items-center justify-center text-center lg:w-[40%] relative min-h-[240px] lg:min-h-full">
+            <div class="left-panel px-6 py-8 sm:px-8 sm:py-10 flex flex-col items-center justify-center text-center lg:w-[42%] relative min-h-[260px] lg:min-h-full">
                 <div class="grid-pattern"></div>
 
                 <div class="relative z-10 flex flex-col items-center w-full">
-                    <!-- Logo -->
-                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg icon-badge p-2 sm:p-2.5 shadow-2xl flex items-center justify-center mb-3 sm:mb-4">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl icon-badge p-2.5 sm:p-3 shadow-2xl flex items-center justify-center mb-4">
                         <img src="{{ asset('images/logo.png') }}" alt="Logo" class="w-full h-full object-contain">
                     </div>
 
-                    <!-- Title -->
-                    <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white leading-none mb-0.5">DIDISPEN</h1>
-                    <p class="text-blue-100 text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase">Digital Dispensasi Pendidikan</p>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white leading-none mb-1">DIDISPEN</h1>
+                    <p class="text-blue-100 text-xs sm:text-sm font-semibold tracking-wider uppercase">Digital Dispensasi Pendidikan</p>
 
-                    <!-- Decorative line -->
-                    <div class="w-10 h-0.5 bg-white/40 rounded-full my-3 sm:my-4"></div>
+                    <div class="w-12 h-1 bg-white/40 rounded-full my-5"></div>
 
-                    <!-- Quote -->
-                    <div class="quote-card rounded-lg p-3 sm:p-4 max-w-[220px] mx-auto">
-                        <i class="fas fa-quote-left text-white/60 text-[10px] mb-1.5 block"></i>
-                        <p class="text-[10px] sm:text-[11px] text-white italic leading-relaxed font-medium">
+                    <div class="quote-card rounded-xl p-4 sm:p-5 max-w-[260px] mx-auto">
+                        <i class="fas fa-quote-left text-white/60 text-sm mb-2 block"></i>
+                        <p class="text-xs sm:text-sm text-white italic leading-relaxed font-medium">
                             "Pelacakan informasi manajemen izin dan ketidakhadiran siswa kini lebih cepat, aman, transparan, dan terintegrasi."
                         </p>
                     </div>
 
-                    <!-- Stats/Features -->
-                    <div class="mt-4 grid grid-cols-3 gap-2 w-full max-w-[200px]">
+                    <div class="mt-6 grid grid-cols-3 gap-3 w-full max-w-[240px]">
                         <div class="text-center">
-                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-0.5">
-                                <i class="fas fa-shield-alt text-white text-[9px]"></i>
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1.5 backdrop-blur-sm">
+                                <i class="fas fa-shield-alt text-white text-sm"></i>
                             </div>
-                            <p class="text-[8px] text-white/90">Aman</p>
+                            <p class="text-[10px] sm:text-xs font-medium text-white/90">Aman</p>
                         </div>
                         <div class="text-center">
-                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-0.5">
-                                <i class="fas fa-bolt text-white text-[9px]"></i>
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1.5 backdrop-blur-sm">
+                                <i class="fas fa-bolt text-white text-sm"></i>
                             </div>
-                            <p class="text-[8px] text-white/90">Cepat</p>
+                            <p class="text-[10px] sm:text-xs font-medium text-white/90">Cepat</p>
                         </div>
                         <div class="text-center">
-                            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-0.5">
-                                <i class="fas fa-link text-white text-[9px]"></i>
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-1.5 backdrop-blur-sm">
+                                <i class="fas fa-link text-white text-sm"></i>
                             </div>
-                            <p class="text-[8px] text-white/90">Terintegrasi</p>
+                            <p class="text-[10px] sm:text-xs font-medium text-white/90">Terintegrasi</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- ===== RIGHT PANEL: ROLE SELECTOR + FORM ===== -->
-            <div class="px-4 py-5 sm:px-6 sm:py-6 flex flex-col justify-center lg:w-[60%] bg-white relative">
+            <div class="px-6 py-8 sm:px-8 sm:py-10 flex flex-col justify-center lg:w-[58%] bg-white/50">
 
-                <!-- ROLE TABS DENGAN ANIMASI GESER -->
-                <div class="mb-3 sm:mb-4">
-                    <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-1.5 text-center lg:text-left">Pilih Peran Masuk</p>
+                <!-- ROLE TABS -->
+                <div class="mb-5 sm:mb-6">
+                    <p class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2 text-center lg:text-left">Pilih Peran Masuk</p>
                     
                     <div class="role-tabs-wrapper" x-ref="tabsWrapper">
-                        <!-- Sliding Indicator -->
                         <div class="role-tab-slider"
                              :style="`transform: translateX(calc(${activeRoleIndex()} * 100% + ${activeRoleIndex()} * 4px))`">
                         </div>
 
-                        <!-- Tab Buttons (Hanya 3: Siswa, Guru Piket, Satpam) -->
                         <div class="relative z-10 flex">
                             <template x-for="(role, index) in roles" :key="role.id">
                                 <button type="button" 
                                         @click="switchRole(role.id)"
-                                        class="role-tab-btn flex-1 py-2 sm:py-2.5 rounded-md text-[10px] sm:text-[11px] flex items-center justify-center gap-1 cursor-pointer"
-                                        :class="{ 'active': activeRole === role.id }"
-                                        x-text="role.label">
+                                        class="role-tab-btn flex-1 py-2.5 sm:py-3 rounded-md text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
+                                        :class="{ 'active': activeRole === role.id }">
+                                        <i :class="role.icon"></i>
+                                        <span x-text="role.label"></span>
                                 </button>
                             </template>
                         </div>
@@ -354,115 +328,123 @@
                 </div>
 
                 <!-- Form Title -->
-                <div class="text-center lg:text-left mb-3 sm:mb-4">
-                    <h2 class="text-lg sm:text-xl font-bold tracking-tight text-slate-800 mb-0.5" x-text="'Login ' + getActiveRole().label"></h2>
-                    <p class="text-slate-400 text-[10px] sm:text-[11px]" x-text="getActiveRole().description"></p>
+                <div class="text-center lg:text-left mb-5 sm:mb-6 min-h-[44px]">
+                    <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-800 mb-1" x-text="'Login ' + getActiveRole().label"></h2>
+                    <p class="text-slate-500 text-xs sm:text-sm" x-text="getActiveRole().description"></p>
                 </div>
 
                 <!-- Error Alert -->
                 @if ($errors->any())
-                    <div class="mb-3 p-2 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[10px] flex items-start space-x-1.5">
-                        <i class="fas fa-exclamation-circle mt-0.5 text-red-400 text-[9px]"></i>
-                        <div>
+                    <div class="mb-5 p-3 sm:p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs sm:text-sm flex items-start space-x-2" 
+                         x-data="{ show: true }" 
+                         x-show="show">
+                        <i class="fas fa-exclamation-circle mt-0.5 text-red-500 flex-shrink-0"></i>
+                        <div class="flex-1">
                             <span class="font-bold">Gagal:</span>
-                            <span class="mt-0.5">{{ $errors->first() }}</span>
+                            <span class="mt-0.5 block">{{ $errors->first() }}</span>
                         </div>
+                        <button @click="show = false" class="text-red-400 hover:text-red-700 flex-shrink-0 ml-2 transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 @endif
 
-                <!-- FORM AREA -->
-                <div class="relative min-h-[160px] sm:min-h-[180px]">
+               <!-- FORM AREA -->
+                <div class="w-full">
 
-                    <!-- ================= SISWA ================= -->
-                    <div class="form-panel absolute inset-0 w-full"
-                         x-show="activeRole === 'student'"
-                         :class="activeRole === 'student' ? 'opacity-100' : 'opacity-0'">
-                        <form method="POST" action="{{ route('login') }}" class="space-y-2.5 sm:space-y-3" @submit="loading = true">
+                    <!-- ================= SISWA (OTOMATIS / SIPINTU) ================= -->
+                    <div x-show="activeRole === 'student'">
+                        <form method="POST" action="{{ route('login') }}" class="space-y-4" x-data="{ loginId: '{{ old('email') }}' }" @submit="loading = true">
                             @csrf
                             <input type="hidden" name="role" value="siswa">
+                            
+                            <!-- Input Email/NIS -->
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1 ml-0.5">Email Siswa</label>
+                                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Email / NIS Siswa</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs"><i class="fas fa-envelope"></i></span>
-                                    <input name="email" type="email" value="{{ old('email') }}" required placeholder="nis@smkn1bangsri.sch.id" class="form-input w-full h-9 pl-9 pr-3 rounded-lg text-slate-700 text-xs focus:outline-none">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-envelope"></i></span>
+                                    <input name="email" type="text" x-model="loginId" required placeholder="Masukkan NIS atau email siswa" class="form-input w-full h-11 sm:h-12 pl-10 pr-4 rounded-xl text-sm text-slate-700 focus:outline-none">
                                 </div>
                             </div>
-                            <div x-data="{ showPw: false }">
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1 ml-0.5">Password</label>
+                            
+                            <!-- Input Password (Otomatis & Dikunci) -->
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Password (Terisi Otomatis)</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs"><i class="fas fa-lock"></i></span>
-                                    <input name="password" :type="showPw ? 'text' : 'password'" required placeholder="••••••••" class="form-input w-full h-9 pl-9 pr-9 rounded-lg text-slate-700 text-xs focus:outline-none">
-                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 text-xs focus:outline-none">
-                                        <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                                    </button>
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
+                                    <input name="password" type="password" :value="loginId.split('@')[0]" readonly required placeholder="••••••••" class="form-input w-full h-11 sm:h-12 pl-10 pr-10 rounded-xl text-sm text-slate-500 bg-slate-100 cursor-not-allowed focus:outline-none border-slate-200">
                                 </div>
+                                
                             </div>
-                            <button type="submit" :disabled="loading" class="btn-submit w-full h-9 mt-1 rounded-lg text-xs font-bold text-white flex items-center justify-center space-x-1.5 disabled:opacity-70">
-                                <i x-show="loading" class="fas fa-spinner fa-spin text-xs"></i>
+
+                            <button type="submit" :disabled="loading" class="btn-submit w-full h-11 sm:h-12 mt-2 rounded-xl text-sm sm:text-base font-bold text-white flex items-center justify-center space-x-2 disabled:opacity-70">
+                                <i x-show="loading" class="fas fa-spinner fa-spin"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
                             </button>
                         </form>
                     </div>
 
-                    <!-- ================= GURU PIKET / ADMIN ================= -->
-                    <div class="form-panel absolute inset-0 w-full"
-                         x-show="activeRole === 'teacher'"
-                         :class="activeRole === 'teacher' ? 'opacity-100' : 'opacity-0'">
-                        <form method="POST" action="{{ route('login') }}" class="space-y-2.5 sm:space-y-3" @submit="loading = true">
+                    <!-- ================= GURU PIKET / ADMIN (OTOMATIS / SIPINTU) ================= -->
+                    <div x-show="activeRole === 'teacher'" style="display: none;">
+                        <form method="POST" action="{{ route('login') }}" class="space-y-4" x-data="{ loginId: '{{ old('email') }}' }" @submit="loading = true">
                             @csrf
-                            <!-- Catatan: Backend harus mengizinkan role 'guru' ATAU 'admin' untuk form ini -->
                             <input type="hidden" name="role" value="guru"> 
+                            
+                            <!-- Input Email/NIP -->
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1 ml-0.5">Email Guru / Admin</label>
+                                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Email / NIP Guru</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs"><i class="fas fa-envelope"></i></span>
-                                    <input name="email" type="email" value="{{ old('email') }}" required placeholder="email@smkn1bangsri.sch.id" class="form-input w-full h-9 pl-9 pr-3 rounded-lg text-slate-700 text-xs focus:outline-none">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-envelope"></i></span>
+                                    <input name="email" type="text" x-model="loginId" required placeholder="Masukkan NIP atau email guru" class="form-input w-full h-11 sm:h-12 pl-10 pr-4 rounded-xl text-sm text-slate-700 focus:outline-none">
                                 </div>
                             </div>
-                            <div x-data="{ showPw: false }">
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1 ml-0.5">Password</label>
+
+                            <!-- Input Password (Otomatis & Dikunci) -->
+                            <div>
+                                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Password (Terisi Otomatis)</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs"><i class="fas fa-lock"></i></span>
-                                    <input name="password" :type="showPw ? 'text' : 'password'" required placeholder="••••••••" class="form-input w-full h-9 pl-9 pr-9 rounded-lg text-slate-700 text-xs focus:outline-none">
-                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 text-xs focus:outline-none">
-                                        <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                                    </button>
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
+                                    <input name="password" type="password" :value="loginId.split('@')[0]" readonly required placeholder="••••••••" class="form-input w-full h-11 sm:h-12 pl-10 pr-10 rounded-xl text-sm text-slate-500 bg-slate-100 cursor-not-allowed focus:outline-none border-slate-200">
                                 </div>
+                                
                             </div>
-                            <p class="text-[9px] text-slate-400 text-center mt-1 italic">*Admin juga dapat login melalui form ini</p>
-                            <button type="submit" :disabled="loading" class="btn-submit w-full h-9 mt-1 rounded-lg text-xs font-bold text-white flex items-center justify-center space-x-1.5 disabled:opacity-70">
-                                <i x-show="loading" class="fas fa-spinner fa-spin text-xs"></i>
+
+                            <button type="submit" :disabled="loading" class="btn-submit w-full h-11 sm:h-12 mt-2 rounded-xl text-sm sm:text-base font-bold text-white flex items-center justify-center space-x-2 disabled:opacity-70">
+                                <i x-show="loading" class="fas fa-spinner fa-spin"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
                             </button>
                         </form>
                     </div>
 
-                    <!-- ================= SATPAM ================= -->
-                    <div class="form-panel absolute inset-0 w-full"
-                         x-show="activeRole === 'security'"
-                         :class="activeRole === 'security' ? 'opacity-100' : 'opacity-0'">
-                        <form method="POST" action="{{ route('login') }}" class="space-y-2.5 sm:space-y-3" @submit="loading = true">
+                    <!-- ================= SATPAM (MANUAL INPUT / DATABASE LOKAL) ================= -->
+                    <div x-show="activeRole === 'security'" style="display: none;">
+                        <form method="POST" action="{{ route('login') }}" class="space-y-4" @submit="loading = true">
                             @csrf
                             <input type="hidden" name="role" value="satpam">
+                            
+                            <!-- Input Email/ID -->
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1 ml-0.5">Email Satpam</label>
+                                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Email / ID Satpam</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs"><i class="fas fa-envelope"></i></span>
-                                    <input name="email" type="email" value="{{ old('email') }}" required placeholder="satpam@smkn1bangsri.sch.id" class="form-input w-full h-9 pl-9 pr-3 rounded-lg text-slate-700 text-xs focus:outline-none">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-envelope"></i></span>
+                                    <input name="email" type="text" value="{{ old('email') }}" required placeholder="Masukkan ID atau email satpam" class="form-input w-full h-11 sm:h-12 pl-10 pr-4 rounded-xl text-sm text-slate-700 focus:outline-none">
                                 </div>
                             </div>
+
+                            <!-- Input Password (Bisa Diketik Manual) -->
                             <div x-data="{ showPw: false }">
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1 ml-0.5">Password</label>
+                                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Password</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs"><i class="fas fa-lock"></i></span>
-                                    <input name="password" :type="showPw ? 'text' : 'password'" required placeholder="••••••••" class="form-input w-full h-9 pl-9 pr-9 rounded-lg text-slate-700 text-xs focus:outline-none">
-                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 text-xs focus:outline-none">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
+                                    <input name="password" :type="showPw ? 'text' : 'password'" required placeholder="••••••••" class="form-input w-full h-11 sm:h-12 pl-10 pr-10 rounded-xl text-sm text-slate-700 focus:outline-none">
+                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary-600 focus:outline-none transition-colors">
                                         <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                                     </button>
                                 </div>
                             </div>
-                            <button type="submit" :disabled="loading" class="btn-submit w-full h-9 mt-1 rounded-lg text-xs font-bold text-white flex items-center justify-center space-x-1.5 disabled:opacity-70">
-                                <i x-show="loading" class="fas fa-spinner fa-spin text-xs"></i>
+
+                            <button type="submit" :disabled="loading" class="btn-submit w-full h-11 sm:h-12 mt-2 rounded-xl text-sm sm:text-base font-bold text-white flex items-center justify-center space-x-2 disabled:opacity-70">
+                                <i x-show="loading" class="fas fa-spinner fa-spin"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
                             </button>
                         </form>
@@ -470,40 +452,12 @@
                     
                 </div>
 
-                <!-- Akun Demo -->
-                {{-- <div class="pt-2 mt-2 border-t border-slate-100" x-data="{ showDemo: false }">
-                    <button @click="showDemo = !showDemo" type="button" class="w-full flex items-center justify-center text-[10px] text-slate-400 hover:text-primary-600 transition-colors group py-1">
-                        <span>🔑 Lihat Kredensial Akun Demo</span>
-                        <i class="fas fa-chevron-down transition-transform duration-300 ml-1 group-hover:text-primary-500 text-[9px]" :class="showDemo ? 'rotate-180' : ''"></i>
-                    </button>
-                    <div x-show="showDemo" x-transition class="mt-1.5 space-y-1 text-[10px] text-slate-600 demo-box p-2 rounded-lg">
-                        <div class="flex items-start gap-1.5">
-                            <span class="text-sm">👨‍🏫</span>
-                            <div>
-                                <p class="font-bold text-slate-700">Guru Piket / Admin</p>
-                                <p class="text-primary-600 font-mono text-[9px]">gurupiket@smkn1bangsri.sch.id</p>
-                                <p class="text-slate-400 text-[9px]">Password: gurupiket2026</p>
-                                <p class="text-slate-400 text-[9px] mt-1 border-t border-slate-200 pt-1">Admin: admin@smkn1bangsri.sch.id</p>
-                                <p class="text-slate-400 text-[9px]">Password: password</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-1.5">
-                            <span class="text-sm">👨‍🎓</span>
-                            <div>
-                                <p class="font-bold text-slate-700">Siswa</p>
-                                <p class="text-primary-600 font-mono text-[9px]">zainal@gmail.com</p>
-                                <p class="text-slate-400 text-[9px]">Password: password</p>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
-
             </div>
         </div>
 
-        <!-- Footer Bersih -->
-        <div class="relative z-10 text-center w-full text-[10px] text-slate-400 space-y-0.5 mt-3 px-4">
-            <p class="font-medium">© 2026 DIDISPEN. All rights reserved.</p>
+        <!-- Footer -->
+        <div class="relative z-10 text-center w-full text-xs text-slate-500 mt-6 px-4">
+            <p class="font-medium tracking-wide">© 2026 DIDISPEN. All rights reserved.</p>
         </div>
 
     </div>
@@ -511,13 +465,12 @@
     <script>
         function loginForm() {
             return {
-                activeRole: 'student',
+                activeRole: '{{ old("role") == "siswa" ? "student" : (old("role") == "guru" ? "teacher" : (old("role") == "satpam" ? "security" : "student")) }}',
                 loading: false,
-                // HANYA 3 ROLE: Admin dihapus dari pilihan tab
                 roles: [
-                    { id: 'student', label: 'Siswa', description: 'Gunakan email siswa terdaftar' },
-                    { id: 'teacher', label: 'Guru Piket', description: 'Gunakan email Guru Piket atau Admin' },
-                    { id: 'security', label: 'Satpam', description: 'Gunakan email pos satpam' }
+                    { id: 'student', label: 'Siswa', icon: 'fas fa-user-graduate', description: 'Gunakan NIS atau email siswa untuk masuk' },
+                    { id: 'teacher', label: 'Guru Piket', icon: 'fas fa-chalkboard-teacher', description: 'Gunakan NIP atau email guru untuk masuk' },
+                    { id: 'security', label: 'Satpam', icon: 'fas fa-user-shield', description: 'Gunakan ID atau email satpam untuk masuk' }
                 ],
                 activeRoleIndex() {
                     return this.roles.findIndex(r => r.id === this.activeRole);

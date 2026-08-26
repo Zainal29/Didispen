@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -10,11 +11,12 @@ class StoreGuruRequest extends FormRequest
 
     public function rules(): array
     {
+        // ✅ REVISI SIPINTU: Tidak ada rule password.
+        // Password dikelola SiPintu (sudah di-hash saat sinkronisasi).
         $userId = $this->route('guru')?->user_id;
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('users')->ignore($userId)],
-            'password' => [$this->isMethod('POST') ? 'required' : 'nullable', 'string', 'min:6'],
             'nip' => ['required', 'string', Rule::unique('guru')->ignore($this->route('guru')?->id)],
             'nama_lengkap' => ['required', 'string', 'max:255'],
             'mata_pelajaran' => ['nullable', 'string', 'max:255'],

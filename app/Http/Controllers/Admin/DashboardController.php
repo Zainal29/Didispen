@@ -35,7 +35,7 @@ class DashboardController extends Controller
         }
 
         // 3. Data Pengajuan Terbaru (5 terakhir)
-        $recent = Dispensasi::with(['siswa.user', 'siswa.kelas', 'guruPiket.guru'])
+        $recent = Dispensasi::with(['siswa.user', 'siswa.kelas', 'guru'])
             ->latest()
             ->take(5)
             ->get();

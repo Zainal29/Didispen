@@ -51,7 +51,7 @@
                 <tr class="hover:bg-gray-50">
                     <td class="p-3 font-mono text-sm">{{ $d->nomor_surat }}</td>
                     <td class="p-3 font-semibold">{{ $d->siswa->nama_lengkap }}</td>
-                    <td class="p-3 text-sm">{{ $d->siswa->kelas->nama_kelas }}</td>
+                    <td class="p-3 text-sm">{{ $d->siswa->kelas?->nama_kelas ?? '-' }}</td>
                     <td class="p-3 text-sm capitalize">{{ str_replace('_', ' ', $d->kategori) }}</td>
                     <td class="p-3 text-sm">{{ Str::limit($d->tujuan, 30) }}</td>
                     <td class="p-3">
@@ -70,7 +70,7 @@
                             {{ ucfirst($d->status) }}
                         </span>
                     </td>
-                    <td class="p-3 text-sm">{{ $d->guruPiket->guru->nama_lengkap ?? '-' }}</td>
+                    <td class="p-3 text-sm">{{ $d->guru?->nama_lengkap ?? '-' }}</td>
                     <td class="p-3 text-center">
                         <a href="{{ route('admin.semua.pengajuan.show', $d->id) }}" class="text-blue-600 hover:text-blue-800">
                             <i class="fas fa-eye"></i>

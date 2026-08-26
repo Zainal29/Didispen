@@ -21,11 +21,11 @@ class CetakStrukController extends Controller
      */
     public function exportPdf(Dispensasi $dispensasi, Request $request)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru']);
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
 
         // Otorisasi: hanya guru piket yang bersangkutan atau admin
         if (auth()->user()->role !== 'admin') {
-            if (! $dispensasi->guruPiket || $dispensasi->guruPiket->guru_id !== auth()->user()->guru?->id) {
+            if (! $dispensasi->guru_id || $dispensasi->guru_id !== auth()->user()->guru?->id) {
                 abort(403, 'Anda tidak berhak mencetak dispensasi ini.');
             }
         }

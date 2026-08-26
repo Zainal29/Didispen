@@ -3,7 +3,6 @@ namespace App\Services;
 
 use App\Models\Dispensasi;
 use App\Models\Guru;
-use App\Models\GuruPiket;
 use App\Models\Siswa;
 use App\Models\Setting;
 use Carbon\Carbon;
@@ -24,30 +23,13 @@ class DispensasiService
         return sprintf('DISP-%d-%04d', $year, $last + 1);
     }
 
-    /** Tentukan guru piket berdasarkan tanggal & shift */
-    public function assignGuruPiket(Carbon $tanggal, Carbon $jamKeluar): ?GuruPiket
-    {
-        $shift = $jamKeluar->hour < 12 ? 'pagi' : 'siang';
-        return GuruPiket::with('guru')
-            ->where('tanggal', $tanggal->toDateString())
-            ->where('shift', $shift)
-            ->first();
-    }
-
-    /** Buat dispensasi baru */
+    /** Buat dispensasi baru — ✅ guru_id NULL, terisi saat guru approve */
     public function create(array $data, Siswa $siswa): Dispensasi
     {
-        $tanggal = Carbon::parse($data['jam_keluar']);
-        $guruPiket = $this->assignGuruPiket($tanggal, $tanggal);
-
-        if (!$guruPiket) {
-            throw new \RuntimeException('Tidak ada guru piket pada jadwal tersebut.');
-        }
-
         return Dispensasi::create([
             'nomor_surat' => $this->generateNomorSurat(),
             'siswa_id' => $siswa->id,
-            'guru_piket_id' => $guruPiket->id,
+            'guru_id' => null, // ✅ Terisi saat disetujui guru
             'kategori' => $data['kategori'],
             'alasan' => $data['alasan'],
             'tujuan' => $data['tujuan'],
@@ -65,6 +47,7 @@ class DispensasiService
         $token = Str::uuid()->toString();
         $dispensasi->update([
             'status' => 'disetujui',
+            'guru_id' => $guru->id, // ✅ Catat guru penanggung jawab
             'catatan_admin' => $catatan,
             'verification_token' => $token,
         ]);
@@ -85,6 +68,7 @@ class DispensasiService
     {
         $dispensasi->update([
             'status' => 'ditolak',
+            'guru_id' => $guru->id, // ✅ Catat guru yang menolak
             'catatan_admin' => $catatan,
         ]);
 
@@ -127,7 +111,12 @@ class DispensasiService
     /** Cek apakah boleh cetak */
     public function canPrint(Dispensasi $dispensasi): array
     {
-        if ($dispensasi->print_count >= $dispensasi->max_print_limit) {
+        $printLimit = min(
+            (int) $dispensasi->max_print_limit,
+            (int) config('app.print_limit', 3)
+        );
+
+        if ($dispensasi->print_count >= $printLimit) {
             return ['allowed' => false, 'reason' => 'Batas cetak telah tercapai.'];
         }
 
@@ -149,3 +138,4 @@ class DispensasiService
         $dispensasi->update(['printed_at' => now()]);
     }
 }
+

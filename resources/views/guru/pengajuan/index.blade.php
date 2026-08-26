@@ -6,22 +6,6 @@
 @section('content')
 @include('components.alert')
 
-@if(!isset($piketHariIni) || !$piketHariIni)
-    {{-- ALERT TIDAK ADA JADWAL PIKET --}}
-    <div class="bg-white rounded-2xl border-2 border-red-200 p-4 sm:p-5 flex items-start gap-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-exclamation-circle"></i>
-        </div>
-        <div class="min-w-0 flex-1">
-            <h3 class="text-sm font-bold text-red-800">Tidak Ada Jadwal Piket</h3>
-            <p class="text-xs text-red-700 mt-0.5">Anda tidak memiliki jadwal piket hari ini. Silakan kembali ke Dashboard.</p>
-            <a href="{{ route('guru.dashboard') }}" class="inline-flex items-center mt-3 text-xs font-bold text-red-700 hover:underline">
-                <i class="fas fa-arrow-left mr-1.5"></i>Kembali ke Dashboard
-            </a>
-        </div>
-    </div>
-@else
-
     {{-- ============ HERO PIKET ============ --}}
     <div class="relative overflow-hidden rounded-2xl mb-4">
         <div class="absolute inset-0 bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500"></div>
@@ -29,8 +13,8 @@
         <div class="relative z-10 p-4 sm:p-5 flex items-center justify-between gap-3">
             <div class="min-w-0">
                 <p class="text-blue-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-                <h2 class="text-base sm:text-lg font-black text-white tracking-tight mt-0.5">Jadwal Piket Hari Ini</h2>
-                <p class="text-blue-100 text-[11px] mt-1 truncate">{{ $piketHariIni->guru->nama_lengkap }}</p>
+                <h2 class="text-base sm:text-lg font-black text-white tracking-tight mt-0.5">Verifikasi Pengajuan Dispensasi</h2>
+                <p class="text-blue-100 text-[11px] mt-1 truncate">Guru Bertugas: {{ $piketHariIni->guru?->nama_lengkap ?? auth()->user()->guru?->nama_lengkap }}</p>
             </div>
         </div>
     </div>
@@ -88,7 +72,7 @@
                         </span>
                     </div>
                     <p class="text-[11px] text-gray-500 truncate">
-                        {{ $d->siswa->kelas->nama_kelas }} • {{ $d->siswa->user->nis_nip ?? '-' }}
+                        {{ $d->siswa->kelas?->nama_kelas ?? '-' }} • {{ $d->siswa->user->nis_nip ?? '-' }}
                     </p>
 
                     <div class="grid grid-cols-2 gap-2 mt-2.5 text-[11px]">
@@ -138,7 +122,7 @@
                     <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-50 text-blue-300 flex items-center justify-center text-2xl mb-3">
                         <i class="fas fa-inbox"></i>
                     </div>
-                    <p class="text-gray-500 font-semibold text-sm">Tidak ada pengajuan dispensasi untuk shift Anda hari ini.</p>
+                    <p class="text-gray-500 font-semibold text-sm">Tidak ada pengajuan dispensasi saat ini.</p>
                 </div>
             @endforelse
         </div>
@@ -174,7 +158,7 @@
                                 <div class="font-bold text-gray-900">{{ $d->siswa->nama_lengkap }}</div>
                                 <div class="text-[11px] text-gray-500 font-mono">{{ $d->siswa->user->nis_nip ?? '-' }}</div>
                             </td>
-                            <td class="p-4 text-xs font-medium text-gray-600">{{ $d->siswa->kelas->nama_kelas }}</td>
+                            <td class="p-4 text-xs font-medium text-gray-600">{{ $d->siswa->kelas?->nama_kelas ?? '-' }}</td>
                             <td class="p-4 text-xs capitalize font-medium text-gray-600">{{ str_replace('_', ' ', $d->kategori) }}</td>
                             <td class="p-4">
                                 <div class="font-bold text-gray-800 text-xs">{{ $d->jam_keluar }} s.d {{ $d->jam_kembali }}</div>
@@ -229,7 +213,6 @@
             <div class="p-4 border-t border-gray-100 bg-gray-50/50">{{ $dispensasi->links() }}</div>
         @endif
     </div>
-@endif
 
 @push('scripts')
 <script>
@@ -254,7 +237,15 @@ function rejectDispensasi(id, nama) {
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/guru/pengajuan/${id}/reject`;
-            form.innerHTML = `@csrf <input type="hidden" name="catatan_admin" value="${result.value}">`;
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+            const reason = document.createElement('input');
+            reason.type = 'hidden';
+            reason.name = 'catatan_admin';
+            reason.value = result.value;
+            form.append(csrf, reason);
             document.body.appendChild(form);
             form.submit();
         }

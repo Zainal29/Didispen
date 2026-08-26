@@ -91,7 +91,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-semibold text-gray-800 truncate">{{ $item->siswa->nama_lengkap }}</p>
-                        <p class="text-xs text-gray-500">{{ $item->siswa->kelas->nama_kelas }} • {{ $item->kategori }}</p>
+                        <p class="text-xs text-gray-500">{{ $item->siswa->kelas?->nama_kelas }} • {{ $item->kategori }}</p>
                         <p class="text-xs text-gray-400 mt-1">{{ $item->created_at->diffForHumans() }}</p>
                     </div>
                     <div>

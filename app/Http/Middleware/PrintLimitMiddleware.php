@@ -1,25 +1,35 @@
 <?php
+
 namespace App\Http\Middleware;
 
+use App\Helpers\PrintHelper;
 use App\Models\Dispensasi;
-use App\Services\DispensasiService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PrintLimitMiddleware
 {
-    public function handle(Request $request, Closure $next, DispensasiService $service)
+    public function handle(Request $request, Closure $next, ?int $limit = null)
     {
         $id = $request->route('dispensasi');
-        $dispensasi = Dispensasi::find($id);
 
-        if (!$dispensasi) abort(404);
+        return DB::transaction(function () use ($request, $next, $id) {
+            $dispensasi = Dispensasi::whereKey($id)->lockForUpdate()->first();
 
-        $check = $service->canPrint($dispensasi);
-        if (!$check['allowed']) {
-            return redirect()->back()->with('error', $check['reason']);
-        }
+            if (! $dispensasi) {
+                abort(404, 'Data dispensasi tidak ditemukan.');
+            }
 
-        return $next($request);
+            $request->route()->setParameter('dispensasi', $dispensasi);
+
+            // ✅ Validasi batas cetak + jam operasional lewat PrintHelper
+            // agar KONSISTEN dengan panel Guru maupun Siswa (single source of truth).
+            if ($reason = PrintHelper::blockReason($dispensasi)) {
+                return redirect()->back()->with('error', $reason);
+            }
+
+            return $next($request);
+        });
     }
 }

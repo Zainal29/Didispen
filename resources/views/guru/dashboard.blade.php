@@ -98,7 +98,7 @@
                     <div class="flex items-center justify-between gap-2">
                         <div class="min-w-0">
                             <p class="font-bold text-gray-900 text-sm truncate">{{ $item->siswa->nama_lengkap }}</p>
-                            <p class="text-[11px] text-gray-500 truncate">{{ $item->siswa->kelas->nama_kelas ?? '-' }} • {{ ucfirst(str_replace('_', ' ', $item->kategori)) }}</p>
+                            <p class="text-[11px] text-gray-500 truncate">{{ $item->siswa->kelas?->nama_kelas ?? '-' }} • {{ ucfirst(str_replace('_', ' ', $item->kategori)) }}</p>
                         </div>
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 flex-shrink-0">Menunggu</span>
                     </div>
@@ -137,7 +137,7 @@
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">Menunggu</span>
                             </div>
                             <p class="text-xs text-gray-500 truncate mt-1">
-                                <span class="font-semibold text-gray-700">{{ $item->siswa->kelas->nama_kelas ?? '-' }}</span> • 
+                                <span class="font-semibold text-gray-700">{{ $item->siswa->kelas?->nama_kelas ?? '-' }}</span> • 
                                 <span class="capitalize">{{ str_replace('_', ' ', $item->kategori) }}</span> • 
                                 <span class="font-mono font-medium text-blue-600">{{ $fmtTime($item->jam_keluar) }} – {{ $fmtTime($item->jam_kembali) }}</span> • 
                                 <span>Tujuan: {{ $item->tujuan }}</span>

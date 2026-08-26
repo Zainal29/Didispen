@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Middleware\CheckDispensasiTime;
+use App\Http\Middleware\GuruPiketMiddleware;
+use App\Http\Middleware\MustChangePassword;
+use App\Http\Middleware\PrintLimitMiddleware;
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,9 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // 1. DAFTARKAN MIDDLEWARE ALIAS DI SINI
         // Ini menggantikan fungsi $routeMiddleware di app/Http/Kernel.php versi lama
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'guru.piket' => \App\Http\Middleware\GuruPiketMiddleware::class,
-            'print.limit' => \App\Http\Middleware\PrintLimitMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'guru.piket' => GuruPiketMiddleware::class,
+            'print.limit' => PrintLimitMiddleware::class,
+            'must.change.password' => MustChangePassword::class,
+
+            // ✅ BARU: Middleware untuk membatasi waktu pengajuan dispensasi
+            'check.dispensasi.time' => CheckDispensasiTime::class,
         ]);
 
         // 2. (Opsional) Menambahkan middleware ke group web secara global

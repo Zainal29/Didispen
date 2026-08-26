@@ -11,6 +11,26 @@
         <div class="flex-1">
             <h4 class="text-sm font-bold text-emerald-800 mb-1">Berhasil!</h4>
             <p class="text-sm text-emerald-700 leading-relaxed">{{ session('success') }}</p>
+
+            @if(session('sync_stats'))
+                @php $stats = session('sync_stats'); @endphp
+                <div class="mt-3 p-3 bg-white/80 rounded-md border border-emerald-200 text-xs text-emerald-900 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div><span class="font-bold">Total Data:</span> {{ $stats['total'] ?? 0 }}</div>
+                    <div><span class="font-bold text-green-600">Baru (Inserted):</span> {{ $stats['inserted'] ?? 0 }}</div>
+                    <div><span class="font-bold text-blue-600">Diperbarui (Updated):</span> {{ $stats['updated'] ?? 0 }}</div>
+                    <div><span class="font-bold text-red-600">Gagal:</span> {{ $stats['failed'] ?? 0 }}</div>
+                </div>
+                @if(!empty($stats['errors']))
+                    <div class="mt-2 text-xs text-red-600">
+                        <strong class="block mb-1">Rincian Error:</strong>
+                        <ul class="list-disc pl-4 space-y-0.5 max-h-32 overflow-y-auto">
+                            @foreach($stats['errors'] as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            @endif
         </div>
         <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 text-emerald-400 hover:text-emerald-600 transition">
             <i class="fas fa-times"></i>

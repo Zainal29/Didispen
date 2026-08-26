@@ -172,7 +172,7 @@
         </div>
     </nav>
 
-    {{-- BOTTOM SHEET AKUN --}}
+        {{-- BOTTOM SHEET AKUN --}}
     <div x-show="sheet" x-cloak class="fixed inset-0 z-40 lg:hidden">
         <div class="absolute inset-0 bg-black/40" @click="sheet = false"></div>
         <div class="absolute bottom-0 inset-x-0 bg-white rounded-t-3xl p-6"
@@ -180,6 +180,8 @@
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0">
             <div class="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-5"></div>
+
+            {{-- Header akun --}}
             <div class="flex items-center space-x-3 mb-5">
                 <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white font-bold flex items-center justify-center shadow-md shadow-blue-500/30">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
@@ -189,7 +191,9 @@
                     <p class="text-xs text-gray-500">Guru Piket</p>
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 mb-3">
+
+            {{-- ✅ GRID 3 TILE: Laporan, Verifikasi, Panduan (rapi satu baris) --}}
+            <div class="grid grid-cols-3 gap-2 mb-2">
                 <a href="{{ route('guru.laporan.index') }}" @click="sheet = false"
                    class="px-3 py-2.5 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 text-center">
                     <i class="fas fa-chart-bar mr-1"></i> Laporan
@@ -203,6 +207,7 @@
                     <i class="fas fa-book-open mr-1"></i> Panduan
                 </a>
             </div>
+
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="w-full flex items-center justify-center px-4 py-3 rounded-xl text-sm font-bold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 transition-colors">

@@ -62,15 +62,15 @@ class DispensasiExport implements FromCollection, WithHeadings, WithMapping, Wit
             $row->created_at->format('d-m-Y H:i'),
             $row->siswa->user->nis_nip ?? '-',
             $row->siswa->nama_lengkap,
-            $row->siswa->kelas->nama_kelas ?? '-',
-            $row->siswa->kelas->jurusan->nama_jurusan ?? '-',
+            $row->siswa->kelas?->nama_kelas ?? '-',
+            $row->siswa->kelas?->jurusan?->nama_jurusan ?? '-',
             ucfirst(str_replace('_', ' ', $row->kategori)),
             $row->alasan,
             $row->tujuan,
-            $row->jam_keluar->format('d-m-Y H:i'),
-            $row->jam_kembali->format('d-m-Y H:i'),
+            $row->jam_keluar,
+            $row->jam_kembali,
             ucfirst($row->status),
-            $row->guruPiket->guru->nama_lengkap ?? '-',
+            $row->guru?->nama_lengkap ?? '-',
         ];
     }
 

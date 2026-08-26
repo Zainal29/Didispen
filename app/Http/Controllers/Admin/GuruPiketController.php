@@ -3,35 +3,50 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Dispensasi;
 use App\Models\Guru;
-use App\Models\GuruPiket;
 use Illuminate\Http\Request;
 
 class GuruPiketController extends Controller
 {
+    /**
+     * Halaman Rekap & Riwayat Guru Piket
+     */
     public function index()
     {
-        // Tampilkan 7 hari (Senin-Minggu)
-        $piket = GuruPiket::with('guru.user')
-            ->orderByRaw("FIELD(hari, 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu')")
+        // Ambil semua guru dan hitung berapa banyak dispensasi yang pernah mereka proses
+        $gurus = Guru::with('user')
+            ->withCount('dispensasi')
+            ->orderByDesc('dispensasi_count')
             ->get();
-            
-        $gurus = Guru::with('user')->get();
 
-        return view('admin.piket.index', compact('piket', 'gurus'));
+        // Ambil 100 riwayat dispensasi terakhir beserta guru yang memprosesnya
+        $riwayat = Dispensasi::with(['guru', 'siswa.kelas.jurusan'])
+            ->whereNotNull('guru_id')
+            ->latest()
+            ->limit(100)
+            ->get();
+
+        $piket = collect(); // collection kosong untuk kompatibilitas
+
+        return view('admin.piket.index', compact('gurus', 'riwayat', 'piket'));
     }
 
-    // Admin hanya update guru yang bertugas di hari tertentu
+    public function store(Request $request)
+    {
+        return redirect()->route('admin.piket.index')
+            ->with('info', 'Sistem menggunakan konsep "Login = Piket". Tidak ada jadwal piket manual yang perlu ditambahkan.');
+    }
+
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'guru_id' => 'required|exists:guru,id',
-        ]);
-
-        $jadwal = GuruPiket::findOrFail($id);
-        $jadwal->update(['guru_id' => $request->guru_id]);
-
         return redirect()->route('admin.piket.index')
-            ->with('success', 'Jadwal piket berhasil diperbarui!');
+            ->with('info', 'Sistem menggunakan konsep "Login = Piket". Tidak ada jadwal piket yang perlu diubah.');
+    }
+
+    public function destroy($id)
+    {
+        return redirect()->route('admin.piket.index')
+            ->with('info', 'Sistem menggunakan konsep "Login = Piket". Data rekap tidak dapat dihapus manual dari menu ini.');
     }
 }

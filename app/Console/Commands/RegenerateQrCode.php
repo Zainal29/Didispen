@@ -7,6 +7,7 @@ use App\Models\Dispensasi;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class RegenerateQrCode extends Command
 {
@@ -23,7 +24,7 @@ class RegenerateQrCode extends Command
                 $query->whereNull('qr_code')
                       ->orWhere('qr_code', '');
             })
-            ->with(['siswa.kelas', 'guruPiket.guru'])
+            ->with(['siswa.kelas', 'guru'])
             ->get();
 
         if ($dispensasiList->count() === 0) {
@@ -46,16 +47,8 @@ class RegenerateQrCode extends Command
             try {
                 $this->line("\n🔄 Processing: {$dispensasi->nomor_surat}...");
 
-                $qrData = [
-                    'id' => $dispensasi->id,
-                    'nomor_surat' => $dispensasi->nomor_surat,
-                    'siswa' => $dispensasi->siswa->nama_lengkap,
-                    'kelas' => $dispensasi->siswa->kelas->nama_kelas,
-                    'jam_keluar' => $dispensasi->jam_keluar,
-                    'jam_kembali' => $dispensasi->jam_kembali,
-                    'berlaku_sampai' => now()->endOfDay()->toIso8601String(),
-                    'token' => md5($dispensasi->id . $dispensasi->nomor_surat . 'SECRET_KEY_DISPENSI')
-                ];
+                $dispensasi->qr_token ??= Str::random(64);
+                $qrData = ['token' => $dispensasi->qr_token];
 
                 $qrCodePath = 'qr_codes/dispensasi_' . $dispensasi->id . '.svg';
 
@@ -64,7 +57,10 @@ class RegenerateQrCode extends Command
                     QrCode::format('svg')->size(300)->generate(json_encode($qrData))
                 );
 
-                $dispensasi->update(['qr_code' => $qrCodePath]);
+                $dispensasi->update([
+                    'qr_code' => $qrCodePath,
+                    'qr_token' => $dispensasi->qr_token,
+                ]);
 
                 $this->info("✅ {$dispensasi->nomor_surat} - QR Code berhasil dibuat");
                 $success++;

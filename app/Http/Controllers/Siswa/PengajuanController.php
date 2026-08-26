@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers\Siswa;
 
+use App\Helpers\DispensasiTimeHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
-use App\Models\GuruPiket;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class PengajuanController extends Controller
 {
     /**
-     * Menampilkan daftar riwayat pengajuan siswa
+     * Daftar riwayat pengajuan siswa
      */
     public function index(Request $request)
     {
         $siswa = auth()->user()->siswa;
 
-        $query = Dispensasi::with(['guruPiket.guru'])
+        $query = Dispensasi::with(['guru', 'siswa.kelas.jurusan'])
             ->where('siswa_id', $siswa->id);
 
         if ($request->filled('status')) {
@@ -30,112 +31,126 @@ class PengajuanController extends Controller
     }
 
     /**
-     * Menampilkan form buat pengajuan
+     * Form buat pengajuan — dengan validasi waktu
      */
     public function create()
     {
         $siswa = auth()->user()->siswa;
 
-        // ✅ REVISI: Gunakan scope hariIni() alih-alih where('tanggal', today())
-        $guruPiketHariIni = GuruPiket::with('guru')->hariIni()->first();
+        // ✅ CEK WAKTU: Apakah sekarang dalam jam pengajuan?
+        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
 
-        if (!$guruPiketHariIni) {
-            return redirect()->route('siswa.dashboard')
-                ->with('error', 'Maaf, tidak ada guru piket yang dijadwalkan hari ini. Silakan hubungi Admin.');
+        if (! $timeCheck['allowed']) {
+            return redirect()->route('siswa.pengajuan.index')
+                ->with('error', $timeCheck['reason'].' Saat ini: '.($timeCheck['current_day'] ?? '').' '.($timeCheck['current_time'] ?? ''));
         }
 
-        // ✅ Tambahan: Cegah siswa membuat pengajuan baru jika yang lama masih "menunggu"
-        $pendingDispensasi = Dispensasi::where('siswa_id', $siswa->id)
+        // Cegah double pengajuan menunggu
+        $pending = Dispensasi::where('siswa_id', $siswa->id)
             ->where('status', 'menunggu')
             ->first();
 
-        if ($pendingDispensasi) {
+        if ($pending) {
             return redirect()->route('siswa.pengajuan.index')
-                ->with('warning', 'Anda masih memiliki pengajuan yang belum diproses (No. ' . $pendingDispensasi->nomor_surat . '). Tunggu persetujuan terlebih dahulu.');
+                ->with('warning', 'Anda masih memiliki pengajuan yang belum diproses (No. '.$pending->nomor_surat.'). Tunggu persetujuan terlebih dahulu.');
         }
 
-        return view('siswa.pengajuan.create', compact('siswa', 'guruPiketHariIni'));
+        return view('siswa.pengajuan.create', compact('siswa'));
     }
 
     /**
-     * Menyimpan pengajuan baru ke database
+     * Simpan pengajuan — dengan validasi waktu & hitung batas kembali
      */
-    public function store(Request $request)
+  public function store(Request $request)
     {
+        // ✅ CEK WAKTU LAGI di server (untuk keamanan)
+        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
+        if (! $timeCheck['allowed']) {
+            return redirect()->route('siswa.pengajuan.index')
+                ->with('error', 'Pengajuan ditolak: '.$timeCheck['reason']);
+        }
+
         $validated = $request->validate([
-            'kategori' => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
-            'alasan' => 'required|string|min:10|max:500',
-            'tujuan' => 'required|string|max:255',
-            'lokasi' => 'nullable|string|max:255',
-            'jam_keluar' => 'required|integer|between:1,10',
+            'kategori'    => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
+            'alasan'      => 'required|string|min:10|max:500',
+            'tujuan'      => 'required|string|max:255',
+            'lokasi'      => 'nullable|string|max:255',
+            'jam_keluar'  => 'required|integer|between:1,10',
             'jam_kembali' => 'required|integer|between:1,10|gt:jam_keluar',
         ], [
-            'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
+            'alasan.min'     => 'Alasan minimal 10 karakter agar lebih jelas.',
             'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',
         ]);
 
-        $siswa = auth()->user()->siswa;
+        // ✅ VALIDASI JAM REALISTIS (SERVER SIDE)
+        // Asumsi: Jam Pelajaran ke-1 dimulai pukul 07:00 WIB
+        // Rumus: Jam Pelajaran Saat Ini = Jam Sistem - 6
+        // Contoh: Jam 09:30 WIB = Jam Pelajaran ke-3 (09 - 6 = 3)
+        $currentLessonHour = now()->format('H') - 6; 
+        
+        // Pastikan tidak kurang dari 1 (jika sebelum jam 7 pagi)
+        $currentLessonHour = max(1, $currentLessonHour); 
 
-        // ✅ REVISI: Gunakan scope hariIni() untuk mendapatkan ID guru piket hari ini
-        $guruPiket = GuruPiket::hariIni()->first();
-
-        if (!$guruPiket) {
-            return redirect()->back()
-                ->with('error', 'Maaf, tidak ada guru piket yang dijadwalkan hari ini. Hubungi Admin.');
+        if ($validated['jam_keluar'] <= $currentLessonHour) {
+            return back()->withErrors([
+                'jam_keluar' => 'Anda tidak dapat memilih jam yang sudah berlalu. Silakan pilih mulai dari Jam Pelajaran ke-' . ($currentLessonHour + 1) . '.'
+            ])->withInput();
         }
 
-        // Cegah spam pengajuan (double check)
+        $siswa = auth()->user()->siswa;
+
+        // Double-check cegah spam
         $pendingExists = Dispensasi::where('siswa_id', $siswa->id)
             ->where('status', 'menunggu')
             ->exists();
-
         if ($pendingExists) {
             return redirect()->route('siswa.pengajuan.index')
                 ->with('error', 'Anda masih memiliki pengajuan yang belum diproses.');
         }
 
-        // Susun data untuk disimpan dengan rapi
-        $dataToSave = [
-            'siswa_id' => $siswa->id,
-            'guru_piket_id' => $guruPiket->id, // ✅ Diisi otomatis dari jadwal hari ini
-            'nomor_surat' => $this->generateNomorSurat(),
-            'status' => 'menunggu',
-            'kategori' => $validated['kategori'],
-            'alasan' => $validated['alasan'],
-            'tujuan' => $validated['tujuan'],
-            'lokasi' => $validated['lokasi'] ?? null,
-            'jam_keluar' => 'Jam Pelajaran ke-' . $validated['jam_keluar'],
-            'jam_kembali' => 'Jam Pelajaran ke-' . $validated['jam_kembali'],
-        ];
-
         try {
-            Dispensasi::create($dataToSave);
+            // ✅ BARU: Hitung batas waktu kembali berdasarkan jam pelajaran yang dipilih
+            $batasWaktu = $this->hitungBatasWaktuKembali($validated['jam_kembali']);
+
+            Dispensasi::create([
+                'siswa_id'              => $siswa->id,
+                'guru_id'               => null,
+                'nomor_surat'           => $this->generateNomorSurat(),
+                'status'                => 'menunggu',
+                'kategori'              => $validated['kategori'],
+                'alasan'                => $validated['alasan'],
+                'tujuan'                => $validated['tujuan'],
+                'lokasi'                => $validated['lokasi'] ?? null,
+                'jam_keluar'            => 'Jam Pelajaran ke-'.$validated['jam_keluar'],
+                'jam_kembali'           => 'Jam Pelajaran ke-'.$validated['jam_kembali'],
+                'batas_waktu_kembali'   => $batasWaktu, // ✅ DISIMPAN KE DATABASE
+            ]);
 
             return redirect()->route('siswa.pengajuan.index')
                 ->with('success', 'Pengajuan dispensasi berhasil dibuat. Menunggu persetujuan guru piket.');
         } catch (\Exception $e) {
-            Log::error('Gagal membuat dispensasi: ' . $e->getMessage());
-            return redirect()->back()
-                ->withInput()
+            Log::error('Gagal membuat dispensasi: '.$e->getMessage());
+            return redirect()->back()->withInput()
                 ->with('error', 'Terjadi kesalahan saat menyimpan pengajuan. Silakan coba lagi.');
         }
     }
 
     /**
-     * Menampilkan detail pengajuan
-     */
-    public function show(Dispensasi $dispensasi)
-    {
-        if ($dispensasi->siswa_id !== auth()->user()->siswa->id) {
-            abort(403, 'Akses ditolak.');
-        }
-
-        $dispensasi->load(['guruPiket.guru', 'siswa.kelas.jurusan']);
-        return view('siswa.pengajuan.show', compact('dispensasi'));
+     * Detail pengajuan
+     */public function show(Dispensasi $dispensasi)
+{
+    // Pastikan hanya siswa yang bersangkutan yang bisa lihat
+    if ($dispensasi->siswa_id !== auth()->user()->siswa->id) {
+        abort(403, 'Akses ditolak.');
     }
 
+    $dispensasi->load(['guru', 'siswa.kelas.jurusan', 'siswa.user']);
+
+    return view('siswa.pengajuan.show', compact('dispensasi'));
+}
+
     /**
-     * Mengambil data QR Code untuk ditampilkan di modal
+     * Ambil QR Code untuk modal
      */
     public function getQRCode(Dispensasi $dispensasi)
     {
@@ -146,7 +161,7 @@ class PengajuanController extends Controller
         if ($dispensasi->status !== 'disetujui') {
             return response()->json([
                 'success' => false,
-                'message' => 'QR Code ini sudah pernah di-scan atau tidak aktif lagi.'
+                'message' => 'QR Code ini sudah pernah di-scan atau tidak aktif lagi.',
             ], 400);
         }
 
@@ -154,7 +169,7 @@ class PengajuanController extends Controller
             'qr_code' => $dispensasi->qr_code,
             'nomor_surat' => $dispensasi->nomor_surat,
             'jam_keluar' => $dispensasi->jam_keluar,
-            'jam_kembali' => $dispensasi->jam_kembali
+            'jam_kembali' => $dispensasi->jam_kembali,
         ]);
     }
 
@@ -165,6 +180,32 @@ class PengajuanController extends Controller
     {
         $tanggal = now()->format('Ymd');
         $random = strtoupper(substr(md5(uniqid()), 0, 6));
+
         return "DISP/{$tanggal}/{$random}";
+    }
+
+    /**
+     * ✅ BARU: Helper untuk menghitung batas waktu kembali + toleransi 15 menit
+     */
+    private function hitungBatasWaktuKembali(int $jamPelajaran): Carbon
+    {
+        // Mapping jam pelajaran ke waktu selesai (Sesuaikan dengan jadwal sekolah Anda)
+        $jamMap = [
+            1 => '08:00',
+            2 => '09:00',
+            3 => '10:00',
+            4 => '11:00',
+            5 => '12:00',
+            6 => '13:00',
+            7 => '14:00',
+            8 => '15:00',
+            9 => '16:00',
+            10 => '17:00',
+        ];
+
+        $waktuSelesai = $jamMap[$jamPelajaran] ?? '15:00';
+
+        // Tambahkan toleransi 15 menit setelah jam berakhir
+        return Carbon::parse($waktuSelesai)->addMinutes(15);
     }
 }

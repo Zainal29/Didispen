@@ -11,7 +11,7 @@ class LaporanController extends Controller
     public function index(Request $request)
     {
         // Mulai query dasar dengan eager loading
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru']);
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
 
         // 1. Filter Status
         if ($request->filled('status')) {
@@ -50,7 +50,7 @@ class LaporanController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru']);
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
 
         // Terapkan logika filter yang SAMA PERSIS dengan method index
         if ($request->filled('status')) $query->where('status', $request->status);
@@ -75,7 +75,7 @@ class LaporanController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru']);
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
 
         // Terapkan logika filter yang SAMA PERSIS
         if ($request->filled('status')) $query->where('status', $request->status);
@@ -136,7 +136,7 @@ class LaporanController extends Controller
                     $row->jam_kembali,
                     
                     ucfirst($row->status),
-                    $row->guruPiket->guru->nama_lengkap ?? '-',
+                    $row->guru->nama_lengkap ?? '-',
                 ]);
             }
             fclose($file);

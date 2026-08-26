@@ -10,7 +10,7 @@ class DispensasiPolicy
     {
         if ($user->isAdmin()) return true;
         if ($user->isGuru()) {
-            return $dispensasi->guruPiket?->guru?->user_id === $user->id;
+            return $dispensasi->status === 'menunggu' || $dispensasi->guru?->user_id === $user->id;
         }
         if ($user->isSiswa()) {
             return $dispensasi->siswa?->user_id === $user->id;

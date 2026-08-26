@@ -1,23 +1,44 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\Admin\GuruPiketController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Guru;
-use App\Http\Controllers\Guru\PengajuanController as GuruPengajuanController;
 use App\Http\Controllers\Guru\CetakStrukController;
-use App\Http\Controllers\Guru\PrintBluetoothController;
-use App\Http\Controllers\Admin\GuruPiketController;
-use App\Http\Controllers\Siswa;
+use App\Http\Controllers\Guru\ChecklogController;
+use App\Http\Controllers\Guru\PengajuanController as GuruPengajuanController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Satpam;
+use App\Http\Controllers\Satpam\DashboardController;
+use App\Http\Controllers\Satpam\ScanController;
+use App\Http\Controllers\Siswa;
+use App\Http\Controllers\Siswa\CetakController;
+use App\Http\Controllers\Siswa\NotifikasiController;
+use App\Http\Controllers\Siswa\PengajuanController;
 use Illuminate\Support\Facades\Route;
 
 // ==========================================
 // PUBLIC ROUTES
 // ==========================================
-Route::get('/', fn() => redirect('/login'));
+Route::get('/', fn () => redirect('/login'));
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
+Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// ✅ REVISI SIPINTU: Route wajib ganti password DIHAPUS.
+// Password dikelola oleh SiPintu/Sijuna. User yang lupa password
+// harus menghubungi admin pusat.
+
+// ==========================================
+// PROFIL (Khusus Siswa - Data Tambahan Opsional)
+// ==========================================
+Route::middleware(['auth', 'role:siswa'])->prefix('profil')->name('profil.')->group(function () {
+    Route::get('/', [ProfileController::class, 'show'])->name('show');
+    Route::post('/update-phone', [ProfileController::class, 'updatePhone'])->name('phone');
+    Route::put('/phone', [ProfileController::class, 'updatePhone']);
+    Route::post('/update-additional', [ProfileController::class, 'updateAdditional'])->name('update-additional');
+    Route::put('/additional', [ProfileController::class, 'updateAdditional'])->name('additional');
+});
 
 // ==========================================
 // ADMIN ROUTES
@@ -26,9 +47,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', Admin\DashboardController::class)->name('dashboard');
     Route::resource('siswa', Admin\SiswaController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
     Route::resource('guru', Admin\GuruController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('piket', Admin\GuruPiketController::class)->only(['index', 'store', 'destroy']);
-  // ✅ Tambahkan 'update' agar form di view bisa mengirim data
-    Route::resource('piket', Admin\GuruPiketController::class)->only(['index', 'update', 'destroy']);
+    Route::resource('piket', GuruPiketController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('satpam', Admin\SatpamController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::get('semua-pengajuan', [Admin\DispensasiController::class, 'index'])->name('semua.pengajuan');
@@ -42,6 +61,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('pengaturan', [Admin\SettingsController::class, 'update'])->name('settings.update');
     Route::get('audit-log', [Admin\AuditLogController::class, 'index'])->name('audit.index');
     Route::get('guru/checklog', [Admin\GuruController::class, 'checklog'])->name('guru.checklog');
+
+    // ✅ REVISI SIPINTU: Route manajemen password admin DIHAPUS.
+    // Admin TIDAK BISA melihat atau mereset password user karena
+    // password di-hash dan dikelola oleh SiPintu/Sijuna.
+    // Jika user lupa password, arahkan ke admin pusat SiPintu/Sijuna.
 
     // Sinkronisasi SiPintu Gateway
     Route::post('sipintu/sync-siswa', [Admin\SipintuSyncController::class, 'syncSiswa'])->name('sipintu.sync-siswa');
@@ -60,19 +84,13 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::post('pengajuan/{dispensasi}/approve', [GuruPengajuanController::class, 'approve'])->name('pengajuan.approve');
     Route::post('pengajuan/{dispensasi}/reject', [GuruPengajuanController::class, 'reject'])->name('pengajuan.reject');
 
-    // ✅ PERBAIKAN: Hapus prefix '/guru/' karena sudah ada di group
     Route::get('pengajuan/{dispensasi}/cetak-struk', [CetakStrukController::class, 'index'])
+        ->middleware('print.limit')
         ->name('cetak-struk');
 
     Route::get('pengajuan/{dispensasi}/cetak-pdf', [CetakStrukController::class, 'exportPdf'])
+        ->middleware('print.limit')
         ->name('cetak-pdf');
-
-    // ✅ PERBAIKAN: Hapus prefix '/guru/' karena sudah ada di group
-    Route::post('pengajuan/{dispensasi}/print-thermal', [PrintBluetoothController::class, 'print'])
-        ->name('print-thermal');
-
-    Route::get('/pengajuan/{dispensasi}/print-data', [PrintBluetoothController::class, 'getData'])
-    ->name('guru.dispensasi.print-data');
 
     // Laporan
     Route::get('laporan', [Guru\LaporanController::class, 'index'])->name('laporan.index');
@@ -80,9 +98,13 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
     Route::get('laporan/excel', [Guru\LaporanController::class, 'exportExcel'])->name('laporan.excel');
 
     // Checklog
-    Route::get('checklog', [\App\Http\Controllers\Guru\ChecklogController::class, 'index'])->name('checklog.index');
-    Route::post('checklog', [\App\Http\Controllers\Guru\ChecklogController::class, 'store'])->name('checklog.store');
-    Route::post('checklog/{log}/checkin', [\App\Http\Controllers\Guru\ChecklogController::class, 'checkIn'])->name('checklog.checkin');
+    Route::get('checklog', [ChecklogController::class, 'index'])->name('checklog.index');
+    Route::post('checklog', [ChecklogController::class, 'store'])->name('checklog.store');
+    Route::post('checklog/{log}/checkin', [ChecklogController::class, 'checkIn'])->name('checklog.checkin');
+
+    // Warning System
+    Route::post('warning/{dispensasi}/send', [Guru\WarningController::class, 'sendWarning'])
+        ->name('warning.send');
 });
 
 // ==========================================
@@ -91,65 +113,57 @@ Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(f
 Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
     Route::get('/dashboard', Siswa\DashboardController::class)->name('dashboard');
 
-    Route::get('pengajuan', [\App\Http\Controllers\Siswa\PengajuanController::class, 'index'])->name('pengajuan.index');
-    Route::get('pengajuan/buat', [\App\Http\Controllers\Siswa\PengajuanController::class, 'create'])->name('pengajuan.create');
-    Route::post('pengajuan', [\App\Http\Controllers\Siswa\PengajuanController::class, 'store'])->name('pengajuan.store');
-    Route::get('pengajuan/{dispensasi}', [\App\Http\Controllers\Siswa\PengajuanController::class, 'show'])->name('pengajuan.show');
-    Route::get('qr-code/{dispensasi}', [Siswa\PengajuanController::class, 'getQRCode'])->name('qr-code');
+    Route::get('pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
+    Route::get('pengajuan/buat', [PengajuanController::class, 'create'])->name('pengajuan.create');
+    Route::post('pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
+    Route::get('pengajuan/{dispensasi}', [PengajuanController::class, 'show'])->name('pengajuan.show');
+    Route::get('qr-code/{dispensasi}', [PengajuanController::class, 'getQRCode'])->name('qr-code');
 
-    Route::get('cetak/{dispensasi}', [\App\Http\Controllers\Siswa\CetakController::class, 'cetak'])->name('cetak');
+    Route::get('cetak/{dispensasi}', [CetakController::class, 'cetak'])->name('cetak');
 
-    Route::get('notifikasi', [\App\Http\Controllers\Siswa\NotifikasiController::class, 'index'])->name('notifikasi.index');
-    Route::post('notifikasi/{notifikasi}/read', [\App\Http\Controllers\Siswa\NotifikasiController::class, 'markRead'])->name('notifikasi.read');
-    Route::post('notifikasi/read-all', [\App\Http\Controllers\Siswa\NotifikasiController::class, 'markAllRead'])->name('notifikasi.readAll');
+    Route::get('notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+    Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead'])->name('notifikasi.read');
+    Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.readAll');
+
+    // ✅ HAPUS BARIS INI (duplikat dengan group PROFIL di atas):
+    // Route::get('/profil', [ProfileController::class, 'show'])->name('siswa.profil.show');
 });
 
 // ==========================================
 // SATPAM ROUTES
 // ==========================================
 Route::middleware(['auth', 'role:satpam'])->prefix('satpam')->name('satpam.')->group(function () {
-    Route::get('dashboard', [\App\Http\Controllers\Satpam\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('scan', [\App\Http\Controllers\Satpam\ScanController::class, 'index'])->name('scan');
-    Route::post('scan/verify', [\App\Http\Controllers\Satpam\ScanController::class, 'verify'])->name('scan.verify');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('scan', [ScanController::class, 'index'])->name('scan');
+    Route::post('scan/verify', [ScanController::class, 'verify'])->middleware('throttle:10,1')->name('scan.verify');
+
     // Konfirmasi Manual
-    Route::post('konfirmasi/{dispensasi}/keluar', [\App\Http\Controllers\Satpam\DashboardController::class, 'konfirmasiKeluar'])->name('konfirmasi.keluar');
-    Route::post('konfirmasi/{dispensasi}/kembali', [\App\Http\Controllers\Satpam\DashboardController::class, 'konfirmasiKembali'])->name('konfirmasi.kembali');
+    Route::post('konfirmasi/{dispensasi}/keluar', [DashboardController::class, 'konfirmasiKeluar'])->name('konfirmasi.keluar');
+    Route::post('konfirmasi/{dispensasi}/kembali', [DashboardController::class, 'konfirmasiKembali'])->name('konfirmasi.kembali');
+
+    // ✅ BARU: Route untuk melihat detail dispensasi
+    Route::get('dispensasi/{dispensasi}/detail', [DashboardController::class, 'showDetail'])->name('dispensasi.detail');
+
+    // ✅ BARU: Route untuk menandai sudah dihubungi
+    Route::post('dispensasi/{dispensasi}/mark-contacted', [DashboardController::class, 'markContacted'])->name('mark-contacted');
+    Route::post('dispensasi/{dispensasi}/wa-contacted', [DashboardController::class, 'markWaContacted'])
+        ->name('satpam.wa-contacted');
 });
+
 // ==========================================
 // PANDUAN PENGGUNAAN (Akses Semua User Login)
 // ==========================================
-Route::get('/panduan', fn() => view('panduan.index'))->middleware('auth')->name('panduan');
-
+Route::get('/panduan', fn () => view('panduan.index'))->middleware(['auth'])->name('panduan');
 
 // ==========================================
-// TESTING & DEBUG ROUTES (Tanpa Auth)
+// TESTING & DEBUG ROUTES
 // ==========================================
 Route::get('/cek-jam-server', function () {
     return response()->json([
-        'php_now_app_timezone'   => now()->toDateTimeString(),
-        'app_timezone_config'    => config('app.timezone'),
-        'php_now_utc'            => now('UTC')->toDateTimeString(),
-        'php_ini_date_timezone'  => ini_get('date.timezone'),
-        'unix_timestamp'         => time(),
+        'php_now_app_timezone' => now()->toDateTimeString(),
+        'app_timezone_config' => config('app.timezone'),
+        'php_now_utc' => now('UTC')->toDateTimeString(),
+        'php_ini_date_timezone' => ini_get('date.timezone'),
+        'unix_timestamp' => time(),
     ]);
-});
-
-// ✅ PERBAIKAN: Route test-printer dipindahkan ke luar closure yang salah
-Route::get('/test-printer', function() {
-    try {
-        // Pastikan library escpos-php sudah diinstall
-        if (!class_exists(\Mike42\Escpos\PrintConnectors\WindowsPrintConnector::class)) {
-            return "❌ Library escpos-php belum terinstall. Jalankan: composer require mike42/escpos-php";
-        }
-
-        $connector = new \Mike42\Escpos\PrintConnectors\WindowsPrintConnector("POS-5809DD");
-        $printer = new \Mike42\Escpos\Printer($connector);
-        $printer->text("Test Print - Koneksi Berhasil!\n");
-        $printer->cut();
-        $printer->close();
-
-        return "✅ Printer berhasil terhubung!";
-    } catch (\Exception $e) {
-        return "❌ Error: " . $e->getMessage();
-    }
-});
+})->middleware(['auth', 'role:admin']);

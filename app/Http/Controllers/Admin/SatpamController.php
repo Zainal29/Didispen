@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class SatpamController extends Controller
 {
@@ -21,7 +22,7 @@ class SatpamController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:6'],
+            'password' => ['required', 'string', Password::min(12)->mixedCase()->numbers()->symbols()],
             'nis_nip' => ['nullable', 'string', 'max:50'],
         ]);
 
@@ -44,7 +45,7 @@ class SatpamController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $satpam->id],
             'nis_nip' => ['nullable', 'string', 'max:50'],
-            'password' => ['nullable', 'string', 'min:6'], // Password opsional saat diedit
+            'password' => ['nullable', 'string', Password::min(12)->mixedCase()->numbers()->symbols()], // Password opsional saat diedit
         ]);
 
         $data = [

@@ -148,6 +148,7 @@
                 <i class="fas fa-book-open text-lg"></i>
                 <span class="text-[10px] font-bold">Panduan</span>
             </a>
+            
 
             {{-- Akun (Bottom Sheet) --}}
             <button @click="sheet = true" class="flex flex-col items-center justify-center gap-1 text-gray-400">

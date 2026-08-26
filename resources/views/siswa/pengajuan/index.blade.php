@@ -172,7 +172,11 @@ function showQRCode(dispensasiId) {
         })
         .then(data => {
             if (data.qr_code) {
-                content.innerHTML = `<img src="/storage/${data.qr_code}" alt="QR Code" class="w-52 h-52 object-contain rounded-lg">`;
+                const image = document.createElement('img');
+                image.src = '/storage/' + data.qr_code.split('/').map(encodeURIComponent).join('/');
+                image.alt = 'QR Code';
+                image.className = 'w-52 h-52 object-contain rounded-lg';
+                content.replaceChildren(image);
             } else {
                 content.innerHTML = '<p class="text-red-500 text-sm">QR Code belum tersedia.</p>';
             }

@@ -40,11 +40,11 @@
                     </div>
                     <div>
                         <span class="text-gray-500">Kelas:</span>
-                        <p class="font-semibold">{{ $dispensasi->siswa->kelas->nama_kelas ?? '-' }}</p>
+                        <p class="font-semibold">{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-500">Jurusan:</span>
-                        <p>{{ $dispensasi->siswa->kelas->jurusan->nama_jurusan ?? '-' }}</p>
+                        <p>{{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
                     </div>
                 </div>
             </div>
@@ -111,10 +111,10 @@
                 <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">Guru Piket Penanggung Jawab</h4>
                 <div class="flex items-center space-x-4">
                     <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xl">
-                        {{ substr($dispensasi->guruPiket->guru->nama_lengkap ?? 'G', 0, 1) }}
+                        {{ substr($dispensasi->guru?->nama_lengkap ?? 'G', 0, 1) }}
                     </div>
                     <div>
-                        <p class="font-semibold text-gray-800">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? 'GURU PIKET UTAMA' }}</p>
+                        <p class="font-semibold text-gray-800">{{ $dispensasi->guru?->nama_lengkap ?? 'Menunggu persetujuan' }}</p>
                         <p class="text-sm text-gray-500">
                             Tanggal Piket: {{ $dispensasi->created_at ? $dispensasi->created_at->format('d M Y') : '-' }}
                         </p>

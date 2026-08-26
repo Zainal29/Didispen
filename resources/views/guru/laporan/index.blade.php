@@ -104,7 +104,7 @@
                     </span>
                 </div>
                 <p class="text-[11px] text-gray-500">
-                    {{ $d->created_at->format('d/m/Y') }} • {{ $d->siswa->kelas->nama_kelas }} • Jam Keluar: {{ $d->jam_keluar }}
+                    {{ $d->created_at->format('d/m/Y') }} • {{ $d->siswa->kelas?->nama_kelas }} • Jam Keluar: {{ $d->jam_keluar }}
                 </p>
             </div>
         @empty
@@ -141,7 +141,7 @@
                         <td class="p-4 font-mono font-bold text-xs">{{ $d->nomor_surat }}</td>
                         <td class="p-4 text-gray-500">{{ $d->created_at->format('d/m/Y') }}</td>
                         <td class="p-4 font-semibold text-gray-800">{{ $d->siswa->nama_lengkap }}</td>
-                        <td class="p-4 text-xs text-gray-500">{{ $d->siswa->kelas->nama_kelas }}</td>
+                        <td class="p-4 text-xs text-gray-500">{{ $d->siswa->kelas?->nama_kelas }}</td>
                         <td class="p-4 font-medium text-gray-700">{{ $d->jam_keluar }}</td>
                         <td class="p-4">
                             <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border {{ $badges[$d->status] ?? 'bg-gray-100 text-gray-600 border-gray-200' }}">

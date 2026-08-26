@@ -13,7 +13,7 @@ class DispensasiController extends Controller
     public function index(Request $request)
     {
         // 1. Mulai query dasar dengan eager loading
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru.user']);
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru.user']);
 
         // 2. PENGGANTI ->filter() agar tidak error
         if ($request->filled('status')) {
@@ -52,7 +52,7 @@ class DispensasiController extends Controller
 
     public function show(Dispensasi $dispensasi)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru.user']);
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru.user']);
         return view('admin.dispensasi.show', compact('dispensasi'));
     }
 }

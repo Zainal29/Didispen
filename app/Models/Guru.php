@@ -1,38 +1,47 @@
 <?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory; // Tambahkan ini
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Guru extends Model
 {
-    use HasFactory; // Tambahkan ini
+    use HasFactory;
 
     protected $table = 'guru';
-    protected $fillable = ['user_id', 'nip', 'nama_lengkap', 'mata_pelajaran', 'digital_signature', 'signature_base64_backup'];
+
+    protected $fillable = [
+        'user_id',
+        'nip',
+        'nama_lengkap',
+        'tanggal_lahir',
+        'mata_pelajaran',
+        'no_telepon',
+        'alamat',
+        'status_aktif',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'tanggal_lahir' => 'date',
+            'status_aktif' => 'boolean',
+        ];
+    }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function piket(): HasMany
+    /**
+     * Relasi ke semua dispensasi yang pernah diproses/disetujui oleh guru ini.
+     */
+    public function dispensasi(): HasMany
     {
-        return $this->hasMany(GuruPiket::class, 'guru_id');
-    }
-
-    // public function getSignatureUrlAttribute(): ?string
-    // {
-    //     return $this->digital_signature ? Storage::url($this->digital_signature) : null;
-    // }
-
-    public function piketHariIni(): ?GuruPiket
-    {
-        return $this->piket()
-            ->where('tanggal', now()->toDateString())
-            ->first();
+        return $this->hasMany(Dispensasi::class, 'guru_id');
     }
 }

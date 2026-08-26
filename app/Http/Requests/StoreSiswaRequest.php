@@ -17,22 +17,21 @@ class StoreSiswaRequest extends FormRequest
         $siswa = $this->route('siswa');
         $userId = $siswa ? $siswa->user_id : null;
 
+        // ✅ REVISI SIPINTU: Tidak ada rule password, alamat, dan no_telepon.
+        // Password dikelola SiPintu; no_telepon & alamat tersinkronisasi otomatis dari SiPintu.
         return [
             'nama_lengkap' => 'required|string|max:255',
             'nis_nip'      => [
-                'required', 'string', 'max:50', 
+                'required', 'string', 'max:50',
                 Rule::unique('users', 'nis_nip')->ignore($userId)
             ],
             'email'        => [
-                'required', 'string', 'email', 'max:255', 
+                'required', 'string', 'email', 'max:255',
                 Rule::unique('users', 'email')->ignore($userId)
             ],
-            'password'     => $this->isMethod('post') ? 'required|string|min:6' : 'nullable|string|min:6',
             'jurusan_id'   => 'nullable|exists:jurusan,id',
             'kelas_id'     => 'nullable|exists:kelas,id',
             'tanggal_lahir'=> 'nullable|date',
-            'alamat'       => 'nullable|string|max:500',
-            'no_telepon'   => 'nullable|string|max:15',
         ];
     }
 
@@ -45,8 +44,6 @@ class StoreSiswaRequest extends FormRequest
             'email.required'        => 'Email wajib diisi.',
             'email.email'           => 'Format email tidak valid.',
             'email.unique'          => 'Email sudah terdaftar.',
-            'password.required'     => 'Password wajib diisi.',
-            'password.min'          => 'Password minimal 6 karakter.',
         ];
     }
 }

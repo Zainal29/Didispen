@@ -58,7 +58,7 @@
                     <td class="p-3 font-mono text-sm">{{ $d->nomor_surat }}</td>
                     <td class="p-3 text-sm">{{ $d->created_at->format('d-m-Y') }}</td>
                     <td class="p-3 font-semibold">{{ $d->siswa->nama_lengkap }}</td>
-                    <td class="p-3 text-sm">{{ $d->siswa->kelas->nama_kelas }}</td>
+                    <td class="p-3 text-sm">{{ $d->siswa->kelas?->nama_kelas }}</td>
                     <td class="p-3 text-sm capitalize">{{ str_replace('_', ' ', $d->kategori) }}</td>
                     <td class="p-3 text-sm">{{ Str::limit($d->tujuan, 30) }}</td>
                     <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold bg-gray-100">{{ ucfirst($d->status) }}</span></td>

@@ -80,6 +80,8 @@ return [
 
     'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'), // ✅ UBAH DARI 'UTC' MENJADI INI
 
+    'print_limit' => env('PRINT_LIMIT', 3),
+
 
     /*
     |--------------------------------------------------------------------------

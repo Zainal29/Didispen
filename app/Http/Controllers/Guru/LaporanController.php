@@ -17,8 +17,8 @@ class LaporanController extends Controller
         $guru = auth()->user()->guru;
 
         // Query dasar: hanya dispensasi yang diproses oleh guru yang login
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru'])
-            ->whereHas('guruPiket', function ($q) use ($guru) {
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+            ->whereHas('guru', function ($q) use ($guru) {
                 $q->where('guru_id', $guru->id);
             });
 
@@ -54,8 +54,8 @@ class LaporanController extends Controller
     {
         $guru = auth()->user()->guru;
 
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru'])
-            ->whereHas('guruPiket', function ($q) use ($guru) {
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+            ->whereHas('guru', function ($q) use ($guru) {
                 $q->where('guru_id', $guru->id);
             });
 
@@ -86,8 +86,8 @@ class LaporanController extends Controller
     {
         $guru = auth()->user()->guru;
 
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guruPiket.guru'])
-            ->whereHas('guruPiket', function ($q) use ($guru) {
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+            ->whereHas('guru', function ($q) use ($guru) {
                 $q->where('guru_id', $guru->id);
             });
 
@@ -140,17 +140,18 @@ class LaporanController extends Controller
 
             $no = 1;
             foreach ($dispensasi as $row) {
+                $cell = fn ($value) => e($this->sanitizeCell($value));
                 echo '<tr>';
-                echo '<td>'.$no++.'</td>';
-                echo '<td>'.$row->nomor_surat.'</td>';
-                echo '<td>'.$row->created_at->format('d/m/Y H:i').'</td>';
-                echo '<td>'.str_replace('_', ' ', strtoupper($row->kategori)).'</td>';
-                echo '<td>'.($row->siswa->nama_lengkap ?? '-').'</td>';
-                echo '<td>'.($row->siswa->kelas->nama_kelas ?? '-').'</td>';
-                echo '<td>'.$row->alasan.'</td>';
-                echo '<td>'.$row->jam_keluar.'</td>';
-                echo '<td>'.$row->jam_kembali.'</td>';
-                echo '<td>'.strtoupper($row->status).'</td>';
+                echo '<td>'.$cell($no++).'</td>';
+                echo '<td>'.$cell($row->nomor_surat).'</td>';
+                echo '<td>'.$cell($row->created_at->format('d/m/Y H:i')).'</td>';
+                echo '<td>'.$cell(str_replace('_', ' ', strtoupper($row->kategori))).'</td>';
+                echo '<td>'.$cell($row->siswa->nama_lengkap ?? '-').'</td>';
+                echo '<td>'.$cell($row->siswa->kelas->nama_kelas ?? '-').'</td>';
+                echo '<td>'.$cell($row->alasan).'</td>';
+                echo '<td>'.$cell($row->jam_keluar).'</td>';
+                echo '<td>'.$cell($row->jam_kembali).'</td>';
+                echo '<td>'.$cell(strtoupper($row->status)).'</td>';
                 echo '</tr>';
             }
 
@@ -160,5 +161,12 @@ class LaporanController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    private function sanitizeCell(mixed $value): string
+    {
+        $value = (string) ($value ?? '');
+
+        return preg_match('/^[=+\-@]/', $value) === 1 ? "'{$value}" : $value;
     }
 }

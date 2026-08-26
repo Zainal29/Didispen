@@ -89,20 +89,80 @@
                     </div>
                 @endif
 
-                {{-- Cetak PDF Thermal 58mm (Muncul jika sudah disetujui/keluar/selesai) --}}
+                {{-- Cetak Struk Thermal 58mm (Muncul jika sudah disetujui/keluar/selesai) --}}
+                {{-- ✅ Validasi & tampilan KONSISTEN dengan panel Siswa (App\Helpers\PrintHelper) --}}
                 @if(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
-                <div class="mt-4 p-5 bg-emerald-50/80 border-2 border-dashed border-emerald-200 rounded-2xl text-center">
-                    <h4 class="text-sm font-bold text-emerald-900 mb-1">
-                        <i class="fas fa-print mr-1.5"></i>Cetak Struk Dispensasi
-                    </h4>
-                    <p class="text-xs text-emerald-600 mb-3">Klik tombol di bawah untuk mencetak PDF Struk Thermal (Ukuran Kertas 58mm).</p>
+                @php
+                    $maxPrint = \App\Helpers\PrintHelper::maxLimit();
+                    $sisaCetak = $maxPrint - $dispensasi->print_count;
+                    $startTime = \App\Helpers\PrintHelper::startTime();
+                    $endTime = \App\Helpers\PrintHelper::endTime();
+                    $currentTime = \App\Helpers\PrintHelper::currentTime();
+                    $isWithinTime = \App\Helpers\PrintHelper::isWithinOperatingHours($currentTime);
+                    $canPrintStruk = $sisaCetak > 0 && $isWithinTime;
+                @endphp
+                <div class="mt-4 p-5 bg-emerald-50/80 border-2 border-dashed border-emerald-200 rounded-2xl">
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-sm font-bold text-emerald-900">
+                            <i class="fas fa-print mr-1.5"></i>Cetak Struk Dispensasi
+                        </h4>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold {{ $sisaCetak > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
+                            {{ $dispensasi->print_count }} / {{ $maxPrint }} kali
+                        </span>
+                    </div>
+                    <p class="text-xs text-emerald-600 mb-2">Cetak PDF Struk Thermal (Ukuran Kertas 58mm).</p>
+
+                    {{-- Progress Bar Batas Cetak --}}
+                    <div class="w-full bg-emerald-200 rounded-full h-2 mb-3">
+                        <div class="bg-emerald-600 h-2 rounded-full transition-all" style="width: {{ min(($dispensasi->print_count / $maxPrint) * 100, 100) }}%"></div>
+                    </div>
+
+                    {{-- Info Jam Cetak --}}
+                    <div class="bg-white rounded-lg p-2 mb-3 border border-emerald-100 text-left">
+                        <p class="text-emerald-800 text-xs">
+                            <i class="fas fa-clock mr-1"></i>
+                            <strong>Jam Cetak:</strong> {{ $startTime }} - {{ $endTime }} WIB
+                        </p>
+                        <p class="text-emerald-600 text-[10px] mt-1">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Saat ini: {{ $currentTime }} WIB -
+                            @if($isWithinTime)
+                                <span class="text-emerald-600 font-bold">✓ Dalam jam operasional</span>
+                            @else
+                                <span class="text-red-600 font-bold">✗ Di luar jam operasional</span>
+                            @endif
+                        </p>
+                    </div>
 
                     <div class="flex justify-center">
-                        <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" target="_blank"
-                           class="px-5 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition shadow-md shadow-emerald-500/20 inline-flex items-center">
-                            <i class="fas fa-file-pdf mr-2 text-sm"></i> Cetak PDF Thermal (58mm)
-                        </a>
+                        @if($canPrintStruk)
+                            <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" target="_blank"
+                               class="px-5 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition shadow-md shadow-emerald-500/20 inline-flex items-center">
+                                <i id="iconCetak" class="fas fa-file-pdf mr-2 text-sm"></i> <span id="textCetak">Cetak PDF Thermal (58mm)</span>
+                            </a>
+                        @else
+                            <button disabled
+                                    title="{{ $sisaCetak <= 0 ? 'Batas cetak tercapai (' . $maxPrint . ' kali)' : 'Pencetakan hanya diperbolehkan pukul ' . $startTime . ' - ' . $endTime . ' WIB' }}"
+                                    class="px-5 py-2.5 bg-gray-200 text-gray-400 text-xs font-bold rounded-xl cursor-not-allowed inline-flex items-center">
+                                <i class="fas fa-lock mr-2 text-sm"></i>
+                                @if($sisaCetak <= 0)
+                                    Batas Cetak Tercapai
+                                @else
+                                    Di Luar Jam Cetak ({{ $startTime }}-{{ $endTime }})
+                                @endif
+                            </button>
+                        @endif
                     </div>
+
+                    @if(!$canPrintStruk)
+                        <p class="text-center text-[11px] text-gray-500 mt-2">
+                            @if($sisaCetak <= 0)
+                                <i class="fas fa-info-circle mr-1"></i>Batas maksimal cetak telah tercapai. Hubungi admin jika membutuhkan cetak ulang.
+                            @else
+                                <i class="fas fa-info-circle mr-1"></i>Pencetakan hanya diperbolehkan pada pukul {{ $startTime }} - {{ $endTime }} WIB. Saat ini pukul {{ $currentTime }} WIB.
+                            @endif
+                        </p>
+                    @endif
                 </div>
                 @endif
 
@@ -154,11 +214,11 @@
                     </div>
                     <div>
                         <span class="text-gray-400 font-medium">Kelas</span>
-                        <p class="font-bold text-gray-800 mt-0.5">{{ $dispensasi->siswa->kelas->nama_kelas }}</p>
+                        <p class="font-bold text-gray-800 mt-0.5">{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-400 font-medium">Jurusan</span>
-                        <p class="text-gray-800 font-medium mt-0.5">{{ $dispensasi->siswa->kelas->jurusan->nama_jurusan ?? '-' }}</p>
+                        <p class="text-gray-800 font-medium mt-0.5">{{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-400 font-medium">No. Telepon</span>
@@ -175,7 +235,7 @@
                 <div class="space-y-2.5 text-xs">
                     <div>
                         <span class="text-gray-400 font-medium">Nama Guru</span>
-                        <p class="font-bold text-gray-800 text-sm mt-0.5">{{ $dispensasi->guruPiket->guru->nama_lengkap ?? 'GURU PIKET UTAMA' }}</p>
+                        <p class="font-bold text-gray-800 text-sm mt-0.5">{{ $dispensasi->guru?->nama_lengkap ?? 'Menunggu persetujuan' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-400 font-medium">Tanggal Piket</span>
@@ -209,7 +269,15 @@
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '{{ route('guru.pengajuan.reject', $dispensasi) }}';
-                form.innerHTML = `@csrf <input type="hidden" name="catatan_admin" value="${result.value}">`;
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = '_token';
+                csrf.value = '{{ csrf_token() }}';
+                const reason = document.createElement('input');
+                reason.type = 'hidden';
+                reason.name = 'catatan_admin';
+                reason.value = result.value;
+                form.append(csrf, reason);
                 document.body.appendChild(form);
                 form.submit();
             }

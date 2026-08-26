@@ -57,10 +57,16 @@
 let html5QrCode;
 let isScanning = false;
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text ?? '';
+    return div.innerHTML;
+}
+
 function setStatus(text, ok = true) {
     const el = document.getElementById('scanStatus');
     if (!el) return;
-    el.innerHTML = `<span class="w-2 h-2 rounded-full ${ok ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'} mr-1.5"></span> ${text}`;
+    el.innerHTML = `<span class="w-2 h-2 rounded-full ${ok ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'} mr-1.5"></span> ${escapeHtml(text)}`;
     el.className = `inline-flex items-center text-[11px] font-bold ${ok ? 'text-emerald-600' : 'text-amber-600'}`;
 }
 
@@ -84,15 +90,15 @@ function verify(code) {
                 <div class="flex items-center space-x-3 mb-3">
                     <div class="w-11 h-11 rounded-full bg-emerald-500 text-white flex items-center justify-center text-lg shadow-lg shadow-emerald-500/40"><i class="fas fa-check"></i></div>
                     <div>
-                        <p class="font-black text-emerald-800 text-base leading-tight">${data.message}</p>
+                        <p class="font-black text-emerald-800 text-base leading-tight">${escapeHtml(data.message)}</p>
                         <p class="text-[11px] text-emerald-600 font-semibold">QR Code valid & terverifikasi</p>
                     </div>
                 </div>
                 <div class="bg-white rounded-xl border border-emerald-200 p-3 text-xs space-y-1">
-                    <p><span class="text-gray-500">Nama:</span> <strong class="text-gray-800">${data.data.siswa.nama_lengkap}</strong></p>
-                    <p><span class="text-gray-500">Kelas:</span> <strong class="text-gray-800">${data.data.siswa.kelas.nama_kelas}</strong></p>
-                    <p><span class="text-gray-500">No. Surat:</span> <strong class="font-mono text-gray-800">${data.data.nomor_surat}</strong></p>
-                    <p><span class="text-gray-500">Jam Kembali:</span> <strong class="text-gray-800">${data.data.jam_kembali}</strong></p>
+                    <p><span class="text-gray-500">Nama:</span> <strong class="text-gray-800">${escapeHtml(data.data.siswa.nama_lengkap)}</strong></p>
+                    <p><span class="text-gray-500">Kelas:</span> <strong class="text-gray-800">${escapeHtml(data.data.siswa.kelas.nama_kelas)}</strong></p>
+                    <p><span class="text-gray-500">No. Surat:</span> <strong class="font-mono text-gray-800">${escapeHtml(data.data.nomor_surat)}</strong></p>
+                    <p><span class="text-gray-500">Jam Kembali:</span> <strong class="text-gray-800">${escapeHtml(data.data.jam_kembali)}</strong></p>
                 </div>
                 <div class="mt-3 text-right">
                     <button onclick="restartScanner()" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow hover:bg-emerald-700">
@@ -108,7 +114,7 @@ function verify(code) {
                     <div class="w-11 h-11 rounded-full bg-red-500 text-white flex items-center justify-center text-lg shadow-lg shadow-red-500/40"><i class="fas fa-xmark"></i></div>
                     <div>
                         <p class="font-black text-red-800 text-base leading-tight">GAGAL</p>
-                        <p class="text-xs text-red-700 font-semibold">${data.message}</p>
+                        <p class="text-xs text-red-700 font-semibold">${escapeHtml(data.message)}</p>
                     </div>
                 </div>
                 <div class="mt-3 text-right">

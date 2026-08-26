@@ -13,7 +13,7 @@ class DashboardController extends Controller
         $siswa = auth()->user()->siswa;
 
         // ✅ Cari dispensasi disetujui yang belum di-scan untuk ditampilkan QR Code-nya di dashboard
-        $dispensasiAktif = Dispensasi::with(['guruPiket.guru', 'siswa.kelas.jurusan'])
+        $dispensasiAktif = Dispensasi::with(['guru', 'siswa.kelas.jurusan'])
             ->where('siswa_id', $siswa->id)
             ->where('status', 'disetujui')
             ->latest()
@@ -29,7 +29,7 @@ class DashboardController extends Controller
         ];
 
         // Pengajuan terbaru (5 terakhir)
-        $pengajuanTerbaru = Dispensasi::with(['guruPiket.guru'])
+        $pengajuanTerbaru = Dispensasi::with(['guru'])
             ->where('siswa_id', $siswa->id)
             ->latest()
             ->take(5)

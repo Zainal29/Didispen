@@ -71,6 +71,10 @@
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
                     <i class="fas fa-history w-5 mr-3"></i> Audit Log
                 </a>
+<a href="{{ url('/profil') }}" 
+   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->is('profil*') ? 'active' : '' }}">
+    <i class="fas fa-user-circle w-5 mr-3"></i> Profil
+</a>
             </nav>
 
             <div class="p-3 border-t">

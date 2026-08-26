@@ -79,7 +79,7 @@
                 <td>{{ $d->nomor_surat }}</td>
                 <td class="text-center">{{ $d->created_at->format('d/m/Y') }}</td>
                 <td>{{ $d->siswa->nama_lengkap }}</td>
-                <td class="text-center">{{ $d->siswa->kelas->nama_kelas ?? '-' }}</td>
+                <td class="text-center">{{ $d->siswa->kelas?->nama_kelas ?? '-' }}</td>
                 <td class="text-center">{{ $d->jam_keluar ?? '-' }}</td>
                 <td class="text-center">{{ $d->jam_kembali ?? '-' }}</td>
                 <td>{{ $d->tujuan }}</td>

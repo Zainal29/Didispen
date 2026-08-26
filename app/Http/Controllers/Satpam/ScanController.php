@@ -22,25 +22,17 @@ class ScanController extends Controller
         $input = trim($request->qr_data);
         $dispensasi = null;
 
-        // 1. Cek jika input berupa JSON (format token aman)
+        // QR hanya boleh membawa token acak yang tersimpan di database.
         if (json_validate($input)) {
             $qrData = json_decode($input, true);
-            if (isset($qrData['id'])) {
-                $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->find($qrData['id']);
+            if (isset($qrData['token']) && is_string($qrData['token'])) {
+                $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])
+                    ->where('qr_token', $qrData['token'])
+                    ->first();
             }
-        } 
-        
-        // 2. Jika bukan JSON (atau ID dari JSON tidak ketemu), cari berdasarkan teks/nomor surat langsung
-        if (!$dispensasi) {
-            // Bersihkan jika QR berisi URL lengkap (misal: http://.../verifikasi/DISP/...)
-            if (str_contains($input, '/verifikasi/')) {
-                $segments = explode('/verifikasi/', $input);
-                $input = end($segments);
-            }
-
+        } elseif (preg_match('/^[A-Za-z0-9]{64}$/', $input)) {
             $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])
-                ->where('nomor_surat', 'LIKE', '%' . $input)
-                ->orWhere('id', $input)
+                ->where('qr_token', $input)
                 ->first();
         }
 
@@ -59,11 +51,22 @@ class ScanController extends Controller
 
         // Proses scan / verifikasi status (hanya jika status 'disetujui')
         if ($dispensasi->status === 'disetujui') {
-            $dispensasi->update([
-                'status' => 'keluar',
-                'waktu_keluar_aktual' => now(),
-                'satpam_keluar_id' => auth()->id()
-            ]);
+            $updated = Dispensasi::whereKey($dispensasi->id)
+                ->where('qr_token', $dispensasi->qr_token)
+                ->where('status', 'disetujui')
+                ->update([
+                    'status' => 'keluar',
+                    'waktu_keluar_aktual' => now(),
+                    'satpam_keluar_id' => auth()->id(),
+                ]);
+
+            if ($updated !== 1) {
+                return response()->json(['success' => false, 'message' => 'QR Code sudah digunakan atau tidak valid.'], 409);
+            }
+
+            $dispensasi->status = 'keluar';
+            $dispensasi->waktu_keluar_aktual = now();
+            $dispensasi->satpam_keluar_id = auth()->id();
 
             // Kirim notifikasi ke siswa bahwa QR Code telah di-scan
             app(\App\Services\NotifikasiService::class)->send(

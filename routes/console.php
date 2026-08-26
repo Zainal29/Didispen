@@ -11,3 +11,14 @@ Artisan::command('inspire', function () {
 // Hapus otomatis audit log yang lebih dari 24 jam.
 // Dijalankan tiap jam, jadi data maksimal bertahan ±25 jam.
 Schedule::command('model:prune')->hourly();
+
+// Jalankan setiap 15 menit setelah jam 15:00
+Schedule::command('dispensasi:auto-complete')
+    ->dailyAt('15:15')
+    ->withoutOverlapping();
+
+// Atau jalankan setiap 15 menit dari jam 15:00 - 17:00
+Schedule::command('dispensasi:auto-complete')
+    ->between('15:00', '17:00')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping();

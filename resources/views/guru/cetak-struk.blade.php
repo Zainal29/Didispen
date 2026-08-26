@@ -24,12 +24,9 @@
 <body>
 
     <div class="actions">
-        <form method="POST" action="{{ route('guru.print-thermal', $dispensasi) }}" style="display:inline">
-            @csrf
-            <button type="submit" class="btn btn-primary">🖨️ Cetak Struk Thermal</button>
-        </form>
-        <a href="{{ route('guru.pengajuan.show', $dispensasi) }}" class="btn btn-secondary">Tutup</a>
-    </div>
+    <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" target="_blank" class="btn btn-primary">📄 Buka PDF Struk (58mm)</a>
+    <a href="{{ route('guru.pengajuan.show', $dispensasi) }}" class="btn btn-secondary">Tutup</a>
+</div>
 
     @if(session('success'))
         <div class="alert alert-success">✅ {{ session('success') }}</div>
@@ -51,7 +48,7 @@
         {{-- Data Siswa --}}
         <div>Nama : {{ $dispensasi->siswa->nama_lengkap }}</div>
         <div>NIS  : {{ $dispensasi->siswa->user->nis_nip ?? '-' }}</div>
-        <div>Kelas: {{ $dispensasi->siswa->kelas->nama_kelas }} - {{ $dispensasi->siswa->kelas->jurusan->nama_jurusan ?? '-' }}</div>
+        <div>Kelas: {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} - {{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</div>
 
         <div class="divider"></div>
 
@@ -86,9 +83,9 @@
         <div class="text-center" style="margin-top: 24px;">
             <div>Guru Piket,</div>
             <div style="height: 60px;"></div>
-            <div><strong>{{ $dispensasi->guruPiket?->guru?->nama_lengkap ?? '..........................' }}</strong></div>
-            @if(!empty($dispensasi->guruPiket?->guru?->nip))
-                <div>NIP. {{ $dispensasi->guruPiket->guru->nip }}</div>
+            <div><strong>{{ $dispensasi->guru?->nama_lengkap ?? '..........................' }}</strong></div>
+            @if(!empty($dispensasi->guru?->nip))
+                <div>NIP. {{ $dispensasi->guru?->nip }}</div>
             @endif
         </div>
 

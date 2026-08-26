@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory; // Tambahkan ini
@@ -11,11 +12,25 @@ class Siswa extends Model
     use HasFactory; // Tambahkan ini
 
     protected $table = 'siswa';
-    protected $fillable = ['user_id', 'jurusan_id', 'kelas_id', 'nama_lengkap', 'tanggal_lahir', 'alamat', 'no_telepon'];
+
+    protected $fillable = [
+        'user_id',
+        'nis_nip',
+        'kelas_id',
+        'jurusan_id',
+        'nama_lengkap',
+        'no_telepon',
+        'alamat',
+        'tanggal_lahir',
+        'status_aktif',
+    ];
 
     protected function casts(): array
     {
-        return ['tanggal_lahir' => 'date'];
+        return [
+            'tanggal_lahir' => 'date',
+            'status_aktif' => 'boolean',
+        ];
     }
 
     public function user(): BelongsTo
