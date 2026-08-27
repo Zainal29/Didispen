@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Helpers\DispensasiTimeHelper;
+use App\Helpers\TimeHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
 use Carbon\Carbon;
@@ -185,25 +186,17 @@ class PengajuanController extends Controller
     }
 
     /**
-     * ✅ BARU: Helper untuk menghitung batas waktu kembali + toleransi 15 menit
+     * ✅ Helper untuk menghitung batas waktu kembali + toleransi 15 menit.
+     * Waktu selesai jam pelajaran diambil dari TimeHelper (Jadwal KBM 2026/2027)
+     * sebagai single source of truth.
      */
     private function hitungBatasWaktuKembali(int $jamPelajaran): Carbon
     {
-        // Mapping jam pelajaran ke waktu selesai (Sesuaikan dengan jadwal sekolah Anda)
-        $jamMap = [
-            1 => '08:00',
-            2 => '09:00',
-            3 => '10:00',
-            4 => '11:00',
-            5 => '12:00',
-            6 => '13:00',
-            7 => '14:00',
-            8 => '15:00',
-            9 => '16:00',
-            10 => '17:00',
-        ];
+        $waktuAktual = TimeHelper::getWaktuAktual('Jam Pelajaran ke-'.$jamPelajaran);
 
-        $waktuSelesai = $jamMap[$jamPelajaran] ?? '15:00';
+        // Format "HH:MM - HH:MM" -> ambil waktu selesai
+        $parts = explode(' - ', $waktuAktual);
+        $waktuSelesai = $parts[1] ?? '15:15';
 
         // Tambahkan toleransi 15 menit setelah jam berakhir
         return Carbon::parse($waktuSelesai)->addMinutes(15);

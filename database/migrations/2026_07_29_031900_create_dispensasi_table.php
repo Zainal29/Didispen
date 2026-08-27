@@ -11,7 +11,11 @@ return new class extends Migration {
             $table->id();
             $table->string('nomor_surat')->unique();
             $table->foreignId('siswa_id')->constrained('siswa')->cascadeOnDelete();
-            $table->foreignId('guru_piket_id')->constrained('guru_piket')->cascadeOnDelete();
+            // ✅ FIX REPLAYABILITY: sebelumnya constrained('guru_piket') padahal
+            // tabel guru_piket tidak pernah ada di migrations (fresh install gagal).
+            // Bentuk final sesuai simplify_guru_piket_to_guru_id: nullable FK ke guru.
+            $table->foreignId('guru_id')->nullable()
+                ->constrained('guru')->nullOnDelete();
             
             // ✅ DISINKRONKAN DENGAN CONTROLLER
             $table->enum('kategori', ['sakit', 'izin', 'keperluan_sekolah', 'lainnya']);

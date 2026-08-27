@@ -54,8 +54,8 @@
 
 {{-- ============ CONTENT SECTIONS ============ --}}
 
-{{-- SECTION: MENUNGGU KELUAR --}}
-<div id="section-menunggu" class="space-y-3 {{ $menungguKeluar->count() === 0 ? 'hidden' : '' }}">
+{{-- SECTION: MENUNGGU KELUAR (hidden saat load — tab aktif awal adalah "Semua") --}}
+<div id="section-menunggu" class="space-y-3 hidden">
     <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-clock text-amber-500 mr-1.5"></i>Menunggu Konfirmasi Keluar</h3>
     @foreach($menungguKeluar as $dispensasi)
         @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
@@ -229,6 +229,9 @@
         @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp
         @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue])
     @endforeach
+    @foreach($selesai as $dispensasi)
+        @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'selesai', 'isOverdue' => false])
+    @endforeach
 </div>
 
 @endsection
@@ -236,10 +239,12 @@
 @push('scripts')
 <script>
 function updateBadges() {
-    document.getElementById('badge-menunggu').textContent = document.querySelectorAll('[data-status="menunggu"]').length;
-    document.getElementById('badge-keluar').textContent = document.querySelectorAll('[data-status="keluar"]').length;
-    document.getElementById('badge-terlambat').textContent = document.querySelectorAll('[data-overdue="true"]').length;
-    document.getElementById('badge-dihubungi').textContent = document.querySelectorAll('[data-warned="true"]').length;
+    // ✅ FIX: hitung HANYA kartu di section masing-masing (bukan seluruh dokumen),
+    // karena section "Semua" merender ulang kartu menunggu/keluar (dulu badge jadi 2x).
+    document.getElementById('badge-menunggu').textContent = document.querySelectorAll('#section-menunggu [data-status="menunggu"]').length;
+    document.getElementById('badge-keluar').textContent = document.querySelectorAll('#section-keluar [data-status="keluar"]').length;
+    document.getElementById('badge-terlambat').textContent = document.querySelectorAll('[data-status="keluar"][data-overdue="true"]').length;
+    document.getElementById('badge-dihubungi').textContent = {{ $dihubungi->count() }};
 }
 
 function switchTab(tabName) {
@@ -253,6 +258,13 @@ function switchTab(tabName) {
     const activeTab = document.getElementById('tab-' + tabName);
     activeTab.classList.remove('bg-gray-100', 'text-gray-600');
     activeTab.classList.add('bg-red-600', 'text-white', 'shadow-md');
+}
+
+// ✅ BARU: Buka/tutup detail kartu (tombol WA & Konfirmasi Kembali ada di dalamnya)
+function toggleCardDetail(event, el) {
+    if (event.target.closest('a, button, form')) return;
+    const detail = el.querySelector('.detail-section');
+    if (detail) detail.classList.toggle('hidden');
 }
 
 // ✅ FUNGSI BARU: Klik WA langsung tandai dihubungi & buka WA
@@ -287,10 +299,11 @@ function handleWaContacted(dispensasiId, waLink) {
                 `;
             }
             
-            // 2. Update badge jumlah di tab
+            // 2. Update badge jumlah di tab & buka WhatsApp di tab baru
             if (typeof updateBadges === 'function') updateBadges();
-            
-            // 3. Buka WhatsApp di tab baru
+            window.open(waLink, '_blank');
+        } else {
+            // Status bukan "keluar" — tetap buka WhatsApp tanpa menandai
             window.open(waLink, '_blank');
         }
     })
@@ -301,6 +314,67 @@ function handleWaContacted(dispensasiId, waLink) {
     });
 }
 
+// ✅ BARU: Countdown realtime untuk semua kartu yang punya batas waktu
+function tickCountdowns() {
+    document.querySelectorAll('.live-countdown[data-deadline]').forEach(el => {
+        const deadline = new Date(el.dataset.deadline);
+        const diffMs = deadline - new Date();
+
+        if (diffMs <= 0) {
+            const lateMin = Math.floor(-diffMs / 60000);
+            el.textContent = `TERLAMBAT ${lateMin}m`;
+            el.classList.remove('bg-amber-100', 'text-amber-700');
+            el.classList.add('bg-red-100', 'text-red-700', 'animate-pulse');
+        } else {
+            const totalMin = Math.floor(diffMs / 60000);
+            const hrs = Math.floor(totalMin / 60);
+            const mins = totalMin % 60;
+            el.textContent = hrs > 0 ? `Sisa ${hrs}j ${mins}m` : `Sisa ${mins}m`;
+            if (totalMin <= 5) {
+                el.classList.remove('bg-amber-100', 'text-amber-700');
+                el.classList.add('bg-red-100', 'text-red-700');
+            }
+        }
+    });
+}
+
+// ✅ BARU: Watcher — deteksi kartu yang baru melewati batas waktu & beri notifikasi
+const overdueNotified = new Set();
+function watchOverdue() {
+    document.querySelectorAll('[data-status="keluar"][data-deadline][data-overdue="false"]').forEach(card => {
+        const deadline = new Date(card.dataset.deadline);
+        if (new Date() > deadline) {
+            card.dataset.overdue = 'true';
+
+            // Tambah badge TERLAMBAT di header kartu
+            const badgeRow = card.querySelector('.flex.items-center.gap-2.mb-1');
+            if (badgeRow && !badgeRow.querySelector('.overdue-flag')) {
+                badgeRow.insertAdjacentHTML('afterbegin',
+                    `<span class="overdue-flag px-2 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 uppercase animate-pulse">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>TERLAMBAT
+                    </span>`);
+            }
+
+            const nama = card.querySelector('.font-bold.text-gray-900')?.textContent.trim() || 'Siswa';
+            if (!overdueNotified.has(card.dataset.dispensasi)) {
+                overdueNotified.add(card.dataset.dispensasi);
+                Swal.fire({
+                    icon: 'warning',
+                    title: '⚠️ Siswa Terlambat!',
+                    text: `${nama} telah melewati batas waktu kembali. Segera hubungi via WhatsApp.`,
+                    confirmButtonColor: '#dc2626',
+                    timer: 8000,
+                    timerProgressBar: true
+                });
+            }
+            updateBadges();
+        }
+    });
+}
+
 updateBadges();
+tickCountdowns();
+setInterval(tickCountdowns, 1000);
+setInterval(watchOverdue, 15000);
 </script>
 @endpush

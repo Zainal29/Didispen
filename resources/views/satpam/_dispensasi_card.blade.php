@@ -26,11 +26,15 @@
     $waktuKembaliAktual = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali);
 @endphp
 
-<div class="card-container bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow" 
+<div class="card-container bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer" 
      data-dispensasi="{{ $dispensasi->id }}"
      data-status="{{ $status }}"
      data-overdue="{{ $isOverdue ? 'true' : 'false' }}"
-     data-warned="{{ $isWarned ? 'true' : 'false' }}">
+     data-warned="{{ $isWarned ? 'true' : 'false' }}"
+     @if($dispensasi->batas_waktu_kembali && in_array($status, ['keluar', 'terlambat']))
+     data-deadline="{{ $dispensasi->batas_waktu_kembali->toISOString() }}"
+     @endif
+     onclick="toggleCardDetail(event, this)">
     
     {{-- Header Card --}}
     <div class="px-4 py-3.5 border-b border-gray-100 {{ $isOverdue ? 'bg-red-50' : ($status === 'menunggu' ? 'bg-amber-50' : 'bg-gray-50') }}">
@@ -158,6 +162,10 @@
             <span class="flex items-center {{ $isOverdue ? 'text-red-600 font-bold' : 'text-amber-600' }}" title="Aktual: {{ $waktuKembaliAktual }}">
                 <i class="fas fa-hourglass-half mr-1"></i>
                 {{ $dispensasi->jam_kembali }}
+                @if($dispensasi->batas_waktu_kembali && in_array($status, ['keluar', 'terlambat']))
+                    <span class="live-countdown ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold {{ $isOverdue ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700' }}"
+                          data-deadline="{{ $dispensasi->batas_waktu_kembali->toISOString() }}">...</span>
+                @endif
             </span>
         </div>
         @if($status === 'menunggu')

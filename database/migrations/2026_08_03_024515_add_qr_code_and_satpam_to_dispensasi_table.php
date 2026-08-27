@@ -19,7 +19,10 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('dispensasi', function (Blueprint $table) {
-            $table->dropForeign(['satpam_keluar_id', 'satpam_kembali_id']);
+            // ✅ FIX: dropForeign harus per-kolom agar nama constraint cocok
+            // dengan yang dibuat di up() (rollback sebelumnya pasti gagal).
+            $table->dropForeign(['satpam_keluar_id']);
+            $table->dropForeign(['satpam_kembali_id']);
             $table->dropColumn(['qr_code', 'waktu_keluar_aktual', 'waktu_kembali_aktual', 'satpam_keluar_id', 'satpam_kembali_id']);
         });
     }

@@ -106,13 +106,20 @@
                     <p class="text-{{ $isOverdue ? 'red' : 'amber' }}-400 text-[10px] font-bold uppercase mb-1">
                         <i class="fas fa-clock mr-1"></i>Batas Waktu Kembali
                     </p>
-                    <p class="font-bold text-{{ $isOverdue ? 'red' : 'amber' }}-700 text-lg">
-                        {{ $dispensasi->batas_waktu_kembali->format('H:i') }} WIB
-                    </p>
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="font-bold text-{{ $isOverdue ? 'red' : 'amber' }}-700 text-lg">
+                            {{ $dispensasi->batas_waktu_kembali->format('H:i') }} WIB
+                        </p>
+                        @if($dispensasi->status === 'keluar')
+                            <span id="live-countdown"
+                                  class="px-2.5 py-1 rounded-lg text-xs font-bold {{ $isOverdue ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-white text-amber-700 border border-amber-200' }}"
+                                  data-deadline="{{ $dispensasi->batas_waktu_kembali->toISOString() }}">...</span>
+                        @endif
+                    </div>
                     @if($isOverdue)
                         <p class="text-red-600 text-xs mt-1 font-bold">
                             <i class="fas fa-exclamation-circle mr-1"></i>
-                            Terlambat {{ now()->diffInMinutes($dispensasi->batas_waktu_kembali) }} menit
+                            Terlambat <span id="late-minutes">{{ now()->diffInMinutes($dispensasi->batas_waktu_kembali) }}</span> menit
                         </p>
                     @endif
                 </div>
@@ -130,11 +137,14 @@
                 
                 if ($dispensasi->status === 'menunggu') {
                     $pesan .= "Anda tercatat menunggu konfirmasi keluar dispensasi.\n";
+                } elseif ($isOverdue) {
+                    $pesan .= "⚠️ *PERINGATAN KETERLAMBATAN DISPENSASI* ⚠️\n";
+                    $pesan .= "Batas waktu kembali Anda telah LEWAT pukul *{$dispensasi->batas_waktu_kembali?->format('H:i')}* WIB.\n";
                 } elseif ($dispensasi->status === 'keluar') {
                     $pesan .= "Anda tercatat sedang dispensasi keluar sekolah.\n";
                 }
                 
-                $pesan .= " No. Surat: {$dispensasi->nomor_surat}\n";
+                $pesan .= "\n No. Surat: {$dispensasi->nomor_surat}\n";
                 $pesan .= "📍 Tujuan: {$dispensasi->tujuan}\n";
                 $pesan .= " Batas Kembali: {$dispensasi->jam_kembali}\n\n";
                 $pesan .= "Mohon segera kembali ke sekolah atau lapor ke Pos Satpam. Terima kasih.";
@@ -148,17 +158,25 @@
                 </h3>
                 
                 <div class="bg-green-50 border-2 border-green-200 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-between gap-3 mb-3">
                         <div>
                             <p class="text-green-700 text-xs font-bold uppercase mb-1">No. Telepon / WhatsApp</p>
                             <p class="text-lg font-bold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
                             <p class="text-green-600 text-xs mt-1">{{ $dispensasi->siswa->nama_lengkap }}</p>
                         </div>
-                        
+
+                        {{-- ✅ BARU: Tombol WhatsApp — buka chat & otomatis tandai dihubungi --}}
+                        <a href="{{ $waLink }}" target="_blank" rel="noopener"
+                           onclick="handleDetailWaContacted(event, {{ $dispensasi->id }}, '{{ $waLink }}')"
+                           class="inline-flex flex-col items-center justify-center w-16 h-16 bg-green-500 hover:bg-green-600 text-white rounded-2xl transition-all shadow-lg shadow-green-500/30 hover:scale-105 flex-shrink-0"
+                           title="Hubungi via WhatsApp">
+                            <i class="fab fa-whatsapp text-3xl"></i>
+                            <span class="text-[8px] font-bold mt-0.5">CHAT</span>
+                        </a>
                     </div>
                     <p class="text-green-700 text-xs">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Klik tombol Tandai Hubungi untuk menghubungi siswa/orang tua secara langsung
+                        Klik ikon WhatsApp untuk menghubungi siswa. Jika status "Sedang Keluar", siswa otomatis ditandai sudah dihubungi.
                     </p>
                 </div>
 
@@ -328,6 +346,70 @@
 
 @push('scripts')
 <script>
+// ✅ BARU: Klik WA — buka chat; tandai dihubungi HANYA jika status keluar & belum ditandai
+function handleDetailWaContacted(event, dispensasiId, waLink) {
+    @if($dispensasi->status === 'keluar' && !$dispensasi->is_warned)
+        event.preventDefault();
+        fetch(`/satpam/dispensasi/${dispensasiId}/wa-contacted`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            keepalive: true
+        })
+        .catch(error => console.error('Error:', error))
+        .finally(() => window.open(waLink, '_blank'));
+    @endif
+    // Selain status keluar: link <a> berjalan normal (buka WA tanpa menandai)
+}
+
+// ✅ BARU: Countdown realtime batas waktu kembali + notifikasi saat lewat
+const detailDeadlineEl = document.getElementById('live-countdown');
+@if($dispensasi->status === 'keluar' && $dispensasi->batas_waktu_kembali)
+    let overdueAlerted = {{ $isOverdue ? 'true' : 'false' }};
+
+    function tickDetailCountdown() {
+        if (!detailDeadlineEl) return;
+        const deadline = new Date(detailDeadlineEl.dataset.deadline);
+        const diffMs = deadline - new Date();
+        const lateEl = document.getElementById('late-minutes');
+
+        if (diffMs <= 0) {
+            const lateMin = Math.floor(-diffMs / 60000);
+            detailDeadlineEl.textContent = `TERLAMBAT ${lateMin}m`;
+            detailDeadlineEl.classList.remove('bg-white', 'text-amber-700', 'border-amber-200');
+            detailDeadlineEl.classList.add('bg-red-100', 'text-red-700', 'animate-pulse');
+            if (lateEl) lateEl.textContent = lateMin;
+
+            if (!overdueAlerted) {
+                overdueAlerted = true;
+                Swal.fire({
+                    icon: 'warning',
+                    title: '⚠️ Melewati Batas Waktu!',
+                    text: 'Siswa telah melewati batas waktu kembali. Segera hubungi via WhatsApp.',
+                    confirmButtonColor: '#dc2626'
+                });
+            }
+        } else {
+            const totalMin = Math.floor(diffMs / 60000);
+            const hrs = Math.floor(totalMin / 60);
+            const mins = totalMin % 60;
+            const secs = Math.floor((diffMs % 60000) / 1000);
+            detailDeadlineEl.textContent = hrs > 0
+                ? `Sisa ${hrs}j ${mins}m ${secs}s`
+                : `Sisa ${mins}m ${secs}s`;
+            if (totalMin <= 5) {
+                detailDeadlineEl.classList.remove('bg-white', 'text-amber-700', 'border-amber-200');
+                detailDeadlineEl.classList.add('bg-red-100', 'text-red-700');
+            }
+        }
+    }
+
+    tickDetailCountdown();
+    setInterval(tickDetailCountdown, 1000);
+@endif
+
 // Konfirmasi untuk tombol konfirmasi kembali
 document.querySelectorAll('[data-confirm]').forEach(btn => {
     btn.addEventListener('click', function (e) {

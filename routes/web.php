@@ -30,14 +30,20 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // harus menghubungi admin pusat.
 
 // ==========================================
-// PROFIL (Khusus Siswa - Data Tambahan Opsional)
+// PROFIL (Shared Layout, Logic Berbeda per Role)
 // ==========================================
-Route::middleware(['auth', 'role:siswa'])->prefix('profil')->name('profil.')->group(function () {
+Route::middleware(['auth'])->prefix('profil')->name('profil.')->group(function () {
     Route::get('/', [ProfileController::class, 'show'])->name('show');
-    Route::post('/update-phone', [ProfileController::class, 'updatePhone'])->name('phone');
-    Route::put('/phone', [ProfileController::class, 'updatePhone']);
-    Route::post('/update-additional', [ProfileController::class, 'updateAdditional'])->name('update-additional');
-    Route::put('/additional', [ProfileController::class, 'updateAdditional'])->name('additional');
+    
+    // Khusus Siswa: Update Data Tambahan
+    Route::post('/update-additional', [ProfileController::class, 'updateAdditional'])
+        ->middleware('role:siswa')
+        ->name('update-additional');
+
+    // Khusus Admin: Ganti Password
+    Route::post('/update-password', [ProfileController::class, 'updatePassword'])
+        ->middleware('role:admin')
+        ->name('update-password');
 });
 
 // ==========================================
@@ -147,7 +153,7 @@ Route::middleware(['auth', 'role:satpam'])->prefix('satpam')->name('satpam.')->g
     // ✅ BARU: Route untuk menandai sudah dihubungi
     Route::post('dispensasi/{dispensasi}/mark-contacted', [DashboardController::class, 'markContacted'])->name('mark-contacted');
     Route::post('dispensasi/{dispensasi}/wa-contacted', [DashboardController::class, 'markWaContacted'])
-        ->name('satpam.wa-contacted');
+        ->name('wa-contacted');
 });
 
 // ==========================================

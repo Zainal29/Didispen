@@ -23,7 +23,7 @@
         }
     </script>
     <style>
-        body { 
+        body {
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
@@ -51,7 +51,7 @@
         .watermark-overlay {
             position: absolute;
             inset: 0;
-            background-image: 
+            background-image:
                 repeating-linear-gradient(
                     45deg,
                     transparent,
@@ -307,7 +307,7 @@
                 <!-- ROLE TABS -->
                 <div class="mb-5 sm:mb-6">
                     <p class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2 text-center lg:text-left">Pilih Peran Masuk</p>
-                    
+
                     <div class="role-tabs-wrapper" x-ref="tabsWrapper">
                         <div class="role-tab-slider"
                              :style="`transform: translateX(calc(${activeRoleIndex()} * 100% + ${activeRoleIndex()} * 4px))`">
@@ -315,7 +315,7 @@
 
                         <div class="relative z-10 flex">
                             <template x-for="(role, index) in roles" :key="role.id">
-                                <button type="button" 
+                                <button type="button"
                                         @click="switchRole(role.id)"
                                         class="role-tab-btn flex-1 py-2.5 sm:py-3 rounded-md text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
                                         :class="{ 'active': activeRole === role.id }">
@@ -335,8 +335,8 @@
 
                 <!-- Error Alert -->
                 @if ($errors->any())
-                    <div class="mb-5 p-3 sm:p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs sm:text-sm flex items-start space-x-2" 
-                         x-data="{ show: true }" 
+                    <div class="mb-5 p-3 sm:p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs sm:text-sm flex items-start space-x-2"
+                         x-data="{ show: true }"
                          x-show="show">
                         <i class="fas fa-exclamation-circle mt-0.5 text-red-500 flex-shrink-0"></i>
                         <div class="flex-1">
@@ -357,7 +357,7 @@
                         <form method="POST" action="{{ route('login') }}" class="space-y-4" x-data="{ loginId: '{{ old('email') }}' }" @submit="loading = true">
                             @csrf
                             <input type="hidden" name="role" value="siswa">
-                            
+
                             <!-- Input Email/NIS -->
                             <div>
                                 <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Email / NIS Siswa</label>
@@ -366,7 +366,7 @@
                                     <input name="email" type="text" x-model="loginId" required placeholder="Masukkan NIS atau email siswa" class="form-input w-full h-11 sm:h-12 pl-10 pr-4 rounded-xl text-sm text-slate-700 focus:outline-none">
                                 </div>
                             </div>
-                            
+
                             <!-- Input Password (Otomatis & Dikunci) -->
                             <div>
                                 <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Password (Terisi Otomatis)</label>
@@ -374,7 +374,7 @@
                                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
                                     <input name="password" type="password" :value="loginId.split('@')[0]" readonly required placeholder="••••••••" class="form-input w-full h-11 sm:h-12 pl-10 pr-10 rounded-xl text-sm text-slate-500 bg-slate-100 cursor-not-allowed focus:outline-none border-slate-200">
                                 </div>
-                                
+
                             </div>
 
                             <button type="submit" :disabled="loading" class="btn-submit w-full h-11 sm:h-12 mt-2 rounded-xl text-sm sm:text-base font-bold text-white flex items-center justify-center space-x-2 disabled:opacity-70">
@@ -388,8 +388,8 @@
                     <div x-show="activeRole === 'teacher'" style="display: none;">
                         <form method="POST" action="{{ route('login') }}" class="space-y-4" x-data="{ loginId: '{{ old('email') }}' }" @submit="loading = true">
                             @csrf
-                            <input type="hidden" name="role" value="guru"> 
-                            
+                            <input type="hidden" name="role" value="guru">
+
                             <!-- Input Email/NIP -->
                             <div>
                                 <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Email / NIP Guru</label>
@@ -405,8 +405,11 @@
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
                                     <input name="password" type="password" :value="loginId.split('@')[0]" readonly required placeholder="••••••••" class="form-input w-full h-11 sm:h-12 pl-10 pr-10 rounded-xl text-sm text-slate-500 bg-slate-100 cursor-not-allowed focus:outline-none border-slate-200">
+                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary-600 focus:outline-none transition-colors">
+                                        <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                    </button>
                                 </div>
-                                
+
                             </div>
 
                             <button type="submit" :disabled="loading" class="btn-submit w-full h-11 sm:h-12 mt-2 rounded-xl text-sm sm:text-base font-bold text-white flex items-center justify-center space-x-2 disabled:opacity-70">
@@ -421,7 +424,7 @@
                         <form method="POST" action="{{ route('login') }}" class="space-y-4" @submit="loading = true">
                             @csrf
                             <input type="hidden" name="role" value="satpam">
-                            
+
                             <!-- Input Email/ID -->
                             <div>
                                 <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">Email / ID Satpam</label>
@@ -449,7 +452,7 @@
                             </button>
                         </form>
                     </div>
-                    
+
                 </div>
 
             </div>

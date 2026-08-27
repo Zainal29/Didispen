@@ -9,8 +9,10 @@ return new class extends Migration {
         Schema::create('siswa', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('jurusan_id')->constrained('jurusan');
-            $table->foreignId('kelas_id')->constrained('kelas');
+            // ✅ Nullable (digabung dari make_siswa_class_and_major_nullable):
+            // siswa hasil sync SiPintu belum tentu punya kelas/jurusan.
+            $table->foreignId('jurusan_id')->nullable()->constrained('jurusan');
+            $table->foreignId('kelas_id')->nullable()->constrained('kelas');
             $table->string('nama_lengkap');
             $table->date('tanggal_lahir')->nullable();
             $table->text('alamat')->nullable();

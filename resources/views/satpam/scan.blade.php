@@ -49,8 +49,6 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
 @push('scripts')
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script>
@@ -96,7 +94,7 @@ function verify(code) {
                 </div>
                 <div class="bg-white rounded-xl border border-emerald-200 p-3 text-xs space-y-1">
                     <p><span class="text-gray-500">Nama:</span> <strong class="text-gray-800">${escapeHtml(data.data.siswa.nama_lengkap)}</strong></p>
-                    <p><span class="text-gray-500">Kelas:</span> <strong class="text-gray-800">${escapeHtml(data.data.siswa.kelas.nama_kelas)}</strong></p>
+                    <p><span class="text-gray-500">Kelas:</span> <strong class="text-gray-800">${escapeHtml(data.data.siswa.kelas?.nama_kelas ?? '-')}</strong></p>
                     <p><span class="text-gray-500">No. Surat:</span> <strong class="font-mono text-gray-800">${escapeHtml(data.data.nomor_surat)}</strong></p>
                     <p><span class="text-gray-500">Jam Kembali:</span> <strong class="text-gray-800">${escapeHtml(data.data.jam_kembali)}</strong></p>
                 </div>
