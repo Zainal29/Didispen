@@ -26,10 +26,10 @@
                     'selesai' => ['bg-gray-100', 'text-gray-700', 'Selesai'],
                 ];
                 $badge = $statusBadges[$dispensasi->status] ?? $statusBadges['menunggu'];
-                
+
                 // Cek apakah terlambat
-                $isOverdue = $dispensasi->status === 'keluar' && 
-                             $dispensasi->batas_waktu_kembali && 
+                $isOverdue = $dispensasi->status === 'keluar' &&
+                             $dispensasi->batas_waktu_kembali &&
                              now()->greaterThan($dispensasi->batas_waktu_kembali);
             @endphp
             <div class="flex flex-col gap-2">
@@ -47,16 +47,16 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    
+
     {{-- KOLOM KIRI: Detail Dispensasi --}}
     <div class="lg:col-span-2 space-y-4">
-        
+
         {{-- Informasi Utama --}}
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-file-alt text-blue-600 mr-2"></i>Informasi Dispensasi
             </h3>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
                     <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">Kategori</p>
@@ -126,97 +126,98 @@
             @endif
         </div>
 
-        {{-- Kontak Darurat & WhatsApp --}}
-        @if(!empty($dispensasi->siswa->no_telepon))
-            @php
-                $hp = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
-                if (str_starts_with($hp, '0')) $hp = '62' . substr($hp, 1);
-                
-                $namaKelas = $dispensasi->siswa->kelas?->nama_kelas ?? 'Siswa';
-                $pesan = "Halo *{$dispensasi->siswa->nama_lengkap}* ({$namaKelas}),\n\n";
-                
-                if ($dispensasi->status === 'menunggu') {
-                    $pesan .= "Anda tercatat menunggu konfirmasi keluar dispensasi.\n";
-                } elseif ($isOverdue) {
-                    $pesan .= "⚠️ *PERINGATAN KETERLAMBATAN DISPENSASI* ⚠️\n";
-                    $pesan .= "Batas waktu kembali Anda telah LEWAT pukul *{$dispensasi->batas_waktu_kembali?->format('H:i')}* WIB.\n";
-                } elseif ($dispensasi->status === 'keluar') {
-                    $pesan .= "Anda tercatat sedang dispensasi keluar sekolah.\n";
-                }
-                
-                $pesan .= "\n No. Surat: {$dispensasi->nomor_surat}\n";
-                $pesan .= "📍 Tujuan: {$dispensasi->tujuan}\n";
-                $pesan .= " Batas Kembali: {$dispensasi->jam_kembali}\n\n";
-                $pesan .= "Mohon segera kembali ke sekolah atau lapor ke Pos Satpam. Terima kasih.";
-                
-                $waLink = "https://wa.me/{$hp}?text=" . urlencode($pesan);
-            @endphp
+        {{-- ✅ KONTAK DARURAT & WHATSAPP (HANYA UNTUK STATUS 'KELUAR') --}}
+@if($dispensasi->status === 'keluar' && !empty($dispensasi->siswa->no_telepon))
+    @php
+        $hp = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
+        if (str_starts_with($hp, '0')) $hp = '62' . substr($hp, 1);
 
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-                <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-phone-alt text-green-600 mr-2"></i>Kontak Darurat
-                </h3>
-                
-                <div class="bg-green-50 border-2 border-green-200 rounded-xl p-4">
-                    <div class="flex items-center justify-between gap-3 mb-3">
-                        <div>
-                            <p class="text-green-700 text-xs font-bold uppercase mb-1">No. Telepon / WhatsApp</p>
-                            <p class="text-lg font-bold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
-                            <p class="text-green-600 text-xs mt-1">{{ $dispensasi->siswa->nama_lengkap }}</p>
-                        </div>
+        $namaKelas = $dispensasi->siswa->kelas?->nama_kelas ?? 'Siswa';
+        $pesan = "Halo *{$dispensasi->siswa->nama_lengkap}* ({$namaKelas}),\n\n";
+        
+        // Cek apakah terlambat
+        $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
+        
+        if ($isOverdue) {
+            $lateMinutes = now()->diffInMinutes($dispensasi->batas_waktu_kembali);
+            $lateHours = floor($lateMinutes / 60);
+            $lateRemainingMins = $lateMinutes % 60;
+            $lateText = $lateHours > 0 ? "{$lateHours}j {$lateRemainingMins}m" : "{$lateMinutes}m";
+            
+            $pesan .= "⚠️ *PERINGATAN KETERLAMBATAN DISPENSASI* ⚠️\n";
+            $pesan .= "Batas waktu kembali Anda telah LEWAT sejak *{$lateText}* yang lalu.\n\n";
+        } else {
+            $pesan .= "Anda tercatat sedang dispensasi keluar sekolah.\n\n";
+        }
 
-                        {{-- ✅ BARU: Tombol WhatsApp — buka chat & otomatis tandai dihubungi --}}
-                        <a href="{{ $waLink }}" target="_blank" rel="noopener"
-                           onclick="handleDetailWaContacted(event, {{ $dispensasi->id }}, '{{ $waLink }}')"
-                           class="inline-flex flex-col items-center justify-center w-16 h-16 bg-green-500 hover:bg-green-600 text-white rounded-2xl transition-all shadow-lg shadow-green-500/30 hover:scale-105 flex-shrink-0"
-                           title="Hubungi via WhatsApp">
-                            <i class="fab fa-whatsapp text-3xl"></i>
-                            <span class="text-[8px] font-bold mt-0.5">CHAT</span>
-                        </a>
-                    </div>
-                    <p class="text-green-700 text-xs">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Klik ikon WhatsApp untuk menghubungi siswa. Jika status "Sedang Keluar", siswa otomatis ditandai sudah dihubungi.
-                    </p>
+        $pesan .= " No. Surat: {$dispensasi->nomor_surat}\n";
+        $pesan .= "📍 Tujuan: {$dispensasi->tujuan}\n";
+        $pesan .= " Batas Kembali: {$dispensasi->jam_kembali}\n\n";
+        $pesan .= "Mohon segera kembali ke sekolah atau lapor ke Pos Satpam. Terima kasih.";
+
+        $waLink = "https://wa.me/{$hp}?text=" . urlencode($pesan);
+    @endphp
+
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+        <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-phone-alt text-green-600 mr-2"></i>Kontak Darurat
+        </h3>
+
+        <div class="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <p class="text-green-700 text-xs font-bold uppercase mb-1">No. Telepon / WhatsApp</p>
+                    <p class="text-lg font-bold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
+                    <p class="text-green-600 text-xs mt-1">{{ $dispensasi->siswa->nama_lengkap }}</p>
                 </div>
 
-                @if($dispensasi->status === 'keluar' && !$dispensasi->is_warned)
-                    <form method="POST" action="{{ route('satpam.mark-contacted', $dispensasi) }}" class="mt-4">
-                        @csrf
-                        <button type="submit" 
-                                class="w-full inline-flex justify-center items-center px-4 py-3 rounded-xl text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-md shadow-purple-500/20 transition-all">
-                            <i class="fas fa-phone-alt mr-2"></i>Tandai Sudah Dihubungi
-                        </button>
-                    </form>
-                @elseif($dispensasi->is_warned)
-                    <div class="mt-4 p-4 bg-purple-50 border-2 border-purple-200 rounded-xl">
-                        <p class="text-purple-700 text-sm font-bold">
-                            <i class="fas fa-check-circle mr-2"></i>Sudah Dihubungi
-                        </p>
-                        <p class="text-purple-600 text-xs mt-1">
-                            {{ $dispensasi->warned_at ? $dispensasi->warned_at->isoFormat('D MMMM Y, HH:mm') : '-' }} WIB
-                        </p>
-                    </div>
-                @endif
+                {{-- ✅ TOMBOL WHATSAPP — Auto-mark contacted saat diklik --}}
+                <a href="{{ $waLink }}" 
+                   target="_blank" 
+                   rel="noopener"
+                   onclick="handleDetailWaContacted(event, {{ $dispensasi->id }}, '{{ $waLink }}')"
+                   class="inline-flex flex-col items-center justify-center w-16 h-16 bg-green-500 hover:bg-green-600 text-white rounded-2xl transition-all shadow-lg shadow-green-500/30 hover:scale-105 flex-shrink-0"
+                   title="Hubungi via WhatsApp">
+                    <i class="fab fa-whatsapp text-3xl"></i>
+                    <span class="text-[8px] font-bold mt-0.5">CHAT</span>
+                </a>
+            </div>
+            <p class="text-green-700 text-xs">
+                <i class="fas fa-info-circle mr-1"></i>
+                Klik ikon WhatsApp untuk menghubungi. Siswa otomatis ditandai sudah dihubungi.
+            </p>
+        </div>
+
+        {{-- Tampilkan status "Sudah Dihubungi" jika sudah --}}
+        @if($dispensasi->is_warned)
+            <div class="mt-4 p-4 bg-purple-50 border-2 border-purple-200 rounded-xl">
+                <p class="text-purple-700 text-sm font-bold">
+                    <i class="fas fa-check-circle mr-2"></i>Sudah Dihubungi
+                </p>
+                <p class="text-purple-600 text-xs mt-1">
+                    {{ $dispensasi->warned_at ? $dispensasi->warned_at->isoFormat('D MMMM Y, HH:mm') : '-' }} WIB
+                </p>
             </div>
         @endif
+    </div>
+@endif
 
         {{-- Aksi untuk Satpam --}}
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-tasks text-red-600 mr-2"></i>Aksi Satpam
             </h3>
-            
+
             <div class="space-y-3">
                 @if($dispensasi->status === 'disetujui')
-                    <a href="{{ route('satpam.scan', ['dispensasi' => $dispensasi->id]) }}" 
+                    <a href="{{ route('satpam.scan', ['dispensasi' => $dispensasi->id]) }}"
                        class="w-full inline-flex justify-center items-center px-5 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-red-600 to-rose-500 shadow-lg shadow-red-500/30 hover:-translate-y-0.5 transition-all">
                         <i class="fas fa-qrcode mr-2 text-lg"></i>Scan QR Code untuk Keluar
                     </a>
                 @elseif($dispensasi->status === 'keluar')
                     <form method="POST" action="{{ route('satpam.konfirmasi.kembali', $dispensasi) }}">
                         @csrf
-                        <button type="submit" 
+                        <button type="submit"
                                 data-confirm="Konfirmasi {{ $dispensasi->siswa->nama_lengkap }} sudah KEMBALI ke sekolah?"
                                 class="w-full inline-flex justify-center items-center px-5 py-3.5 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 hover:-translate-y-0.5 transition-all">
                             <i class="fas fa-door-closed mr-2 text-lg"></i>Konfirmasi Siswa Kembali
@@ -236,13 +237,13 @@
 
     {{-- KOLOM KANAN: Data Siswa & Guru --}}
     <div class="space-y-4">
-        
+
         {{-- Data Siswa --}}
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-user-graduate text-blue-600 mr-2"></i>Data Siswa
             </h3>
-            
+
             <div class="space-y-3">
                 <div>
                     <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">Nama Lengkap</p>
@@ -275,7 +276,7 @@
             <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-user-tie text-amber-600 mr-2"></i>Guru Piket Penanggung Jawab
             </h3>
-            
+
             <div class="space-y-3">
                 <div>
                     <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">Nama Guru</p>
@@ -294,7 +295,7 @@
             <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-history text-purple-600 mr-2"></i>Riwayat Status
             </h3>
-            
+
             <div class="space-y-3">
                 <div class="flex items-start gap-3">
                     <div class="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
@@ -303,7 +304,7 @@
                         <p class="text-[10px] text-gray-500">{{ $dispensasi->created_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                     </div>
                 </div>
-                
+
                 @if($dispensasi->guru)
                 <div class="flex items-start gap-3">
                     <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2"></div>
@@ -313,7 +314,7 @@
                     </div>
                 </div>
                 @endif
-                
+
                 @if($dispensasi->waktu_keluar_aktual)
                 <div class="flex items-start gap-3">
                     <div class="w-2 h-2 rounded-full bg-sky-500 mt-2"></div>
@@ -323,7 +324,7 @@
                     </div>
                 </div>
                 @endif
-                
+
                 @if($dispensasi->waktu_kembali_aktual)
                 <div class="flex items-start gap-3">
                     <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2"></div>
@@ -337,7 +338,7 @@
         </div>
 
         {{-- Tombol Kembali --}}
-        <a href="{{ route('satpam.dashboard') }}" 
+        <a href="{{ route('satpam.dashboard') }}"
            class="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all">
             <i class="fas fa-arrow-left mr-2"></i>Kembali
         </a>
@@ -415,7 +416,7 @@ document.querySelectorAll('[data-confirm]').forEach(btn => {
     btn.addEventListener('click', function (e) {
         e.preventDefault();
         const form = this.closest('form');
-        
+
         Swal.fire({
             title: 'Konfirmasi',
             text: this.dataset.confirm,

@@ -34,7 +34,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // ==========================================
 Route::middleware(['auth'])->prefix('profil')->name('profil.')->group(function () {
     Route::get('/', [ProfileController::class, 'show'])->name('show');
-    
+
     // Khusus Siswa: Update Data Tambahan
     Route::post('/update-additional', [ProfileController::class, 'updateAdditional'])
         ->middleware('role:siswa')

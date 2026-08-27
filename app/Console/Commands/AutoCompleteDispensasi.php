@@ -10,16 +10,16 @@ class AutoCompleteDispensasi extends Command
 {
     protected $signature = 'dispensasi:auto-complete';
 
-    protected $description = 'Otomatis menyelesaikan dispensasi yang melewati jam pulang sekolah (15:15)';
+    protected $description = 'Otomatis menyelesaikan dispensasi yang melewati jam pulang sekolah (15:00)';
 
     public function handle()
     {
         $now = Carbon::now('Asia/Jakarta');
         $currentTime = $now->format('H:i');
 
-        // Hanya jalankan setelah jam 15:20 (setelah jam ke-10 selesai)
-        if ($currentTime < '15:16') {
-            $this->info(" Belum jam pulang sekolah. Saat ini: {$currentTime}");
+        // ✅ REVISI: Hanya jalankan setelah jam 15:00
+        if ($currentTime < '15:00') {
+            $this->info("ℹ️ Belum jam pulang sekolah. Saat ini: {$currentTime}");
 
             return;
         }
@@ -41,12 +41,17 @@ class AutoCompleteDispensasi extends Command
             $dispensasi->update([
                 'status' => 'selesai',
                 'waktu_kembali_aktual' => now(),
-                'satpam_kembali_id' => null, // Null karena otomatis
+                'satpam_kembali_id' => null, // Null karena otomatis, bukan scan satpam
                 'catatan_admin' => 'Otomatis selesai (melewati jam pulang sekolah)',
             ]);
             $count++;
         }
 
-        $this->info("✅ Berhasil menyelesaikan {$count} dispensasi secara otomatis.");
+        // ✅ REVISI: Output lebih rapi
+        if ($count > 0) {
+            $this->info("✅ Berhasil menyelesaikan {$count} dispensasi secara otomatis.");
+        } else {
+            $this->info('ℹ️ Tidak ada dispensasi yang perlu diselesaikan otomatis saat ini.');
+        }
     }
 }
