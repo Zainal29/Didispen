@@ -18,3 +18,4 @@ Schedule::command('dispensasi:auto-complete')
 
 // Jalankan setiap hari jam 00:00
 Schedule::command('dispensasi:cleanup-history')->dailyAt('00:00');
+Schedule::command('dispensasi:cleanup-foto')->dailyAt('02:00');

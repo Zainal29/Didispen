@@ -728,7 +728,7 @@
                                 <label
                                     class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1"
                                 >
-                                    Password (Otomatis dari NIS)
+                                    Password (Otomatis, Bisa dilihat kok)
                                 </label>
 
 

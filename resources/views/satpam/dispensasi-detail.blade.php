@@ -56,7 +56,23 @@
             <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-file-alt text-blue-600 mr-2"></i>Informasi Dispensasi
             </h3>
-
+            {{-- Di section Informasi Dispensasi --}}
+@if($dispensasi->foto_verifikasi)
+<div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
+    <h4 class="text-sm font-bold text-blue-900 mb-3">
+        <i class="fas fa-camera mr-1"></i> Foto Verifikasi
+    </h4>
+    <div class="flex justify-center">
+        <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}" 
+             alt="Foto {{ $dispensasi->siswa->nama_lengkap }}"
+             class="w-48 h-48 object-cover rounded-xl border-4 border-blue-300 shadow-lg">
+    </div>
+    <p class="text-xs text-blue-700 text-center mt-3">
+        <i class="fas fa-shield-alt mr-1"></i> 
+        Gunakan foto ini untuk verifikasi identitas siswa
+    </p>
+</div>
+@endif
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
                     <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">Kategori</p>

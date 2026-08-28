@@ -62,6 +62,16 @@
                         <span class="ml-auto bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $pending }}</span>
                     @endif
                 </a>
+
+                <a href="{{ route('guru.scan') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors">
+                    <i class="fas fa-qrcode w-6 text-center"></i>
+                    <span class="font-medium">Scan QR (Backup)</span>
+                </a>
+
+                <a href="{{ route('guru.pengajuan.create') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors">
+                    <i class="fas fa-plus-circle w-6 text-center"></i>
+                    <span class="font-medium">Buat Dispensasi</span>
+                </a>
                 <a href="{{ route('guru.laporan.index') }}" class="{{ request()->routeIs('guru.laporan.*') ? $navOn : $navOff }}">
                     <i class="fas fa-chart-bar w-5 mr-3 text-center"></i> Laporan
                 </a>
@@ -162,6 +172,8 @@
                 <span class="text-[10px] font-bold {{ request()->routeIs('guru.pengajuan.*') ? $mobOn : $mobOff }}">Verifikasi</span>
             </div>
 
+
+
             {{-- Akun (bottom sheet) --}}
             <button @click="sheet = true" class="flex flex-col items-center justify-center gap-1 text-gray-400">
                 <span class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white text-[10px] font-bold flex items-center justify-center">
@@ -207,6 +219,8 @@
                     <i class="fas fa-book-open mr-1"></i> Panduan
                 </a>
             </div>
+
+
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf

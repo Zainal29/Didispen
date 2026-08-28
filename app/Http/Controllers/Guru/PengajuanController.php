@@ -4,57 +4,128 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
-use App\Services\DispensasiService;
-use App\Services\NotifikasiService;
+use App\Models\Siswa;
+use App\Helpers\TimeHelper;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class PengajuanController extends Controller
 {
-    public function __construct(private DispensasiService $dispensasiService) {}
-
     /**
-     * Daftar pengajuan untuk diverifikasi guru
+     * Daftar riwayat pengajuan yang dibuat guru
      */
     public function index(Request $request)
     {
-        $guru = auth()->user()->guru;
+        $guruId = auth()->user()->guru->id ?? null;
 
-        // ✅ Tampilkan:
-        //   1. Semua dispensasi "menunggu" (siapa saja guru boleh proses)
-        //   2. Dispensasi yang sudah ditangani oleh guru ini (guru_id = $guru->id)
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-            ->where(function ($q) use ($guru) {
-                $q->where('status', 'menunggu')
-                    ->orWhere('guru_id', $guru->id);
-            });
+            ->where('guru_id', $guruId);
 
-        // Filter Status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // ✅ Filter Pencarian (Nama Siswa atau NIS)
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('siswa', function ($q2) use ($search) {
-                    $q2->where('nama_lengkap', 'like', "%{$search}%");
-                })->orWhereHas('siswa.user', function ($q2) use ($search) {
-                    $q2->where('nis_nip', 'like', "%{$search}%");
-                });
+        $pengajuan = $query->latest()->paginate(15);
+
+        return view('guru.pengajuan.index', compact('pengajuan'));
+    }
+
+    /**
+     * Form buat pengajuan manual
+     */
+    public function create()
+    {
+        return view('guru.pengajuan.create');
+    }
+
+    /**
+     * ✅ ENDPOINT PENCARIAN SISWA (AJAX untuk Select2)
+     * Mencari berdasarkan NIS atau Nama, tapi mengembalikan ID untuk disimpan
+     */
+    public function searchSiswa(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        $siswas = Siswa::with(['user', 'kelas.jurusan'])
+            ->where('status_aktif', 1)
+            ->where(function($q) use ($query) {
+                $q->where('nama_lengkap', 'like', "%{$query}%")
+                  ->orWhereHas('user', function($q2) use ($query) {
+                      $q2->where('nis_nip', 'like', "%{$query}%");
+                  });
+            })
+            ->limit(15)
+            ->get()
+            ->map(function($s) {
+                // Ekstrak data dengan aman untuk menghindari error null
+                $nis = $s->user ? $s->user->nis_nip : 'Tanpa NIS';
+                $kelas = $s->kelas ? $s->kelas->nama_kelas : 'Tanpa Kelas';
+
+                return [
+                    'id' => $s->id, // ✅ Ini yang akan disimpan ke DB (Aman & Benar)
+                    'text' => "{$nis} - {$s->nama_lengkap} ({$kelas})", // ✅ Ini yang DITAMPILKAN di layar
+                ];
             });
+
+        return response()->json(['results' => $siswas]);
+    }
+
+    /**
+     * Simpan pengajuan manual — Langsung Disetujui
+     */
+    public function store(Request $request)
+    {
+        // SESUDAH (Benar)
+        $validated = $request->validate([
+            'siswa_id'        => 'required|exists:siswa,id', // <-- Perbaiki menjadi 'siswa'
+            'kategori'        => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
+            'alasan'          => 'required|string|min:10',
+            'tujuan'          => 'required|string|max:255',
+            'jam_keluar'      => 'required|integer|between:1,10',
+            'jam_kembali'     => 'required|integer|between:1,10|gt:jam_keluar',
+            'foto_verifikasi' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ], [
+            'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',
+            'foto_verifikasi.image' => 'File harus berupa gambar (JPG/PNG).',
+            'foto_verifikasi.max'   => 'Ukuran foto maksimal 2MB.',
+        ]);
+
+        // Hitung batas waktu kembali
+        $waktuAktual = TimeHelper::getWaktuAktual('Jam Pelajaran ke-'.$validated['jam_kembali']);
+        $parts = explode(' - ', $waktuAktual);
+        $batasWaktu = Carbon::parse($parts[1] ?? '15:15')->addMinutes(15);
+
+        $token = Str::random(64);
+        $guruId = auth()->user()->guru->id ?? null;
+
+        // Handle upload foto
+        $fotoPath = null;
+        if ($request->hasFile('foto_verifikasi')) {
+            $fotoPath = $request->file('foto_verifikasi')->store('foto-verifikasi', ['disk' => 'public']);
         }
 
-        $dispensasi = $query->latest()->paginate(15)->withQueryString();
+        // Buat Dispensasi (LANGSUNG DISETUJUI karena dibuat oleh Guru)
+        Dispensasi::create([
+            'siswa_id'            => $validated['siswa_id'],
+            'guru_id'             => $guruId,
+            'nomor_surat'         => 'DISP/' . now()->format('Ymd') . '/' . strtoupper(substr(md5($token), 0, 6)),
+            'status'              => 'disetujui',
+            'kategori'            => $validated['kategori'],
+            'alasan'              => $validated['alasan'],
+            'tujuan'              => $validated['tujuan'],
+            'jam_keluar'          => 'Jam Pelajaran ke-'.$validated['jam_keluar'],
+            'jam_kembali'         => 'Jam Pelajaran ke-'.$validated['jam_kembali'],
+            'batas_waktu_kembali' => $batasWaktu,
+            'qr_token'            => $token,
+            'foto_verifikasi'     => $fotoPath,
+            'catatan_admin'       => 'Dibuatkan manual oleh Guru Piket: ' . auth()->user()->name,
+        ]);
 
-        // Pass sebagai object semu agar view hero piket tetap kompatibel
-        $piketHariIni = (object) ['guru' => $guru];
-
-        return view('guru.pengajuan.index', compact('dispensasi', 'piketHariIni'));
+        return redirect()->route('guru.pengajuan.index')
+            ->with('success', 'Dispensasi berhasil dibuat dan disetujui. Siswa dapat langsung menunjukkan QR Code.');
     }
 
     /**
@@ -62,112 +133,14 @@ class PengajuanController extends Controller
      */
     public function show(Dispensasi $dispensasi)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
-        $guru = auth()->user()->guru;
+        $guruId = auth()->user()->guru->id ?? null;
 
-        // Keamanan:
-        // - "menunggu": semua guru boleh lihat
-        // - Sudah diproses: hanya guru yang tercatat di guru_id yang boleh lihat
-        if ($dispensasi->status !== 'menunggu' && $dispensasi->guru_id !== $guru->id) {
-            abort(403, 'Akses ditolak. Anda bukan guru piket yang menangani dispensasi ini.');
+        if ($dispensasi->guru_id !== $guruId) {
+            abort(403, 'Akses ditolak.');
         }
+
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
 
         return view('guru.pengajuan.show', compact('dispensasi'));
-    }
-
-    /**
-     * Approve / Setujui Pengajuan
-     */
-    public function approve(Request $request, Dispensasi $dispensasi)
-    {
-        $dispensasi->load(['siswa.kelas', 'siswa.user']);
-        $guru = auth()->user()->guru;
-
-        if ($dispensasi->status !== 'menunggu') {
-            return redirect()->back()->with('error', 'Dispensasi ini sudah diproses sebelumnya.');
-        }
-
-        try {
-            $dispensasi->qr_token = $dispensasi->qr_token ?? Str::random(64);
-            $qrContent = json_encode(['token' => $dispensasi->qr_token]);
-            $qrCodePath = 'qr_codes/dispensasi_'.$dispensasi->id.'.svg';
-
-            if (! Storage::disk('public')->exists('qr_codes')) {
-                Storage::disk('public')->makeDirectory('qr_codes');
-            }
-
-            Storage::disk('public')->put(
-                $qrCodePath,
-                QrCode::format('svg')->size(300)->generate($qrContent)
-            );
-
-            // ✅ Set guru_id LANGSUNG ke tabel dispensasi
-            $dispensasi->update([
-                'status' => 'disetujui',
-                'qr_code' => $qrCodePath,
-                'qr_token' => $dispensasi->qr_token,
-                'guru_id' => $guru->id,
-            ]);
-
-            // Kirim notifikasi ke siswa
-            app(NotifikasiService::class)->send(
-                $dispensasi->siswa->user_id,
-                "✅ Pengajuan dispensasi ({$dispensasi->nomor_surat}) telah DISETUJUI oleh Guru Piket.",
-                route('siswa.pengajuan.show', $dispensasi, false)
-            );
-
-            return redirect()->route('guru.pengajuan.show', $dispensasi)
-                ->with('success', "Dispensasi {$dispensasi->nomor_surat} berhasil disetujui. QR Code telah dibuat.");
-
-        } catch (\Exception $e) {
-            Log::error('Gagal generate QR Code Dispensasi: '.$e->getMessage());
-
-            return redirect()->back()->with('error', 'Gagal membuat QR Code. Silakan coba lagi.');
-        }
-    }
-
-    /**
-     * Tolak Pengajuan
-     */
-    public function reject(Request $request, Dispensasi $dispensasi)
-    {
-        $dispensasi->load('siswa.user');
-        $guru = auth()->user()->guru;
-
-        if ($dispensasi->status !== 'menunggu') {
-            return redirect()->back()->with('error', 'Dispensasi ini sudah diproses sebelumnya.');
-        }
-
-        // Validasi alasan penolakan dari SweetAlert
-        $request->validate([
-            'catatan_admin' => 'required|string|min:5|max:500',
-        ], [
-            'catatan_admin.required' => 'Alasan penolakan wajib diisi.',
-            'catatan_admin.min' => 'Alasan penolakan minimal 5 karakter agar jelas.',
-        ]);
-
-        try {
-            // ✅ Set guru_id LANGSUNG ke tabel dispensasi
-            $dispensasi->update([
-                'status' => 'ditolak',
-                'catatan_admin' => $request->catatan_admin,
-                'guru_id' => $guru->id, // Catat guru yang menolak
-            ]);
-
-            // Kirim notifikasi ke siswa
-            app(NotifikasiService::class)->send(
-                $dispensasi->siswa->user_id,
-                "❌ Pengajuan dispensasi ({$dispensasi->nomor_surat}) DITOLAK. Alasan: {$request->catatan_admin}",
-                route('siswa.pengajuan.show', $dispensasi, false)
-            );
-
-            return redirect()->route('guru.pengajuan.index')
-                ->with('success', "Dispensasi {$dispensasi->nomor_surat} berhasil ditolak.");
-
-        } catch (\Exception $e) {
-            Log::error('Gagal menolak dispensasi: '.$e->getMessage());
-
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat menolak pengajuan.');
-        }
     }
 }

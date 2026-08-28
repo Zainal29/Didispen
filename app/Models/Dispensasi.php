@@ -38,6 +38,7 @@ class Dispensasi extends Model
         'satpam_kembali_id',
         'is_warned',            // ✅ BARU
         'warned_at',            // ✅ BARU
+        'foto_verifikasi',
     ];
 
     protected $casts = [
@@ -73,7 +74,7 @@ class Dispensasi extends Model
         }
 
         return $this->status === 'keluar' &&
-               now()->greaterThan($this->batas_waktu_kembali);
+            now()->greaterThan($this->batas_waktu_kembali);
     }
 
     /**
@@ -85,5 +86,17 @@ class Dispensasi extends Model
             'is_warned' => true,
             'warned_at' => now(),
         ]);
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+
+        // Auto-delete foto saat dispensasi dihapus
+        static::deleted(function ($dispensasi) {
+            if ($dispensasi->foto_verifikasi && \Storage::disk('public')->exists($dispensasi->foto_verifikasi)) {
+                \Storage::disk('public')->delete($dispensasi->foto_verifikasi);
+            }
+        });
     }
 }

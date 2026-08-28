@@ -38,6 +38,10 @@ class AutoCompleteDispensasi extends Command
 
         $count = 0;
         foreach ($dispensasiList as $dispensasi) {
+            // ✅ HAPUS FOTO sebelum auto-complete
+            if ($dispensasi->foto_verifikasi) {
+                \Storage::disk('public')->delete($dispensasi->foto_verifikasi);
+            }
             $dispensasi->update([
                 'status' => 'selesai',
                 'waktu_kembali_aktual' => now(),
