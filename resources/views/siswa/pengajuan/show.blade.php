@@ -41,13 +41,13 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {{-- Kolom Kiri: Informasi Dispensasi --}}
         <div class="lg:col-span-2 space-y-4">
-            
+
             {{-- Informasi Dispensasi --}}
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
                 <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-file-alt text-blue-600 mr-2"></i>Informasi Dispensasi
                 </h3>
-                
+
                 <div class="space-y-3">
                     <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
                         <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">Kategori</p>
@@ -105,7 +105,7 @@
                 <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-qrcode text-blue-600 mr-2"></i>Status QR Code & Cetak
                 </h3>
-                
+
                 {{-- Info QR Code --}}
                 @if($dispensasi->status === 'selesai')
                 <div class="p-4 bg-gray-50 border-2 border-gray-200 rounded-xl text-center">
@@ -135,8 +135,9 @@
 
                 {{-- Info Batas Cetak --}}
                 @php
-                    $maxPrint = \App\Helpers\PrintHelper::maxLimit();
-                    $sisaCetak = $maxPrint - $dispensasi->print_count;
+                    $maxPrint = \App\Helpers\PrintHelper::maxStudentLimit();
+                    $currentPrint = $dispensasi->student_print_count ?? 0;
+                    $sisaCetak = $maxPrint - $currentPrint;
                     $currentTime = \App\Helpers\PrintHelper::currentTime();
                     $startTime = \App\Helpers\PrintHelper::startTime();
                     $endTime = \App\Helpers\PrintHelper::endTime();
@@ -146,40 +147,44 @@
                 <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                     <div class="flex items-center justify-between mb-2">
                         <p class="text-blue-800 text-sm font-bold">
-                            <i class="fas fa-print mr-2"></i>Status Pencetakan
+                            <i class="fas fa-print mr-2"></i>Status Pencetakan Anda
                         </p>
                         <span class="px-3 py-1 rounded-full text-xs font-bold {{ $sisaCetak > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
-                            {{ $dispensasi->print_count }} / {{ $maxPrint }} kali
+                            {{ $currentPrint }} / {{ $maxPrint }} kali
                         </span>
                     </div>
-                    <div class="w-full bg-blue-200 rounded-full h-2 mb-2">
-                        <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: {{ min(($dispensasi->print_count / $maxPrint) * 100, 100) }}%"></div>
+
+                    {{-- Progress Bar --}}
+                    <div class="w-full bg-blue-200 rounded-full h-2 mb-3">
+                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                             style="width: {{ min(($currentPrint / $maxPrint) * 100, 100) }}%">
+                        </div>
                     </div>
-                    
+
                     {{-- Info Jam Cetak --}}
-                    <div class="bg-white rounded-lg p-2 mb-2 border border-blue-100">
+                    <div class="bg-white rounded-lg p-2.5 mb-3 border border-blue-100">
                         <p class="text-blue-700 text-xs">
                             <i class="fas fa-clock mr-1"></i>
                             <strong>Jam Cetak:</strong> {{ $startTime }} - {{ $endTime }} WIB
                         </p>
                         <p class="text-blue-600 text-[10px] mt-1">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Saat ini: {{ $currentTime }} WIB - 
+                            Saat ini: {{ $currentTime }} WIB -
                             @if($isWithinTime)
                                 <span class="text-emerald-600 font-bold">✓ Dalam jam operasional</span>
                             @else
-                                <span class="text-red-600 font-bold"> Di luar jam operasional</span>
+                                <span class="text-red-600 font-bold">✗ Di luar jam operasional</span>
                             @endif
                         </p>
                     </div>
-                    
+
                     @if($sisaCetak > 0)
                         <p class="text-blue-700 text-xs">
-                            <i class="fas fa-check-circle mr-1"></i>Sisa cetak: <strong>{{ $sisaCetak }} kali</strong> lagi
+                            <i class="fas fa-check-circle mr-1"></i>Sisa cetak Anda: <strong>{{ $sisaCetak }} kali</strong> lagi
                         </p>
                     @else
                         <p class="text-red-700 text-xs font-bold">
-                            <i class="fas fa-exclamation-triangle mr-1"></i>Batas cetak telah tercapai. Hubungi admin untuk cetak ulang.
+                            <i class="fas fa-exclamation-triangle mr-1"></i>Batas cetak Anda telah tercapai. Silakan hubungi Guru Piket untuk mencetak ulang.
                         </p>
                     @endif
                 </div>
@@ -187,13 +192,17 @@
                 {{-- Tombol Cetak --}}
                 <div class="mt-4">
                     @if(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
-                        @if($dispensasi->print_count < $maxPrint && $isWithinTime)
-                            <a href="{{ route('siswa.cetak', $dispensasi) }}" target="_blank"
+                        {{-- ✅ PERBAIKAN: Gunakan $sisaCetak > 0 --}}
+                        @if($sisaCetak > 0 && $isWithinTime)
+                            <a href="{{ route('siswa.cetak', $dispensasi) }}"
+                               target="_blank"
+                               onclick="handleAfterPrintSiswa()"
+                               id="btnCetakSiswa"
                                class="w-full inline-flex justify-center items-center px-5 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-lg shadow-emerald-500/30 active:scale-[0.98] transition-all">
                                 <i class="fas fa-print mr-2"></i>Cetak Surat Dispensasi
                             </a>
                         @else
-                            <button disabled 
+                            <button disabled
                                     class="w-full inline-flex justify-center items-center px-5 py-3 rounded-xl text-sm font-bold text-gray-400 bg-gray-200 cursor-not-allowed">
                                 <i class="fas fa-lock mr-2"></i>
                                 @if(!$isWithinTime)
@@ -206,12 +215,12 @@
                                 @if(!$isWithinTime)
                                     <i class="fas fa-info-circle mr-1"></i>Pencetakan hanya tersedia pukul {{ $startTime }} - {{ $endTime }} WIB
                                 @else
-                                    <i class="fas fa-info-circle mr-1"></i>Hubungi admin/guru jika membutuhkan cetak ulang
+                                    <i class="fas fa-info-circle mr-1"></i>Hubungi Guru Piket jika membutuhkan cetak ulang
                                 @endif
                             </p>
                         @endif
                     @else
-                        <button disabled 
+                        <button disabled
                                 class="w-full inline-flex justify-center items-center px-5 py-3 rounded-xl text-sm font-bold text-gray-400 bg-gray-200 cursor-not-allowed">
                             <i class="fas fa-lock mr-2"></i>Belum Bisa Dicetak
                         </button>
@@ -225,13 +234,13 @@
 
         {{-- Kolom Kanan: Data Siswa & Guru --}}
         <div class="space-y-4">
-            
+
             {{-- Data Siswa --}}
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
                 <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-user-graduate text-blue-600 mr-2"></i>Data Siswa
                 </h3>
-                
+
                 <div class="space-y-3">
                     <div>
                         <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">Nama Lengkap</p>
@@ -264,7 +273,7 @@
                 <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-user-tie text-amber-600 mr-2"></i>Guru Piket Penanggung Jawab
                 </h3>
-                
+
                 <div class="space-y-3">
                     <div>
                         <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">Nama Guru</p>
@@ -283,7 +292,7 @@
                 <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-history text-purple-600 mr-2"></i>Riwayat Status
                 </h3>
-                
+
                 <div class="space-y-3">
                     <div class="flex items-start gap-3">
                         <div class="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
@@ -292,7 +301,7 @@
                             <p class="text-[10px] text-gray-500">{{ $dispensasi->created_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                         </div>
                     </div>
-                    
+
                     @if($dispensasi->guru)
                     <div class="flex items-start gap-3">
                         <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2"></div>
@@ -302,7 +311,7 @@
                         </div>
                     </div>
                     @endif
-                    
+
                     @if($dispensasi->waktu_keluar_aktual)
                     <div class="flex items-start gap-3">
                         <div class="w-2 h-2 rounded-full bg-sky-500 mt-2"></div>
@@ -312,7 +321,7 @@
                         </div>
                     </div>
                     @endif
-                    
+
                     @if($dispensasi->waktu_kembali_aktual)
                     <div class="flex items-start gap-3">
                         <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2"></div>
@@ -326,12 +335,30 @@
             </div>
 
             {{-- Tombol Kembali --}}
-            <a href="{{ route('siswa.pengajuan.index') }}" 
+            <a href="{{ route('siswa.pengajuan.index') }}"
                class="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all">
                 <i class="fas fa-arrow-left mr-2"></i>Kembali ke Riwayat
             </a>
         </div>
     </div>
 </div>
+
+
+@push('scripts')
+<script>
+function handleAfterPrintSiswa() {
+    const btn = document.getElementById('btnCetakSiswa');
+    if(btn) {
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Mencetak...';
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+    }
+
+    // Refresh halaman setelah 2.5 detik agar progress bar terupdate dari database
+    setTimeout(function() {
+        location.reload();
+    }, 2500);
+}
+</script>
+@endpush
 
 @endsection

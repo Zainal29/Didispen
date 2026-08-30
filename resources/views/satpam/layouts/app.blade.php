@@ -33,9 +33,12 @@
 
         <div class="flex items-center space-x-3 px-5 py-5 border-b border-gray-100">
             <div class="relative">
-                <div class="absolute inset-0 bg-gradient-to-br from-red-600 to-rose-500 rounded-xl blur-md opacity-40"></div>
-                <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-rose-500 text-white shadow-lg shadow-red-500/40">
-                    <i class="fas fa-shield-alt"></i>
+              <div class="relative flex items-center justify-center w-14 h-14 rounded-xl bg-[#fbfcf6] shadow-lg  overflow-hidden flex-shrink-0">
+                    @if(file_exists(public_path('images/logo-didispen.jpeg')))
+                        <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                    @else
+                        <i class="fas fa-shield-alt text-red-600 text-xl"></i>
+                    @endif
                 </div>
             </div>
             <div>
@@ -78,11 +81,12 @@
             {{-- Mobile Header --}}
             <div class="lg:hidden flex items-center justify-between px-4 py-3">
                 <div class="flex items-center space-x-2.5">
-                    <div class="relative">
-                        <div class="absolute inset-0 bg-gradient-to-br from-red-600 to-rose-500 rounded-lg blur-sm opacity-40"></div>
-                        <div class="relative w-9 h-9 rounded-lg bg-gradient-to-br from-red-600 to-rose-500 text-white flex items-center justify-center text-sm shadow-md shadow-red-500/30">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
+                    <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-[#fbfcf6] shadow-md overflow-hidden flex-shrink-0">
+                        @if(file_exists(public_path('images/logo-didispen.jpeg')))
+                            <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                        @else
+                            <i class="fas fa-shield-alt text-red-600 text-sm"></i>
+                        @endif
                     </div>
                     <div>
                         <h1 class="text-sm font-black text-gray-900 tracking-tight leading-none">DIDISPEN</h1>
@@ -122,75 +126,113 @@
     </div>
 
     {{-- ================================================== --}}
-    {{-- BOTTOM NAV — MOBILE (3 slot: Beranda | SCAN | Akun) --}}
+    {{-- BOTTOM NAV — MOBILE (5 GRID SIMETRIS)             --}}
     {{-- ================================================== --}}
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(220,38,38,0.08)]"
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_20px_rgba(220,38,38,0.08)]"
          style="padding-bottom: env(safe-area-inset-bottom);">
-        <div class="grid grid-cols-4 h-16">
+        <div class="grid grid-cols-5 h-16 w-full">
 
-            {{-- Beranda --}}
-            <a href="{{ route('satpam.dashboard') }}" class="flex flex-col items-center justify-center gap-0.5 {{ request()->routeIs('satpam.dashboard') ? $mobOn : $mobOff }}">
+            {{-- 1. Beranda --}}
+            <a href="{{ route('satpam.dashboard') }}"
+               class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('satpam.dashboard') ? $mobOn : $mobOff }}">
                 <i class="fas fa-house text-lg"></i>
-                <span class="text-[10px] font-bold">Beranda</span>
+                <span class="text-[9px] font-bold leading-tight">Beranda</span>
             </a>
 
-            {{-- FAB Scan QR (aksi utama satpam) --}}
-            <div class="relative flex flex-col items-center justify-end pb-1.5">
+            {{-- 2. Verifikasi Manual --}}
+            <a href="{{ route('satpam.scan') }}#manual"
+               class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ $mobOff }} hover:text-red-600">
+                <i class="fas fa-search text-lg"></i>
+                <span class="text-[9px] font-bold leading-tight">Manual</span>
+            </a>
+
+            {{-- 3. FAB Scan QR (Center - Lebih Besar) --}}
+            <div class="relative flex flex-col items-center justify-end pb-1">
                 <a href="{{ route('satpam.scan') }}"
-                   class="absolute -top-6 w-14 h-14 rounded-full bg-gradient-to-br from-red-600 to-rose-500 text-white text-xl flex items-center justify-center shadow-lg shadow-red-500/40 border-4 border-gray-100 active:scale-95 transition-transform {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-red-300' : '' }}">
+                   class="absolute -top-5 w-12 h-12 rounded-full bg-gradient-to-br from-red-600 to-rose-500 text-white text-lg flex items-center justify-center shadow-lg shadow-red-500/40 border-4 border-gray-100 active:scale-95 transition-transform {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-red-300 ring-offset-2' : '' }}">
                     <i class="fas fa-qrcode"></i>
                 </a>
-                <span class="text-[10px] font-bold {{ request()->routeIs('satpam.scan') ? $mobOn : $mobOff }}">Scan</span>
+                <span class="text-[9px] font-bold leading-tight {{ request()->routeIs('satpam.scan') ? $mobOn : $mobOff }}">Scan</span>
             </div>
 
-            {{-- Panduan --}}
-            <a href="{{ route('panduan') }}" class="flex flex-col items-center justify-center gap-0.5 {{ request()->routeIs('panduan') ? $mobOn : $mobOff }}">
+            {{-- 4. Panduan --}}
+            <a href="{{ route('panduan') }}"
+               class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('panduan') ? $mobOn : $mobOff }}">
                 <i class="fas fa-book-open text-lg"></i>
-                <span class="text-[10px] font-bold">Panduan</span>
+                <span class="text-[9px] font-bold leading-tight">Panduan</span>
             </a>
-            
 
-            {{-- Akun (Bottom Sheet) --}}
-            <button @click="sheet = true" class="flex flex-col items-center justify-center gap-1 text-gray-400">
-                <span class="w-6 h-6 rounded-full bg-gradient-to-br from-red-600 to-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+            {{-- 5. Akun --}}
+            <button @click="sheet = true"
+                    class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ $mobOff }} hover:text-red-600">
+                <span class="w-6 h-6 rounded-full bg-gradient-to-br from-red-600 to-rose-500 text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
                 </span>
-                <span class="text-[10px] font-bold">Akun</span>
+                <span class="text-[9px] font-bold leading-tight">Akun</span>
             </button>
         </div>
     </nav>
 
-    {{-- BOTTOM SHEET AKUN --}}
+    {{-- ================================================== --}}
+    {{-- BOTTOM SHEET AKUN (Smooth & Rapi)                 --}}
+    {{-- ================================================== --}}
     <div x-show="sheet" x-cloak class="fixed inset-0 z-40 lg:hidden">
-        <div class="absolute inset-0 bg-black/40" @click="sheet = false"></div>
+        {{-- Backdrop dengan blur --}}
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="sheet = false"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"></div>
+
+        {{-- Panel Sheet --}}
         <div class="absolute bottom-0 inset-x-0 bg-white rounded-t-3xl p-6"
              style="padding-bottom: calc(env(safe-area-inset-bottom) + 24px);"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0">
-            <div class="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-5"></div>
-            <div class="flex items-center space-x-3 mb-5">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-red-600 to-rose-500 text-white font-bold flex items-center justify-center shadow-md shadow-red-500/30 text-lg">
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="translate-y-full"
+             x-transition:enter-end="translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="translate-y-0"
+             x-transition:leave-end="translate-y-full">
+
+            {{-- Handle Bar --}}
+            <div class="w-12 h-1.5 rounded-full bg-gray-200 mx-auto mb-6"></div>
+
+            {{-- Header Akun --}}
+            <div class="flex items-center space-x-4 mb-6">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-red-600 to-rose-500 text-white font-bold text-xl flex items-center justify-center shadow-md shadow-red-500/30 flex-shrink-0">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
                 </div>
-                <div>
-                    <p class="font-bold text-gray-900">{{ $user->name }}</p>
-                    <p class="text-xs text-gray-500">Petugas Keamanan • Pos Gerbang</p>
+                <div class="min-w-0">
+                    <p class="font-bold text-gray-900 text-base truncate">{{ $user->name }}</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Petugas Keamanan • Pos Gerbang</p>
                 </div>
             </div>
-            <a href="{{ route('panduan') }}" @click="sheet = false"
-               class="w-full flex items-center justify-center px-4 py-3 mb-2.5 rounded-xl text-sm font-bold text-gray-700 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
-                <i class="fas fa-book-open text-red-600 mr-2"></i> Panduan Penggunaan
-            </a>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center justify-center px-4 py-3 rounded-xl text-sm font-bold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 transition-colors">
-                    <i class="fas fa-sign-out-alt mr-2"></i> Keluar dari Akun
-                </button>
-            </form>
-            <button @click="sheet = false" class="w-full mt-2 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">Tutup</button>
+
+            {{-- Menu --}}
+            <div class="space-y-3">
+                <a href="{{ route('panduan') }}" @click="sheet = false"
+                   class="w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-bold text-gray-700 bg-gray-50 border border-gray-100 hover:bg-gray-100 active:scale-[0.98] transition-all">
+                    <i class="fas fa-book-open text-red-600 mr-3 text-lg"></i> Panduan Penggunaan
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                            class="w-full flex items-center justify-center px-4 py-3.5 rounded-xl text-sm font-bold text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 active:scale-[0.98] transition-all">
+                        <i class="fas fa-sign-out-alt mr-3 text-lg"></i> Keluar dari Akun
+                    </button>
+                </form>
+            </div>
+
+            {{-- Tombol Tutup --}}
+            <button @click="sheet = false"
+                    class="w-full mt-4 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
+                Tutup
+            </button>
         </div>
     </div>
-</div>
 
 @stack('scripts')
 

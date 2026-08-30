@@ -5,113 +5,94 @@ namespace App\Helpers;
 use App\Models\Dispensasi;
 use App\Models\Setting;
 
-/**
- * PrintHelper
- *
- * Satu sumber kebenaran (single source of truth) untuk seluruh logika
- * validasi pencetakan struk/surat dispensasi. Dipakai oleh:
- *  - PrintLimitMiddleware
- *  - Siswa\CetakController
- *  - Guru\CetakStrukController (via middleware)
- *  - View dashboard & detail (siswa & guru)
- *
- * Pengaturan dibaca dari tabel `settings` (bisa diubah Admin):
- *  - print_max_limit   : batas maksimal cetak per dispensasi (default 3)
- *  - print_start_time  : jam mulai operasional cetak (default 06:00)
- *  - print_end_time    : jam akhir operasional cetak (default 17:00)
- */
 class PrintHelper
 {
-    /**
-     * Status dispensasi yang boleh dicetak.
-     */
     public const PRINTABLE_STATUSES = ['disetujui', 'keluar', 'selesai'];
 
-    /**
-     * Batas maksimal cetak (global, dari pengaturan Admin).
-     */
-    public static function maxLimit(): int
+    public static function maxStudentLimit(): int
     {
-        return (int) Setting::get('print_max_limit', 3);
+        return (int) Setting::get('student_print_limit', 3);
     }
 
-    /**
-     * Jam mulai operasional cetak, format H:i.
-     */
+    public static function maxTeacherLimit(): int
+    {
+        return (int) Setting::get('teacher_print_limit', 10);
+    }
+
     public static function startTime(): string
     {
         return (string) Setting::get('print_start_time', '06:00');
     }
 
-    /**
-     * Jam akhir operasional cetak, format H:i.
-     */
     public static function endTime(): string
     {
         return (string) Setting::get('print_end_time', '17:00');
     }
 
-    /**
-     * Waktu sekarang dalam format H:i (WIB / Asia-Jakarta).
-     */
     public static function currentTime(): string
     {
         return now()->format('H:i');
     }
 
-    /**
-     * Apakah waktu sekarang berada dalam jam operasional cetak?
-     */
     public static function isWithinOperatingHours(?string $currentTime = null): bool
     {
         $currentTime = $currentTime ?? self::currentTime();
-
         return $currentTime >= self::startTime() && $currentTime <= self::endTime();
     }
 
-    /**
-     * Apakah dispensasi boleh dicetak saat ini?
-     * (status valid + belum mencapai batas + dalam jam operasional)
-     */
-    public static function canPrint(Dispensasi $dispensasi): bool
+    public static function canStudentPrint(Dispensasi $dispensasi): bool
     {
         return in_array($dispensasi->status, self::PRINTABLE_STATUSES, true)
-            && $dispensasi->print_count < self::maxLimit()
+            && ($dispensasi->student_print_count ?? 0) < self::maxStudentLimit()
             && self::isWithinOperatingHours();
     }
 
-    /**
-     * Alasan mengapa dispensasi TIDAK bisa dicetak (null jika bisa dicetak).
-     * Dipakai untuk pesan redirect maupun teks tombol/tooltip.
-     */
-    public static function blockReason(Dispensasi $dispensasi): ?string
+    public static function getStudentBlockReason(Dispensasi $dispensasi): ?string
     {
-        if (! in_array($dispensasi->status, self::PRINTABLE_STATUSES, true)) {
-            return 'Surat/struk hanya bisa dicetak setelah mendapatkan persetujuan dari guru piket.';
+        if (!in_array($dispensasi->status, self::PRINTABLE_STATUSES, true)) {
+            return 'Surat hanya bisa dicetak setelah mendapatkan persetujuan dari guru piket.';
         }
 
-        $maxLimit = self::maxLimit();
-        if ($dispensasi->print_count >= $maxLimit) {
-            return "Batas maksimal cetak surat telah tercapai ({$maxLimit} kali). "
-                .'Silakan hubungi admin jika membutuhkan cetak ulang.';
+        $maxLimit = self::maxStudentLimit();
+        if (($dispensasi->student_print_count ?? 0) >= $maxLimit) {
+            return "Batas maksimal cetak siswa telah tercapai ({$maxLimit} kali). Silakan minta bantuan Guru Piket untuk mencetak.";
         }
 
-        if (! self::isWithinOperatingHours()) {
+        if (!self::isWithinOperatingHours()) {
             return self::operatingHoursMessage();
         }
 
         return null;
     }
 
-    /**
-     * Pesan error standar untuk pelanggaran jam operasional cetak.
-     * Format: "Pencetakan struk hanya diperbolehkan pada pukul 06:00 - 17:00 WIB.
-     *          Saat ini pukul 20:15 WIB."
-     */
+    public static function canTeacherPrint(Dispensasi $dispensasi): bool
+    {
+        return in_array($dispensasi->status, self::PRINTABLE_STATUSES, true)
+            && ($dispensasi->teacher_print_count ?? 0) < self::maxTeacherLimit()
+            && self::isWithinOperatingHours();
+    }
+
+    public static function getTeacherBlockReason(Dispensasi $dispensasi): ?string
+    {
+        if (!in_array($dispensasi->status, self::PRINTABLE_STATUSES, true)) {
+            return 'Surat hanya bisa dicetak setelah mendapatkan persetujuan.';
+        }
+
+        $maxLimit = self::maxTeacherLimit();
+        if (($dispensasi->teacher_print_count ?? 0) >= $maxLimit) {
+            return "Batas maksimal cetak guru telah tercapai ({$maxLimit} kali).";
+        }
+
+        if (!self::isWithinOperatingHours()) {
+            return self::operatingHoursMessage();
+        }
+
+        return null;
+    }
+
     public static function operatingHoursMessage(?string $currentTime = null): string
     {
         $currentTime = $currentTime ?? self::currentTime();
-
         return sprintf(
             'Pencetakan struk hanya diperbolehkan pada pukul %s - %s WIB. Saat ini pukul %s WIB.',
             self::startTime(),

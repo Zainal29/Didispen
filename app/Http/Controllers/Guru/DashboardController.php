@@ -5,59 +5,89 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request)
+    public function index(Request $request)
     {
-        $guru = Auth::user()->guru;
+        $today = now()->format('Y-m-d');
 
-        // Statistik dasar
+        // Filter aktif (default: 'semua')
+        $filter = $request->get('filter', 'semua');
+
+        // ==========================================
+        // STATISTIK HARI INI
+        // ==========================================
         $stats = [
-            'piket_hari_ini' => $guru,
-            'pending' => Dispensasi::where('status', 'menunggu')->count(),
-            'keluar' => Dispensasi::where('status', 'keluar')->whereDate('created_at', today())->count(),
-            'selesai' => Dispensasi::where('status', 'selesai')->whereDate('created_at', today())->count(),
-            'total' => Dispensasi::whereDate('created_at', today())->count(),
-
-            // ✅ BARU: Statistik Overdue & Warning
-            'overdue' => Dispensasi::where('status', 'keluar')
-                ->whereNotNull('batas_waktu_kembali')
-                ->where('batas_waktu_kembali', '<', now())
-                ->count(),
-
-            'warned' => Dispensasi::where('is_warned', true)
-                ->whereDate('warned_at', today())
-                ->count(),
+            'menunggu' => Dispensasi::where('status', 'menunggu')->whereDate('created_at', $today)->count(),
+            'disetujui' => Dispensasi::where('status', 'disetujui')->whereDate('created_at', $today)->count(),
+            'keluar' => Dispensasi::where('status', 'keluar')->whereDate('created_at', $today)->count(),
+            'selesai' => Dispensasi::where('status', 'selesai')->whereDate('created_at', $today)->count(),
+            'total' => Dispensasi::whereDate('created_at', $today)->count(),
         ];
 
-        // Semua pengajuan yang masih menunggu
-        $pendingDispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
+        // ==========================================
+        // QUERY UNTUK SETIAP KATEGORI
+        // ==========================================
+
+        // 1. Menunggu Persetujuan
+        $menunggu = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
             ->where('status', 'menunggu')
+            ->whereDate('created_at', $today)
             ->latest()
             ->get();
 
-        // Siswa yang sedang keluar (untuk monitoring real-time)
-        $siswaKeluar = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
+        // 2. Sedang Keluar (sudah di-scan satpam)
+        $sedangKeluar = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
             ->where('status', 'keluar')
-            ->whereDate('created_at', today())
+            ->whereDate('created_at', $today)
             ->latest()
             ->get();
 
-        // ✅ BARU: Siswa yang overdue (terlambat)
-        $overdueDispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
+        // 3. Selesai (sudah kembali)
+        $selesai = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+            ->where('status', 'selesai')
+            ->whereDate('created_at', $today)
+            ->latest()
+            ->get();
+
+        // 4. Terlambat (masih keluar tapi lewat batas waktu)
+        $terlambat = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
             ->where('status', 'keluar')
-            ->whereNotNull('batas_waktu_kembali')
+            ->whereDate('created_at', $today)
             ->where('batas_waktu_kembali', '<', now())
-            ->latest('batas_waktu_kembali')
+            ->latest()
             ->get();
+
+        // 5. Disetujui (menunggu scan satpam)
+        $disetujui = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+            ->where('status', 'disetujui')
+            ->whereDate('created_at', $today)
+            ->latest()
+            ->get();
+
+        // ==========================================
+        // TENTUKAN DATA YANG DITAMPILKAN
+        // ==========================================
+        $displayData = match($filter) {
+            'menunggu' => $menunggu,
+            'keluar' => $sedangKeluar,
+            'selesai' => $selesai,
+            'terlambat' => $terlambat,
+            'disetujui' => $disetujui,
+            default => $menunggu->merge($disetujui)->merge($sedangKeluar)->merge($selesai)->sortByDesc('created_at')->values(),
+        };
 
         return view('guru.dashboard', compact(
             'stats',
-            'pendingDispensasi',
-            'siswaKeluar',
-            'overdueDispensasi'
+            'filter',
+            'menunggu',
+            'sedangKeluar',
+            'selesai',
+            'terlambat',
+            'disetujui',
+            'displayData'
         ));
     }
 }

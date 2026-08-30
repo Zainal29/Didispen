@@ -15,63 +15,72 @@
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen overflow-hidden">
-        
+
         {{-- SIDEBAR --}}
         <aside class="w-64 bg-white shadow-lg flex flex-col">
             <div class="p-5 border-b">
-                <h1 class="text-xl font-bold text-blue-800">    
-                    <i class="fas fa-school mr-2"></i>DIDISPEN
-                </h1>
-                <p class="text-xs text-gray-500 mt-1">Panel Administrator</p>
+                <div class="flex items-center space-x-3">
+                    <div class="w-14 h-14 rounded-xl bg-[#fbfcf6] shadow-md overflow-hidden flex items-center justify-center flex-shrink-0">
+                        @if(file_exists(public_path('images/logo-didispen.jpeg')))
+                            <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                        @else
+                            <i class="fas fa-school text-blue-800 text-xl"></i>
+                        @endif
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-blue-800">DIDISPEN</h1>
+                        <p class="text-xs text-gray-500 mt-1">Panel Administrator</p>
+                    </div>
+                </div>
             </div>
-            
+
             <nav class="flex-1 overflow-y-auto p-3 space-y-1">
-                <a href="{{ route('admin.dashboard') }}" 
+                <a href="{{ route('admin.dashboard') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt w-5 mr-3"></i> Dashboard
                 </a>
 
                 <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Master Data</p>
-                <a href="{{ route('admin.siswa.index') }}" 
+                <a href="{{ route('admin.siswa.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
                     <i class="fas fa-user-graduate w-5 mr-3"></i> Siswa
                 </a>
-                <a href="{{ route('admin.satpam.index') }}" 
+                <a href="{{ route('admin.satpam.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.satpam.*') ? 'active' : '' }}">
                     <i class="fas fa-user-shield w-5 mr-3"></i> Satpam
                 </a>
-                <a href="{{ route('admin.guru.index') }}" 
+                <a href="{{ route('admin.guru.index') }}"
    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ (request()->routeIs('admin.guru.index') || request()->routeIs('admin.guru.create') || request()->routeIs('admin.guru.edit')) ? 'active' : '' }}">
     <i class="fas fa-chalkboard-teacher w-5 mr-3"></i> Guru
 </a>
-<a href="{{ route('admin.guru.checklog') }}" 
+<a href="{{ route('admin.guru.checklog') }}"
    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.guru.checklog') ? 'active' : '' }}">
     <i class="fas fa-id-card-alt w-5 mr-3"></i> Izin Guru
 </a>
                 <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Operasional</p>
-                <a href="{{ route('admin.piket.index') }}" 
+                <a href="{{ route('admin.piket.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.piket.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar-alt w-5 mr-3"></i> Jadwal Piket
                 </a>
-                <a href="{{ route('admin.semua.pengajuan') }}" 
+                <a href="{{ route('admin.semua.pengajuan') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.semua.*') ? 'active' : '' }}">
                     <i class="fas fa-file-alt w-5 mr-3"></i> Semua Pengajuan
                 </a>
-                <a href="{{ route('admin.laporan.index') }}" 
+                <a href="{{ route('admin.laporan.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.laporan.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-bar w-5 mr-3"></i> Laporan
                 </a>
 
                 <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Sistem</p>
-                <a href="{{ route('admin.settings.index') }}" 
+                <a href="{{ route('admin.settings.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <i class="fas fa-cog w-5 mr-3"></i> Pengaturan
                 </a>
-                <a href="{{ route('admin.audit.index') }}" 
+                <a href="{{ route('admin.audit.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
                     <i class="fas fa-history w-5 mr-3"></i> Audit Log
                 </a>
-<a href="{{ url('/profil') }}" 
+<a href="{{ url('/profil') }}"
    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->is('profil*') ? 'active' : '' }}">
     <i class="fas fa-user-circle w-5 mr-3"></i> Profil
 </a>

@@ -34,9 +34,12 @@
             {{-- Brand --}}
             <div class="flex items-center space-x-3 px-5 py-5 border-b border-gray-100">
                 <div class="relative">
-                    <div class="absolute inset-0 bg-gradient-to-br from-blue-600 to-sky-500 rounded-xl blur-md opacity-40"></div>
-                    <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/40">
-                        <i class="fas fa-user-graduate"></i>
+                   <div class="relative flex items-center justify-center w-14 h-14 rounded-xl bg-[#fbfcf6] shadow-lg overflow-hidden flex-shrink-0">
+                        @if(file_exists(public_path('images/logo-didispen.jpeg')))
+                            <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-1">
+                        @else
+                            <i class="fas fa-user-graduate text-blue-600 text-xl"></i>
+                        @endif
                     </div>
                 </div>
                 <div>
@@ -100,11 +103,12 @@
                 {{-- Topbar MOBILE: ringkas, muat di layar kecil --}}
                 <div class="lg:hidden flex items-center justify-between px-4 py-3">
                     <div class="flex items-center space-x-2.5">
-                        <div class="relative">
-                            <div class="absolute inset-0 bg-gradient-to-br from-blue-600 to-sky-500 rounded-lg blur-sm opacity-40"></div>
-                            <div class="relative w-9 h-9 rounded-lg bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center text-sm shadow-md shadow-blue-500/30">
-                                <i class="fas fa-user-graduate"></i>
-                            </div>
+                      <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-[#fbfcf6] shadow-md overflow-hidden flex-shrink-0">
+                            @if(file_exists(public_path('images/logo-didispen.jpeg')))
+                                <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                            @else
+                                <i class="fas fa-user-graduate text-blue-600 text-sm"></i>
+                            @endif
                         </div>
                         <div>
                             <h1 class="text-sm font-black text-gray-900 tracking-tight leading-none">DIDISPEN</h1>
@@ -219,7 +223,7 @@
                 </a>
                             <a href="{{ route('profil.show') }}" @click="sheet = false"
                 class="w-full flex items-center justify-center px-4 py-3 mb-2.5 rounded-xl text-sm font-bold text-gray-700 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <i class="fas fa-user-circle text-red-600 mr-2"></i> Profil & Ganti Password
+                    <i class="fas fa-user-circle text-red-600 mr-2"></i> Profil Siswa
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

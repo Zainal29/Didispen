@@ -2,34 +2,36 @@
 
 namespace App\Http\Middleware;
 
-use App\Helpers\PrintHelper;
-use App\Models\Dispensasi;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Helpers\PrintHelper;
 
 class PrintLimitMiddleware
 {
-    public function handle(Request $request, Closure $next, ?int $limit = null)
+    public function handle(Request $request, Closure $next)
     {
-        $id = $request->route('dispensasi');
+        // Ambil model dispensasi dari parameter route (biasanya bernama 'dispensasi')
+        $dispensasi = $request->route('dispensasi');
 
-        return DB::transaction(function () use ($request, $next, $id) {
-            $dispensasi = Dispensasi::whereKey($id)->lockForUpdate()->first();
-
-            if (! $dispensasi) {
-                abort(404, 'Data dispensasi tidak ditemukan.');
-            }
-
-            $request->route()->setParameter('dispensasi', $dispensasi);
-
-            // ✅ Validasi batas cetak + jam operasional lewat PrintHelper
-            // agar KONSISTEN dengan panel Guru maupun Siswa (single source of truth).
-            if ($reason = PrintHelper::blockReason($dispensasi)) {
-                return redirect()->back()->with('error', $reason);
-            }
-
+        if (!$dispensasi) {
             return $next($request);
-        });
+        }
+
+        $user = auth()->user();
+        $reason = null;
+
+        // Tentukan validasi berdasarkan role pengguna
+        if ($user->role === 'siswa') {
+            $reason = PrintHelper::getStudentBlockReason($dispensasi);
+        } elseif (in_array($user->role, ['guru', 'admin'])) {
+            $reason = PrintHelper::getTeacherBlockReason($dispensasi);
+        }
+
+        // Jika ada alasan penolakan, redirect kembali dengan pesan error
+        if ($reason) {
+            return redirect()->back()->with('error', $reason);
+        }
+
+        return $next($request);
     }
 }

@@ -42,7 +42,7 @@
                 <dt class="text-gray-500 font-medium">Terdaftar Sejak</dt>
                 <dd class="text-gray-800">{{ $user->created_at->format('d M Y') }}</dd>
             </div>
-            
+
             {{-- ✅ TAMPILAN NO. TELEPON SISWA --}}
             @if($user->role === 'siswa' && $user->siswa)
             <div class="pt-3">
@@ -50,7 +50,7 @@
                 <dd class="flex items-center justify-end gap-2 text-gray-800 font-medium">
                     @if($user->siswa->no_telepon)
                         <a href="tel:{{ $user->siswa->no_telepon }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-100">
-                            <i class="fas fa-phone-alt text-xs"></i> 
+                            <i class="fas fa-phone-alt text-xs"></i>
                             {{ str_replace('+62', '0', $user->siswa->no_telepon) }}
                         </a>
                     @else
@@ -68,7 +68,7 @@
     </div>
 
     <div class="lg:col-span-2 space-y-6">
-        
+
         {{-- ===== FORM DATA TAMBAHAN (KHUSUS SISWA) ===== --}}
         @if($user->role === 'siswa' && $user->siswa)
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -84,7 +84,7 @@
 
             <form method="POST" action="{{ route('profil.update-additional') }}">
                 @csrf
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {{-- No. Telepon / WhatsApp --}}
                     <div class="md:col-span-2">
@@ -114,7 +114,7 @@
                         <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
                             <i class="fas fa-calendar-alt mr-1 text-pink-500"></i> Tanggal Lahir
                         </label>
-                        <input type="date" name="tanggal_lahir" 
+                        <input type="date" name="tanggal_lahir"
                                value="{{ old('tanggal_lahir', $user->siswa->tanggal_lahir ? \Carbon\Carbon::parse($user->siswa->tanggal_lahir)->format('Y-m-d') : '') }}"
                                max="{{ now()->subYears(7)->format('Y-m-d') }}"
                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-purple-600 focus:ring-4 focus:ring-purple-50 outline-none transition-all text-sm font-medium @error('tanggal_lahir') border-red-500 bg-red-50 @enderror">
@@ -132,7 +132,7 @@
                         <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
                             <i class="fas fa-map-marker-alt mr-1 text-red-500"></i> Alamat Lengkap
                         </label>
-                        <textarea name="alamat" rows="3" 
+                        <textarea name="alamat" rows="3"
                                   placeholder="Masukkan alamat domisili saat ini (RT/RW, Desa, Kecamatan)..."
                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-purple-600 focus:ring-4 focus:ring-purple-50 outline-none transition-all text-sm font-medium resize-none @error('alamat') border-red-500 bg-red-50 @enderror">{{ old('alamat', $user->siswa->alamat) }}</textarea>
                         @error('alamat')
@@ -160,25 +160,80 @@
         </div>
         @endif
 
-        {{-- ===== INFO KEAMANAN PASSWORD (SEMUA ROLE) ===== --}}
+        {{-- ===== KEAMANAN AKUN & PASSWORD ===== --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div class="flex items-center gap-3 mb-4">
+            <div class="flex items-center gap-3 mb-5">
                 <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                     <i class="fas fa-shield-alt text-lg"></i>
                 </div>
-                <h3 class="font-bold text-gray-900">Keamanan Akun & Password</h3>
-            </div>
-            
-            <div class="p-4 rounded-xl bg-blue-50/50 border border-blue-100 text-sm text-blue-800 leading-relaxed space-y-3">
-                <div class="flex gap-3">
-                    <i class="fas fa-sync-alt text-blue-500 mt-0.5"></i>
-                    <p>Password akun Anda dikelola terpusat oleh sistem <strong>SiPintu/Sijuna</strong> dan disimpan dalam bentuk terenkripsi (hash). Demi keamanan integrasi, password <strong>tidak dapat dilihat, direset, atau diubah</strong> melalui aplikasi DIDISPEN.</p>
-                </div>
-                <div class="flex gap-3">
-                    <i class="fas fa-headset text-blue-500 mt-0.5"></i>
-                    <p>Jika Anda <strong>lupa password</strong> atau mengalami masalah login, silakan menghubungi <strong>admin pusat SiPintu/Sijuna</strong> atau operator sekolah untuk bantuan reset kredensial.</p>
+                <div>
+                    <h3 class="font-bold text-gray-900">Keamanan Akun</h3>
+                    <p class="text-xs text-gray-500">Kelola keamanan dan kredensial akun Anda.</p>
                 </div>
             </div>
+
+            @if($user->role === 'admin')
+                {{-- ✅ FORM GANTI PASSWORD KHUSUS ADMIN --}}
+                <form method="POST" action="{{ route('profil.update-password') }}">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
+                                Password Saat Ini <span class="text-red-500">*</span>
+                            </label>
+                            <input type="password" name="current_password" required
+                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm font-medium @error('current_password') border-red-500 bg-red-50 @enderror"
+                                   placeholder="Masukkan password lama">
+                            @error('current_password')
+                                <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="hidden md:block"></div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
+                                Password Baru <span class="text-red-500">*</span>
+                            </label>
+                            <input type="password" name="new_password" required minlength="8"
+                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm font-medium @error('new_password') border-red-500 bg-red-50 @enderror"
+                                   placeholder="Minimal 8 karakter">
+                            @error('new_password')
+                                <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
+                                Konfirmasi Password Baru <span class="text-red-500">*</span>
+                            </label>
+                            <input type="password" name="new_password_confirmation" required minlength="8"
+                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-sm font-medium"
+                                   placeholder="Ulangi password baru">
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit"
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] flex items-center gap-2">
+                            <i class="fas fa-key"></i> Ubah Password
+                        </button>
+                    </div>
+                </form>
+            @else
+                {{-- ✅ INFO UMUM UNTUK NON-ADMIN (TANPA SEBUT SiPintu/Sijuna) --}}
+                <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 leading-relaxed space-y-3">
+                    <div class="flex gap-3">
+                        <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                        <p>Password akun Anda dikelola secara terpusat oleh sistem. Demi keamanan, password <strong>tidak dapat diubah</strong> langsung melalui halaman profil ini.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <i class="fas fa-headset text-blue-500 mt-0.5"></i>
+                        <p>Jika Anda <strong>lupa password</strong> atau mengalami masalah login, silakan hubungi <strong>Administrator Sistem</strong> atau Operator Sekolah untuk bantuan reset kredensial.</p>
+                    </div>
+                </div>
+            @endif
         </div>
 
     </div>

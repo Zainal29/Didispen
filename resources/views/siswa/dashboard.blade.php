@@ -25,7 +25,7 @@
 
 {{-- ============ STATUS DISPENSASI AKTIF (LOGIKA DIPERBAIKI) ============ --}}
 @if(isset($dispensasiAktif))
-    
+
     {{-- KONDISI 1: BARU DISETUJUI (QR CODE MUNCUL) --}}
     @if($dispensasiAktif->status === 'disetujui' && $dispensasiAktif->qr_code)
     <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-4 mb-4">
@@ -140,18 +140,18 @@
             'keluar'    => 'bg-sky-100 text-sky-700 border-sky-200',
             'selesai'   => 'bg-gray-100 text-gray-600 border-gray-200',
         ];
-        
+
         // Cek apakah bisa cetak (single source of truth: App\Helpers\PrintHelper)
-        $maxPrint = \App\Helpers\PrintHelper::maxLimit();
-        $canPrint = in_array($pengajuan->status, \App\Helpers\PrintHelper::PRINTABLE_STATUSES) && 
+         $maxPrint = \App\Helpers\PrintHelper::maxStudentLimit();
+        $canPrint = in_array($pengajuan->status, \App\Helpers\PrintHelper::PRINTABLE_STATUSES) &&
                     $pengajuan->print_count < $maxPrint;
-        
+
         // Cek jam cetak
         $currentTime = \App\Helpers\PrintHelper::currentTime();
         $startTime = \App\Helpers\PrintHelper::startTime();
         $endTime = \App\Helpers\PrintHelper::endTime();
         $isWithinTime = \App\Helpers\PrintHelper::isWithinOperatingHours($currentTime);
-        
+
         $canPrint = $canPrint && $isWithinTime;
     @endphp
     <div class="p-4 active:bg-blue-50/40 transition-colors border-b border-gray-100">
@@ -159,7 +159,7 @@
             <div class="min-w-0 flex-1">
                 <h4 class="font-mono font-bold text-gray-800 text-xs truncate">{{ $pengajuan->nomor_surat }}</h4>
                 <p class="text-[11px] text-gray-500 mt-0.5">
-                    {{ $pengajuan->created_at->format('d M Y, H:i') }} • 
+                    {{ $pengajuan->created_at->format('d M Y, H:i') }} •
                     <span class="capitalize">{{ str_replace('_', ' ', $pengajuan->kategori) }}</span>
                 </p>
                 <p class="text-xs text-gray-600 mt-0.5 truncate">
@@ -170,14 +170,14 @@
                 {{ ucfirst($pengajuan->status) }}
             </span>
         </div>
-        
+
         <div class="mt-2.5 flex gap-2">
             {{-- Tombol Detail --}}
             <a href="{{ route('siswa.pengajuan.show', $pengajuan) }}"
                class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-transform">
                 <i class="fas fa-eye mr-1.5"></i>Detail
             </a>
-            
+
             {{-- ✅ Tombol Cetak yang Sudah Diperbaiki --}}
             @if(in_array($pengajuan->status, ['disetujui', 'keluar', 'selesai']))
                 @if($pengajuan->print_count < $maxPrint && $isWithinTime)
@@ -187,7 +187,7 @@
                     </a>
                 @else
                     {{-- Tombol disabled dengan tooltip --}}
-                    <button disabled 
+                    <button disabled
                             class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-gray-400 bg-gray-200 cursor-not-allowed"
                             title="{{ $pengajuan->print_count >= $maxPrint ? 'Batas cetak tercapai (' . $maxPrint . ' kali)' : 'Di luar jam cetak (' . $startTime . ' - ' . $endTime . ' WIB)' }}">
                         <i class="fas fa-lock mr-1.5"></i>Cetak

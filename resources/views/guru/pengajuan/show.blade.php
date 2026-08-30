@@ -93,8 +93,9 @@
                 {{-- ✅ Validasi & tampilan KONSISTEN dengan panel Siswa (App\Helpers\PrintHelper) --}}
                 @if(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
                 @php
-                    $maxPrint = \App\Helpers\PrintHelper::maxLimit();
-                    $sisaCetak = $maxPrint - $dispensasi->print_count;
+                    $maxPrint = \App\Helpers\PrintHelper::maxTeacherLimit();
+                    $currentPrint = $dispensasi->teacher_print_count ?? 0;
+                    $sisaCetak = $maxPrint - $currentPrint;
                     $startTime = \App\Helpers\PrintHelper::startTime();
                     $endTime = \App\Helpers\PrintHelper::endTime();
                     $currentTime = \App\Helpers\PrintHelper::currentTime();
@@ -107,14 +108,15 @@
                             <i class="fas fa-print mr-1.5"></i>Cetak Struk Dispensasi
                         </h4>
                         <span class="px-3 py-1 rounded-full text-xs font-bold {{ $sisaCetak > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
-                            {{ $dispensasi->print_count }} / {{ $maxPrint }} kali
+                            {{ $currentPrint }} / {{ $maxPrint }} kali
                         </span>
+
                     </div>
                     <p class="text-xs text-emerald-600 mb-2">Cetak PDF Struk Thermal (Ukuran Kertas 58mm).</p>
 
-                    {{-- Progress Bar Batas Cetak --}}
+                    {{-- Progress Bar --}}
                     <div class="w-full bg-emerald-200 rounded-full h-2 mb-3">
-                        <div class="bg-emerald-600 h-2 rounded-full transition-all" style="width: {{ min(($dispensasi->print_count / $maxPrint) * 100, 100) }}%"></div>
+                        <div class="bg-emerald-600 h-2 rounded-full transition-all" style="width: {{ min(($currentPrint / $maxPrint) * 100, 100) }}%"></div>
                     </div>
 
                     {{-- Info Jam Cetak --}}

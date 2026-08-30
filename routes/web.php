@@ -55,6 +55,8 @@
         Route::resource('guru', Admin\GuruController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('piket', GuruPiketController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('satpam', Admin\SatpamController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::put('profil/update-password', [ProfileController::class, 'updatePassword'])
+             ->name('profil.update-password');
 
         Route::get('semua-pengajuan', [Admin\DispensasiController::class, 'index'])->name('semua.pengajuan');
         Route::get('semua-pengajuan/{dispensasi}', [Admin\DispensasiController::class, 'show'])->name('semua.pengajuan.show');
@@ -82,7 +84,7 @@
     // GURU ROUTES
     // ==========================================
     Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(function () {
-        Route::get('/dashboard', Guru\DashboardController::class)->name('dashboard');
+        Route::get('dashboard', [\App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard');
 
         // ==========================================
         // 1. ROUTE SPESIFIK (HARUS DI ATAS!)

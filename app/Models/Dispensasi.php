@@ -32,6 +32,8 @@ class Dispensasi extends Model
         'print_count',
         'max_print_limit',
         'printed_at',
+        'student_print_count',
+        'teacher_print_count',
         'waktu_keluar_aktual',
         'waktu_kembali_aktual',
         'satpam_keluar_id',

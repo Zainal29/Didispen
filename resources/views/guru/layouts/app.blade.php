@@ -35,9 +35,12 @@
 
         <div class="flex items-center space-x-3 px-5 py-5 border-b border-gray-100">
             <div class="relative">
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-600 to-sky-500 rounded-xl blur-md opacity-40"></div>
-                <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/40">
-                    <i class="fas fa-chalkboard-teacher"></i>
+               <div class="relative flex items-center justify-center w-14 h-14 rounded-xl bg-[#fbfcf6] shadow-lg overflow-hidden flex-shrink-0">
+                    @if(file_exists(public_path('images/logo-didispen.jpeg')))
+                        <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                    @else
+                        <i class="fas fa-chalkboard-teacher text-blue-600 text-xl"></i>
+                    @endif
                 </div>
             </div>
             <div>
@@ -101,9 +104,12 @@
             <div class="lg:hidden flex items-center justify-between px-4 py-3">
                 <div class="flex items-center space-x-2.5 min-w-0">
                     <div class="relative">
-                        <div class="absolute inset-0 bg-gradient-to-br from-blue-600 to-sky-500 rounded-lg blur-sm opacity-40"></div>
-                        <div class="relative w-9 h-9 rounded-lg bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center text-sm shadow-md shadow-blue-500/30">
-                            <i class="fas fa-chalkboard-teacher"></i>
+                        <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-[#fbfcf6] shadow-md overflow-hidden flex-shrink-0">
+                            @if(file_exists(public_path('images/logo-didispen.jpeg')))
+                                <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                            @else
+                                <i class="fas fa-chalkboard-teacher text-blue-600 text-xl"></i>
+                            @endif
                         </div>
                     </div>
                     <div class="min-w-0">
@@ -142,97 +148,149 @@
     </div>
 
     {{-- ================================================== --}}
-    {{-- BOTTOM NAV — MOBILE                                --}}
+    {{-- BOTTOM NAV — MOBILE (5 GRID SIMETRIS)             --}}
     {{-- ================================================== --}}
     <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(37,99,235,0.08)]"
          style="padding-bottom: env(safe-area-inset-bottom);">
-        <div class="grid grid-cols-4 h-16">
+        <div class="grid grid-cols-5 h-16">
 
-            {{-- Beranda --}}
-            <a href="{{ route('guru.dashboard') }}" class="flex flex-col items-center justify-center gap-0.5 {{ request()->routeIs('guru.dashboard') ? $mobOn : $mobOff }}">
+            {{-- 1. Beranda --}}
+            <a href="{{ route('guru.dashboard') }}"
+               class="flex flex-col items-center justify-center gap-0.5 {{ request()->routeIs('guru.dashboard') ? 'text-blue-600' : 'text-gray-400' }}">
                 <i class="fas fa-house text-lg"></i>
-                <span class="text-[10px] font-bold">Beranda</span>
+                <span class="text-[9px] font-bold">Beranda</span>
             </a>
 
-            {{-- Keluar/Masuk (Checklog) --}}
-            <a href="{{ route('guru.checklog.index') }}" class="flex flex-col items-center justify-center gap-0.5 {{ request()->routeIs('guru.checklog.*') ? $mobOn : $mobOff }}">
+            {{-- 2. Keluar/Masuk --}}
+            <a href="{{ route('guru.checklog.index') }}"
+               class="flex flex-col items-center justify-center gap-0.5 {{ request()->routeIs('guru.checklog.*') ? 'text-blue-600' : 'text-gray-400' }}">
                 <i class="fas fa-door-open text-lg"></i>
-                <span class="text-[10px] font-bold">Keluar/Masuk</span>
+                <span class="text-[9px] font-bold">Keluar/Masuk</span>
             </a>
 
-            {{-- FAB Verifikasi --}}
-            <div class="relative flex flex-col items-center justify-end pb-1.5">
+            {{-- 3. FAB Verifikasi (Center - Lebih Besar) --}}
+            <div class="relative flex flex-col items-center justify-end pb-1">
                 <a href="{{ route('guru.pengajuan.index') }}"
-                   class="absolute -top-6 w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white text-xl flex items-center justify-center shadow-lg shadow-blue-500/40 border-4 border-gray-100 active:scale-95 transition-transform {{ request()->routeIs('guru.pengajuan.*') ? 'ring-2 ring-blue-300' : '' }}">
+                   class="absolute -top-5 w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white text-lg flex items-center justify-center shadow-lg shadow-blue-500/40 border-4 border-gray-100 active:scale-95 transition-transform {{ request()->routeIs('guru.pengajuan.*') ? 'ring-2 ring-blue-300' : '' }}">
                     <i class="fas fa-clipboard-check"></i>
                     @if($pending > 0)
-                        <span class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">{{ $pending }}</span>
+                        <span class="absolute -top-1 -right-1 min-w-[18px] h-4 px-1 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center border-2 border-white">{{ $pending }}</span>
                     @endif
                 </a>
-                <span class="text-[10px] font-bold {{ request()->routeIs('guru.pengajuan.*') ? $mobOn : $mobOff }}">Verifikasi</span>
+                <span class="text-[9px] font-bold {{ request()->routeIs('guru.pengajuan.*') ? 'text-blue-600' : 'text-gray-400' }}">Verifikasi</span>
             </div>
 
+            {{-- 4. Scan QR --}}
+            <a href="{{ route('guru.scan') }}"
+               class="flex flex-col items-center justify-center gap-0.5 {{ request()->routeIs('guru.scan') ? 'text-blue-600' : 'text-gray-400' }}">
+                <i class="fas fa-qrcode text-lg"></i>
+                <span class="text-[9px] font-bold">Scan QR</span>
+            </a>
 
-
-            {{-- Akun (bottom sheet) --}}
-            <button @click="sheet = true" class="flex flex-col items-center justify-center gap-1 text-gray-400">
-                <span class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white text-[10px] font-bold flex items-center justify-center">
+            {{-- 5. Akun --}}
+            <button @click="sheet = true"
+                    class="flex flex-col items-center justify-center gap-0.5 text-gray-400">
+                <span class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
                 </span>
-                <span class="text-[10px] font-bold">Akun</span>
+                <span class="text-[9px] font-bold">Akun</span>
             </button>
         </div>
     </nav>
 
-        {{-- BOTTOM SHEET AKUN --}}
+    {{-- BOTTOM SHEET AKUN --}}
     <div x-show="sheet" x-cloak class="fixed inset-0 z-40 lg:hidden">
-        <div class="absolute inset-0 bg-black/40" @click="sheet = false"></div>
-        <div class="absolute bottom-0 inset-x-0 bg-white rounded-t-3xl p-6"
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="sheet = false"></div>
+        <div class="absolute bottom-0 inset-x-0 bg-white rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto"
              style="padding-bottom: calc(env(safe-area-inset-bottom) + 24px);"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0">
-            <div class="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-5"></div>
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="translate-y-full"
+             x-transition:enter-end="translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="translate-y-0"
+             x-transition:leave-end="translate-y-full">
+
+            {{-- Handle --}}
+            <div class="w-12 h-1.5 rounded-full bg-gray-300 mx-auto mb-6"></div>
 
             {{-- Header akun --}}
-            <div class="flex items-center space-x-3 mb-5">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white font-bold flex items-center justify-center shadow-md shadow-blue-500/30">
+            <div class="flex items-center space-x-4 mb-6">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-sky-500 text-white font-bold text-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
                 </div>
-                <div>
-                    <p class="font-bold text-gray-900">{{ $user->name }}</p>
-                    <p class="text-xs text-gray-500">Guru Piket</p>
+                <div class="flex-1">
+                    <p class="font-bold text-gray-900 text-base">{{ $user->name }}</p>
+                    <p class="text-sm text-gray-500">Guru Piket</p>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ $user->email }}</p>
                 </div>
             </div>
 
-            {{-- ✅ GRID 3 TILE: Laporan, Verifikasi, Panduan (rapi satu baris) --}}
-            <div class="grid grid-cols-3 gap-2 mb-2">
-                <a href="{{ route('guru.laporan.index') }}" @click="sheet = false"
-                   class="px-3 py-2.5 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 text-center">
-                    <i class="fas fa-chart-bar mr-1"></i> Laporan
-                </a>
+            {{-- Menu Grid 2x2 --}}
+            <div class="grid grid-cols-2 gap-3 mb-6">
                 <a href="{{ route('guru.pengajuan.index') }}" @click="sheet = false"
-                   class="px-3 py-2.5 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 text-center">
-                    <i class="fas fa-file-signature mr-1"></i> Verifikasi
+                   class="flex items-center px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 hover:bg-blue-100 transition-colors">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500 text-white flex items-center justify-center mr-3">
+                        <i class="fas fa-file-signature"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-blue-900">Verifikasi</p>
+                        <p class="text-[10px] text-blue-600">Dispensasi</p>
+                    </div>
                 </a>
+
+                <a href="{{ route('guru.laporan.index') }}" @click="sheet = false"
+                   class="flex items-center px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 transition-colors">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500 text-white flex items-center justify-center mr-3">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-emerald-900">Laporan</p>
+                        <p class="text-[10px] text-emerald-600">Statistik</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('guru.scan') }}" @click="sheet = false"
+                   class="flex items-center px-4 py-3 rounded-xl bg-purple-50 border border-purple-100 hover:bg-purple-100 transition-colors">
+                    <div class="w-10 h-10 rounded-lg bg-purple-500 text-white flex items-center justify-center mr-3">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-purple-900">Scan QR</p>
+                        <p class="text-[10px] text-purple-600">Backup</p>
+                    </div>
+                </a>
+
                 <a href="{{ route('panduan') }}" @click="sheet = false"
-                   class="px-3 py-2.5 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 text-center">
-                    <i class="fas fa-book-open mr-1"></i> Panduan
+                   class="flex items-center px-4 py-3 rounded-xl bg-amber-50 border border-amber-100 hover:bg-amber-100 transition-colors">
+                    <div class="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center mr-3">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-amber-900">Panduan</p>
+                        <p class="text-[10px] text-amber-600">Bantuan</p>
+                    </div>
                 </a>
             </div>
 
+            {{-- Divider --}}
+            <div class="border-t border-gray-200 my-4"></div>
 
-
+            {{-- Logout Button --}}
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="w-full flex items-center justify-center px-4 py-3 rounded-xl text-sm font-bold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 transition-colors">
+                <button type="submit"
+                        class="w-full flex items-center justify-center px-4 py-3.5 rounded-xl text-sm font-bold text-red-600 border-2 border-red-200 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-colors">
                     <i class="fas fa-sign-out-alt mr-2"></i> Keluar dari Akun
                 </button>
             </form>
-            <button @click="sheet = false" class="w-full mt-2 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">Tutup</button>
+
+            {{-- Close Button --}}
+            <button @click="sheet = false"
+                    class="w-full mt-3 px-4 py-3 rounded-xl text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
+                Tutup
+            </button>
         </div>
     </div>
-</div>
-
 @stack('scripts')
 
 {{-- ✅ GLOBAL SWEETALERT NOTIFICATION --}}
