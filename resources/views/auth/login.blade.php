@@ -669,128 +669,75 @@
                 <div class="w-full">
 
 
-                    <!-- ================= SISWA ================= -->
-                    <div x-show="activeRole === 'student'">
+                <!-- ================= SISWA ================= -->
+                <div x-show="activeRole === 'student'">
+                    <form method="POST" action="{{ route('login') }}" class="space-y-4" x-data="{ loginId: '{{ old('email') }}' }" @submit="loading = true">
+                        @csrf
+                        <input type="hidden" name="role" value="siswa">
 
-                        <form
-                            method="POST"
-                            action="{{ route('login') }}"
-                            class="space-y-4"
-                            x-data="{ loginId: '{{ old('email') }}' }"
-                            @submit="loading = true"
+                        <!-- IDENTIFIER -->
+                        <div>
+                            <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">
+                                Email / NIS Siswa
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input
+                                    name="email"
+                                    type="text"
+                                    x-model="loginId"
+                                    required
+                                    placeholder="Masukkan NIS atau email siswa"
+                                    class="form-input w-full h-11 sm:h-12 pl-10 pr-4 rounded-xl text-sm text-slate-700"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- PASSWORD SISWA -->
+                        <div x-data="{ showPw: false }">
+                            <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1">
+                                Password
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input
+                                    name="password"
+                                    :type="showPw ? 'text' : 'password'"
+                                    required
+                                    autocomplete="current-password"
+                                    placeholder="Masukkan password"
+                                    class="form-input w-full h-11 sm:h-12 pl-10 pr-10 rounded-xl text-sm text-slate-700"
+                                >
+                                <button
+                                    type="button"
+                                    @click="showPw = !showPw"
+                                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary-600 focus:outline-none transition-colors"
+                                    title="Tampilkan/sembunyikan password"
+                                >
+                                    <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                </button>
+                            </div>
+                            <!-- ✅ HINT PENTING AGAR SISWA TIDAK BINGUNG -->
+                                <!--<p class="text-[11px] text-slate-400 mt-1.5 ml-1">
+                                    Gunakan <strong>NIS</strong> Anda sebagai password jika belum pernah diubah.
+                                </p>-->
+                        </div>
+
+                        <!-- SUBMIT -->
+                        <button
+                            type="submit"
+                            :disabled="loading"
+                            class="btn-submit w-full h-11 sm:h-12 mt-2 rounded-xl text-sm sm:text-base font-bold text-white flex items-center justify-center space-x-2 disabled:opacity-70"
                         >
-
-                            @csrf
-
-                            <input
-                                type="hidden"
-                                name="role"
-                                value="siswa"
-                            >
-
-
-                            <!-- IDENTIFIER -->
-                            <div>
-
-                                <label
-                                    class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1"
-                                >
-                                    Email / NIS Siswa
-                                </label>
-
-
-                                <div class="relative">
-
-                                    <span
-                                        class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"
-                                    >
-                                        <i class="fas fa-envelope"></i>
-                                    </span>
-
-
-                                    <input
-                                        name="email"
-                                        type="text"
-                                        x-model="loginId"
-                                        required
-                                        placeholder="Masukkan NIS atau email siswa"
-                                        class="form-input w-full h-11 sm:h-12 pl-10 pr-4 rounded-xl text-sm text-slate-700"
-                                    >
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- PASSWORD OTOMATIS SISWA -->
-                            <div x-data="{ showPw: false }">
-
-                                <label
-                                    class="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5 ml-1"
-                                >
-                                    Password (Otomatis, Bisa dilihat kok)
-                                </label>
-
-
-                                <div class="relative">
-
-                                    <span
-                                        class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"
-                                    >
-                                        <i class="fas fa-lock"></i>
-                                    </span>
-
-
-                                    <input
-                                        name="password"
-                                        :type="showPw ? 'text' : 'password'"
-                                        :value="loginId.split('@')[0]"
-                                        readonly
-                                        required
-                                        placeholder="••••••••"
-                                        class="form-input w-full h-11 sm:h-12 pl-10 pr-10 rounded-xl text-sm text-slate-500 bg-slate-100 cursor-not-allowed"
-                                    >
-
-
-                                    <button
-                                        type="button"
-                                        @click="showPw = !showPw"
-                                        class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary-600"
-                                        title="Tampilkan/sembunyikan password"
-                                    >
-
-                                        <i
-                                            :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"
-                                        ></i>
-
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- SUBMIT -->
-                            <button
-                                type="submit"
-                                :disabled="loading"
-                                class="btn-submit w-full h-11 sm:h-12 mt-2 rounded-xl text-sm sm:text-base font-bold text-white flex items-center justify-center space-x-2 disabled:opacity-70"
-                            >
-
-                                <i
-                                    x-show="loading"
-                                    class="fas fa-spinner fa-spin"
-                                ></i>
-
-                                <span
-                                    x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"
-                                ></span>
-
-                            </button>
-
-                        </form>
-
-                    </div>
+                            <i x-show="loading" class="fas fa-spinner fa-spin"></i>
+                            <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
+                        </button>
+                    </form>
+                </div>
 
 
 
@@ -902,9 +849,9 @@
 
 
                                 <!-- INFO -->
-                                <p class="text-[11px] text-slate-400 mt-1.5 ml-1">
-                                    Password guru/admin dimasukkan secara manual.
-                                </p>
+                                <!--<p class="text-[11px] text-slate-400 mt-1.5 ml-1">
+                                    Password gurul.
+                                </p>-->
 
                             </div>
 
