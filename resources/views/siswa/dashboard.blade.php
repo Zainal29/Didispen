@@ -23,44 +23,51 @@
     </div>
 </div>
 
-{{-- ============ STATUS DISPENSASI AKTIF (LOGIKA DIPERBAIKI) ============ --}}
+{{-- ============ STATUS DISPENSASI AKTIF (SEDERHANA) ============ --}}
 @if(isset($dispensasiAktif))
 
-    {{-- KONDISI 1: BARU DISETUJUI (QR CODE MUNCUL) --}}
-    @if($dispensasiAktif->status === 'disetujui' && $dispensasiAktif->qr_code)
-    <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-4 mb-4">
+    {{-- KONDISI 1: DISETUJUI (TOMBOL LIHAT QR CODE) --}}
+    @if($dispensasiAktif->status === 'disetujui')
+    <div class="bg-white rounded-2xl border border-emerald-100 shadow-sm p-4 mb-4">
         <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 animate-pulse">
                     Aktif
                 </span>
-                <h3 class="text-sm font-bold text-gray-900"><i class="fas fa-qrcode text-blue-600 mr-1.5"></i>QR Dispensasi</h3>
+                <h3 class="text-sm font-bold text-gray-900">
+                    <i class="fas fa-check-circle text-emerald-600 mr-1.5"></i>Dispensasi Disetujui
+                </h3>
             </div>
-            <a href="{{ asset('storage/' . $dispensasiAktif->qr_code) }}" download class="text-[11px] font-bold text-blue-600 active:opacity-60">
-                <i class="fas fa-download mr-1"></i>Simpan
-            </a>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-center gap-4">
-            <div class="bg-white p-2 rounded-xl border-2 border-dashed border-blue-200 flex-shrink-0">
-                <img src="{{ asset('storage/' . $dispensasiAktif->qr_code) }}" alt="QR Code" class="w-32 h-32 sm:w-40 sm:h-40 object-contain">
+        <div class="space-y-2 text-xs">
+            <div class="bg-gray-50 rounded-lg px-3 py-2">
+                <p class="text-[10px] font-bold text-gray-500 uppercase">No. Surat</p>
+                <p class="font-mono font-bold text-gray-800 truncate">{{ $dispensasiAktif->nomor_surat }}</p>
             </div>
-            <div class="flex-1 min-w-0 space-y-2 text-xs w-full">
-                <div class="bg-blue-50/60 border border-blue-100 rounded-lg px-3 py-2">
-                    <p class="text-[10px] font-bold text-blue-500 uppercase">No. Surat</p>
-                    <p class="font-mono font-bold text-gray-800 truncate">{{ $dispensasiAktif->nomor_surat }}</p>
-                </div>
-                <div class="bg-blue-50/60 border border-blue-100 rounded-lg px-3 py-2">
-                    <p class="text-[10px] font-bold text-blue-500 uppercase">Waktu</p>
-                    <p class="font-bold text-gray-800">{{ $dispensasiAktif->jam_keluar }} – {{ $dispensasiAktif->jam_kembali }}</p>
-                </div>
+            <div class="bg-gray-50 rounded-lg px-3 py-2">
+                <p class="text-[10px] font-bold text-gray-500 uppercase">Waktu</p>
+                <p class="font-bold text-gray-800">{{ $dispensasiAktif->jam_keluar }} – {{ $dispensasiAktif->jam_kembali }}</p>
             </div>
         </div>
-        <p class="text-center text-[10px] text-gray-400 font-mono mt-3">Tunjukkan ke petugas satpam saat keluar</p>
+
+        <div class="mt-3 flex gap-2">
+            <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
+               class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors">
+                <i class="fas fa-qrcode mr-1.5"></i>Lihat QR Code
+            </a>
+            @if($dispensasiAktif->student_print_count < 15)
+            <a href="{{ route('siswa.cetak', $dispensasiAktif) }}"
+               target="_blank"
+               class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors">
+                <i class="fas fa-print mr-1.5"></i>Cetak
+            </a>
+            @endif
+        </div>
     </div>
     @endif
 
-    {{-- KONDISI 2: SUDAH KELUAR (QR CODE HILANG, MUNCUL STATUS KELUAR) --}}
+    {{-- KONDISI 2: SUDAH KELUAR --}}
     @if($dispensasiAktif->status === 'keluar')
     <div class="bg-sky-50 rounded-2xl border-2 border-sky-200 shadow-sm p-4 mb-4">
         <div class="flex items-center gap-3">
@@ -80,7 +87,7 @@
     </div>
     @endif
 
-    {{-- KONDISI 3: SUDAH SELESAI / KEMBALI --}}
+    {{-- KONDISI 3: SUDAH SELESAI --}}
     @if($dispensasiAktif->status === 'selesai')
     <div class="bg-emerald-50 rounded-2xl border-2 border-emerald-200 shadow-sm p-4 mb-4">
         <div class="flex items-center gap-3">

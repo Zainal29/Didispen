@@ -57,7 +57,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('siswa.pengajuan.store') }}" id="formDispensasi" class="space-y-4">
+               <form method="POST" action="{{ route('siswa.pengajuan.store') }}" enctype="multipart/form-data" id="formDispensasi" class="space-y-4">
                     @csrf
 
                     {{-- Data Siswa (Read-only) --}}
@@ -132,7 +132,7 @@
         <p class="text-xs text-blue-700 mb-3">
             Upload foto selfie Anda untuk verifikasi oleh Satpam. Foto akan dihapus otomatis setelah Anda kembali.
         </p>
-        <input type="file" name="foto_verifikasi" accept="image/*" required 
+        <input type="file" name="foto_verifikasi" accept="image/*" required
             class="w-full px-3 py-2 border-2 border-blue-300 rounded-lg text-sm focus:outline-none focus:border-blue-600">
         @error('foto_verifikasi')
             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -234,43 +234,43 @@
             const now = new Date();
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
             const wib = new Date(utc + (3600000 * 7));
-            
+
             const dayOfWeek = wib.getDay(); // 0=Minggu, 1=Senin, ..., 6=Sabtu
             const hours = wib.getHours();
             const minutes = wib.getMinutes();
             const currentTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-            
+
             const banner = document.getElementById('timeWarningBanner');
             const message = document.getElementById('timeWarningMessage');
             const timeDisplay = document.getElementById('currentTimeDisplay');
             const form = document.getElementById('formDispensasi');
             const submitBtn = document.getElementById('submitBtn');
-            
+
             if (timeDisplay) {
                 const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
                 timeDisplay.textContent = `${days[dayOfWeek]}, ${currentTime} WIB`;
             }
-            
+
             let isAllowed = true;
             let restrictionMsg = '';
-            
+
             if (dayOfWeek === 0 || dayOfWeek === 6) {
                 isAllowed = false;
                 restrictionMsg = 'Pengajuan dispensasi hanya dapat dilakukan pada hari <strong>Senin sampai Jumat</strong>.';
             } else {
                 const jamTutup = (dayOfWeek === 5) ? 14 : 15;
                 const currentHour = hours + (minutes / 60);
-                
+
                 if (currentHour < 8 || currentHour > jamTutup) {
                     isAllowed = false;
                     restrictionMsg = `Pengajuan dispensasi hanya dapat dilakukan pada pukul <strong>08:00 - ${jamTutup}:00 WIB</strong>.`;
                 }
             }
-            
+
             if (!isAllowed) {
                 if (banner) banner.classList.remove('hidden');
                 if (message) message.innerHTML = restrictionMsg;
-                
+
                 if (form) {
                     form.querySelectorAll('input, select, textarea, button').forEach(el => {
                         el.disabled = true;
@@ -285,7 +285,7 @@
                 }
             } else {
                 if (banner) banner.classList.add('hidden');
-                
+
                 if (form) {
                     form.querySelectorAll('input, select, textarea, button').forEach(el => {
                         // Jangan enable submitBtn di sini, biarkan dikontrol oleh logika normal
@@ -317,12 +317,12 @@
     // ✅ BARU: Disable jam yang sudah lewat berdasarkan waktu saat ini
     function disablePastLessons() {
         if (!jamKeluar) return;
-        
+
         const now = new Date();
         const currentHour = now.getHours();
         const currentMinute = now.getMinutes();
         const currentTime = currentHour * 60 + currentMinute;
-        
+
         // Jadwal KBM (sama dengan di server)
         const jadwal = [
             { jam: 1, start: 7 * 60 + 0, end: 7 * 60 + 45 },   // 07:00 - 07:45
@@ -336,7 +336,7 @@
             { jam: 9, start: 13 * 60 + 45, end: 14 * 60 + 30 },// 13:45 - 14:30
             { jam: 10, start: 14 * 60 + 30, end: 15 * 60 + 15 },// 14:30 - 15:15
         ];
-        
+
         // Cari jam pelajaran yang sedang berjalan
         let currentLesson = 1;
         for (const item of jadwal) {
@@ -348,13 +348,13 @@
                 }
             }
         }
-        
+
         // Disable semua jam yang sudah lewat
         const options = jamKeluar.querySelectorAll('option');
         options.forEach(option => {
             const val = parseInt(option.value);
             if (option.value === '') return;
-            
+
             if (val < currentLesson) {
                 option.disabled = true;
                 option.classList.add('text-gray-300', 'cursor-not-allowed');
@@ -365,7 +365,7 @@
                 option.textContent = `Jam ke-${val}`;
             }
         });
-        
+
         // Jika jam keluar yang dipilih sudah disabled, reset
         const selectedValue = parseInt(jamKeluar.value);
         if (!isNaN(selectedValue) && selectedValue < currentLesson) {

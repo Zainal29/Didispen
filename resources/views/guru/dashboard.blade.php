@@ -128,16 +128,88 @@
 
     <div class="divide-y divide-gray-100">
         @forelse($displayData as $item)
-        {{-- ... (KODE LOOPING ITEM ANDA TETAP SAMA PERSIS DI SINI) ... --}}
         <div class="p-4 hover:bg-gray-50 transition-colors">
-            {{-- (Paste kode item dari file asli Anda di sini, jangan diubah) --}}
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+
+                {{-- Info Siswa & Dispensasi --}}
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                        <span class="font-mono text-xs font-bold text-gray-600">{{ $item->nomor_surat }}</span>
+
+                        {{-- Badge Status --}}
+                        @php
+                            $badgeClass = match($item->status) {
+                                'menunggu' => 'bg-amber-100 text-amber-700',
+                                'disetujui' => 'bg-emerald-100 text-emerald-700',
+                                'keluar' => 'bg-sky-100 text-sky-700',
+                                'selesai' => 'bg-gray-100 text-gray-700',
+                                default => 'bg-gray-100 text-gray-700'
+                            };
+                        @endphp
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase {{ $badgeClass }}">
+                            {{ $item->status }}
+                        </span>
+                    </div>
+
+                    <p class="font-bold text-gray-900 text-sm truncate">{{ $item->siswa->nama_lengkap }}</p>
+                    <p class="text-xs text-gray-500 mb-1">
+                        {{ $item->siswa->kelas?->nama_kelas ?? '-' }} • {{ $item->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}
+                    </p>
+                    <p class="text-xs text-gray-600 line-clamp-2">
+                        <span class="font-semibold">{{ ucfirst(str_replace('_', ' ', $item->kategori)) }}:</span>
+                        {{ Str::limit($item->alasan, 60) }}
+                    </p>
+                </div>
+
+                {{-- Tombol Aksi --}}
+                <div class="flex gap-2 flex-shrink-0">
+                    {{-- ✅ TOMBOL DETAIL (MATA) - SELALU MUNCUL --}}
+                    <a href="{{ route('guru.pengajuan.show', $item) }}"
+                       class="inline-flex items-center justify-center px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg transition-colors border border-blue-200"
+                       title="Lihat Detail">
+                        <i class="fas fa-eye"></i>
+                    </a>
+
+                    @if($item->status === 'menunggu')
+                        {{-- Tombol Setujui --}}
+                        <form method="POST" action="{{ route('guru.pengajuan.approve', $item) }}" class="inline">
+                            @csrf
+                            <button type="submit"
+                                    onclick="return confirm('Setujui dispensasi {{ $item->siswa->nama_lengkap }}?')"
+                                    class="inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors"
+                                    title="Setujui">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </form>
+
+                        {{-- Tombol Tolak --}}
+                        <button type="button"
+                                onclick="rejectDispensasi({{ $item->id }}, '{{ $item->siswa->nama_lengkap }}')"
+                                class="inline-flex items-center justify-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors"
+                                title="Tolak">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    @else
+                        {{-- Tombol Cetak (untuk status selain menunggu) --}}
+                        @if(in_array($item->status, ['disetujui', 'keluar', 'selesai']))
+                            <a href="{{ route('guru.cetak-pdf', [$item, 'format' => 'thermal']) }}"
+                               target="_blank"
+                               class="inline-flex items-center justify-center px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition-colors border border-emerald-200"
+                               title="Cetak Struk">
+                                <i class="fas fa-print"></i>
+                            </a>
+                        @endif
+                    @endif
+                </div>
+            </div>
         </div>
         @empty
         <div class="p-10 text-center">
             <div class="w-16 h-16 mx-auto rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center text-2xl mb-3">
                 <i class="fas fa-inbox"></i>
             </div>
-            <p class="text-gray-500 font-semibold text-sm">Tidak ada data untuk filter ini</p>
+            <p class="text-gray-500 font-semibold text-sm">Tidak ada data dispensasi untuk filter ini</p>
+            <p class="text-gray-400 text-xs mt-1">Data akan muncul ketika siswa mengajukan dispensasi.</p>
         </div>
         @endforelse
     </div>
@@ -240,6 +312,48 @@ window.addEventListener('popstate', function(event) {
         }
     }
 });
+
+
+// Fungsi untuk menolak dispensasi (Bisa dipanggil dari dalam loop AJAX)
+function rejectDispensasi(id, namaSiswa) {
+    Swal.fire({
+        title: 'Tolak Dispensasi',
+        text: `Masukkan alasan penolakan untuk ${namaSiswa}:`,
+        input: 'textarea',
+        inputPlaceholder: 'Contoh: Alasan tidak jelas, siswa masih bisa mengikuti pelajaran...',
+        inputAttributes: { rows: 3 },
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Ya, Tolak',
+        cancelButtonText: 'Batal',
+        reverseButtons: true,
+        inputValidator: (value) => {
+            if (!value || value.trim() === '') return 'Alasan penolakan wajib diisi!';
+        }
+    }).then(result => {
+        if (result.isConfirmed) {
+            // Buat form dinamis untuk submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/guru/pengajuan/${id}/reject`; // Sesuaikan dengan route Anda
+
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+
+            const reason = document.createElement('input');
+            reason.type = 'hidden';
+            reason.name = 'catatan_admin';
+            reason.value = result.value;
+
+            form.append(csrf, reason);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
 </script>
 @endpush
 @endsection

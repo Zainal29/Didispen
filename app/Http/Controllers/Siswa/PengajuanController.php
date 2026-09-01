@@ -78,10 +78,13 @@ class PengajuanController extends Controller
             'alasan' => 'required|string|min:10|max:500',
             'tujuan' => 'required|string|max:255',
             'lokasi' => 'nullable|string|max:255',
-            'no_telepon' => 'required|string|regex:/^(?:\+?62|0)?8[0-9]{7,12}$/',
+
+            // ✅ PERBAIKAN: Gunakan array untuk regex agar tidak error delimiter
+            'no_telepon' => ['required', 'string', 'regex:/^(?:\+?62|0)?8[0-9]{7,12}$/'],
+
             'jam_keluar' => 'required|integer|between:1,10',
             'jam_kembali' => 'required|integer|between:1,10|gt:jam_keluar',
-            'foto_verifikasi' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+            'foto_verifikasi' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
             'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',

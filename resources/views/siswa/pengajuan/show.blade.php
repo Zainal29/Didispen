@@ -107,14 +107,34 @@
                 </h3>
 
                 {{-- Info QR Code --}}
-                @if($dispensasi->status === 'selesai')
-                <div class="p-4 bg-gray-50 border-2 border-gray-200 rounded-xl text-center">
-                    <div class="w-16 h-16 mx-auto rounded-full bg-gray-300 text-white flex items-center justify-center mb-3">
-                        <i class="fas fa-check text-2xl"></i>
+                @if($dispensasi->status === 'disetujui')
+                    @if($dispensasi->qr_code)
+                    <div class="p-4 bg-emerald-50 border-2 border-emerald-200 rounded-xl text-center">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center mb-3">
+                            <i class="fas fa-check text-2xl"></i>
+                        </div>
+                        <p class="text-emerald-700 font-bold text-sm mb-1">QR Code Aktif</p>
+                        <p class="text-emerald-600 text-xs mb-4">Tunjukkan QR Code ini kepada petugas Satpam saat keluar dan kembali.</p>
+
+                        {{-- Tampilkan QR Code --}}
+                        <div class="bg-white p-4 rounded-xl inline-block shadow-lg">
+                            <img src="{{ asset('storage/' . $dispensasi->qr_code) }}"
+                                 alt="QR Code"
+                                 class="w-48 h-48 object-contain">
+                        </div>
+
+                        <p class="text-[10px] text-gray-500 mt-3">No. Surat: {{ $dispensasi->nomor_surat }}</p>
                     </div>
-                    <p class="text-gray-700 font-bold text-sm mb-1">QR Code Sudah Di-Scan (Tidak Aktif)</p>
-                    <p class="text-gray-500 text-xs">Dispensasi ini sudah pernah di-scan oleh Satpam (Status: Selesai) dan QR Code tidak dapat di-scan lagi.</p>
-                </div>
+                    @else
+                    <div class="p-4 bg-amber-50 border-2 border-amber-200 rounded-xl text-center">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-amber-500 text-white flex items-center justify-center mb-3">
+                            <i class="fas fa-clock text-2xl"></i>
+                        </div>
+                        <p class="text-amber-700 font-bold text-sm mb-1">QR Code Belum Tersedia</p>
+                        <p class="text-amber-600 text-xs">QR Code sedang di-generate. Silakan refresh halaman ini.</p>
+                    </div>
+                    @endif
+
                 @elseif($dispensasi->status === 'keluar')
                 <div class="p-4 bg-sky-50 border-2 border-sky-200 rounded-xl text-center">
                     <div class="w-16 h-16 mx-auto rounded-full bg-sky-500 text-white flex items-center justify-center mb-3">
@@ -123,13 +143,23 @@
                     <p class="text-sky-700 font-bold text-sm mb-1">Sedang Keluar</p>
                     <p class="text-sky-600 text-xs">Anda sudah keluar dari sekolah. Harap kembali tepat waktu.</p>
                 </div>
-                @else
-                <div class="p-4 bg-emerald-50 border-2 border-emerald-200 rounded-xl text-center">
-                    <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center mb-3">
-                        <i class="fas fa-check-circle text-2xl"></i>
+
+                @elseif($dispensasi->status === 'selesai')
+                <div class="p-4 bg-gray-50 border-2 border-gray-200 rounded-xl text-center">
+                    <div class="w-16 h-16 mx-auto rounded-full bg-gray-400 text-white flex items-center justify-center mb-3">
+                        <i class="fas fa-check-double text-2xl"></i>
                     </div>
-                    <p class="text-emerald-700 font-bold text-sm mb-1">QR Code Aktif</p>
-                    <p class="text-emerald-600 text-xs">Tunjukkan QR Code ini kepada petugas Satpam saat keluar dan kembali.</p>
+                    <p class="text-gray-700 font-bold text-sm mb-1">QR Code Sudah Di-Scan (Tidak Aktif)</p>
+                    <p class="text-gray-500 text-xs">Dispensasi ini sudah pernah di-scan oleh Satpam.</p>
+                </div>
+
+                @else
+                <div class="p-4 bg-amber-50 border-2 border-amber-200 rounded-xl text-center">
+                    <div class="w-16 h-16 mx-auto rounded-full bg-amber-500 text-white flex items-center justify-center mb-3">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
+                    <p class="text-amber-700 font-bold text-sm mb-1">Menunggu Persetujuan</p>
+                    <p class="text-amber-600 text-xs">QR Code akan tersedia setelah disetujui guru piket.</p>
                 </div>
                 @endif
 

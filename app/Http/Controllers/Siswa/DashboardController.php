@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Siswa;
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
 use App\Models\Notifikasi;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -18,6 +21,30 @@ class DashboardController extends Controller
             ->where('status', 'disetujui')
             ->latest()
             ->first();
+
+        // ✅ TAMBAHKAN INI: Auto-generate QR Code jika status disetujui tapi qr_code masih kosong
+        if ($dispensasiAktif && $dispensasiAktif->status === 'disetujui' && empty($dispensasiAktif->qr_code)) {
+            if (empty($dispensasiAktif->qr_token)) {
+                $dispensasiAktif->qr_token = Str::random(64);
+            }
+
+            // ✅ SESUDAH (Ganti dengan ini):
+            $qrContent = $dispensasiAktif->qr_token; // Hanya token murni
+            // ✅ PERBAIKAN 1: Gunakan ekstensi .png agar lebih stabil di tag <img>
+            $qrCodePath = 'qr_codes/dispensasi_' . $dispensasiAktif->id . '.svg';
+
+            // Buat direktori jika belum ada
+            Storage::disk('public')->makeDirectory('qr_codes');
+
+            // ✅ PERBAIKAN 2: Tambahkan slash '/' setelah 'public' agar path menjadi app/public/qr_codes/...
+            QrCode::format('svg')
+                ->size(300)
+                ->margin(0)
+                ->generate($qrContent, storage_path('app/public/' . $qrCodePath));
+
+            $dispensasiAktif->qr_code = $qrCodePath;
+            $dispensasiAktif->save();
+        }
 
         // Statistik pengajuan
         $stats = [
@@ -41,8 +68,8 @@ class DashboardController extends Controller
             ->count();
 
         return view('siswa.dashboard', compact(
-            'stats', 
-            'pengajuanTerbaru', 
+            'stats',
+            'pengajuanTerbaru',
             'notifikasiBelumDibaca',
             'dispensasiAktif'
         ));

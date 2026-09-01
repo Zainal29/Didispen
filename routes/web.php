@@ -24,6 +24,9 @@
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    // Route publik untuk verifikasi QR Code via URL
+    Route::get('/verify-qr/{dispensasi}', [\App\Http\Controllers\Satpam\ScanController::class, 'verifyQR'])
+        ->name('verify.qr');
 
     // ✅ REVISI SIPINTU: Route wajib ganti password DIHAPUS.
     // Password dikelola oleh SiPintu/Sijuna. User yang lupa password
@@ -80,81 +83,81 @@
         Route::post('sipintu/sync-guru', [Admin\SipintuSyncController::class, 'syncGuru'])->name('sipintu.sync-guru');
     });
 
-    // ==========================================
-    // GURU ROUTES
-    // ==========================================
-    Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(function () {
-        Route::get('dashboard', [\App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard');
+        // ==========================================
+        // GURU ROUTES
+        // ==========================================
+        Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(function () {
+            Route::get('dashboard', [\App\Http\Controllers\Guru\DashboardController::class, 'index'])->name('dashboard');
+
+            // ==========================================
+            // 1. ROUTE SPESIFIK (HARUS DI ATAS!)
+            // ==========================================
+            Route::get('pengajuan/buat', [GuruPengajuanController::class, 'create'])->name('pengajuan.create');
+            Route::post('pengajuan', [GuruPengajuanController::class, 'store'])->name('pengajuan.store');
+            Route::get('pengajuan/search-siswa', [GuruPengajuanController::class, 'searchSiswa'])->name('pengajuan.search-siswa'); // ✅ BARU
+
+
+            // ==========================================
+            // 2. ROUTE INDEX (DAFTAR)
+            // ==========================================
+            Route::get('pengajuan', [GuruPengajuanController::class, 'index'])->name('pengajuan.index');
+
+            // ==========================================
+            // 3. ROUTE DENGAN PARAMETER (HARUS DI BAWAH!)
+            // ==========================================
+            Route::get('pengajuan/{dispensasi}', [GuruPengajuanController::class, 'show'])->name('pengajuan.show');
+            Route::post('pengajuan/{dispensasi}/approve', [GuruPengajuanController::class, 'approve'])->name('pengajuan.approve');
+            Route::post('pengajuan/{dispensasi}/reject', [GuruPengajuanController::class, 'reject'])->name('pengajuan.reject');
+
+            // Cetak
+            Route::get('pengajuan/{dispensasi}/cetak-struk', [CetakStrukController::class, 'index'])
+                ->middleware('print.limit')
+                ->name('cetak-struk');
+
+            Route::get('pengajuan/{dispensasi}/cetak-pdf', [CetakStrukController::class, 'exportPdf'])
+                ->middleware('print.limit')
+                ->name('cetak-pdf');
+
+            // Laporan
+            Route::get('laporan', [Guru\LaporanController::class, 'index'])->name('laporan.index');
+            Route::get('laporan/pdf', [Guru\LaporanController::class, 'exportPdf'])->name('laporan.pdf');
+            Route::get('laporan/excel', [Guru\LaporanController::class, 'exportExcel'])->name('laporan.excel');
+
+            // Checklog
+            Route::get('checklog', [ChecklogController::class, 'index'])->name('checklog.index');
+            Route::post('checklog', [ChecklogController::class, 'store'])->name('checklog.store');
+            Route::post('checklog/{log}/checkin', [ChecklogController::class, 'checkIn'])->name('checklog.checkin');
+
+            // Warning System
+            Route::post('warning/{dispensasi}/send', [Guru\WarningController::class, 'sendWarning'])
+                ->name('warning.send');
+
+            // Scan QR Backup
+            Route::get('scan', [\App\Http\Controllers\Guru\ScanController::class, 'index'])->name('scan');
+            Route::post('scan/verify', [\App\Http\Controllers\Guru\ScanController::class, 'verify'])->name('scan.verify');
+        });
 
         // ==========================================
-        // 1. ROUTE SPESIFIK (HARUS DI ATAS!)
+        // SISWA ROUTES
         // ==========================================
-        Route::get('pengajuan/buat', [GuruPengajuanController::class, 'create'])->name('pengajuan.create');
-        Route::post('pengajuan', [GuruPengajuanController::class, 'store'])->name('pengajuan.store');
-        Route::get('pengajuan/search-siswa', [GuruPengajuanController::class, 'searchSiswa'])->name('pengajuan.search-siswa'); // ✅ BARU
+        Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
+            Route::get('/dashboard', Siswa\DashboardController::class)->name('dashboard');
 
+            Route::get('pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
+            Route::get('pengajuan/buat', [PengajuanController::class, 'create'])->name('pengajuan.create');
+            Route::post('pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
+            Route::get('pengajuan/{dispensasi}', [PengajuanController::class, 'show'])->name('pengajuan.show');
+            Route::get('qr-code/{dispensasi}', [PengajuanController::class, 'getQRCode'])->name('qr-code');
 
-        // ==========================================
-        // 2. ROUTE INDEX (DAFTAR)
-        // ==========================================
-        Route::get('pengajuan', [GuruPengajuanController::class, 'index'])->name('pengajuan.index');
+            Route::get('cetak/{dispensasi}', [CetakController::class, 'cetak'])->name('cetak');
 
-        // ==========================================
-        // 3. ROUTE DENGAN PARAMETER (HARUS DI BAWAH!)
-        // ==========================================
-        Route::get('pengajuan/{dispensasi}', [GuruPengajuanController::class, 'show'])->name('pengajuan.show');
-        Route::post('pengajuan/{dispensasi}/approve', [GuruPengajuanController::class, 'approve'])->name('pengajuan.approve');
-        Route::post('pengajuan/{dispensasi}/reject', [GuruPengajuanController::class, 'reject'])->name('pengajuan.reject');
+            Route::get('notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+            Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead'])->name('notifikasi.read');
+            Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.readAll');
 
-        // Cetak
-        Route::get('pengajuan/{dispensasi}/cetak-struk', [CetakStrukController::class, 'index'])
-            ->middleware('print.limit')
-            ->name('cetak-struk');
-
-        Route::get('pengajuan/{dispensasi}/cetak-pdf', [CetakStrukController::class, 'exportPdf'])
-            ->middleware('print.limit')
-            ->name('cetak-pdf');
-
-        // Laporan
-        Route::get('laporan', [Guru\LaporanController::class, 'index'])->name('laporan.index');
-        Route::get('laporan/pdf', [Guru\LaporanController::class, 'exportPdf'])->name('laporan.pdf');
-        Route::get('laporan/excel', [Guru\LaporanController::class, 'exportExcel'])->name('laporan.excel');
-
-        // Checklog
-        Route::get('checklog', [ChecklogController::class, 'index'])->name('checklog.index');
-        Route::post('checklog', [ChecklogController::class, 'store'])->name('checklog.store');
-        Route::post('checklog/{log}/checkin', [ChecklogController::class, 'checkIn'])->name('checklog.checkin');
-
-        // Warning System
-        Route::post('warning/{dispensasi}/send', [Guru\WarningController::class, 'sendWarning'])
-            ->name('warning.send');
-
-        // Scan QR Backup
-        Route::get('scan', [\App\Http\Controllers\Guru\ScanController::class, 'index'])->name('scan');
-        Route::post('scan/verify', [\App\Http\Controllers\Guru\ScanController::class, 'verify'])->name('scan.verify');
-    });
-
-    // ==========================================
-    // SISWA ROUTES
-    // ==========================================
-    Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
-        Route::get('/dashboard', Siswa\DashboardController::class)->name('dashboard');
-
-        Route::get('pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
-        Route::get('pengajuan/buat', [PengajuanController::class, 'create'])->name('pengajuan.create');
-        Route::post('pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
-        Route::get('pengajuan/{dispensasi}', [PengajuanController::class, 'show'])->name('pengajuan.show');
-        Route::get('qr-code/{dispensasi}', [PengajuanController::class, 'getQRCode'])->name('qr-code');
-
-        Route::get('cetak/{dispensasi}', [CetakController::class, 'cetak'])->name('cetak');
-
-        Route::get('notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
-        Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead'])->name('notifikasi.read');
-        Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.readAll');
-
-        // ✅ HAPUS BARIS INI (duplikat dengan group PROFIL di atas):
-        // Route::get('/profil', [ProfileController::class, 'show'])->name('siswa.profil.show');
-    });
+            // ✅ HAPUS BARIS INI (duplikat dengan group PROFIL di atas):
+            // Route::get('/profil', [ProfileController::class, 'show'])->name('siswa.profil.show');
+        });
 
     // ==========================================
     // SATPAM ROUTES
@@ -167,6 +170,7 @@
         // Konfirmasi Manual
         Route::post('konfirmasi/{dispensasi}/keluar', [DashboardController::class, 'konfirmasiKeluar'])->name('konfirmasi.keluar');
         Route::post('konfirmasi/{dispensasi}/kembali', [DashboardController::class, 'konfirmasiKembali'])->name('konfirmasi.kembali');
+
 
         // ✅ PERBAIKAN: Cukup 'search-dispensasi', karena sudah ada prefix 'satpam.' dari grup
         Route::post('search-dispensasi', [\App\Http\Controllers\Satpam\DashboardController::class, 'searchDispensasi'])
