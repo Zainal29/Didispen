@@ -15,13 +15,13 @@ class KelasFactory extends Factory
         // Ambil jurusan acak dari database
         $jurusan = Jurusan::inRandomOrder()->first();
         $kodeJurusan = $jurusan ? $jurusan->kode_jurusan : 'UMUM';
-        
-        $tingkat = $this->faker->randomElement(['X', 'XI', 'XII']);
-        $nomorKelas = $this->faker->numberBetween(1, 4);
+
+        $tingkat = fake()->randomElement(['X', 'XI', 'XII']);
+        $nomorKelas = fake()->numberBetween(1, 4);
 
         return [
             'jurusan_id' => $jurusan ? $jurusan->id : 1,
-            'nama_kelas' => "$tingkat $kodeJurusan $nomorKelas", // Contoh output: XII RPL 2
+            'nama_kelas' => "$tingkat $kodeJurusan $nomorKelas",
             'tingkat' => $tingkat,
         ];
     }
