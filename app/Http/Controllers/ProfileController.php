@@ -1,11 +1,20 @@
 <?php
+
 namespace App\Http\Controllers;
+
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
+    public function __construct(private ?AuditLogService $auditLog = null)
+    {
+        $this->auditLog = $auditLog ?? app(AuditLogService::class);
+    }
+
     public function show()
     {
         $user = Auth::user();
@@ -23,12 +32,14 @@ class ProfileController extends Controller
     public function updateAdditional(Request $request)
     {
         $user = Auth::user();
-        if ($user->role !== 'siswa' || ! $user->siswa) abort(403);
+        if ($user->role !== 'siswa' || ! $user->siswa) {
+            abort(403, 'Hanya siswa yang dapat memperbarui data profil tambahan.');
+        }
 
         $validated = $request->validate([
-            'no_telepon'  => ['nullable', 'string', 'max:20'],
+            'no_telepon'    => ['nullable', 'string', 'max:20'],
             'tanggal_lahir' => ['nullable', 'date', 'before_or_equal:' . now()->subYears(7)->format('Y-m-d')],
-            'alamat'      => ['nullable', 'string', 'max:500'],
+            'alamat'        => ['nullable', 'string', 'max:500'],
         ]);
 
         $updateData = [
@@ -38,8 +49,11 @@ class ProfileController extends Controller
 
         if (filled($request->no_telepon)) {
             $phone = preg_replace('/[^0-9]/', '', $request->no_telepon);
-            if (str_starts_with($phone, '0')) $phone = '62' . substr($phone, 1);
-            elseif (! str_starts_with($phone, '62')) $phone = '62' . $phone;
+            if (str_starts_with($phone, '0')) {
+                $phone = '62' . substr($phone, 1);
+            } elseif (! str_starts_with($phone, '62')) {
+                $phone = '62' . $phone;
+            }
             $updateData['no_telepon'] = '+' . $phone;
         }
 
@@ -53,18 +67,31 @@ class ProfileController extends Controller
     public function updatePassword(Request $request)
     {
         $user = Auth::user();
-        if ($user->role !== 'admin') abort(403);
+        if ($user->role !== 'admin') {
+            abort(403, 'Hanya Administrator yang diizinkan mengubah password.');
+        }
 
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
             'new_password'     => ['required', 'string', 'min:8', 'confirmed'],
         ], [
-            'current_password.current_password' => 'Password lama salah.',
-            'new_password.min'                  => 'Minimal 8 karakter.',
-            'new_password.confirmed'            => 'Konfirmasi password tidak cocok.',
+            'current_password.required'         => 'Password saat ini wajib diisi.',
+            'current_password.current_password' => 'Password lama yang Anda masukkan salah.',
+            'new_password.required'             => 'Password baru wajib diisi.',
+            'new_password.min'                  => 'Password baru minimal 8 karakter.',
+            'new_password.confirmed'            => 'Konfirmasi password baru tidak cocok.',
         ]);
 
-        $user->update(['password' => Hash::make($validated['new_password'])]);
+        $user->update([
+            'password' => Hash::make($validated['new_password']),
+        ]);
+
+        try {
+            $this->auditLog?->log($user->id, 'update_password_admin', 'users', $user->id);
+        } catch (\Throwable $e) {
+            // Ignore audit logging failure
+        }
+
         return back()->with('success', 'Password Administrator berhasil diperbarui!');
     }
 }

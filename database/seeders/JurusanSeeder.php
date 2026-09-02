@@ -12,11 +12,11 @@ class JurusanSeeder extends Seeder
         $jurusans = [
             [
                 'kode_jurusan' => 'PPLG',
-                'nama_jurusan' => 'pengembangan Perangkat Lunak dan Gim',
+                'nama_jurusan' => 'Pengembangan Perangkat Lunak dan Gim',
             ],
             [
                 'kode_jurusan' => 'AKL',
-                'nama_jurusan' => 'Akuntansi Keuangan Lembaga',
+                'nama_jurusan' => 'Akuntansi dan Keuangan Lembaga',
             ],
             [
                 'kode_jurusan' => 'MPLB',
@@ -32,14 +32,13 @@ class JurusanSeeder extends Seeder
             ],
         ];
 
-        // ✅ Gunakan firstOrCreate agar tidak error jika data sudah ada
-        foreach ($jurusans as $jurusanData) {
+        foreach ($jurusans as $item) {
             Jurusan::firstOrCreate(
-                ['kode_jurusan' => $jurusanData['kode_jurusan']], // Cek berdasarkan kode (kolom unique)
-                $jurusanData                                       // Buat data baru jika kode belum ada
+                ['kode_jurusan' => $item['kode_jurusan']],
+                $item
             );
         }
 
-        $this->command->info('✅ JurusanSeeder selesai. Data jurusan aman dari duplikasi.');
+        $this->command->info('✅ JurusanSeeder selesai. (5 Jurusan manual berhasil disiapkan)');
     }
 }

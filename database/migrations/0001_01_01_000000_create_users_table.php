@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['siswa', 'guru', 'admin'])->default('siswa');
+            $table->enum('role', ['siswa', 'guru', 'admin', 'satpam'])->default('siswa');
             $table->string('nis_nip')->nullable()->unique();
             $table->rememberToken();
             $table->timestamps();

@@ -6,7 +6,6 @@ use App\Models\Jurusan;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\User;
-use Faker\Factory as FakerFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,82 +13,122 @@ class SiswaSeeder extends Seeder
 {
     public function run(): void
     {
-        $fakerID = FakerFactory::create('id_ID');
-        $jumlahSiswaDummy = 2; // Ubah angka ini (misal: 10, 30, atau 50). Jangan terlalu besar agar tidak timeout.
+        $jurusanMap = Jurusan::pluck('id', 'kode_jurusan');
+        $kelasMap   = Kelas::pluck('id', 'nama_kelas');
 
-        // Ambil semua ID sekali saja di awal agar proses looping jauh lebih cepat (optimasi performa)
-        $kelasIds = Kelas::pluck('id')->toArray();
-        $jurusanIds = Jurusan::pluck('id')->toArray();
+        $siswas = [
+            [
+                'name'          => 'Zainal Abidin',
+                'email'         => 'zainal@gmail.com',
+                'nis'           => '20269999',
+                'nama_kelas'    => 'XII PPLG 1',
+                'kode_jurusan'  => 'PPLG',
+                'tanggal_lahir' => '2008-01-15',
+                'alamat'        => 'Jl. Raya Bangsri No. 45, Jepara',
+                'no_telepon'    => '+6281234567890',
+            ],
+            [
+                'name'          => 'Ahmad Fauzi',
+                'email'         => 'ahmad@sch.id',
+                'nis'           => '20260001',
+                'nama_kelas'    => 'XII PPLG 1',
+                'kode_jurusan'  => 'PPLG',
+                'tanggal_lahir' => '2008-03-22',
+                'alamat'        => 'Jl. Pemuda No. 12, Bangsri, Jepara',
+                'no_telepon'    => '+6281234567891',
+            ],
+            [
+                'name'          => 'Dewi Lestari',
+                'email'         => 'dewi@sch.id',
+                'nis'           => '20260002',
+                'nama_kelas'    => 'XI AKL 1',
+                'kode_jurusan'  => 'AKL',
+                'tanggal_lahir' => '2008-07-10',
+                'alamat'        => 'Jl. Kartini No. 8, Bangsri, Jepara',
+                'no_telepon'    => '+6281234567892',
+            ],
+            [
+                'name'          => 'Rizky Pratama',
+                'email'         => 'rizky@sch.id',
+                'nis'           => '20260003',
+                'nama_kelas'    => 'XI MPLB 1',
+                'kode_jurusan'  => 'MPLB',
+                'tanggal_lahir' => '2008-09-05',
+                'alamat'        => 'Jl. Diponegoro No. 17, Jepara',
+                'no_telepon'    => '+6281234567893',
+            ],
+            [
+                'name'          => 'Siti Aisyah',
+                'email'         => 'aisyah@sch.id',
+                'nis'           => '20260004',
+                'nama_kelas'    => 'X PPLG 1',
+                'kode_jurusan'  => 'PPLG',
+                'tanggal_lahir' => '2009-02-14',
+                'alamat'        => 'Jl. Veteran No. 3, Bangsri, Jepara',
+                'no_telepon'    => '+6281234567894',
+            ],
+            [
+                'name'          => 'Bagas Pratama',
+                'email'         => 'bagas@sch.id',
+                'nis'           => '20260005',
+                'nama_kelas'    => 'X TO 1',
+                'kode_jurusan'  => 'TO',
+                'tanggal_lahir' => '2009-05-30',
+                'alamat'        => 'Jl. Industri No. 20, Mlonggo, Jepara',
+                'no_telepon'    => '+6281234567895',
+            ],
+            [
+                'name'          => 'Putri Anggraini',
+                'email'         => 'putri@sch.id',
+                'nis'           => '20260006',
+                'nama_kelas'    => 'XII PM 1',
+                'kode_jurusan'  => 'PM',
+                'tanggal_lahir' => '2007-11-28',
+                'alamat'        => 'Jl. Pahlawan No. 5, Jepara',
+                'no_telepon'    => '+6281234567896',
+            ],
+            [
+                'name'          => 'Dimas Saputra',
+                'email'         => 'dimas@sch.id',
+                'nis'           => '20260007',
+                'nama_kelas'    => 'X AKL 1',
+                'kode_jurusan'  => 'AKL',
+                'tanggal_lahir' => '2009-08-19',
+                'alamat'        => 'Jl. Ahmad Yani No. 99, Bangsri, Jepara',
+                'no_telepon'    => '+6281234567897',
+            ],
+        ];
 
-        if (empty($kelasIds) || empty($jurusanIds)) {
-            $this->command->error('❌ Data Kelas atau Jurusan kosong! Jalankan KelasSeeder dan JurusanSeeder terlebih dahulu.');
+        foreach ($siswas as $item) {
+            $user = User::firstOrCreate(
+                ['email' => $item['email']],
+                [
+                    'name'                 => $item['name'],
+                    'password'             => Hash::make('password'),
+                    'role'                 => 'siswa',
+                    'nis_nip'              => $item['nis'],
+                    'must_change_password' => false,
+                ]
+            );
 
-            return;
+            $kelasId   = $kelasMap[$item['nama_kelas']] ?? Kelas::first()->id;
+            $jurusanId = $jurusanMap[$item['kode_jurusan']] ?? Jurusan::first()->id;
+
+            Siswa::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nis_nip'       => $item['nis'],
+                    'kelas_id'      => $kelasId,
+                    'jurusan_id'    => $jurusanId,
+                    'nama_lengkap'  => $item['name'],
+                    'tanggal_lahir' => $item['tanggal_lahir'],
+                    'alamat'        => $item['alamat'],
+                    'no_telepon'    => $item['no_telepon'],
+                    'status_aktif'  => true,
+                ]
+            );
         }
 
-        // =====================================================================
-        // 1. Buat akun khusus untuk Zainal (Siswa)
-        // =====================================================================
-        $userZainal = User::firstOrCreate(
-            ['email' => 'zainal@gmail.com'],
-            [
-                'name' => 'Zainal',
-                'password' => Hash::make('password'),
-                'role' => 'siswa',
-                'nis_nip' => '20269999',
-            ]
-        );
-
-        // Ambil kelas acak untuk Zainal, lalu ambil jurusan_id dari kelas tersebut
-        $kelasUntukZainal = Kelas::inRandomOrder()->first();
-        $jurusanIdUntukZainal = $kelasUntukZainal ? $kelasUntukZainal->jurusan_id : $jurusanIds[0];
-
-        // Buat relasi ke tabel siswa jika belum ada (DITAMBAHKAN 'jurusan_id')
-        Siswa::firstOrCreate(
-            ['user_id' => $userZainal->id],
-            [
-                'kelas_id' => $kelasUntukZainal?->id ?? $kelasIds[0],
-                'jurusan_id' => $jurusanIdUntukZainal, // <-- FIX: Mencegah error 1364
-                'nama_lengkap' => 'Zainal',
-                'tanggal_lahir' => '2008-01-01',
-                'alamat' => $fakerID->address(),
-                'no_telepon' => $fakerID->phoneNumber(),
-            ]
-        );
-
-        // =====================================================================
-        // 2. Generate Siswa dummy tambahan (Menggantikan Factory agar jurusan_id pasti terisi)
-        // =====================================================================
-        for ($i = 0; $i < $jumlahSiswaDummy; $i++) {
-            $namaLengkap = $fakerID->name();
-            $nomorInduk = $fakerID->unique()->numerify('2026####');
-
-            // a. Buat User
-            $user = User::create([
-                'name' => $namaLengkap,
-                'email' => $fakerID->unique()->safeEmail(),
-                'password' => Hash::make('password'),
-                'role' => 'siswa',
-                'nis_nip' => $nomorInduk,
-            ]);
-
-            // b. Pilih Kelas dan Jurusan secara acak dari array yang sudah diambil di awal
-            $randomKelasId = $fakerID->randomElement($kelasIds);
-            $kelas = Kelas::find($randomKelasId);
-            $randomJurusanId = $kelas ? $kelas->jurusan_id : $fakerID->randomElement($jurusanIds);
-
-            // c. Buat Siswa
-            Siswa::create([
-                'user_id' => $user->id,
-                'kelas_id' => $randomKelasId,
-                'jurusan_id' => $randomJurusanId, // <-- FIX: Mencegah error 1364 pada data dummy
-                'nama_lengkap' => $namaLengkap,
-                'tanggal_lahir' => $fakerID->dateTimeBetween('-18 years', '-15 years')->format('Y-m-d'),
-                'alamat' => $fakerID->address(),
-                'no_telepon' => $fakerID->phoneNumber(),
-            ]);
-        }
-
-        $this->command->info("✅ SiswaSeeder selesai. (Akun zainal@gmail.com & {$jumlahSiswaDummy} Siswa dummy berhasil dibuat)");
+        $this->command->info('✅ SiswaSeeder selesai. (8 Akun Siswa manual berhasil dibuat)');
     }
 }

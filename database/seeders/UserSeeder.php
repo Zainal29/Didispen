@@ -10,59 +10,18 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $users = [
+        // Admin Utama Sistem
+        User::firstOrCreate(
+            ['email' => 'admin@sch.id'],
             [
-                'name' => 'Admin Sekolah',
-                'email' => 'admin@sch.id',
-                'password' => Hash::make('password'),
-                'role' => 'admin',
-                'nis_nip' => 'ADMIN001',
-            ],
-            [
-                'name' => 'Budi Santoso',
-                'email' => 'budi@sch.id',
-                'password' => Hash::make('password'),
-                'role' => 'guru',
-                'nis_nip' => '1987654321',
-            ],
-            [
-                'name' => 'Siti Rahayu',
-                'email' => 'siti@sch.id',
-                'password' => Hash::make('password'),
-                'role' => 'guru',
-                'nis_nip' => '1987654322',
-            ],
-            [
-                'name' => 'Ahmad Fauzi',
-                'email' => 'ahmad@sch.id',
-                'password' => Hash::make('password'),
-                'role' => 'siswa',
-                'nis_nip' => '2025001',
-            ],
-            [
-                'name' => 'Dewi Lestari',
-                'email' => 'dewi@sch.id',
-                'password' => Hash::make('password'),
-                'role' => 'siswa',
-                'nis_nip' => '2025002',
-            ],
-            [
-                'name' => 'Rizky Pratama',
-                'email' => 'rizky@sch.id',
-                'password' => Hash::make('password'),
-                'role' => 'siswa',
-                'nis_nip' => '2025003',
-            ],
-        ];
+                'name'                 => 'Administrator Sistem',
+                'password'             => Hash::make('password'),
+                'role'                 => 'admin',
+                'nis_nip'              => 'ADMIN001',
+                'must_change_password' => false,
+            ]
+        );
 
-        // ✅ Gunakan firstOrCreate agar tidak error jika data sudah ada
-        foreach ($users as $userData) {
-            User::firstOrCreate(
-                ['email' => $userData['email']], // Cek berdasarkan email (kolom unique)
-                $userData                        // Buat data baru jika email belum ada
-            );
-        }
-
-        $this->command->info('✅ UserSeeder selesai. Data user aman dari duplikasi.');
+        $this->command->info('✅ UserSeeder selesai. (Akun Admin Utama siap digunakan: admin@sch.id / password)');
     }
 }

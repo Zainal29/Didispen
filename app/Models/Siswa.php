@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Siswa extends Model
 {
-    use HasFactory; // Tambahkan ini
+     // Tambahkan ini
 
     protected $table = 'siswa';
 
