@@ -63,7 +63,7 @@
 
         <div class="mt-6 pt-4 border-t border-gray-100 text-[11px] text-gray-400 flex items-start gap-2">
             <i class="fas fa-info-circle mt-0.5"></i>
-            <span>Data identitas utama dikelola oleh sistem pusat SiPintu/Sijuna.</span>
+            <span>Data identitas utama dikelola oleh sistem pusat.</span>
         </div>
     </div>
 
@@ -92,8 +92,9 @@
                             <i class="fas fa-phone-alt mr-1 text-emerald-600"></i> No. Telepon / WhatsApp <span class="text-red-500">*</span>
                         </label>
                         <div class="flex">
+                            {{-- ✅ DIPERBAIKI: Emoji bendera diganti dengan icon fa-globe --}}
                             <span class="inline-flex items-center px-3.5 rounded-l-xl border border-r-0 border-gray-200 bg-gray-50 text-gray-600 font-semibold text-sm">
-                                🇮🇩+62
+                                <i class="fas fa-globe text-gray-500 mr-1.5"></i>+62
                             </span>
                             <input type="tel" name="no_telepon" id="phone_input"
                                    value="{{ old('no_telepon', preg_replace('/^\+62/', '', $user->siswa->no_telepon ?? '')) }}"
@@ -222,7 +223,7 @@
                     </div>
                 </form>
             @else
-                {{-- ✅ INFO UMUM UNTUK NON-ADMIN (TANPA SEBUT SiPintu/Sijuna) --}}
+                {{-- ✅ INFO UMUM UNTUK NON-ADMIN --}}
                 <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 leading-relaxed space-y-3">
                     <div class="flex gap-3">
                         <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>

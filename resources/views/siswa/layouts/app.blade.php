@@ -76,7 +76,7 @@
                         <i class="fas fa-book-open w-5 mr-3 text-center"></i> Panduan
                     </a>
                     <a href="{{ route('profil.show') }}" class="{{ request()->routeIs('profil.show') ? $navOn : $navOff }}">
-                        <i class="fas fa-user-circle text-red-600 mr-2"></i> Profil
+                        <i class="fas fa-user-circle mr-2"></i> Profil
                     </a>
                 </div>
             </nav>

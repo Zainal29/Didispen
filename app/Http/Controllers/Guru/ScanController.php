@@ -49,7 +49,7 @@ class ScanController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'QR Code tidak ditemukan atau tidak valid! Pastikan formatnya benar.'
-            ]);
+            ], 404);
         }
 
         // 2. Logika Scan PERTAMA: KELUAR
@@ -57,16 +57,16 @@ class ScanController extends Controller
             $updated = Dispensasi::whereKey($dispensasi->id)->where('status', 'disetujui')->update([
                 'status' => 'keluar',
                 'waktu_keluar_aktual' => now(),
-                'satpam_keluar_id' => auth()->id(), // Mencatat siapa yang scan (bisa guru/satpam)
+                'satpam_keluar_id' => auth()->id(),
             ]);
 
             if ($updated !== 1) {
-                return response()->json(['success' => false, 'message' => 'Gagal memproses. Status dispensasi sudah berubah.']);
+                return response()->json(['success' => false, 'message' => 'Gagal memproses. Status dispensasi sudah berubah.'], 400);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => '✅ Siswa berhasil dicatat KELUAR (via Guru Piket)',
+                'message' => '✅ Siswa berhasil dicatat KELUAR.',
                 'action' => 'keluar',
                 'data' => $dispensasi->fresh(['siswa.kelas.jurusan'])
             ]);
@@ -74,20 +74,27 @@ class ScanController extends Controller
 
         // 3. Logika Scan KEDUA: KEMBALI
         if ($dispensasi->status === 'keluar') {
+            $isLate = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
+
             $updated = Dispensasi::whereKey($dispensasi->id)->where('status', 'keluar')->update([
                 'status' => 'selesai',
                 'waktu_kembali_aktual' => now(),
                 'satpam_kembali_id' => auth()->id(),
+                'is_warned' => $isLate ? true : $dispensasi->is_warned,
+                'warned_at' => $isLate ? now() : $dispensasi->warned_at,
             ]);
 
             if ($updated !== 1) {
-                return response()->json(['success' => false, 'message' => 'Gagal memproses kembali.']);
+                return response()->json(['success' => false, 'message' => 'Gagal memproses kembali.'], 400);
             }
+
+            $pesan = $isLate ? '✅ Siswa berhasil dicatat KEMBALI (TERLAMBAT).' : '✅ Siswa berhasil dicatat KEMBALI (Tepat Waktu).';
 
             return response()->json([
                 'success' => true,
-                'message' => '✅ Siswa berhasil dicatat KEMBALI (via Guru Piket)',
+                'message' => $pesan,
                 'action' => 'kembali',
+                'is_terlambat' => $isLate,
                 'data' => $dispensasi->fresh(['siswa.kelas.jurusan'])
             ]);
         }
@@ -95,8 +102,8 @@ class ScanController extends Controller
         // 4. Jika status sudah selesai atau lainnya
         return response()->json([
             'success' => false,
-            'message' => 'QR Code ini sudah selesai diproses atau status tidak valid.',
+            'message' => 'QR Code ini sudah selesai diproses atau status tidak valid (Status: ' . ucfirst($dispensasi->status) . ').',
             'data' => $dispensasi,
-        ]);
+        ], 400);
     }
 }

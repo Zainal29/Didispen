@@ -5,7 +5,7 @@
 @section('content')
 {{-- Header --}}
 <div class="mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">Selamat Datang, {{ auth()->user()->name }}! 👋</h2>
+    <h2 class="text-2xl font-bold text-gray-800">Selamat Datang, {{ auth()->user()->name }}!</h2>
     <p class="text-gray-500 text-sm mt-1">Berikut adalah ringkasan aktivitas dispensasi hari ini.</p>
 </div>
 
@@ -66,7 +66,7 @@
 
 {{-- Grafik & Aktivitas Terbaru --}}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    
+
     {{-- Grafik Pengajuan (Lebar 2/3) --}}
     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
         <div class="flex justify-between items-center mb-4">
@@ -91,7 +91,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-semibold text-gray-800 truncate">{{ $item->siswa->nama_lengkap }}</p>
-                        <p class="text-xs text-gray-500">{{ $item->siswa->kelas?->nama_kelas }} • {{ $item->kategori }}</p>
+                        <p class="text-xs text-gray-500">{{ $item->siswa->kelas?->nama_kelas }} &bull; {{ $item->kategori }}</p>
                         <p class="text-xs text-gray-400 mt-1">{{ $item->created_at->diffForHumans() }}</p>
                     </div>
                     <div>
@@ -112,8 +112,10 @@
                 <p class="text-sm text-gray-500 text-center py-4">Belum ada pengajuan terbaru.</p>
             @endforelse
         </div>
-        <a href="{{ route('admin.semua.pengajuan') }}" class="block text-center text-sm text-indigo-600 hover:text-indigo-800 font-medium mt-4">
-            Lihat Semua Pengajuan →
+
+        {{-- ✅ DIPERBAIKI: Mengganti panah teks (→) dengan icon Font Awesome agar konsisten --}}
+        <a href="{{ route('admin.semua.pengajuan') }}" class="block text-center text-sm text-indigo-600 hover:text-indigo-800 font-medium mt-4 transition-colors">
+            Lihat Semua Pengajuan <i class="fas fa-arrow-right ml-1"></i>
         </a>
     </div>
 </div>
@@ -125,8 +127,8 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('chartPengajuan').getContext('2d');
-        
-        // Gradient untuk bar chart agar terlihat lebih keren
+
+        // Gradient untuk bar chart agar terlihat lebih profesional
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, 'rgba(79, 70, 229, 0.8)'); // Indigo-600
         gradient.addColorStop(1, 'rgba(79, 70, 229, 0.2)');

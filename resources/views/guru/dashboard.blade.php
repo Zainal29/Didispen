@@ -34,7 +34,8 @@
     <div class="flex items-center justify-between">
         <div class="min-w-0">
             <p class="text-blue-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-            <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">Halo, {{ auth()->user()->name }}! 👋</h2>
+            {{-- ✅ DIPERBAIKI: Emoji 👋 diganti dengan icon fa-hand-sparkles --}}
+            <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">Halo, {{ auth()->user()->name }}! <i class="fas fa-hand-sparkles text-yellow-300 ml-1"></i></h2>
             <p class="text-blue-100 text-xs sm:text-sm mt-1">
                 Pantau dan kelola dispensasi siswa hari ini.
             </p>

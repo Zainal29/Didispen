@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Satpam;
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ScanController extends Controller
 {
@@ -25,15 +26,17 @@ class ScanController extends Controller
         $input = trim($request->qr_data);
         $dispensasi = null;
 
-        // 1. Parsing QR Data (mendukung berbagai format URL/Token)
+        // 1. Parsing QR Data (Mendukung JSON, Token Murni, DAN URL)
         if (json_validate($input)) {
             $qrData = json_decode($input, true);
             if (isset($qrData['token']) && is_string($qrData['token'])) {
                 $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('qr_token', $qrData['token'])->first();
             }
         } elseif (preg_match('/^[A-Za-z0-9]{64}$/', $input)) {
+            // Format: Token murni (64 karakter)
             $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('qr_token', $input)->first();
         } elseif (preg_match('#/verify-qr/(\d+)#', $input, $matches)) {
+            // Format URL: /verify-qr/18?token=...
             $id = (int) $matches[1];
             parse_str(parse_url($input, PHP_URL_QUERY) ?? '', $queryParams);
             $token = $queryParams['token'] ?? null;
@@ -44,12 +47,16 @@ class ScanController extends Controller
                 $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('id', $id)->whereNotNull('qr_token')->first();
             }
         } elseif (preg_match('#/verifikasi/(\d+)#', $input, $matches)) {
+            // Format URL alternatif: /verifikasi/18
             $id = (int) $matches[1];
             $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('id', $id)->whereNotNull('qr_token')->first();
         }
 
         if (! $dispensasi) {
-            return response()->json(['success' => false, 'message' => 'QR Code tidak ditemukan atau tidak valid!']);
+            return response()->json([
+                'success' => false,
+                'message' => 'QR Code tidak ditemukan atau tidak valid!'
+            ], 404);
         }
 
         // 2. LOGIKA SCAN PERTAMA: KELUAR (disetujui -> keluar)
@@ -61,7 +68,10 @@ class ScanController extends Controller
             ]);
 
             if ($updated !== 1) {
-                return response()->json(['success' => false, 'message' => 'Gagal memproses. Status dispensasi sudah berubah.']);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal memproses. Status dispensasi sudah berubah.'
+                ], 400);
             }
 
             $isSampaiPulang = str_contains(strtolower($dispensasi->jam_kembali), 'ke-9') || str_contains(strtolower($dispensasi->jam_kembali), 'ke-10');
@@ -73,6 +83,7 @@ class ScanController extends Controller
                 $pesanSukses .= ' Wajib scan kembali saat siswa tiba di sekolah.';
             }
 
+            // Kirim notifikasi jika service tersedia
             if (class_exists(\App\Services\NotifikasiService::class)) {
                 app(\App\Services\NotifikasiService::class)->send(
                     $dispensasi->siswa->user_id,
@@ -92,24 +103,29 @@ class ScanController extends Controller
 
         // 3. LOGIKA SCAN KEDUA: KEMBALI (keluar -> selesai)
         if ($dispensasi->status === 'keluar') {
+            $isTerlambat = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
+
+            // ✅ OPTIMASI: Update status dan flag keterlambatan dalam 1 query
             $updated = Dispensasi::whereKey($dispensasi->id)->where('status', 'keluar')->update([
                 'status' => 'selesai',
                 'waktu_kembali_aktual' => now(),
                 'satpam_kembali_id' => auth()->id(),
+                'is_warned' => $isTerlambat ? true : $dispensasi->is_warned,
+                'warned_at' => $isTerlambat ? now() : $dispensasi->warned_at,
             ]);
 
             if ($updated !== 1) {
-                return response()->json(['success' => false, 'message' => 'Gagal memproses kembali.']);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal memproses kembali.'
+                ], 400);
             }
 
-            $isTerlambat = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
-            $pesanKembali = '✅ Siswa berhasil dicatat KEMBALI.';
+            $pesanKembali = $isTerlambat
+                ? '✅ Siswa berhasil dicatat KEMBALI. ⚠️ PERINGATAN: Terlambat dari batas waktu!'
+                : '✅ Siswa berhasil dicatat KEMBALI (Tepat Waktu).';
 
-            if ($isTerlambat) {
-                $pesanKembali .= ' ⚠️ PERINGATAN: Siswa terlambat dari batas waktu yang ditentukan!';
-                $dispensasi->update(['is_warned' => true, 'warned_at' => now()]);
-            }
-
+            // Kirim notifikasi jika service tersedia
             if (class_exists(\App\Services\NotifikasiService::class)) {
                 app(\App\Services\NotifikasiService::class)->send(
                     $dispensasi->siswa->user_id,
@@ -127,11 +143,11 @@ class ScanController extends Controller
             ]);
         }
 
-        // 4. Jika status sudah 'selesai' atau lainnya
+        // 4. Jika status sudah 'selesai', 'ditolak', atau lainnya
         return response()->json([
             'success' => false,
-            'message' => 'QR Code ini sudah selesai diproses atau status tidak valid.',
+            'message' => 'QR Code ini sudah selesai diproses atau status tidak valid (Status: ' . ucfirst($dispensasi->status) . ').',
             'data' => $dispensasi,
-        ]);
+        ], 400);
     }
 }

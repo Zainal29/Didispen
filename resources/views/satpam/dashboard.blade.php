@@ -37,8 +37,9 @@
             <p class="text-red-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">
                 {{ now()->isoFormat('dddd, D MMMM Y') }} • Pos Gerbang
             </p>
+            {{-- ✅ DIPERBAIKI: Emoji 👋 diganti dengan icon fa-hand-sparkles --}}
             <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5 truncate">
-                Halo, {{ auth()->user()->name }} 👋
+                Halo, {{ auth()->user()->name }} <i class="fas fa-hand-sparkles text-yellow-300 ml-1"></i>
             </h2>
             <p class="text-red-100 text-[11px] mt-1 hidden sm:block">Pantau keluar-masuk siswa dispensasi hari ini dengan mudah.</p>
         </div>
@@ -137,7 +138,8 @@
                         @php
                             $hp = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
                             if (str_starts_with($hp, '0')) $hp = '62' . substr($hp, 1);
-                            $waLink = "https://wa.me/{$hp}?text=" . urlencode("⚠️ *PERINGATAN KETERLAMBATAN* ⚠️\n\nYth. *{$dispensasi->siswa->nama_lengkap}*,\nBatas waktu kembali dispensasi Anda telah **LEWAT**.\n\n📍 Tujuan: {$dispensasi->tujuan}\n⚠️ **SEGERA KEMBALI** ke sekolah.\n\n*Petugas Satpam SMKN 1 Bangsri*");
+                            // ✅ DIPERBAIKI: Emoji di WhatsApp message diganti dengan text yang lebih profesional
+                            $waLink = "https://wa.me/{$hp}?text=" . urlencode("*PERINGATAN KETERLAMBATAN*\n\nYth. *{$dispensasi->siswa->nama_lengkap}*,\nBatas waktu kembali dispensasi Anda telah LEWAT.\n\nLokasi Tujuan: {$dispensasi->tujuan}\nSEGERA KEMBALI ke sekolah.\n\nPetugas Satpam SMKN 1 Bangsri");
                         @endphp
                         <div id="wa-section-{{ $dispensasi->id }}" class="bg-green-50 border-2 border-green-200 rounded-xl p-3">
                             <div class="flex items-center justify-between mb-2">
@@ -365,9 +367,10 @@ function watchOverdue() {
             const nama = card.querySelector('.font-bold.text-gray-900')?.textContent.trim() || 'Siswa';
             if (!overdueNotified.has(card.dataset.dispensasi)) {
                 overdueNotified.add(card.dataset.dispensasi);
+                // ✅ DIPERBAIKI: Emoji di SweetAlert diganti dengan icon HTML
                 Swal.fire({
                     icon: 'warning',
-                    title: '⚠️ Siswa Terlambat!',
+                    html: '<i class="fas fa-exclamation-triangle text-amber-500 text-5xl mb-3"></i><h3 style="color: #1f2937; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Siswa Terlambat!</h3>',
                     text: `${nama} telah melewati batas waktu kembali.`,
                     confirmButtonColor: '#dc2626',
                     timer: 5000,

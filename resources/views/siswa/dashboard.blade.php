@@ -11,7 +11,8 @@
     <div class="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full"></div>
     <div class="relative z-10 p-4 sm:p-6">
         <p class="text-blue-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-        <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">Halo, {{ auth()->user()->name }}! 👋</h2>
+        {{-- ✅ DIPERBAIKI: Emoji 👋 diganti dengan icon --}}
+        <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">Halo, {{ auth()->user()->name }}! <i class="fas fa-hand-sparkles text-yellow-300 ml-1"></i></h2>
         <div class="mt-3 flex flex-wrap items-center gap-2">
             <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-white/15 border border-white/20 text-white text-[11px] font-bold">
                 <i class="fas fa-bell mr-1.5 text-amber-300"></i>{{ $notifikasiBelumDibaca ?? 0 }} Notifikasi Baru
@@ -132,78 +133,75 @@
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-4 py-3 sm:p-5 border-b border-gray-100 flex justify-between items-center">
         <h3 class="text-sm font-bold text-gray-900"><i class="fas fa-history mr-1.5 text-blue-600"></i>Pengajuan Terbaru</h3>
-        <a href="{{ route('siswa.pengajuan.index') }}" class="text-[11px] font-bold text-blue-600">Lihat Semua →</a>
+        {{-- ✅ DIPERBAIKI: Panah teks diganti dengan icon --}}
+        <a href="{{ route('siswa.pengajuan.index') }}" class="text-[11px] font-bold text-blue-600">Lihat Semua <i class="fas fa-arrow-right ml-1"></i></a>
     </div>
 
     @if(isset($pengajuanTerbaru) && $pengajuanTerbaru->count() > 0)
         <div class="divide-y divide-gray-100">
-            {{-- Di bagian list pengajuan terbaru --}}
-@foreach($pengajuanTerbaru as $pengajuan)
-    @php
-        $badges = [
-            'menunggu'  => 'bg-amber-100 text-amber-700 border-amber-200',
-            'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-            'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
-            'keluar'    => 'bg-sky-100 text-sky-700 border-sky-200',
-            'selesai'   => 'bg-gray-100 text-gray-600 border-gray-200',
-        ];
+            @foreach($pengajuanTerbaru as $pengajuan)
+                @php
+                    $badges = [
+                        'menunggu'  => 'bg-amber-100 text-amber-700 border-amber-200',
+                        'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                        'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
+                        'keluar'    => 'bg-sky-100 text-sky-700 border-sky-200',
+                        'selesai'   => 'bg-gray-100 text-gray-600 border-gray-200',
+                    ];
 
-        // Cek apakah bisa cetak (single source of truth: App\Helpers\PrintHelper)
-         $maxPrint = \App\Helpers\PrintHelper::maxStudentLimit();
-        $canPrint = in_array($pengajuan->status, \App\Helpers\PrintHelper::PRINTABLE_STATUSES) &&
-                    $pengajuan->print_count < $maxPrint;
+                    $maxPrint = \App\Helpers\PrintHelper::maxStudentLimit();
+                    $canPrint = in_array($pengajuan->status, \App\Helpers\PrintHelper::PRINTABLE_STATUSES) &&
+                                $pengajuan->print_count < $maxPrint;
 
-        // Cek jam cetak
-        $currentTime = \App\Helpers\PrintHelper::currentTime();
-        $startTime = \App\Helpers\PrintHelper::startTime();
-        $endTime = \App\Helpers\PrintHelper::endTime();
-        $isWithinTime = \App\Helpers\PrintHelper::isWithinOperatingHours($currentTime);
+                    $currentTime = \App\Helpers\PrintHelper::currentTime();
+                    $startTime = \App\Helpers\PrintHelper::startTime();
+                    $endTime = \App\Helpers\PrintHelper::endTime();
+                    $isWithinTime = \App\Helpers\PrintHelper::isWithinOperatingHours($currentTime);
 
-        $canPrint = $canPrint && $isWithinTime;
-    @endphp
-    <div class="p-4 active:bg-blue-50/40 transition-colors border-b border-gray-100">
-        <div class="flex justify-between items-start gap-2">
-            <div class="min-w-0 flex-1">
-                <h4 class="font-mono font-bold text-gray-800 text-xs truncate">{{ $pengajuan->nomor_surat }}</h4>
-                <p class="text-[11px] text-gray-500 mt-0.5">
-                    {{ $pengajuan->created_at->format('d M Y, H:i') }} •
-                    <span class="capitalize">{{ str_replace('_', ' ', $pengajuan->kategori) }}</span>
-                </p>
-                <p class="text-xs text-gray-600 mt-0.5 truncate">
-                    <span class="font-semibold text-gray-700">Tujuan:</span> {{ $pengajuan->tujuan }}
-                </p>
-            </div>
-            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex-shrink-0 {{ $badges[$pengajuan->status] ?? 'bg-gray-100 text-gray-600 border-gray-200' }}">
-                {{ ucfirst($pengajuan->status) }}
-            </span>
-        </div>
+                    $canPrint = $canPrint && $isWithinTime;
+                @endphp
+                <div class="p-4 active:bg-blue-50/40 transition-colors border-b border-gray-100">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-mono font-bold text-gray-800 text-xs truncate">{{ $pengajuan->nomor_surat }}</h4>
+                            <p class="text-[11px] text-gray-500 mt-0.5">
+                                {{ $pengajuan->created_at->format('d M Y, H:i') }} •
+                                <span class="capitalize">{{ str_replace('_', ' ', $pengajuan->kategori) }}</span>
+                            </p>
+                            <p class="text-xs text-gray-600 mt-0.5 truncate">
+                                <span class="font-semibold text-gray-700">Tujuan:</span> {{ $pengajuan->tujuan }}
+                            </p>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border flex-shrink-0 {{ $badges[$pengajuan->status] ?? 'bg-gray-100 text-gray-600 border-gray-200' }}">
+                            {{ ucfirst($pengajuan->status) }}
+                        </span>
+                    </div>
 
-        <div class="mt-2.5 flex gap-2">
-            {{-- Tombol Detail --}}
-            <a href="{{ route('siswa.pengajuan.show', $pengajuan) }}"
-               class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-transform">
-                <i class="fas fa-eye mr-1.5"></i>Detail
-            </a>
+                    <div class="mt-2.5 flex gap-2">
+                        {{-- Tombol Detail --}}
+                        <a href="{{ route('siswa.pengajuan.show', $pengajuan) }}"
+                           class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-transform">
+                            <i class="fas fa-eye mr-1.5"></i>Detail
+                        </a>
 
-            {{-- ✅ Tombol Cetak yang Sudah Diperbaiki --}}
-            @if(in_array($pengajuan->status, ['disetujui', 'keluar', 'selesai']))
-                @if($pengajuan->print_count < $maxPrint && $isWithinTime)
-                    <a href="{{ route('siswa.cetak', $pengajuan) }}" target="_blank"
-                       class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-500/20 active:scale-95 transition-transform">
-                        <i class="fas fa-print mr-1.5"></i>Cetak
-                    </a>
-                @else
-                    {{-- Tombol disabled dengan tooltip --}}
-                    <button disabled
-                            class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-gray-400 bg-gray-200 cursor-not-allowed"
-                            title="{{ $pengajuan->print_count >= $maxPrint ? 'Batas cetak tercapai (' . $maxPrint . ' kali)' : 'Di luar jam cetak (' . $startTime . ' - ' . $endTime . ' WIB)' }}">
-                        <i class="fas fa-lock mr-1.5"></i>Cetak
-                    </button>
-                @endif
-            @endif
-        </div>
-    </div>
-@endforeach
+                        {{-- Tombol Cetak --}}
+                        @if(in_array($pengajuan->status, ['disetujui', 'keluar', 'selesai']))
+                            @if($pengajuan->print_count < $maxPrint && $isWithinTime)
+                                <a href="{{ route('siswa.cetak', $pengajuan) }}" target="_blank"
+                                   class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-500/20 active:scale-95 transition-transform">
+                                    <i class="fas fa-print mr-1.5"></i>Cetak
+                                </a>
+                            @else
+                                <button disabled
+                                        class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-gray-400 bg-gray-200 cursor-not-allowed"
+                                        title="{{ $pengajuan->print_count >= $maxPrint ? 'Batas cetak tercapai (' . $maxPrint . ' kali)' : 'Di luar jam cetak (' . $startTime . ' - ' . $endTime . ' WIB)' }}">
+                                    <i class="fas fa-lock mr-1.5"></i>Cetak
+                                </button>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            @endforeach
         </div>
     @else
         <div class="p-10 text-center">

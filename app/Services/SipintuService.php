@@ -9,6 +9,7 @@ use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http; // ✅ TAMBAHKAN INI
 use Illuminate\Support\Facades\Log;
 
 class SipintuService
