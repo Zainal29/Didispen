@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Kelas;
 use App\Models\Jurusan;
+use Faker\Factory as FakerFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class KelasFactory extends Factory
@@ -12,12 +13,14 @@ class KelasFactory extends Factory
 
     public function definition(): array
     {
+        $faker = FakerFactory::create();
+
         // Ambil jurusan acak dari database
         $jurusan = Jurusan::inRandomOrder()->first();
         $kodeJurusan = $jurusan ? $jurusan->kode_jurusan : 'UMUM';
 
-        $tingkat = fake()->randomElement(['X', 'XI', 'XII']);
-        $nomorKelas = fake()->numberBetween(1, 4);
+        $tingkat = $faker->randomElement(['X', 'XI', 'XII']);
+        $nomorKelas = $faker->numberBetween(1, 4);
 
         return [
             'jurusan_id' => $jurusan ? $jurusan->id : 1,
