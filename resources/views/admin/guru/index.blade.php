@@ -12,17 +12,14 @@
                 <h3 class="text-xl font-bold text-gray-800 tracking-tight">Daftar Guru</h3>
                 <p class="text-sm text-gray-500 mt-1">Total {{ $gurus->total() }} guru terdaftar dalam sistem.</p>
             </div>
-            
+
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 {{-- Tombol Sync SiPintu --}}
-                <form action="{{ route('admin.sipintu.sync-guru') }}" method="POST" class="flex items-center gap-2 w-full sm:w-auto" 
+                <form action="{{ route('admin.sipintu.sync-guru') }}" method="POST" class="flex items-center gap-2 w-full sm:w-auto"
                       onsubmit="this.querySelectorAll('button').forEach(b => { b.disabled=true; b.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Memproses...'; });">
                     @csrf
                     <button type="submit" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
                         <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Sinkronisasi</span><span class="sm:hidden">Sync</span>
-                    </button>
-                    <button type="submit" name="force" value="1" class="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2" title="Paksa ambil data terbaru (Bypass Cache)">
-                        <i class="fas fa-bolt"></i> <span class="hidden sm:inline">Force Sync</span><span class="sm:hidden">Force</span>
                     </button>
                 </form>
 
@@ -42,11 +39,11 @@
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Pencarian</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-search text-sm"></i></span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama, NIP, Mapel, atau Alamat..." 
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama, NIP, Mapel, atau Alamat..."
                                class="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow">
                     </div>
                 </div>
-                
+
                 <div class="md:col-span-3">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Urutkan Berdasarkan</label>
                     <select name="sort" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
@@ -93,7 +90,7 @@
                     @forelse($gurus as $g)
                     <tr class="hover:bg-blue-50/50 transition-colors group">
                         <td class="p-4 font-mono text-xs text-gray-500 align-top">{{ $g->nip }}</td>
-                        
+
                         <td class="p-4 align-top font-semibold text-gray-900">{{ $g->nama_lengkap }}</td>
 
                         <td class="p-4 align-top">
@@ -101,7 +98,7 @@
                                 {{ $g->mata_pelajaran ?? 'Umum' }}
                             </span>
                         </td>
-                        
+
                         <td class="p-4 align-top">
                             @if($g->no_telepon)
                                 <a href="tel:{{ $g->no_telepon }}" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-medium transition-colors bg-blue-50 px-2 py-1 rounded-md hover:bg-blue-100 whitespace-nowrap">
@@ -119,7 +116,7 @@
                                     <p class="text-xs text-gray-600 leading-relaxed line-clamp-2" title="{{ $g->alamat }}">
                                         {{ $g->alamat }}
                                     </p>
-                                    <button onclick="copyToClipboard('{{ addslashes($g->alamat) }}', this)" 
+                                    <button onclick="copyToClipboard('{{ addslashes($g->alamat) }}', this)"
                                             class="mt-1.5 text-[10px] text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors opacity-0 group-hover/address:opacity-100"
                                             title="Salin Alamat">
                                         <i class="far fa-copy"></i> <span class="copy-text">Salin</span>
@@ -129,7 +126,7 @@
                                 <span class="text-gray-400 italic text-xs">-</span>
                             @endif
                         </td>
-                        
+
                         <td class="p-4 align-top text-xs text-gray-500 font-mono break-all">{{ $g->user->email }}</td>
 
                         <td class="p-4 text-center align-middle whitespace-nowrap">
@@ -176,7 +173,7 @@
             <form id="form" method="POST">
                 @csrf
                 <input type="hidden" id="method" name="_method" value="POST">
-                
+
                 <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex justify-between items-center">
                     <h3 id="modalTitle" class="text-lg font-bold text-white flex items-center gap-2">
                         <i class="fas fa-user-plus"></i> Tambah Guru Baru
@@ -198,28 +195,28 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
-                            <input type="text" name="nama_lengkap" id="nama_lengkap" required 
+                            <input type="text" name="nama_lengkap" id="nama_lengkap" required
                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                    placeholder="Contoh: Budi Santoso, S.Pd.">
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">NIP / ID Guru <span class="text-red-500">*</span></label>
-                            <input type="text" name="nip" id="nip" required 
+                            <input type="text" name="nip" id="nip" required
                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono"
                                    placeholder="19800101...">
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Sekolah <span class="text-red-500">*</span></label>
-                            <input type="email" name="email" id="email" required 
+                            <input type="email" name="email" id="email" required
                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                    placeholder="nip@smkn1bangsri.sch.id">
                         </div>
 
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Mata Pelajaran</label>
-                            <input type="text" name="mata_pelajaran" id="mata_pelajaran" 
+                            <input type="text" name="mata_pelajaran" id="mata_pelajaran"
                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                    placeholder="Contoh: Matematika, Bahasa Inggris">
                         </div>
@@ -247,7 +244,7 @@ function copyToClipboard(text, btnElement) {
         const originalHtml = btnElement.innerHTML;
         btnElement.innerHTML = '<i class="fas fa-check"></i> <span class="copy-text">Tersalin!</span>';
         btnElement.classList.add('text-emerald-600');
-        
+
         setTimeout(() => {
             btnElement.innerHTML = originalHtml;
             btnElement.classList.remove('text-emerald-600');
@@ -262,14 +259,14 @@ function openModal(data = null) {
     const modal = document.getElementById('modal');
     const title = document.getElementById('modalTitle');
     const form = document.getElementById('form');
-    
+
     modal.classList.remove('hidden');
-    
+
     if (data) {
         title.innerHTML = '<i class="fas fa-user-edit"></i> Edit Data Guru';
         form.action = `/admin/guru/${data.id}`;
         document.getElementById('method').value = 'PUT';
-        
+
         document.getElementById('nama_lengkap').value = data.nama_lengkap;
         document.getElementById('nip').value = data.nip;
         document.getElementById('email').value = data.user.email;
@@ -282,8 +279,8 @@ function openModal(data = null) {
     }
 }
 
-function closeModal() { 
-    document.getElementById('modal').classList.add('hidden'); 
+function closeModal() {
+    document.getElementById('modal').classList.add('hidden');
 }
 
 document.addEventListener('keydown', function(e) {

@@ -12,17 +12,14 @@
                 <h3 class="text-xl font-bold text-gray-800 tracking-tight">Daftar Siswa</h3>
                 <p class="text-sm text-gray-500 mt-1">Kelola data siswa, kelas, dan jurusan dari SiPintu Gateway.</p>
             </div>
-            
+
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 {{-- Tombol Sync SiPintu --}}
-                <form action="{{ route('admin.sipintu.sync-siswa') }}" method="POST" class="flex items-center gap-2 w-full sm:w-auto" 
+                <form action="{{ route('admin.sipintu.sync-siswa') }}" method="POST" class="flex items-center gap-2 w-full sm:w-auto"
                       onsubmit="this.querySelectorAll('button').forEach(b => { b.disabled=true; b.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Memproses...'; });">
                     @csrf
                     <button type="submit" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
                         <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Sinkronisasi</span><span class="sm:hidden">Sync</span>
-                    </button>
-                    <button type="submit" name="force" value="1" class="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2" title="Paksa ambil data terbaru (Bypass Cache)">
-                        <i class="fas fa-bolt"></i> <span class="hidden sm:inline">Force Sync</span><span class="sm:hidden">Force</span>
                     </button>
                 </form>
 
@@ -42,11 +39,11 @@
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Cari Siswa</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-search text-sm"></i></span>
-                        <input type="text" name="search" id="searchInput" value="{{ request('search') }}" placeholder="Nama, NIS, atau email..." 
+                        <input type="text" name="search" id="searchInput" value="{{ request('search') }}" placeholder="Nama, NIS, atau email..."
                                class="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow">
                     </div>
                 </div>
-                
+
                 <div class="md:col-span-3">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Filter Kelas</label>
                     <select name="kelas_id" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
@@ -117,11 +114,11 @@
                     @forelse($siswas as $s)
                     <tr class="hover:bg-indigo-50/40 transition-colors group">
                         <td class="p-4 font-mono text-xs text-gray-500 align-top">{{ $s->user->nis_nip ?? '-' }}</td>
-                        
+
                         <td class="p-4 align-top">
                             <div class="font-semibold text-gray-900">{{ $s->nama_lengkap }}</div>
                         </td>
-                        
+
                         <td class="p-4 align-top">
                             @if($s->kelas)
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap">
@@ -131,11 +128,11 @@
                                 <span class="text-gray-400 italic text-xs">Belum ada</span>
                             @endif
                         </td>
-                        
+
                         <td class="p-4 align-top text-xs text-gray-600">
                             {{ $s->jurusan?->nama_jurusan ?? $s->kelas?->jurusan?->nama_jurusan ?? '-' }}
                         </td>
-                        
+
                         <td class="p-4 align-top text-xs text-gray-500 font-mono break-all">{{ $s->user->email ?? '-' }}</td>
                         <td class="p-4 align-top text-xs text-gray-500">{{ $s->created_at->format('d/m/Y') }}</td>
 
@@ -184,7 +181,7 @@
                 @csrf
                 <input type="hidden" id="siswaId" name="siswa_id">
                 <input type="hidden" id="formMethod" name="_method" value="POST">
-                
+
                 <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 flex justify-between items-center">
                     <h3 id="modalTitle" class="text-lg font-bold text-white flex items-center gap-2">
                         <i class="fas fa-user-plus"></i> Tambah Siswa Baru
@@ -207,15 +204,15 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
-                            <input type="text" id="nama_lengkap" name="nama_lengkap" required 
+                            <input type="text" id="nama_lengkap" name="nama_lengkap" required
                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                    placeholder="Contoh: Ahmad Fauzi">
                             <span class="text-red-600 text-xs mt-1 block" id="error_nama_lengkap"></span>
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">NIS / NISN <span class="text-red-500">*</span></label>
-                            <input type="text" id="nis_nip" name="nis_nip" required 
+                            <input type="text" id="nis_nip" name="nis_nip" required
                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono"
                                    placeholder="1234567890">
                             <span class="text-red-600 text-xs mt-1 block" id="error_nis_nip"></span>
@@ -223,7 +220,7 @@
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Sekolah <span class="text-red-500">*</span></label>
-                            <input type="email" id="email" name="email" required 
+                            <input type="email" id="email" name="email" required
                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                    placeholder="nis@smkn1bangsri.sch.id">
                             <span class="text-red-600 text-xs mt-1 block" id="error_email"></span>
@@ -253,7 +250,7 @@
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Lahir</label>
-                            <input type="date" id="tanggal_lahir" name="tanggal_lahir" 
+                            <input type="date" id="tanggal_lahir" name="tanggal_lahir"
                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
                             <span class="text-red-600 text-xs mt-1 block" id="error_tanggal_lahir"></span>
                         </div>

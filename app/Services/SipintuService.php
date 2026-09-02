@@ -9,7 +9,7 @@ use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http; // ✅ TAMBAHKAN INI
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SipintuService
@@ -78,6 +78,7 @@ class SipintuService
                 'inserted' => 0,
                 'updated' => 0,
                 'failed' => 0,
+                'skipped' => 0, // ✅ TAMBAHAN: untuk menghitung alumni/tidak aktif yang dilewati
                 'errors' => [],
             ];
 
@@ -88,6 +89,25 @@ class SipintuService
                     if (! is_array($item)) {
                         $stats['failed']++;
                         $stats['errors'][] = "Item index {$index} bukan format data yang valid.";
+                        continue;
+                    }
+
+                    // ✅ PERBAIKAN: Cek status alumni / tidak aktif terlebih dahulu
+                    $statusAktif = $item['status_aktif']
+                        ?? $item['is_active']
+                        ?? $item['aktif']
+                        ?? $item['active']
+                        ?? true;
+
+                    // Cek apakah alumni (biasanya field alumni = true atau status = 'alumni')
+                    $isAlumni = $item['alumni']
+                        ?? $item['is_alumni']
+                        ?? (strtolower((string) ($item['status'] ?? '')) === 'alumni')
+                        ?? false;
+
+                    // Skip alumni dan siswa tidak aktif, jangan dimasukkan ke stats failed
+                    if ($isAlumni || ! $statusAktif) {
+                        $stats['skipped']++;
                         continue;
                     }
 
@@ -285,7 +305,7 @@ class SipintuService
                 }
             });
 
-            $summaryMsg = "Sinkronisasi Siswa SiPintu Selesai: Total {$stats['total']} data ({$stats['inserted']} baru, {$stats['updated']} diperbarui, {$stats['failed']} gagal).";
+            $summaryMsg = "Sinkronisasi Siswa SiPintu Selesai: Total {$stats['total']} data ({$stats['inserted']} baru, {$stats['updated']} diperbarui, {$stats['failed']} gagal, {$stats['skipped']} alumni/tidak aktif dilewati).";
             Log::info($summaryMsg, $stats);
 
             return [
@@ -300,7 +320,7 @@ class SipintuService
             return [
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat memproses sinkronisasi SiPintu: ' . $e->getMessage(),
-                'stats' => ['total' => 0, 'inserted' => 0, 'updated' => 0, 'failed' => 0, 'errors' => [$e->getMessage()]],
+                'stats' => ['total' => 0, 'inserted' => 0, 'updated' => 0, 'failed' => 0, 'skipped' => 0, 'errors' => [$e->getMessage()]],
             ];
         }
     }
@@ -351,13 +371,30 @@ class SipintuService
                         continue;
                     }
 
-                    $nip = trim((string) ($item['nip'] ?? $item['nis_nip'] ?? ''));
+                    // ✅ PERBAIKAN: alias NIP lebih lengkap
+                    $nip = trim((string) (
+                        $item['nip']
+                        ?? $item['nis_nip']
+                        ?? $item['nip_guru']
+                        ?? $item['no_induk']
+                        ?? $item['employee_id']
+                        ?? $item['id_pegawai']
+                        ?? ''
+                    ));
                     $nama = trim($item['nama_lengkap'] ?? $item['name'] ?? $item['nama'] ?? '');
-                    $email = $nip ? strtolower($nip . '@smkn1bangsri.sch.id') : ($item['user']['email'] ?? '');
 
-                    if (! $nip || ! $nama) {
+                    // ✅ PERBAIKAN: guru tanpa NIP (honorer) tetap bisa sync pakai NIP placeholder
+                    if (! $nip) {
+                        $apiId = $item['id'] ?? $item['guru_id'] ?? null;
+                        $nip = 'HONOR-' . ($apiId ?? ($index + 1));
+                    }
+
+                    $email = strtolower($nip . '@smkn1bangsri.sch.id');
+
+                    // Nama tetap wajib, kalau kosong baru dilewati
+                    if (! $nama) {
                         $stats['failed']++;
-                        $stats['errors'][] = "Baris " . ($index + 1) . ": NIP atau Nama kosong.";
+                        $stats['errors'][] = "Baris " . ($index + 1) . ": Nama kosong.";
                         continue;
                     }
 

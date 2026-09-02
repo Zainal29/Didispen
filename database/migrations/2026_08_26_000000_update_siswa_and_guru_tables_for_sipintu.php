@@ -25,7 +25,7 @@ return new class extends Migration
                 $table->date('tanggal_lahir')->nullable()->after('nama_lengkap');
             }
             if (! Schema::hasColumn('guru', 'status_aktif')) {
-                $table->boolean('status_aktif')->default(true)->after('alamat');
+                $table->boolean('status_aktif')->default(true)->after('mata_pelajaran');
             }
             // Ubah tipe mata_pelajaran ke text agar bisa menampung multiple mapel
             $table->text('mata_pelajaran')->nullable()->change();
