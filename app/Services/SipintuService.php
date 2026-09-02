@@ -226,7 +226,6 @@ class SipintuService
                                 'nis_nip' => $nis,
                                 'password' => $passwordHash,
                                 'role' => 'siswa',
-                                'must_change_password' => false,
                             ]);
                             $stats['updated']++;
                         } else {
@@ -236,7 +235,6 @@ class SipintuService
                                 'password' => $passwordHash,
                                 'role' => 'siswa',
                                 'nis_nip' => $nis,
-                                'must_change_password' => false,
                             ]);
                             $stats['inserted']++;
                         }
@@ -442,7 +440,6 @@ class SipintuService
                                 'nis_nip' => $nip,
                                 'password' => $passwordHash,
                                 'role' => 'guru',
-                                'must_change_password' => false,
                             ]);
                             $stats['updated']++;
                         } else {
@@ -452,7 +449,6 @@ class SipintuService
                                 'password' => $passwordHash,
                                 'role' => 'guru',
                                 'nis_nip' => $nip,
-                                'must_change_password' => false,
                             ]);
                             $stats['inserted']++;
                         }

@@ -67,11 +67,10 @@ class GuruSeeder extends Seeder
             $user = User::firstOrCreate(
                 ['email' => $data['email']],
                 [
-                    'name'                 => $data['name'],
-                    'password'             => Hash::make('password'),
-                    'role'                 => 'guru',
-                    'nis_nip'              => $data['nip'],
-                    'must_change_password' => false,
+                    'name'     => $data['name'],
+                    'password' => Hash::make('password'),
+                    'role'     => 'guru',
+                    'nis_nip'  => $data['nip'],
                 ]
             );
 

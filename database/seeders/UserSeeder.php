@@ -14,11 +14,10 @@ class UserSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@sch.id'],
             [
-                'name'                 => 'Administrator Sistem',
-                'password'             => Hash::make('password'),
-                'role'                 => 'admin',
-                'nis_nip'              => 'ADMIN001',
-                'must_change_password' => false,
+                'name'     => 'Administrator Sistem',
+                'password' => Hash::make('password'),
+                'role'     => 'admin',
+                'nis_nip'  => 'ADMIN001',
             ]
         );
 

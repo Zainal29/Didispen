@@ -51,15 +51,12 @@ class GuruController extends Controller
     public function store(StoreGuruRequest $request)
     {
         DB::transaction(function () use ($request) {
-            // ✅ REVISI SIPINTU: Password dikelola SiPintu (sudah di-hash saat sinkronisasi).
-            // Untuk pembuatan manual oleh admin, gunakan password acak yang tidak dapat ditekan.
             $user = User::create([
-                'name'                 => $request->name,
-                'email'                => $request->email,
-                'password'             => Hash::make(bin2hex(random_bytes(16))),
-                'role'                 => 'guru',
-                'nis_nip'              => $request->nip,
-                'must_change_password' => false,
+                'name'     => $request->name,
+                'email'    => $request->email,
+                'password' => Hash::make(bin2hex(random_bytes(16))),
+                'role'     => 'guru',
+                'nis_nip'  => $request->nip,
             ]);
 
             Guru::create([
@@ -85,8 +82,6 @@ class GuruController extends Controller
                 'nis_nip' => $request->nip,
             ]);
 
-            // ✅ REVISI SIPINTU: Password TIDAK diubah dari sini (dikelola SiPintu).
-
             $guru->update($request->only(['nip', 'nama_lengkap', 'mata_pelajaran']));
         });
 
@@ -110,9 +105,4 @@ class GuruController extends Controller
 
         return view('admin.guru.checklog', compact('logs'));
     }
-
-    // ✅ REVISI SIPINTU: Semua metode manajemen password guru DIHAPUS
-    // (editPassword, updatePassword, resetPassword, generateTempPassword, showPasswordInfo).
-    // Password di-hash dan dikelola oleh SiPintu/Sijuna.
-    // Jika user lupa password, arahkan ke admin pusat SiPintu/Sijuna.
 }

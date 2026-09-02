@@ -13,11 +13,10 @@ class SatpamSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'satpam@smkn1bangsri.sch.id'],
             [
-                'name'                 => 'Petugas Satpam',
-                'password'             => Hash::make('satpam123'),
-                'role'                 => 'satpam',
-                'nis_nip'              => 'SATPAM001',
-                'must_change_password' => false,
+                'name'     => 'Petugas Satpam',
+                'password' => Hash::make('satpam123'),
+                'role'     => 'satpam',
+                'nis_nip'  => 'SATPAM001',
             ]
         );
 

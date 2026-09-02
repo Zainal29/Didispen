@@ -103,11 +103,10 @@ class SiswaSeeder extends Seeder
             $user = User::firstOrCreate(
                 ['email' => $item['email']],
                 [
-                    'name'                 => $item['name'],
-                    'password'             => Hash::make('password'),
-                    'role'                 => 'siswa',
-                    'nis_nip'              => $item['nis'],
-                    'must_change_password' => false,
+                    'name'     => $item['name'],
+                    'password' => Hash::make('password'),
+                    'role'     => 'siswa',
+                    'nis_nip'  => $item['nis'],
                 ]
             );
 
