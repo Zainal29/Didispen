@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Jurusan;
+use App\Models\Kelas;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -30,9 +32,9 @@ class SipintuApiService
 
         return Http::retry(2, 500)
             ->withHeaders([
-                'X-Client-ID' => $this->clientId,
+                'X-Client-ID'     => $this->clientId,
                 'X-Client-Secret' => $this->clientSecret,
-                'Accept' => 'application/json',
+                'Accept'          => 'application/json',
             ])
             ->timeout($timeout)
             ->get($url, $queryParams);
@@ -52,9 +54,9 @@ class SipintuApiService
         if (! $force && Cache::has($cacheKey)) {
             Log::info('SipintuApiService: Mengambil data siswa dari cache.');
             return [
-                'status' => 'success',
+                'status'     => 'success',
                 'from_cache' => true,
-                'data' => Cache::get($cacheKey),
+                'data'       => Cache::get($cacheKey),
             ];
         }
 
@@ -64,26 +66,26 @@ class SipintuApiService
 
             if (! $response->successful()) {
                 Log::error('SipintuApiService: Gagal mengambil data siswa. Status: ' . $response->status());
-                
+
                 // Fallback ke cache jika tersedia
                 if (Cache::has($cacheKey)) {
                     return [
-                        'status' => 'fallback',
+                        'status'     => 'fallback',
                         'from_cache' => true,
-                        'message' => 'API SiPintu tidak merespon (Status: ' . $response->status() . '). Menggunakan data cache terakhir.',
-                        'data' => Cache::get($cacheKey),
+                        'message'    => 'API SiPintu tidak merespon (Status: ' . $response->status() . '). Menggunakan data cache terakhir.',
+                        'data'       => Cache::get($cacheKey),
                     ];
                 }
 
                 return [
-                    'status' => 'error',
+                    'status'     => 'error',
                     'from_cache' => false,
-                    'message' => 'Gagal terhubung ke API SiPintu (Status: ' . $response->status() . ').',
-                    'data' => [],
+                    'message'    => 'Gagal terhubung ke API SiPintu (Status: ' . $response->status() . ').',
+                    'data'       => [],
                 ];
             }
 
-            $raw = $response->json();
+            $raw  = $response->json();
             $data = $raw['data'] ?? $raw['students'] ?? (is_array($raw) ? $raw : []);
 
             if (is_array($data) && ! empty($data)) {
@@ -91,9 +93,9 @@ class SipintuApiService
             }
 
             return [
-                'status' => 'success',
+                'status'     => 'success',
                 'from_cache' => false,
-                'data' => $data,
+                'data'       => $data,
             ];
 
         } catch (\Throwable $e) {
@@ -101,18 +103,18 @@ class SipintuApiService
 
             if (Cache::has($cacheKey)) {
                 return [
-                    'status' => 'fallback',
+                    'status'     => 'fallback',
                     'from_cache' => true,
-                    'message' => 'Terjadi kesalahan koneksi API SiPintu: ' . $e->getMessage() . '. Menggunakan data cache terakhir.',
-                    'data' => Cache::get($cacheKey),
+                    'message'    => 'Terjadi kesalahan koneksi API SiPintu: ' . $e->getMessage() . '. Menggunakan data cache terakhir.',
+                    'data'       => Cache::get($cacheKey),
                 ];
             }
 
             return [
-                'status' => 'error',
+                'status'     => 'error',
                 'from_cache' => false,
-                'message' => 'Koneksi ke API SiPintu gagal: ' . $e->getMessage(),
-                'data' => [],
+                'message'    => 'Koneksi ke API SiPintu gagal: ' . $e->getMessage(),
+                'data'       => [],
             ];
         }
     }
@@ -131,9 +133,9 @@ class SipintuApiService
         if (! $force && Cache::has($cacheKey)) {
             Log::info('SipintuApiService: Mengambil data guru dari cache.');
             return [
-                'status' => 'success',
+                'status'     => 'success',
                 'from_cache' => true,
-                'data' => Cache::get($cacheKey),
+                'data'       => Cache::get($cacheKey),
             ];
         }
 
@@ -146,22 +148,22 @@ class SipintuApiService
 
                 if (Cache::has($cacheKey)) {
                     return [
-                        'status' => 'fallback',
+                        'status'     => 'fallback',
                         'from_cache' => true,
-                        'message' => 'API SiPintu tidak merespon (Status: ' . $response->status() . '). Menggunakan data cache terakhir.',
-                        'data' => Cache::get($cacheKey),
+                        'message'    => 'API SiPintu tidak merespon (Status: ' . $response->status() . '). Menggunakan data cache terakhir.',
+                        'data'       => Cache::get($cacheKey),
                     ];
                 }
 
                 return [
-                    'status' => 'error',
+                    'status'     => 'error',
                     'from_cache' => false,
-                    'message' => 'Gagal terhubung ke API SiPintu (Status: ' . $response->status() . ').',
-                    'data' => [],
+                    'message'    => 'Gagal terhubung ke API SiPintu (Status: ' . $response->status() . ').',
+                    'data'       => [],
                 ];
             }
 
-            $raw = $response->json();
+            $raw  = $response->json();
             $data = $raw['data'] ?? $raw['teachers'] ?? (is_array($raw) ? $raw : []);
 
             if (is_array($data) && ! empty($data)) {
@@ -169,9 +171,9 @@ class SipintuApiService
             }
 
             return [
-                'status' => 'success',
+                'status'     => 'success',
                 'from_cache' => false,
-                'data' => $data,
+                'data'       => $data,
             ];
 
         } catch (\Throwable $e) {
@@ -179,18 +181,18 @@ class SipintuApiService
 
             if (Cache::has($cacheKey)) {
                 return [
-                    'status' => 'fallback',
+                    'status'     => 'fallback',
                     'from_cache' => true,
-                    'message' => 'Terjadi kesalahan koneksi API SiPintu: ' . $e->getMessage() . '. Menggunakan data cache terakhir.',
-                    'data' => Cache::get($cacheKey),
+                    'message'    => 'Terjadi kesalahan koneksi API SiPintu: ' . $e->getMessage() . '. Menggunakan data cache terakhir.',
+                    'data'       => Cache::get($cacheKey),
                 ];
             }
 
             return [
-                'status' => 'error',
+                'status'     => 'error',
                 'from_cache' => false,
-                'message' => 'Koneksi ke API SiPintu gagal: ' . $e->getMessage(),
-                'data' => [],
+                'message'    => 'Koneksi ke API SiPintu gagal: ' . $e->getMessage(),
+                'data'       => [],
             ];
         }
     }
@@ -208,9 +210,9 @@ class SipintuApiService
 
         if (! $force && Cache::has($cacheKey)) {
             return [
-                'status' => 'success',
+                'status'     => 'success',
                 'from_cache' => true,
-                'data' => Cache::get($cacheKey),
+                'data'       => Cache::get($cacheKey),
             ];
         }
 
@@ -218,18 +220,20 @@ class SipintuApiService
             $response = $this->request('/api/v1/sijuna/classrooms', [], 30);
 
             if ($response->successful()) {
-                $raw = $response->json();
+                $raw  = $response->json();
                 $data = $raw['data'] ?? $raw['classrooms'] ?? $raw['classes'] ?? (is_array($raw) ? $raw : []);
+
                 Cache::put($cacheKey, $data, $this->cacheTtl);
 
                 return [
-                    'status' => 'success',
+                    'status'     => 'success',
                     'from_cache' => false,
-                    'data' => $data,
+                    'data'       => $data,
                 ];
             }
 
             return ['status' => 'error', 'message' => 'Gagal mengambil data kelas', 'data' => []];
+
         } catch (\Throwable $e) {
             Log::error('SipintuApiService getKelasData Exception: ' . $e->getMessage());
             return ['status' => 'error', 'message' => $e->getMessage(), 'data' => []];
@@ -249,9 +253,9 @@ class SipintuApiService
 
         if (! $force && Cache::has($cacheKey)) {
             return [
-                'status' => 'success',
+                'status'     => 'success',
                 'from_cache' => true,
-                'data' => Cache::get($cacheKey),
+                'data'       => Cache::get($cacheKey),
             ];
         }
 
@@ -259,18 +263,20 @@ class SipintuApiService
             $response = $this->request('/api/v1/sijuna/majors', [], 30);
 
             if ($response->successful()) {
-                $raw = $response->json();
+                $raw  = $response->json();
                 $data = $raw['data'] ?? $raw['majors'] ?? $raw['jurusan'] ?? (is_array($raw) ? $raw : []);
+
                 Cache::put($cacheKey, $data, $this->cacheTtl);
 
                 return [
-                    'status' => 'success',
+                    'status'     => 'success',
                     'from_cache' => false,
-                    'data' => $data,
+                    'data'       => $data,
                 ];
             }
 
             return ['status' => 'error', 'message' => 'Gagal mengambil data jurusan', 'data' => []];
+
         } catch (\Throwable $e) {
             Log::error('SipintuApiService getJurusanData Exception: ' . $e->getMessage());
             return ['status' => 'error', 'message' => $e->getMessage(), 'data' => []];

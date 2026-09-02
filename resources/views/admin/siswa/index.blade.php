@@ -48,10 +48,9 @@
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Filter Kelas</label>
                     <select name="kelas_id" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
                         <option value="">-- Semua Kelas --</option>
-                        @foreach($kelass as $k)
-                            <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
-                                {{ $k->nama_kelas }} ({{ $k->jurusan?->kode_jurusan ?? '-' }})
-                            </option>
+                        {{-- ✅ DIPERBAIKI: Menggunakan $kelasList sesuai Controller --}}
+                        @foreach($kelasList as $k)
+                            <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -84,7 +83,7 @@
             </form>
         </div>
 
-        {{-- TABLE AREA (STRUKTUR ASLI DIPERTAHANKAN) --}}
+        {{-- TABLE AREA --}}
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold tracking-wider">
@@ -230,7 +229,8 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jurusan</label>
                             <select id="jurusan_id" name="jurusan_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer bg-white">
                                 <option value="">-- Pilih Jurusan --</option>
-                                @foreach($jurusans as $j)
+                                {{-- ✅ DIPERBAIKI: Menggunakan $jurusanList sesuai Controller --}}
+                                @foreach($jurusanList as $j)
                                     <option value="{{ $j->id }}">{{ $j->nama_jurusan }}</option>
                                 @endforeach
                             </select>
@@ -241,7 +241,8 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kelas</label>
                             <select id="kelas_id" name="kelas_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer bg-white">
                                 <option value="">-- Pilih Kelas --</option>
-                                @foreach($kelass as $k)
+                                {{-- ✅ DIPERBAIKI: Menggunakan $kelasList (bukan $kelass) sesuai Controller --}}
+                                @foreach($kelasList as $k)
                                     <option value="{{ $k->id }}">{{ $k->nama_kelas }} ({{ $k->jurusan?->kode_jurusan ?? '-' }})</option>
                                 @endforeach
                             </select>

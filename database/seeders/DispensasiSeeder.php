@@ -1,4 +1,4 @@
-```php
+
 <?php
 
 namespace Database\Seeders;
@@ -100,4 +100,3 @@ class DispensasiSeeder extends Seeder
         );
     }
 }
-```

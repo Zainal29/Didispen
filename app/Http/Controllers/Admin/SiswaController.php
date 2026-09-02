@@ -56,10 +56,12 @@ class SiswaController extends Controller
 
         $siswas = $query->orderBy($sort, $dir)->paginate(15)->withQueryString();
 
-        $kelasList   = Kelas::orderBy('nama_kelas')->get();
+        $kelasList   = Kelas::with('jurusan')->orderBy('nama_kelas')->get();
         $jurusanList = Jurusan::orderBy('nama_jurusan')->get();
+        $kelas       = $kelasList;
+        $jurusan     = $jurusanList;
 
-        return view('admin.siswa.index', compact('siswas', 'kelasList', 'jurusanList', 'sortable', 'sort', 'dir'));
+        return view('admin.siswa.index', compact('siswas', 'kelasList', 'jurusanList', 'kelas', 'jurusan', 'sortable', 'sort', 'dir'));
     }
 
     public function store(StoreSiswaRequest $request)
@@ -93,7 +95,7 @@ class SiswaController extends Controller
 
     public function edit(Siswa $siswa)
     {
-        $kelasList   = Kelas::orderBy('nama_kelas')->get();
+        $kelasList   = Kelas::with('jurusan')->orderBy('nama_kelas')->get();
         $jurusanList = Jurusan::orderBy('nama_jurusan')->get();
 
         return view('admin.siswa.edit', compact('siswa', 'kelasList', 'jurusanList'));

@@ -15,18 +15,18 @@ class SipintuSyncController extends Controller
      */
     public function syncSiswa(Request $request)
     {
-        $force = $request->boolean('force', false);
+        $force  = $request->boolean('force', false);
         $result = $this->sipintuService->syncSiswa($force);
 
         if ($result['success']) {
             return redirect()->back()->with([
-                'success' => $result['message'],
+                'success'    => $result['message'],
                 'sync_stats' => $result['stats'] ?? null,
             ]);
         }
 
         return redirect()->back()->with([
-            'error' => $result['message'],
+            'error'      => $result['message'],
             'sync_stats' => $result['stats'] ?? null,
         ]);
     }
@@ -36,18 +36,18 @@ class SipintuSyncController extends Controller
      */
     public function syncGuru(Request $request)
     {
-        $force = $request->boolean('force', false);
+        $force  = $request->boolean('force', false);
         $result = $this->sipintuService->syncGuru($force);
 
         if ($result['success']) {
             return redirect()->back()->with([
-                'success' => $result['message'],
+                'success'    => $result['message'],
                 'sync_stats' => $result['stats'] ?? null,
             ]);
         }
 
         return redirect()->back()->with([
-            'error' => $result['message'],
+            'error'      => $result['message'],
             'sync_stats' => $result['stats'] ?? null,
         ]);
     }
