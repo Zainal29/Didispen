@@ -88,13 +88,31 @@ class LoginController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | VALIDASI STATUS AKTIF (SISWA / GURU)
+        |--------------------------------------------------------------------------
+        */
+        if ($user->role === 'siswa') {
+            if (!$user->siswa || !$user->siswa->status_aktif) {
+                return back()
+                    ->withErrors(['email' => 'Akun siswa tidak aktif atau terdaftar sebagai alumni.'])
+                    ->withInput();
+            }
+        } elseif ($user->role === 'guru') {
+            if ($user->guru && !$user->guru->status_aktif) {
+                return back()
+                    ->withErrors(['email' => 'Akun guru tidak aktif.'])
+                    ->withInput();
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | VALIDASI PASSWORD
         |--------------------------------------------------------------------------
         */
         $passwordValid = false;
 
         if ($user->role === 'siswa') {
-            // Password siswa di-hash dari SiPintu (atau default NIS jika API tidak mengirim password)
             if (!empty($user->password) && Hash::check($credentials['password'], $user->password)) {
                 $passwordValid = true;
             }

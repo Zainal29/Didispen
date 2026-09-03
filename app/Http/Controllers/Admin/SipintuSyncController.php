@@ -4,19 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\SipintuService;
-use Illuminate\Http\Request;
 
 class SipintuSyncController extends Controller
 {
-    public function __construct(private SipintuService $sipintuService) {}
+    public function __construct(
+        private SipintuService $sipintuService
+    ) {}
 
     /**
      * Sinkronkan Data Siswa dari SiPintu Gateway
      */
-    public function syncSiswa(Request $request)
+    public function syncSiswa()
     {
-        $force  = $request->boolean('force', false);
-        $result = $this->sipintuService->syncSiswa($force);
+        $result = $this->sipintuService->syncSiswa();
 
         if ($result['success']) {
             return redirect()->back()->with([
@@ -34,10 +34,9 @@ class SipintuSyncController extends Controller
     /**
      * Sinkronkan Data Guru dari SiPintu Gateway
      */
-    public function syncGuru(Request $request)
+    public function syncGuru()
     {
-        $force  = $request->boolean('force', false);
-        $result = $this->sipintuService->syncGuru($force);
+        $result = $this->sipintuService->syncGuru();
 
         if ($result['success']) {
             return redirect()->back()->with([

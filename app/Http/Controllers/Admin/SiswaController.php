@@ -33,7 +33,7 @@ class SiswaController extends Controller
         if (! array_key_exists($sort, $sortable)) $sort = 'created_at';
         if (! in_array($dir, ['asc', 'desc'])) $dir = 'desc';
 
-        $query = Siswa::with(['user', 'kelas', 'jurusan']);
+        $query = Siswa::with(['user', 'kelas', 'jurusan'])->where('status_aktif', true);
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -84,6 +84,7 @@ class SiswaController extends Controller
                 'tanggal_lahir' => $request->tanggal_lahir,
                 'alamat'        => $request->alamat,
                 'no_telepon'    => $request->no_telepon,
+                'status_aktif'  => true,
             ]);
 
             $this->auditLog->log(auth()->id(), 'create_siswa', 'siswa', $user->id);
