@@ -4,13 +4,17 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class DispensasiSeeder extends Seeder
+class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Seeder ini dikosongkan karena tidak membutuhkan data dummy dispensasi.
-        // Data dispensasi akan dibuat secara organik oleh pengguna melalui aplikasi.
-
-        $this->command->info('✅ DispensasiSeeder dilewati (Tidak ada data dummy yang dibuat).');
+        // Urutan WAJIB seperti ini agar tidak error:
+        $this->call([
+            JurusanSeeder::class,   // (Jika Anda punya file ini)
+            KelasSeeder::class,     // (Jika Anda punya file ini)
+            SiswaSeeder::class,     // Membuat User & Siswa (Zainal)
+            GuruSeeder::class,      // Membuat User & Guru (Budi)
+            DispensasiSeeder::class,// Membuat contoh dispensasi (Aman skip jika data kosong)
+        ]);
     }
 }
