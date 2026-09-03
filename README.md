@@ -11,7 +11,14 @@
 ## 📌 Tentang Proyek
 **DIDISPEN (Digital Dispensasi Pendidikan)** adalah sistem manajemen perizinan dan dispensasi keluar-masuk siswa berbasis web yang dirancang khusus untuk **SMKN 1 Bangsri**. 
 
-Sistem ini mengintegrasikan alur dispensasi secara *real-time* dari pengajuan oleh siswa, verifikasi oleh Guru Piket Utama, pemindaian **Kode QR** di pos Satpam gerbang sekolah, hingga pencetakan laporan rekapitulasi.
+Sistem ini menggantikan dispensasi kertas dengan alur digital *real-time*: pengajuan oleh siswa, verifikasi oleh Guru Piket, pemindaian **Kode QR** dinamis di pos Satpam, hingga pencetakan struk thermal dan laporan rekapitulasi.
+
+**Fitur Utama:**
+- ✅ **Multi-Role Access:** Hak akses terpisah untuk Siswa, Guru Piket, Satpam, dan Admin.
+- ✅ **Dynamic QR Code:** QR Code unik yang hanya bisa di-scan 1 kali untuk mencegah penyalahgunaan.
+- ✅ **Real-time Validation:** Validasi jam keluar, jam kembali, dan status keterlambatan secara otomatis.
+- ✅ **Thermal Printing:** Dukungan cetak struk dispensasi ukuran 58mm untuk arsip satpam.
+- ✅ **SiPintu Integration:** Sinkronisasi data master siswa dan guru otomatis dari API Gateway sekolah.
 
 **Developed with ❤️ by By 3M**:
 - 👨‍💻 **Maulana Fahri Oktavian**
@@ -22,138 +29,145 @@ Sistem ini mengintegrasikan alur dispensasi secara *real-time* dari pengajuan ol
 
 ## ⚙️ Spesifikasi & Persyaratan Sistem
 
-Sebelum melakukan installasi, pastikan lingkungan server/komputer Anda memenuhi persyaratan berikut:
+Pastikan lingkungan server/komputer Anda memenuhi persyaratan berikut sebelum instalasi:
 
-| Komponen | Persyaratan Minimum |
-| :--- | :--- |
-| **PHP Version** | `>= 8.2` (Disarankan PHP 8.3) |
-| **Framework** | `Laravel 11.x` |
-| **Database** | MySQL / MariaDB `>= 10.4` |
-| **Dependency Manager** | Composer `>= 2.5` |
-| **Web Server** | Nginx / Apache / Artisan Serve |
-| **Ekstensi PHP Wajib** | `php-gd` (untuk QR Code), `php-pdo`, `php-mbstring`, `php-xml`, `php-curl`, `php-zip` |
-
----
-
-## 📦 Daftar Package Utama & Cara Install Manual
-
-Jika Anda melakukan pengembangan baru atau perlu memasang kembali package yang dibutuhkan sistem secara manual, jalankan perintah berikut:
-
-### 1. Simple QR Code (Generasi Kode QR SVG)
-```bash
-composer require simplesoftwareio/simple-qrcode
-```
-
-### 2. Laravel DomPDF (Cetak Laporan PDF)
-```bash
-composer require barryvdh/laravel-dompdf
-```
-
-### 3. ESC/POS Printer (Thermal Printer Bluetooth/USB)
-```bash
-composer require mike42/escpos-php
-```
+| Komponen | Persyaratan Minimum | Catatan |
+| :--- | :--- | :--- |
+| **PHP Version** | `>= 8.2` | Disarankan PHP 8.3 untuk performa optimal. |
+| **Framework** | `Laravel 11.x` | |
+| **Database** | MySQL / MariaDB `>= 10.4` | |
+| **Dependency Manager** | Composer `>= 2.5` & Node.js `>= 18` | Diperlukan untuk compile aset frontend. |
+| **Ekstensi PHP Wajib** | `php-gd`, `php-pdo`, `php-mbstring`, `php-xml`, `php-curl`, `php-zip` | `php-gd` wajib untuk generate QR Code. |
+| **Browser** | Chrome / Edge / Brave (Terbaru) | Wajib untuk fitur scan QR via kamera web. |
 
 ---
 
-## 🛠️ Panduan Instalasi (Setelah Clone / Download Proyek)
+## 🛠️ Panduan Instalasi (Developer / Local)
 
-Ikuti langkah-langkah di bawah ini untuk menjalankan proyek setelah berhasil melakukan `git clone` atau mengunduh source code:
+Ikuti langkah-langkah berikut untuk menjalankan proyek setelah melakukan `git clone`:
 
-### 1. Clone / Download Repository
+### 1. Clone Repository & Masuk ke Direktori
 ```bash
 git clone https://github.com/username/Digipen.git
 cd Digipen
 ```
 
-### 2. Install Seluruh Dependensi Package (Composer)
-Perintah ini akan otomatis meng-install seluruh package yang terdaftar di `composer.json` (`simple-qrcode`, `dompdf`, `escpos-php`, dll.):
+### 2. Install Dependensi Backend & Frontend
 ```bash
+# Install package PHP
 composer install
+
+# Install package Node.js (jika ada aset yang perlu di-compile)
+npm install
+npm run build
 ```
 
-### 3. Konfigurasi File Environment `.env`
-Duplikat file `.env.example` menjadi `.env`:
+### 3. Konfigurasi Environment (`.env`)
+Duplikat file konfigurasi dan atur sesuai database Anda:
 ```bash
 cp .env.example .env
 ```
-Buka file `.env` dan atur koneksi database sesuai server Anda:
-```env
-APP_NAME=DIDISPEN
-APP_ENV=local
-APP_KEY=
-APP_DEBUG=true
-APP_TIMEZONE=Asia/Jakarta
-APP_URL=http://localhost:8000
 
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=didispen
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-### 4. Generate Application Key
+### 4. Generate Key & Setup Storage
 ```bash
 php artisan key:generate
-```
-
-### 5. Buat Storage Link (Public Storage)
-Diperlukan untuk membaca logo, QR Code, dan file upload:
-```bash
 php artisan storage:link
 ```
+*(Perintah `storage:link` wajib agar gambar QR Code dan logo dapat ditampilkan).*
 
-### 6. Jalankan Migrasi Database & Seeder Data Demo
-Pastikan database dengan nama yang ada di `.env` (contoh: `didispen`) sudah dibuat di MySQL/PHPMyAdmin, lalu jalankan:
+### 5. Migrasi Database & Isi Data Demo
+Pastikan database yang Anda tulis di `.env` sudah dibuat di phpMyAdmin/MySQL, lalu jalankan:
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-### 7. Optimasi & Refresh Autoload Composer
-```bash
-composer dump-autoload
-php artisan optimize:clear
-```
-
-### 8. Jalankan Server Lokal
+### 6. Jalankan Server Lokal
 ```bash
 php artisan serve
 ```
-Akses aplikasi melalui browser di: `http://127.0.0.1:8000` atau `http://localhost:8000`
+Akses aplikasi melalui browser di: `http://127.0.0.1:8000`
 
 ---
 
-## 🔑 Kredensial Akun Login Demo
-
-Setelah menjalankan `php artisan db:seed`, Anda dapat menggunakan akun demo berikut untuk masuk ke sistem:
-
-| Peran (Role) | Email Login | Password Default | Hak Akses Utama |
-| :--- | :--- | :--- | :--- |
-| 👨‍🎓 **Siswa** | `zainal@gmail.com` | `password` | Buat Pengajuan, Cek QR Code, Notifikasi |
-| 👨‍🏫 **Guru Piket** | `gurupiket@smkn1bangsri.sch.id` | `gurupiket2026` | Verifikasi (Setujui/Tolak), Export Laporan |
-| 👮 **Satpam** | `satpam@smkn1bangsri.sch.id` | `password` | Scan QR Code Gerbang, Konfirmasi Kembali |
-| 👨‍💼 **Admin** | `admin@sch.id` | `password` | Kelola Master Data Siswa/Guru, Jadwal Piket |
-
----
-
-## 📖 Panduan Penggunaan Singkat
+## 📖 Panduan Penggunaan Detail (User Manual)
 
 ### 👨‍🎓 1. Panduan untuk SISWA
-1. **Buat Pengajuan**: Login &rarr; Klik tombol **"+" (Buat Pengajuan)** &rarr; Isi Kategori, Lokasi, Alasan, Jam Keluar & Kembali &rarr; Kirim.
-2. **Lihat Kode QR**: Buka menu **"Riwayat"** &rarr; Jika status **Disetujui** (Hijau), klik pengajuan untuk melihat Kode QR Aktif.
-3. **Di Pos Satpam**: Tunjukkan Kode QR ke Satpam saat keluar gerbang. Saat kembali ke sekolah, laporkan diri ke Satpam untuk dikonfirmasi **Selesai**.
+1. **Login:** Masuk menggunakan NIS dan password default (`password`).
+2. **Buat Pengajuan:** 
+   - Klik tombol **"+ Buat Pengajuan"** di Dashboard.
+   - Pilih Kategori (Sakit/Izin/Keperluan Sekolah), isi Lokasi, Alasan, serta estimasi Jam Keluar dan Jam Kembali.
+   - Klik **Kirim**. Status akan berubah menjadi *"Menunggu"*.
+3. **Cek Status & QR Code:**
+   - Buka menu **"Riwayat Pengajuan"**.
+   - Jika status sudah **"Disetujui"** (Badge Hijau), klik tombol **"Lihat Detail"** atau **"Lihat QR Code"**.
+4. **Proses di Gerbang:** Tunjukkan QR Code di layar HP Anda kepada Satpam saat keluar. Saat kembali ke sekolah, lapor ke Satpam untuk di-konfirmasi "Selesai".
 
 ### 👨‍🏫 2. Panduan untuk GURU PIKET
-1. **Memverifikasi Pengajuan**: Login &rarr; Buka menu **"Verifikasi"** &rarr; Klik **"Proses"** &rarr; Klik **"Setujui"** (terbit QR) atau **"Tolak"** (isi alasan).
-2. **Cetak Laporan**: Menu **"Laporan"** &rarr; Atur Filter Tanggal/Status &rarr; Klik **"Export PDF"** / **"Export Excel"**.
+1. **Verifikasi Pengajuan:**
+   - Login dan buka menu **"Verifikasi Dispensasi"**.
+   - Lihat daftar pengajuan berstatus *"Menunggu"*.
+   - Klik **"Proses"**. Anda bisa memilih **"Setujui"** (sistem akan otomatis membuat QR Code) atau **"Tolak"** (wajib mengisi alasan penolakan).
+2. **Monitoring:** Guru piket dapat memantau siswa yang sedang keluar di Dashboard untuk memastikan tidak ada yang melebihi batas waktu.
 
 ### 👮‍♂️ 3. Panduan untuk SATPAM
-1. **Scan QR Siswa Keluar**: Buka menu **"Scan QR"** &rarr; Arahkan kamera ke QR Code siswa &rarr; Sistem mencatat siswa keluar (QR hanya bisa di-scan 1x).
-2. **Konfirmasi Siswa Kembali**: Buka Dashboard Satpam &rarr; Tabel **"Siswa Sedang Keluar"** &rarr; Klik **"Konfirmasi Kembali"**.
+1. **Izinkan Kamera:** Saat pertama kali membuka menu **"Scan QR"**, browser akan meminta izin akses kamera. Klik **"Allow" / "Izinkan"**.
+2. **Scan Saat Siswa Keluar:**
+   - Arahkan kamera ke QR Code siswa.
+   - Jika valid, sistem akan berbunyi/bernotifikasi **"✅ Siswa berhasil dicatat KELUAR"**. 
+   - *Catatan:* QR Code hanya bisa di-scan **1 kali**. Scan kedua akan ditolak.
+3. **Konfirmasi Saat Siswa Kembali:**
+   - Buka Dashboard Satpam, lihat tabel **"Siswa Sedang Keluar"**.
+   - Saat siswa tiba, cari nama siswa tersebut dan klik tombol **"Konfirmasi Kembali"**.
+   - Sistem akan otomatis mengecek apakah siswa terlambat atau tepat waktu.
+
+### 👨‍💼 4. Panduan untuk ADMIN
+1. **Manajemen Data:** Admin dapat melihat data Siswa, Guru, dan Jadwal Piket di menu sidebar.
+2. **Sinkronisasi SiPintu:** 
+   - Buka menu **"Sinkronisasi SiPintu"**.
+   - Klik **"Test Koneksi"** untuk memastikan API sekolah aktif.
+   - Klik **"Sinkronisasi"** untuk menarik data terbaru siswa/guru agar akun login mereka otomatis terbuat/terupdate.
+
+---
+
+## ⚠️ Troubleshooting (Pemecahan Masalah)
+
+| Masalah | Solusi |
+| :--- | :--- |
+| **QR Code tidak muncul (Broken Image)** | Pastikan Anda sudah menjalankan `php artisan storage:link`. Periksa folder `public/storage`. |
+| **Kamera Scanner Satpam tidak menyala** | Pastikan membuka aplikasi via `https://` (di production) atau `http://localhost` (di local). Browser memblokir kamera pada `http://` dengan IP address (misal: `http://192.168.x.x`). |
+| **Error "Class not found" setelah clone** | Jalankan `composer dump-autoload` dan `composer install` kembali. |
+| **Gagal Sinkronisasi SiPintu (Timeout)** | Pastikan server memiliki koneksi internet stabil. Cek log di `storage/logs/laravel.log` untuk detail error API. |
+| **Halaman tampil berantakan (CSS tidak load)** | Jalankan `npm run build` atau pastikan CDN Tailwind CSS tidak diblokir oleh jaringan sekolah. |
+
+---
+
+## 📂 Struktur Folder Penting
+```text
+├── app/
+│   ├── Http/Controllers/   # Logika pengendali (Siswa, Guru, Satpam, Admin)
+│   ├── Models/             # Model database (User, Siswa, Dispensasi, dll)
+│   └── Services/           # Logika bisnis kompleks (SipintuService, QR Generator)
+├── database/
+│   ├── migrations/         # Skema tabel database
+│   └── seeders/            # Data dummy untuk pengujian
+├── resources/
+│   └── views/              # File tampilan Blade (UI)
+├── routes/
+│   └── web.php             # Definisi URL dan routing aplikasi
+└── public/
+    └── storage/            # Folder untuk menyimpan file QR Code & Upload
+```
 
 ---
 
 © 2026 **DIDISPEN - SMKN 1 Bangsri**. All rights reserved.  
-Developed by **By 3M** (Maulana Fahri Oktavian • Muhammad Sabrian Nuh • Muhammad Zainal Arief).
+Developed by **By 3M** *(Maulana Fahri Oktavian • Muhammad Sabrian Nuh • Muhammad Zainal Arief)*.
+
+--- 
+
+### 💡 **Apa yang diperbaiki dari versi sebelumnya?**
+1. **Menambahkan "Fitur Utama"** agar pembaca langsung tahu keunggulan sistem.
+2. **Detail Instalasi** ditambah dengan `npm install` dan penjelasan `.env` yang lebih jelas.
+3. **Panduan Pengguna** dipecah menjadi langkah-langkah *step-by-step* yang sangat detail (termasuk instruksi "Izinkan Kamera" untuk satpam yang sering jadi masalah utama).
+4. **Menambahkan Tabel Troubleshooting** untuk mengantisipasi pertanyaan umum saat deployment atau penggunaan.
+5. **Menambahkan Struktur Folder** untuk memudahkan developer baru yang ingin mengembangkan kode.
