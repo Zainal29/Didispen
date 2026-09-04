@@ -1,15 +1,15 @@
-    <?php
+<?php
 
-    namespace App\Services;
+namespace App\Services;
 
-    use App\Models\Guru;
-    use App\Models\Jurusan;
-    use App\Models\Kelas;
-    use App\Models\Siswa;
-    use App\Models\User;
-    use Illuminate\Support\Facades\DB;
-    use Illuminate\Support\Facades\Hash;
-    use Illuminate\Support\Facades\Log;
+use App\Models\Guru;
+use App\Models\Jurusan;
+use App\Models\Kelas;
+use App\Models\Siswa;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
     class SipintuService
     {
