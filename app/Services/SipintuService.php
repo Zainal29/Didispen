@@ -19,7 +19,13 @@ class SipintuService
     ) {}
 
     /**
-     * Resolve password dari API.
+     * ==========================================================
+     * RESOLVE PASSWORD
+     * ==========================================================
+     *
+     * Password hanya dibuat ketika user BARU.
+     *
+     * User yang sudah ada tidak akan di-hash ulang setiap sync.
      */
     private function resolvePasswordHash(
         array $item,
@@ -46,7 +52,9 @@ class SipintuService
     }
 
     /**
-     * Ubah berbagai format menjadi boolean.
+     * ==========================================================
+     * BOOLEAN NORMALIZER
+     * ==========================================================
      */
     private function toBoolean(mixed $value): ?bool
     {
@@ -76,6 +84,8 @@ class SipintuService
             'ya',
             'yes',
             'terdaftar',
+            'masih aktif',
+            'siswa aktif',
         ], true)) {
             return true;
         }
@@ -87,11 +97,17 @@ class SipintuService
             'no',
             'nonaktif',
             'tidak aktif',
+            'non aktif',
+            'non-aktif',
             'inactive',
             'alumni',
             'lulus',
             'keluar',
             'berhenti',
+            'dikeluarkan',
+            'drop out',
+            'pindah',
+            'mutasi',
         ], true)) {
             return false;
         }
@@ -100,7 +116,46 @@ class SipintuService
     }
 
     /**
-     * Ekstrak nama kelas dari payload data siswa.
+     * ==========================================================
+     * EXTRACT NIS
+     * ==========================================================
+     */
+    private function extractNis(array $item): string
+    {
+        return trim((string) (
+            $item['nis']
+            ?? $item['nis_nip']
+            ?? $item['nisn']
+            ?? data_get($item, 'student.nis')
+            ?? data_get($item, 'siswa.nis')
+            ?? data_get($item, 'data.nis')
+            ?? ''
+        ));
+    }
+
+    /**
+     * ==========================================================
+     * EXTRACT NAMA
+     * ==========================================================
+     */
+    private function extractNama(array $item): string
+    {
+        return trim((string) (
+            $item['nama_lengkap']
+            ?? $item['name']
+            ?? $item['nama']
+            ?? data_get($item, 'student.nama')
+            ?? data_get($item, 'student.nama_lengkap')
+            ?? data_get($item, 'siswa.nama')
+            ?? data_get($item, 'data.nama')
+            ?? ''
+        ));
+    }
+
+    /**
+     * ==========================================================
+     * EXTRACT NAMA KELAS
+     * ==========================================================
      */
     private function extractNamaKelas(array $item): string
     {
@@ -111,6 +166,7 @@ class SipintuService
             ?? data_get($item, 'nama_rombel')
             ?? data_get($item, 'student.kelas')
             ?? data_get($item, 'student.nama_kelas')
+            ?? data_get($item, 'student.rombel')
             ?? data_get($item, 'siswa.kelas')
             ?? data_get($item, 'data.kelas')
             ?? '';
@@ -130,88 +186,105 @@ class SipintuService
 
     /**
      * ==========================================================
-     * CEK SISWA AKTIF (FAIL-CLOSED)
+     * NORMALIZE KEY
+     * ==========================================================
+     */
+    private function normalizeKey(?string $value): string
+    {
+        return strtolower(trim((string) $value));
+    }
+
+    /**
+     * ==========================================================
+     * CEK SISWA AKTIF
      * ==========================================================
      *
-     * Aturan Validasi Ketat:
-     * 1. Cek kelengkapan NIS dan Nama.
-     * 2. Cek flag boolean alumni / is_alumni (Root & Nested) -> Jika true, tolak langsung.
-     * 3. Cek field status teks (status, status_siswa, status_pendidikan, student_status, dll).
-     * 4. Validasi kelas: tidak boleh kosong, tidak boleh berstatus alumni/lulus,
-     *    dan harus memiliki pattern tingkat kelas valid (X, XI, atau XII).
-     * 5. Cek flag status aktif boolean (status_aktif, is_active, dll).
-     * 6. FAIL-CLOSED: Jika tidak ada bukti status aktif yang valid, tolak data.
+     * SECURITY RULE:
+     *
+     * Data hanya boleh masuk jika:
+     *
+     * 1. NIS dan nama tersedia.
+     * 2. Tidak ada flag alumni.
+     * 3. Tidak ada status nonaktif/alumni/lulus/keluar.
+     * 4. Kelas valid X/XI/XII.
+     * 5. Ada bukti eksplisit bahwa siswa aktif.
+     *
+     * Jika status aktif tidak dapat dikonfirmasi:
+     * -> DATA DITOLAK.
      */
-    private function isStudentActive(array $item, ?string &$reason = null): bool
-    {
-        $reason = 'Status aktif tidak dapat diverifikasi (FAIL-CLOSED)';
+    private function isStudentActive(
+        array $item,
+        ?string &$reason = null
+    ): bool {
+        $reason = 'Status aktif tidak dapat dikonfirmasi';
 
         /*
-         * ----------------------------------------------------------
-         * 1. IDENTITAS DASAR
-         * ----------------------------------------------------------
+         * ======================================================
+         * 1. IDENTITAS
+         * ======================================================
          */
-        $nis = trim((string) (
-            $item['nis']
-            ?? $item['nis_nip']
-            ?? $item['nisn']
-            ?? data_get($item, 'student.nis')
-            ?? data_get($item, 'data.nis')
-            ?? ''
-        ));
+        $nis = $this->extractNis($item);
+        $nama = $this->extractNama($item);
 
-        $nama = trim((string) (
-            $item['nama_lengkap']
-            ?? $item['name']
-            ?? $item['nama']
-            ?? data_get($item, 'student.nama')
-            ?? data_get($item, 'data.nama')
-            ?? ''
-        ));
+        if ($nis === '') {
+            $reason = 'NIS kosong';
+            return false;
+        }
 
-        if ($nis === '' || $nama === '') {
-            $reason = 'NIS atau Nama kosong';
+        if ($nama === '') {
+            $reason = 'Nama kosong';
             return false;
         }
 
         /*
-         * ----------------------------------------------------------
-         * 2. PRIORITAS 1: FLAG ALUMNI (ROOT & NESTED)
-         * ----------------------------------------------------------
+         * ======================================================
+         * 2. FLAG ALUMNI
+         * ======================================================
          */
-        $alumniKeys = [
+        $alumniFields = [
             'alumni',
             'is_alumni',
             'status_alumni',
             'isAlumni',
             'is_lulus',
             'lulus',
+
             'student.alumni',
             'student.is_alumni',
             'student.status_alumni',
+            'student.is_lulus',
+
             'siswa.alumni',
             'siswa.is_alumni',
+            'siswa.status_alumni',
+            'siswa.is_lulus',
+
             'peserta_didik.alumni',
             'peserta_didik.is_alumni',
+
             'data.alumni',
             'data.is_alumni',
         ];
 
-        foreach ($alumniKeys as $key) {
-            $val = data_get($item, $key);
-            if ($val !== null) {
-                $isAlumni = $this->toBoolean($val);
-                if ($isAlumni === true) {
-                    $reason = 'Field alumni = true';
-                    return false;
-                }
+        foreach ($alumniFields as $field) {
+            $value = data_get($item, $field);
+
+            if ($value === null) {
+                continue;
+            }
+
+            $boolean = $this->toBoolean($value);
+
+            if ($boolean === true) {
+                $reason = "Field {$field} menunjukkan ALUMNI";
+                return false;
             }
         }
 
         /*
-         * ----------------------------------------------------------
-         * 3. PRIORITAS 2: STATUS TEKS (ROOT & NESTED)
-         * ----------------------------------------------------------
+         * ======================================================
+         * 3. STATUS TEKS
+         * ======================================================
          */
         $statusFields = [
             'status',
@@ -223,12 +296,19 @@ class SipintuService
             'status_pendidikan',
             'status_belajar',
             'keterangan_status',
-            'keterangan',
+
             'student.status',
             'student.student_status',
             'student.status_pendidikan',
+            'student.status_keaktifan',
+
             'siswa.status',
+            'siswa.status_siswa',
+            'siswa.status_pendidikan',
+
             'peserta_didik.status',
+            'peserta_didik.status_pendidikan',
+
             'data.status',
             'data.student_status',
             'data.status_pendidikan',
@@ -236,8 +316,10 @@ class SipintuService
 
         $nonActiveKeywords = [
             'alumni',
+            'alumnus',
             'lulus',
             'lulusan',
+            'tamat',
             'tidak aktif',
             'nonaktif',
             'non aktif',
@@ -247,12 +329,10 @@ class SipintuService
             'berhenti',
             'dikeluarkan',
             'drop out',
-            'do',
+            'dropout',
             'pindah',
-            'meninggal',
             'mutasi',
-            'alumnus',
-            'tamat',
+            'meninggal',
         ];
 
         $activeKeywords = [
@@ -266,125 +346,382 @@ class SipintuService
         ];
 
         $hasExplicitActiveText = false;
-        $hasUnknownStatusText = false;
-        $unknownStatusSample = '';
+        $hasUnknownStatus = false;
+        $unknownStatus = '';
 
         foreach ($statusFields as $field) {
-            $val = data_get($item, $field);
-            if ($val === null || is_array($val)) {
+            $value = data_get($item, $field);
+
+            if ($value === null || is_array($value)) {
                 continue;
             }
 
-            $rawText = trim((string) $val);
-            $statusText = strtolower($rawText);
+            $text = trim((string) $value);
 
-            if ($statusText === '') {
+            if ($text === '') {
                 continue;
             }
 
-            // Cek jika status adalah nonaktif/alumni
-            if (in_array($statusText, $nonActiveKeywords, true)) {
-                $reason = "Status: {$rawText}";
+            $lower = strtolower($text);
+
+            /*
+             * Status angka / boolean.
+             */
+            $boolean = $this->toBoolean($value);
+
+            if ($boolean === false) {
+                $reason = "Status {$field} = {$text}";
                 return false;
             }
 
-            foreach ($nonActiveKeywords as $badKeyword) {
-                if ($statusText === $badKeyword || str_starts_with($statusText, $badKeyword . ' ') || str_ends_with($statusText, ' ' . $badKeyword)) {
-                    $reason = "Status: {$rawText}";
+            if ($boolean === true) {
+                $hasExplicitActiveText = true;
+                continue;
+            }
+
+            /*
+             * Cek status nonaktif lebih dahulu.
+             */
+            foreach ($nonActiveKeywords as $badWord) {
+                if (
+                    $lower === $badWord
+                    || str_contains($lower, $badWord)
+                ) {
+                    $reason = "Status {$field}: {$text}";
                     return false;
                 }
             }
 
-            // Cek jika status teks positif
-            if (in_array($statusText, $activeKeywords, true)) {
-                $hasExplicitActiveText = true;
-            } else {
-                $hasUnknownStatusText = true;
-                $unknownStatusSample = $rawText;
+            /*
+             * Cek status aktif.
+             */
+            foreach ($activeKeywords as $activeWord) {
+                if (
+                    $lower === $activeWord
+                    || str_contains($lower, $activeWord)
+                ) {
+                    $hasExplicitActiveText = true;
+                    break;
+                }
+            }
+
+            if (! $hasExplicitActiveText) {
+                $hasUnknownStatus = true;
+                $unknownStatus = $text;
             }
         }
 
-        if ($hasUnknownStatusText && ! $hasExplicitActiveText) {
-            $reason = "Status tidak valid / tidak dikenal: {$unknownStatusSample}";
+        /*
+         * Jika ada status tidak dikenal dan tidak ada bukti aktif,
+         * jangan masukkan data.
+         */
+        if ($hasUnknownStatus && ! $hasExplicitActiveText) {
+            $reason = "Status tidak dikenal: {$unknownStatus}";
             return false;
         }
 
         /*
-         * ----------------------------------------------------------
-         * 4. PRIORITAS 3: VALIDASI KELAS (X, XI, XII)
-         * ----------------------------------------------------------
+         * ======================================================
+         * 4. VALIDASI KELAS
+         * ======================================================
          */
         $namaKelas = $this->extractNamaKelas($item);
 
         if ($namaKelas === '') {
-            $reason = 'Kelas kosong atau tidak terdaftar';
+            $reason = 'Kelas kosong';
             return false;
         }
 
-        $lowerKelas = strtolower($namaKelas);
-        foreach (['alumni', 'lulus', 'keluar', 'nonaktif', 'non aktif', 'drop out', 'do', 'pindah', 'mutasi'] as $badWord) {
-            if (str_contains($lowerKelas, $badWord)) {
-                $reason = "Kelas: {$namaKelas}";
+        $kelasLower = strtolower($namaKelas);
+
+        foreach ([
+            'alumni',
+            'lulus',
+            'lulusan',
+            'keluar',
+            'nonaktif',
+            'non aktif',
+            'non-aktif',
+            'drop out',
+            'dropout',
+            'pindah',
+            'mutasi',
+        ] as $badWord) {
+            if (str_contains($kelasLower, $badWord)) {
+                $reason = "Kelas menunjukkan data tidak aktif: {$namaKelas}";
                 return false;
             }
         }
 
-        // Kelas harus memiliki tingkat valid: X, XI, atau XII
-        if (! preg_match('/^(XII|XI|X)(?:\s+|-|_|\.|\/|$)/i', $namaKelas)) {
-            $reason = "Tingkat kelas tidak valid (bukan X, XI, XII): {$namaKelas}";
+        /*
+         * Kelas harus X / XI / XII.
+         */
+        if (! preg_match(
+            '/^(XII|XI|X)(?:\s+|-|_|\.|\/|$)/i',
+            $namaKelas
+        )) {
+            $reason = "Tingkat kelas tidak valid: {$namaKelas}";
             return false;
         }
 
         /*
-         * ----------------------------------------------------------
-         * 5. PRIORITAS 4: STATUS AKTIF BOOLEAN (ROOT & NESTED)
-         * ----------------------------------------------------------
+         * ======================================================
+         * 5. STATUS AKTIF BOOLEAN
+         * ======================================================
          */
-        $statusAktifFields = [
+        $activeFields = [
             'status_aktif',
             'is_active',
             'aktif',
             'active',
             'status_active',
             'aktif_status',
+
             'student.status_aktif',
             'student.is_active',
+            'student.aktif',
+            'student.active',
+
             'siswa.status_aktif',
             'siswa.is_active',
+            'siswa.aktif',
+            'siswa.active',
+
             'peserta_didik.status_aktif',
             'peserta_didik.is_active',
+
             'data.status_aktif',
             'data.is_active',
         ];
 
         $hasExplicitActiveBool = false;
 
-        foreach ($statusAktifFields as $field) {
-            $val = data_get($item, $field);
-            if ($val !== null) {
-                $bool = $this->toBoolean($val);
-                if ($bool === false) {
-                    $reason = "Field {$field} = false";
-                    return false;
-                }
-                if ($bool === true) {
-                    $hasExplicitActiveBool = true;
-                }
+        foreach ($activeFields as $field) {
+            $value = data_get($item, $field);
+
+            if ($value === null) {
+                continue;
+            }
+
+            $boolean = $this->toBoolean($value);
+
+            if ($boolean === false) {
+                $reason = "Field {$field} = false";
+                return false;
+            }
+
+            if ($boolean === true) {
+                $hasExplicitActiveBool = true;
             }
         }
 
         /*
-         * ----------------------------------------------------------
-         * 6. EVALUASI AKHIR (FAIL-CLOSED)
-         * ----------------------------------------------------------
+         * ======================================================
+         * 6. FINAL SECURITY CHECK
+         * ======================================================
+         *
+         * JANGAN gunakan $namaKelas sebagai alasan siswa aktif.
+         *
+         * Alumni bisa saja masih memiliki kelas X/XI/XII di API
+         * tetapi status sebenarnya sudah tidak aktif.
          */
-        if ($hasExplicitActiveBool || $hasExplicitActiveText || $namaKelas !== '') {
+        if (
+            $hasExplicitActiveBool
+            || $hasExplicitActiveText
+        ) {
             $reason = 'Aktif';
             return true;
         }
 
-        $reason = 'Status aktif tidak dapat dikonfirmasi (FAIL-CLOSED)';
+        $reason = 'Tidak ada bukti eksplisit bahwa siswa aktif';
+
         return false;
+    }
+
+    /**
+     * ==========================================================
+     * EKSTRAK JURUSAN
+     * ==========================================================
+     */
+    private function extractJurusan(array $item, string $namaKelas): array
+    {
+        $kelasData = $item['kelas']
+            ?? $item['classroom']
+            ?? $item['nama_kelas']
+            ?? $item['rombel']
+            ?? data_get($item, 'student.kelas')
+            ?? '';
+
+        $jurusanData = $item['jurusan']
+            ?? $item['nama_jurusan']
+            ?? $item['kode_jurusan']
+            ?? (
+                is_array($kelasData)
+                    ? (
+                        $kelasData['jurusan']
+                        ?? $kelasData['major']
+                        ?? ''
+                    )
+                    : ''
+            );
+
+        $kode = '';
+        $nama = '';
+
+        if (is_array($jurusanData)) {
+            $kode = trim((string) (
+                $jurusanData['kode']
+                ?? $jurusanData['kode_jurusan']
+                ?? $jurusanData['code']
+                ?? ''
+            ));
+
+            $nama = trim((string) (
+                $jurusanData['nama']
+                ?? $jurusanData['nama_jurusan']
+                ?? $jurusanData['name']
+                ?? ''
+            ));
+        } else {
+            $nama = trim((string) $jurusanData);
+
+            $kode = trim((string) (
+                $item['kode_jurusan']
+                ?? ''
+            ));
+        }
+
+        /*
+         * Jika jurusan tidak tersedia, ambil dari kelas.
+         *
+         * Contoh:
+         * X PPLG 1
+         * XI MPLB 2
+         * XII PM 1
+         */
+        if (
+            $kode === ''
+            && $nama === ''
+            && preg_match(
+                '/^(?:XII|XI|X)\s+([A-Z0-9]+)/i',
+                $namaKelas,
+                $match
+            )
+        ) {
+            $kode = strtoupper($match[1]);
+
+            $nama = [
+                'PPLG' => 'Pengembangan Perangkat Lunak dan Gim',
+                'MPLB' => 'Manajemen Perkantoran dan Layanan Bisnis',
+                'PM'   => 'Pemasaran',
+                'AKL'  => 'Akuntansi Keuangan Lembaga',
+                'TO'   => 'Teknik Otomotif',
+            ][$kode] ?? $kode;
+        }
+
+        return [
+            'kode' => $kode,
+            'nama' => $nama,
+        ];
+    }
+
+    /**
+     * ==========================================================
+     * NOMOR TELEPON
+     * ==========================================================
+     */
+    private function extractPhone(array $item): ?string
+    {
+        $phone = data_get($item, 'no_telepon')
+            ?? data_get($item, 'hp')
+            ?? data_get($item, 'telepon')
+            ?? data_get($item, 'no_telp')
+            ?? data_get($item, 'no_hp')
+            ?? data_get($item, 'nomor_telepon')
+            ?? data_get($item, 'nomor_hp')
+            ?? data_get($item, 'phone')
+            ?? data_get($item, 'phone_number')
+            ?? data_get($item, 'whatsapp')
+            ?? data_get($item, 'wa')
+            ?? data_get($item, 'mobile')
+            ?? data_get($item, 'user.phone')
+            ?? data_get($item, 'user.no_telepon');
+
+        if (! filled($phone)) {
+            return null;
+        }
+
+        $phone = preg_replace(
+            '/[^0-9+]/',
+            '',
+            trim((string) $phone)
+        );
+
+        return $phone !== '' ? $phone : null;
+    }
+
+    /**
+     * ==========================================================
+     * ALAMAT
+     * ==========================================================
+     */
+    private function extractAddress(array $item): ?string
+    {
+        $address = data_get($item, 'alamat')
+            ?? data_get($item, 'address')
+            ?? data_get($item, 'alamat_lengkap')
+            ?? data_get($item, 'full_address')
+            ?? data_get($item, 'domisili');
+
+        return filled($address)
+            ? trim((string) $address)
+            : null;
+    }
+
+    /**
+     * ==========================================================
+     * NONAKTIFKAN / BERSIHKAN SISWA YANG SUDAH TIDAK AKTIF
+     * ==========================================================
+     *
+     * Jika siswa lama tidak lagi muncul sebagai aktif:
+     *
+     * - Jika belum memiliki dispensasi -> hapus siswa + user.
+     * - Jika sudah memiliki dispensasi -> jangan hapus histori,
+     *   cukup status_aktif = false.
+     */
+    private function cleanupInactiveStudents(array $nisList): void
+    {
+        if (empty($nisList)) {
+            return;
+        }
+
+        $existingStudents = Siswa::withCount('dispensasi')
+            ->with('user')
+            ->whereIn('nis_nip', $nisList)
+            ->get();
+
+        foreach ($existingStudents as $siswa) {
+            try {
+                if ((int) $siswa->dispensasi_count === 0) {
+                    $user = $siswa->user;
+
+                    $siswa->delete();
+
+                    if ($user) {
+                        $user->delete();
+                    }
+                } else {
+                    $siswa->update([
+                        'status_aktif' => false,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning(
+                    "Gagal cleanup siswa NIS {$siswa->nis_nip}: "
+                    . $e->getMessage()
+                );
+            }
+        }
     }
 
     /**
@@ -399,7 +736,7 @@ class SipintuService
             ini_set('memory_limit', '512M');
 
             Log::info('==========================================');
-            Log::info('Memulai sinkronisasi SISWA AKTIF...');
+            Log::info('MEMULAI SINKRONISASI SISWA AKTIF');
             Log::info('==========================================');
 
             $apiResult = $this->apiService->getSiswaData();
@@ -429,7 +766,7 @@ class SipintuService
                 return [
                     'success' => true,
                     'message' =>
-                        'Koneksi SiPintu berhasil, namun tidak ada data siswa yang ditemukan.',
+                        'Koneksi SiPintu berhasil, namun tidak ada data siswa.',
                     'stats' => [
                         'total' => 0,
                         'inserted' => 0,
@@ -443,12 +780,13 @@ class SipintuService
 
             /*
              * ======================================================
-             * FILTER AWAL SISWA (HANYA SISWA AKTIF)
+             * FILTER DATA API
              * ======================================================
              */
-
             $jumlahDariApi = count($studentsData);
+
             $activeStudents = [];
+            $skippedNis = [];
             $jumlahDilewati = 0;
 
             foreach ($studentsData as $item) {
@@ -457,56 +795,73 @@ class SipintuService
                     continue;
                 }
 
-                $reason = '';
-                $nis = trim((string) (
-                    $item['nis']
-                    ?? $item['nis_nip']
-                    ?? $item['nisn']
-                    ?? data_get($item, 'student.nis')
-                    ?? '-'
-                ));
+                $nis = $this->extractNis($item);
+                $nama = $this->extractNama($item);
 
-                $nama = trim((string) (
-                    $item['nama_lengkap']
-                    ?? $item['name']
-                    ?? $item['nama']
-                    ?? data_get($item, 'student.nama')
-                    ?? 'Tanpa Nama'
-                ));
+                $reason = '';
 
                 if ($this->isStudentActive($item, $reason)) {
                     $activeStudents[] = $item;
-                } else {
-                    $jumlahDilewati++;
-                    Log::info("SKIP: NIS {$nis} ({$nama}) - {$reason}");
-
-                    // Cleanup / Deaktivasi data alumni yang sebelumnya sudah terlanjur ada di database lokal
-                    if ($nis !== '' && $nis !== '-') {
-                        $existingSiswa = Siswa::where('nis_nip', $nis)->first();
-                        if ($existingSiswa) {
-                            if ($existingSiswa->dispensasi()->doesntExist()) {
-                                $userToDelete = $existingSiswa->user;
-                                $existingSiswa->delete();
-                                $userToDelete?->delete();
-                            } else {
-                                $existingSiswa->update(['status_aktif' => false]);
-                            }
-                        }
-                    }
+                    continue;
                 }
+
+                $jumlahDilewati++;
+
+                if ($nis !== '') {
+                    $skippedNis[] = $nis;
+                }
+
+                /*
+                 * Jangan masukkan data alumni/nonaktif.
+                 */
+                Log::info(
+                    "SKIP SISWA: NIS {$nis} ({$nama}) - {$reason}"
+                );
             }
+
+            /*
+             * Hapus / nonaktifkan data lokal yang sekarang sudah
+             * terdeteksi bukan siswa aktif.
+             */
+            $skippedNis = array_values(
+                array_unique(
+                    array_filter($skippedNis)
+                )
+            );
+
+            $this->cleanupInactiveStudents($skippedNis);
 
             $totalStudents = count($activeStudents);
 
-            Log::info("Total data siswa dari API: {$jumlahDariApi}");
-            Log::info("Total siswa AKTIF: {$totalStudents}");
-            Log::info("Total data dilewati: {$jumlahDilewati}");
+            Log::info(
+                "Total data dari API: {$jumlahDariApi}"
+            );
 
+            Log::info(
+                "Total SISWA AKTIF: {$totalStudents}"
+            );
+
+            Log::info(
+                "Total dilewati: {$jumlahDilewati}"
+            );
+
+            /*
+             * ======================================================
+             * SAFETY STOP
+             * ======================================================
+             *
+             * Jika API mengirim data tetapi tidak ada satu pun
+             * yang lolos filter, jangan menghapus massal seluruh
+             * database siswa.
+             */
             if ($totalStudents === 0) {
                 return [
                     'success' => true,
                     'message' =>
-                        "API mengirim {$jumlahDariApi} data, tetapi tidak ada data yang lolos sebagai siswa aktif ({$jumlahDilewati} dilewati).",
+                        "API mengirim {$jumlahDariApi} data, "
+                        . "tetapi tidak ada data yang dapat "
+                        . "dikonfirmasi sebagai siswa aktif. "
+                        . "Tidak dilakukan sinkronisasi siswa baru.",
                     'stats' => [
                         'total' => 0,
                         'inserted' => 0,
@@ -531,12 +886,49 @@ class SipintuService
 
             /*
              * ======================================================
-             * PROSES BATCH SISWA AKTIF
+             * CACHE JURUSAN
+             * ======================================================
+             *
+             * Hanya ambil sekali.
+             */
+            $jurusanMap = [];
+
+            Jurusan::query()
+                ->get([
+                    'id',
+                    'kode_jurusan',
+                    'nama_jurusan',
+                ])
+                ->each(function (Jurusan $jurusan) use (&$jurusanMap) {
+                    $kode = $this->normalizeKey(
+                        $jurusan->kode_jurusan
+                    );
+
+                    $nama = $this->normalizeKey(
+                        $jurusan->nama_jurusan
+                    );
+
+                    if ($kode !== '') {
+                        $jurusanMap['kode:' . $kode] = $jurusan;
+                    }
+
+                    if ($nama !== '') {
+                        $jurusanMap['nama:' . $nama] = $jurusan;
+                    }
+                });
+
+            /*
+             * ======================================================
+             * BATCH PROCESS
              * ======================================================
              */
-
             $batchSize = 100;
-            $batches = array_chunk($activeStudents, $batchSize);
+
+            $batches = array_chunk(
+                $activeStudents,
+                $batchSize
+            );
+
             $totalBatches = count($batches);
 
             foreach ($batches as $batchIndex => $batch) {
@@ -552,213 +944,262 @@ class SipintuService
                 DB::transaction(
                     function () use (
                         $batch,
-                        &$stats
+                        &$stats,
+                        &$jurusanMap
                     ) {
+
+                        /*
+                         * ==================================================
+                         * PRELOAD USER BATCH
+                         * ==================================================
+                         */
+                        $nisList = [];
+                        $emailList = [];
+
+                        foreach ($batch as $item) {
+                            if (! is_array($item)) {
+                                continue;
+                            }
+
+                            $nis = $this->extractNis($item);
+
+                            if ($nis === '') {
+                                continue;
+                            }
+
+                            $nisList[] = $nis;
+                            $emailList[] = strtolower(
+                                $nis . '@smkn1bangsri.sch.id'
+                            );
+                        }
+
+                        $nisList = array_values(
+                            array_unique($nisList)
+                        );
+
+                        $emailList = array_values(
+                            array_unique($emailList)
+                        );
+
+                        $users = User::query()
+                            ->where(function ($query) use (
+                                $nisList,
+                                $emailList
+                            ) {
+                                $query
+                                    ->whereIn(
+                                        'nis_nip',
+                                        $nisList
+                                    )
+                                    ->orWhereIn(
+                                        'email',
+                                        $emailList
+                                    );
+                            })
+                            ->get();
+
+                        $userMap = [];
+
+                        foreach ($users as $user) {
+                            if (filled($user->nis_nip)) {
+                                $userMap[
+                                    'nis:' . $this->normalizeKey(
+                                        $user->nis_nip
+                                    )
+                                ] = $user;
+                            }
+
+                            if (filled($user->email)) {
+                                $userMap[
+                                    'email:' . $this->normalizeKey(
+                                        $user->email
+                                    )
+                                ] = $user;
+                            }
+                        }
+
+                        /*
+                         * ==================================================
+                         * PRELOAD SISWA
+                         * ==================================================
+                         */
+                        $userIds = $users
+                            ->pluck('id')
+                            ->filter()
+                            ->values()
+                            ->all();
+
+                        $siswaMap = [];
+
+                        if (! empty($userIds)) {
+                            Siswa::query()
+                                ->whereIn('user_id', $userIds)
+                                ->get()
+                                ->each(
+                                    function (Siswa $siswa) use (
+                                        &$siswaMap
+                                    ) {
+                                        $siswaMap[
+                                            (string) $siswa->user_id
+                                        ] = $siswa;
+                                    }
+                                );
+                        }
+
+                        /*
+                         * ==================================================
+                         * PROSES SISWA
+                         * ==================================================
+                         */
                         foreach ($batch as $index => $item) {
 
                             if (! is_array($item)) {
                                 $stats['failed']++;
+
                                 $stats['errors'][] =
-                                    "Item index {$index} bukan format data yang valid.";
+                                    "Item index {$index} bukan format valid.";
+
                                 continue;
                             }
 
-                            /*
-                             * ==================================================
-                             * IDENTITAS
-                             * ==================================================
-                             */
+                            $nis = $this->extractNis($item);
+                            $nama = $this->extractNama($item);
 
-                            $nis = trim(
-                                (string) (
-                                    $item['nis']
-                                    ?? $item['nis_nip']
-                                    ?? $item['nisn']
-                                    ?? data_get($item, 'student.nis')
-                                    ?? ''
-                                )
-                            );
-
-                            $nama = trim(
-                                (string) (
-                                    $item['nama_lengkap']
-                                    ?? $item['name']
-                                    ?? $item['nama']
-                                    ?? data_get($item, 'student.nama')
-                                    ?? ''
-                                )
-                            );
-
-                            if (! $nis || ! $nama) {
+                            if (
+                                $nis === ''
+                                || $nama === ''
+                            ) {
                                 $stats['failed']++;
+
                                 $stats['errors'][] =
-                                    'Baris '
+                                    "Baris "
                                     . ($index + 1)
-                                    . ': NIS atau Nama kosong.';
+                                    . ": NIS atau Nama kosong.";
+
                                 continue;
                             }
-
-                            $email = strtolower(
-                                $nis
-                                . '@smkn1bangsri.sch.id'
-                            );
 
                             try {
 
                                 /*
                                  * ==================================================
-                                 * KELAS & JURUSAN
+                                 * DATA DASAR
                                  * ==================================================
                                  */
+                                $email = strtolower(
+                                    $nis
+                                    . '@smkn1bangsri.sch.id'
+                                );
 
-                                $kelasData =
-                                    $item['kelas']
-                                    ?? $item['classroom']
-                                    ?? $item['nama_kelas']
-                                    ?? $item['rombel']
-                                    ?? data_get($item, 'student.kelas')
-                                    ?? '';
+                                $namaKelas =
+                                    $this->extractNamaKelas($item);
 
                                 $jurusanData =
-                                    $item['jurusan']
-                                    ?? $item['nama_jurusan']
-                                    ?? $item['kode_jurusan']
-                                    ?? (
-                                        is_array($kelasData)
-                                            ? (
-                                                $kelasData['jurusan']
-                                                ?? $kelasData['major']
-                                                ?? ''
-                                            )
-                                            : ''
+                                    $this->extractJurusan(
+                                        $item,
+                                        $namaKelas
                                     );
 
-                                $namaKelasDariApi = $this->extractNamaKelas($item);
+                                $kodeJurusan =
+                                    trim(
+                                        (string) (
+                                            $jurusanData['kode']
+                                            ?? ''
+                                        )
+                                    );
 
-                                $kodeJurusanDariApi = trim(
-                                    (string) (
-                                        is_array($jurusanData)
-                                            ? (
-                                                $jurusanData['kode']
-                                                ?? $jurusanData['kode_jurusan']
-                                                ?? $jurusanData['code']
-                                                ?? ''
-                                            )
-                                            : (
-                                                $item['kode_jurusan']
-                                                ?? ''
-                                            )
-                                    )
-                                );
-
-                                $namaJurusanDariApi = trim(
-                                    (string) (
-                                        is_array($jurusanData)
-                                            ? (
-                                                $jurusanData['nama']
-                                                ?? $jurusanData['nama_jurusan']
-                                                ?? $jurusanData['name']
-                                                ?? ''
-                                            )
-                                            : $jurusanData
-                                    )
-                                );
-
-                                /*
-                                 * Tebak jurusan dari nama kelas jika kosong.
-                                 */
-                                if (
-                                    ! $namaJurusanDariApi
-                                    && preg_match(
-                                        '/^(?:XII|XI|X)\s+([A-Z0-9]+)/i',
-                                        $namaKelasDariApi,
-                                        $kodeKelas
-                                    )
-                                ) {
-                                    $kodeJurusanDariApi =
-                                        strtoupper(
-                                            $kodeKelas[1]
-                                        );
-
-                                    $namaJurusanDariApi =
-                                        [
-                                            'PPLG' =>
-                                                'Pengembangan Perangkat Lunak dan Gim',
-                                            'MPLB' =>
-                                                'Manajemen Perkantoran dan Layanan Bisnis',
-                                            'PM' =>
-                                                'Pemasaran',
-                                            'AKL' =>
-                                                'Akuntansi Keuangan Lembaga',
-                                            'TO' =>
-                                                'Teknik Otomotif',
-                                        ][$kodeJurusanDariApi]
-                                        ?? $kodeJurusanDariApi;
-                                }
+                                $namaJurusan =
+                                    trim(
+                                        (string) (
+                                            $jurusanData['nama']
+                                            ?? ''
+                                        )
+                                    );
 
                                 /*
                                  * ==================================================
                                  * JURUSAN
                                  * ==================================================
                                  */
-
                                 $jurusanObj = null;
 
-                                if ($kodeJurusanDariApi) {
+                                if ($kodeJurusan !== '') {
                                     $jurusanObj =
-                                        Jurusan::whereRaw(
-                                            'LOWER(TRIM(kode_jurusan)) = ?',
-                                            [
-                                                strtolower(
-                                                    $kodeJurusanDariApi
-                                                ),
-                                            ]
-                                        )->first();
+                                        $jurusanMap[
+                                            'kode:'
+                                            . $this->normalizeKey(
+                                                $kodeJurusan
+                                            )
+                                        ] ?? null;
                                 }
 
                                 if (
                                     ! $jurusanObj
-                                    && $namaJurusanDariApi
+                                    && $namaJurusan !== ''
                                 ) {
                                     $jurusanObj =
-                                        Jurusan::whereRaw(
-                                            'LOWER(TRIM(nama_jurusan)) = ?',
-                                            [
-                                                strtolower(
-                                                    $namaJurusanDariApi
-                                                ),
-                                            ]
-                                        )->first();
+                                        $jurusanMap[
+                                            'nama:'
+                                            . $this->normalizeKey(
+                                                $namaJurusan
+                                            )
+                                        ] ?? null;
                                 }
 
                                 if (
                                     ! $jurusanObj
                                     && (
-                                        $namaJurusanDariApi
-                                        || $kodeJurusanDariApi
+                                        $kodeJurusan !== ''
+                                        || $namaJurusan !== ''
                                     )
                                 ) {
+                                    $kodeFinal =
+                                        strtoupper(
+                                            $kodeJurusan
+                                            ?: substr(
+                                                preg_replace(
+                                                    '/[^A-Za-z0-9]/',
+                                                    '',
+                                                    $namaJurusan
+                                                ),
+                                                0,
+                                                5
+                                            )
+                                        );
+
+                                    $kodeFinal =
+                                        $kodeFinal ?: 'UMUM';
+
+                                    $namaFinal =
+                                        $namaJurusan
+                                        ?: $kodeFinal;
+
                                     $jurusanObj =
                                         Jurusan::create([
                                             'kode_jurusan' =>
-                                                strtoupper(
-                                                    $kodeJurusanDariApi
-                                                    ?: substr(
-                                                        preg_replace(
-                                                            '/[^A-Za-z]/',
-                                                            '',
-                                                            $namaJurusanDariApi
-                                                        ),
-                                                        0,
-                                                        5
-                                                    )
-                                                )
-                                                ?: 'UMUM',
+                                                $kodeFinal,
 
                                             'nama_jurusan' =>
-                                                $namaJurusanDariApi
-                                                ?: $kodeJurusanDariApi,
+                                                $namaFinal,
                                         ]);
+
+                                    /*
+                                     * Masukkan ke cache agar siswa
+                                     * berikutnya tidak query lagi.
+                                     */
+                                    $jurusanMap[
+                                        'kode:'
+                                        . $this->normalizeKey(
+                                            $kodeFinal
+                                        )
+                                    ] = $jurusanObj;
+
+                                    $jurusanMap[
+                                        'nama:'
+                                        . $this->normalizeKey(
+                                            $namaFinal
+                                        )
+                                    ] = $jurusanObj;
                                 }
 
                                 /*
@@ -766,38 +1207,47 @@ class SipintuService
                                  * KELAS
                                  * ==================================================
                                  */
-
                                 $kelasObj = null;
 
                                 if (
-                                    $namaKelasDariApi
+                                    $namaKelas !== ''
                                     && $jurusanObj
                                 ) {
-                                    $kelasObj =
-                                        Kelas::whereRaw(
-                                            'LOWER(TRIM(nama_kelas)) = ?',
-                                            [
-                                                strtolower(
-                                                    $namaKelasDariApi
-                                                ),
-                                            ]
-                                        )
-                                        ->where(
-                                            'jurusan_id',
-                                            $jurusanObj->id
-                                        )
-                                        ->first();
 
+                                    $kelasKey =
+                                        $this->normalizeKey(
+                                            $namaKelas
+                                        );
+
+                                    /*
+                                     * Query hanya untuk kelas yang
+                                     * dibutuhkan. Setelah ditemukan,
+                                     * langsung digunakan kembali.
+                                     */
+                                    $kelasObj =
+                                        Kelas::query()
+                                            ->where(
+                                                'jurusan_id',
+                                                $jurusanObj->id
+                                            )
+                                            ->whereRaw(
+                                                'LOWER(TRIM(nama_kelas)) = ?',
+                                                [$kelasKey]
+                                            )
+                                            ->first();
+
+                                    /*
+                                     * Jika belum ada dengan jurusan
+                                     * tersebut, cari kelas global.
+                                     */
                                     if (! $kelasObj) {
                                         $kelasObj =
-                                            Kelas::whereRaw(
-                                                'LOWER(TRIM(nama_kelas)) = ?',
-                                                [
-                                                    strtolower(
-                                                        $namaKelasDariApi
-                                                    ),
-                                                ],
-                                            )->first();
+                                            Kelas::query()
+                                                ->whereRaw(
+                                                    'LOWER(TRIM(nama_kelas)) = ?',
+                                                    [$kelasKey]
+                                                )
+                                                ->first();
 
                                         if ($kelasObj) {
                                             $kelasObj->update([
@@ -807,26 +1257,29 @@ class SipintuService
                                         }
                                     }
 
+                                    /*
+                                     * Buat kelas baru.
+                                     */
                                     if (! $kelasObj) {
                                         $tingkat = 'X';
 
                                         if (
                                             preg_match(
                                                 '/^(XII|XI|X)\b/i',
-                                                $namaKelasDariApi,
-                                                $tingkatMatch
+                                                $namaKelas,
+                                                $match
                                             )
                                         ) {
                                             $tingkat =
                                                 strtoupper(
-                                                    $tingkatMatch[1]
+                                                    $match[1]
                                                 );
                                         }
 
                                         $kelasObj =
                                             Kelas::create([
                                                 'nama_kelas' =>
-                                                    $namaKelasDariApi,
+                                                    $namaKelas,
 
                                                 'jurusan_id' =>
                                                     $jurusanObj->id,
@@ -837,157 +1290,61 @@ class SipintuService
                                     }
                                 }
 
-                                $kelasFinal = $kelasObj;
-
-                                $jurusanIdFinal =
-                                    $kelasFinal?->jurusan_id
+                                $jurusanId =
+                                    $kelasObj?->jurusan_id
                                     ?? $jurusanObj?->id;
 
                                 /*
                                  * ==================================================
-                                 * TELEPON
+                                 * DATA SISWA
                                  * ==================================================
                                  */
-
-                                $nomorTelepon =
-                                    data_get(
-                                        $item,
-                                        'no_telepon'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'hp'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'telepon'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'no_telp'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'no_hp'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'nomor_telepon'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'nomor_hp'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'phone'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'phone_number'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'whatsapp'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'wa'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'mobile'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'user.phone'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'user.no_telepon'
-                                    );
-
-                                if ($nomorTelepon) {
-                                    $nomorTelepon =
-                                        preg_replace(
-                                            '/[^0-9+]/',
-                                            '',
-                                            trim(
-                                                (string) $nomorTelepon
-                                            )
-                                        );
-                                }
-
-                                /*
-                                 * ==================================================
-                                 * ALAMAT
-                                 * ==================================================
-                                 */
+                                $phone =
+                                    $this->extractPhone($item);
 
                                 $alamat =
-                                    data_get(
-                                        $item,
-                                        'alamat'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'address'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'alamat_lengkap'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'full_address'
-                                    )
-                                    ?? data_get(
-                                        $item,
-                                        'domisili'
-                                    )
-                                    ?? null;
-
-                                /*
-                                 * ==================================================
-                                 * TANGGAL LAHIR
-                                 * ==================================================
-                                 */
+                                    $this->extractAddress($item);
 
                                 $tanggalLahir =
                                     $item['tanggal_lahir']
                                     ?? $item['tgl_lahir']
-                                    ?? null;
-
-                                /*
-                                 * ==================================================
-                                 * PASSWORD
-                                 * ==================================================
-                                 */
-
-                                $passwordHash =
-                                    $this->resolvePasswordHash(
+                                    ?? data_get(
                                         $item,
-                                        'password'
-                                    );
+                                        'student.tanggal_lahir'
+                                    )
+                                    ?? null;
 
                                 /*
                                  * ==================================================
                                  * USER
                                  * ==================================================
                                  */
-
                                 $user =
-                                    User::where(
-                                        'nis_nip',
-                                        $nis
-                                    )
-                                    ->orWhere(
-                                        'email',
-                                        $email
-                                    )
-                                    ->first();
+                                    $userMap[
+                                        'nis:'
+                                        . $this->normalizeKey($nis)
+                                    ]
+                                    ?? $userMap[
+                                        'email:'
+                                        . $this->normalizeKey($email)
+                                    ]
+                                    ?? null;
+
+                                $isNewUser = false;
 
                                 if ($user) {
+
+                                    /*
+                                     * ==================================================
+                                     * USER LAMA
+                                     * ==================================================
+                                     *
+                                     * PENTING:
+                                     * Password TIDAK disentuh.
+                                     *
+                                     * Ini menghindari:
+                                     * Hash::make() x 1.300 setiap sync.
+                                     */
                                     $user->update([
                                         'name' =>
                                             $nama,
@@ -998,15 +1355,25 @@ class SipintuService
                                         'nis_nip' =>
                                             $nis,
 
-                                        'password' =>
-                                            $passwordHash,
-
                                         'role' =>
                                             'siswa',
                                     ]);
 
                                     $stats['updated']++;
+
                                 } else {
+
+                                    /*
+                                     * ==================================================
+                                     * USER BARU
+                                     * ==================================================
+                                     */
+                                    $passwordHash =
+                                        $this->resolvePasswordHash(
+                                            $item,
+                                            'password'
+                                        );
+
                                     $user =
                                         User::create([
                                             'name' =>
@@ -1025,63 +1392,84 @@ class SipintuService
                                                 $nis,
                                         ]);
 
+                                    $isNewUser = true;
+
                                     $stats['inserted']++;
                                 }
+
+                                /*
+                                 * Simpan ke cache user.
+                                 */
+                                $userMap[
+                                    'nis:'
+                                    . $this->normalizeKey($nis)
+                                ] = $user;
+
+                                $userMap[
+                                    'email:'
+                                    . $this->normalizeKey($email)
+                                ] = $user;
 
                                 /*
                                  * ==================================================
                                  * SISWA
                                  * ==================================================
                                  */
-
                                 $siswa =
-                                    Siswa::firstOrNew([
-                                        'user_id' =>
-                                            $user->id,
-                                    ]);
+                                    $siswaMap[
+                                        (string) $user->id
+                                    ]
+                                    ?? null;
 
-                                $siswaData = [
-                                    'nis_nip' =>
-                                        $nis,
+                                if (! $siswa) {
+                                    $siswa =
+                                        new Siswa();
 
-                                    'jurusan_id' =>
-                                        $jurusanIdFinal,
+                                    $siswa->user_id =
+                                        $user->id;
 
-                                    'kelas_id' =>
-                                        $kelasFinal?->id,
+                                    $siswaMap[
+                                        (string) $user->id
+                                    ] = $siswa;
+                                }
 
-                                    'nama_lengkap' =>
-                                        $nama,
+                                $siswa->nis_nip =
+                                    $nis;
 
-                                    'status_aktif' =>
-                                        true,
-                                ];
+                                $siswa->jurusan_id =
+                                    $jurusanId;
+
+                                $siswa->kelas_id =
+                                    $kelasObj?->id;
+
+                                $siswa->nama_lengkap =
+                                    $nama;
+
+                                /*
+                                 * Karena sudah lolos filter aktif.
+                                 */
+                                $siswa->status_aktif =
+                                    true;
 
                                 if (filled($tanggalLahir)) {
-                                    $siswaData[
-                                        'tanggal_lahir'
-                                    ] = $tanggalLahir;
+                                    $siswa->tanggal_lahir =
+                                        $tanggalLahir;
                                 }
 
                                 if (filled($alamat)) {
-                                    $siswaData[
-                                        'alamat'
-                                    ] = $alamat;
+                                    $siswa->alamat =
+                                        $alamat;
                                 }
 
-                                if (filled($nomorTelepon)) {
-                                    $siswaData[
-                                        'no_telepon'
-                                    ] = $nomorTelepon;
+                                if (filled($phone)) {
+                                    $siswa->no_telepon =
+                                        $phone;
                                 }
-
-                                $siswa->fill(
-                                    $siswaData
-                                );
 
                                 $siswa->save();
 
                             } catch (\Throwable $e) {
+
                                 $stats['failed']++;
 
                                 $stats['errors'][] =
@@ -1089,7 +1477,7 @@ class SipintuService
                                     . $e->getMessage();
 
                                 Log::error(
-                                    "Err sync Siswa NIS {$nis}: "
+                                    "ERROR SYNC SISWA NIS {$nis}: "
                                     . $e->getMessage()
                                 );
                             }
@@ -1098,10 +1486,15 @@ class SipintuService
                 );
 
                 /*
-                 * Jeda antar batch & Memory Management.
+                 * Jangan terlalu agresif terhadap API/database.
+                 *
+                 * 100 data -> jeda 0.2 detik.
                  */
-                if ($batchIndex < $totalBatches - 1) {
-                    usleep(500000);
+                if (
+                    $batchIndex
+                    < $totalBatches - 1
+                ) {
+                    usleep(200000);
                 }
 
                 gc_collect_cycles();
@@ -1109,90 +1502,23 @@ class SipintuService
 
             /*
              * ==========================================================
-             * CLEANUP DUPLIKAT KELAS
-             * ==========================================================
-             */
-
-            Kelas::withCount('siswa')
-                ->get()
-                ->groupBy(
-                    fn (Kelas $kelas) =>
-                        $kelas->jurusan_id
-                        . '|'
-                        . strtolower(
-                            trim(
-                                $kelas->nama_kelas
-                            )
-                        )
-                )
-                ->filter(
-                    fn ($group) =>
-                        $group->count() > 1
-                )
-                ->each(
-                    function ($duplicates) {
-
-                        $utama =
-                            $duplicates
-                                ->sortByDesc(
-                                    'siswa_count'
-                                )
-                                ->first();
-
-                        foreach (
-                            $duplicates
-                            as $duplikat
-                        ) {
-                            if (
-                                $duplikat->id
-                                === $utama->id
-                            ) {
-                                continue;
-                            }
-
-                            Siswa::where(
-                                'kelas_id',
-                                $duplikat->id
-                            )->update([
-                                'kelas_id' =>
-                                    $utama->id,
-
-                                'jurusan_id' =>
-                                    $utama->jurusan_id,
-                            ]);
-
-                            $duplikat->delete();
-                        }
-                    }
-                );
-
-            /*
-             * Hapus kelas kosong.
-             */
-            Kelas::whereDoesntHave(
-                'siswa'
-            )->delete();
-
-            /*
-             * Hapus jurusan kosong.
-             */
-            Jurusan::whereDoesntHave(
-                'kelas'
-            )->delete();
-
-            /*
-             * ==========================================================
              * AUDIT LOG
              * ==========================================================
              */
-
             if (auth()->check()) {
-                $this->auditLog->log(
-                    auth()->id(),
-                    'sync_sipintu_siswa',
-                    'siswa',
-                    null
-                );
+                try {
+                    $this->auditLog->log(
+                        auth()->id(),
+                        'sync_sipintu_siswa',
+                        'siswa',
+                        null
+                    );
+                } catch (\Throwable $e) {
+                    Log::warning(
+                        'Gagal membuat audit log sync siswa: '
+                        . $e->getMessage()
+                    );
+                }
             }
 
             /*
@@ -1200,7 +1526,6 @@ class SipintuService
              * SUMMARY
              * ==========================================================
              */
-
             $summaryMsg =
                 "Sinkronisasi Siswa Aktif Selesai: "
                 . "Total {$stats['total']} siswa aktif "
@@ -1261,10 +1586,11 @@ class SipintuService
             ini_set('memory_limit', '256M');
 
             Log::info('==========================================');
-            Log::info('Memulai sinkronisasi guru...');
+            Log::info('MEMULAI SINKRONISASI GURU');
             Log::info('==========================================');
 
-            $apiResult = $this->apiService->getGuruData();
+            $apiResult =
+                $this->apiService->getGuruData();
 
             if (($apiResult['status'] ?? null) === 'error') {
                 return [
@@ -1282,7 +1608,8 @@ class SipintuService
                 ];
             }
 
-            $teachersData = $apiResult['data'] ?? [];
+            $teachersData =
+                $apiResult['data'] ?? [];
 
             if (
                 ! is_array($teachersData)
@@ -1291,7 +1618,8 @@ class SipintuService
                 return [
                     'success' => true,
                     'message' =>
-                        'Koneksi SiPintu berhasil, namun tidak ada data guru yang ditemukan.',
+                        'Koneksi SiPintu berhasil, '
+                        . 'namun tidak ada data guru.',
                     'stats' => [
                         'total' => 0,
                         'inserted' => 0,
@@ -1303,11 +1631,8 @@ class SipintuService
                 ];
             }
 
-            $totalGuru = count($teachersData);
-
-            Log::info(
-                "Total guru dari API: {$totalGuru}"
-            );
+            $totalGuru =
+                count($teachersData);
 
             $stats = [
                 'total' => $totalGuru,
@@ -1335,7 +1660,8 @@ class SipintuService
                             $stats['failed']++;
 
                             $stats['errors'][] =
-                                "Item index {$index} bukan format data yang valid.";
+                                "Item index {$index} "
+                                . "bukan format valid.";
 
                             continue;
                         }
@@ -1343,37 +1669,30 @@ class SipintuService
                         /*
                          * NIP
                          */
-
-                        $nip = trim(
-                            (string) (
-                                $item['nip']
-                                ?? $item['nis_nip']
-                                ?? $item['nip_guru']
-                                ?? $item['no_induk']
-                                ?? $item['employee_id']
-                                ?? $item['id_pegawai']
-                                ?? ''
-                            )
-                        );
+                        $nip = trim((string) (
+                            $item['nip']
+                            ?? $item['nis_nip']
+                            ?? $item['nip_guru']
+                            ?? $item['no_induk']
+                            ?? $item['employee_id']
+                            ?? $item['id_pegawai']
+                            ?? ''
+                        ));
 
                         /*
                          * Nama
                          */
-
-                        $nama = trim(
-                            (string) (
-                                $item['nama_lengkap']
-                                ?? $item['name']
-                                ?? $item['nama']
-                                ?? ''
-                            )
-                        );
+                        $nama = trim((string) (
+                            $item['nama_lengkap']
+                            ?? $item['name']
+                            ?? $item['nama']
+                            ?? ''
+                        ));
 
                         /*
                          * Guru tanpa NIP tetap diproses.
                          */
-
-                        if (! $nip) {
+                        if ($nip === '') {
                             $apiId =
                                 $item['id']
                                 ?? $item['guru_id']
@@ -1387,12 +1706,7 @@ class SipintuService
                                 );
                         }
 
-                        $email = strtolower(
-                            $nip
-                            . '@smkn1bangsri.sch.id'
-                        );
-
-                        if (! $nama) {
+                        if ($nama === '') {
                             $stats['failed']++;
 
                             $stats['errors'][] =
@@ -1403,12 +1717,18 @@ class SipintuService
                             continue;
                         }
 
+                        $email = strtolower(
+                            $nip
+                            . '@smkn1bangsri.sch.id'
+                        );
+
                         try {
 
                             /*
-                             * MATA PELAJARAN
+                             * ==================================================
+                             * MAPEL
+                             * ==================================================
                              */
-
                             $rawMapel =
                                 $item['mata_pelajaran']
                                 ?? $item['mapel']
@@ -1435,9 +1755,10 @@ class SipintuService
                             }
 
                             /*
-                             * NOMOR HP
+                             * ==================================================
+                             * HP
+                             * ==================================================
                              */
-
                             $hp =
                                 data_get(
                                     $item,
@@ -1462,10 +1783,9 @@ class SipintuService
                                 ?? data_get(
                                     $item,
                                     'mobile'
-                                )
-                                ?? null;
+                                );
 
-                            if ($hp) {
+                            if (filled($hp)) {
                                 $hp =
                                     preg_replace(
                                         '/[^0-9+]/',
@@ -1477,9 +1797,10 @@ class SipintuService
                             }
 
                             /*
+                             * ==================================================
                              * ALAMAT
+                             * ==================================================
                              */
-
                             $alamat =
                                 data_get(
                                     $item,
@@ -1492,22 +1813,23 @@ class SipintuService
                                 ?? data_get(
                                     $item,
                                     'alamat_lengkap'
-                                )
-                                ?? null;
+                                );
 
                             /*
+                             * ==================================================
                              * TANGGAL LAHIR
+                             * ==================================================
                              */
-
                             $tanggalLahir =
                                 $item['tanggal_lahir']
                                 ?? $item['tgl_lahir']
                                 ?? null;
 
                             /*
+                             * ==================================================
                              * STATUS GURU
+                             * ==================================================
                              */
-
                             $statusAktif = true;
 
                             if (
@@ -1536,19 +1858,10 @@ class SipintuService
                             }
 
                             /*
-                             * PASSWORD
-                             */
-
-                            $passwordHash =
-                                $this->resolvePasswordHash(
-                                    $item,
-                                    'password'
-                                );
-
-                            /*
+                             * ==================================================
                              * USER
+                             * ==================================================
                              */
-
                             $user =
                                 User::where(
                                     'nis_nip',
@@ -1562,6 +1875,9 @@ class SipintuService
 
                             if ($user) {
 
+                                /*
+                                 * Password user lama TIDAK disentuh.
+                                 */
                                 $user->update([
                                     'name' =>
                                         $nama,
@@ -1572,9 +1888,6 @@ class SipintuService
                                     'nis_nip' =>
                                         $nip,
 
-                                    'password' =>
-                                        $passwordHash,
-
                                     'role' =>
                                         'guru',
                                 ]);
@@ -1582,6 +1895,16 @@ class SipintuService
                                 $stats['updated']++;
 
                             } else {
+
+                                /*
+                                 * Password hanya di-hash
+                                 * untuk user baru.
+                                 */
+                                $passwordHash =
+                                    $this->resolvePasswordHash(
+                                        $item,
+                                        'password'
+                                    );
 
                                 $user =
                                     User::create([
@@ -1605,9 +1928,10 @@ class SipintuService
                             }
 
                             /*
+                             * ==================================================
                              * GURU
+                             * ==================================================
                              */
-
                             $guru =
                                 Guru::firstOrNew([
                                     'user_id' =>
@@ -1666,7 +1990,7 @@ class SipintuService
                                 . $e->getMessage();
 
                             Log::error(
-                                "Err sync Guru NIP {$nip}: "
+                                "ERROR SYNC GURU NIP {$nip}: "
                                 . $e->getMessage()
                             );
                         }
@@ -1675,14 +1999,20 @@ class SipintuService
                     /*
                      * Audit log
                      */
-
                     if (auth()->check()) {
-                        $this->auditLog->log(
-                            auth()->id(),
-                            'sync_sipintu_guru',
-                            'guru',
-                            null
-                        );
+                        try {
+                            $this->auditLog->log(
+                                auth()->id(),
+                                'sync_sipintu_guru',
+                                'guru',
+                                null
+                            );
+                        } catch (\Throwable $e) {
+                            Log::warning(
+                                'Gagal membuat audit log sync guru: '
+                                . $e->getMessage()
+                            );
+                        }
                     }
                 }
             );

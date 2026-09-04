@@ -4,10 +4,10 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class SiswaSeeder extends Seeder
+class GuruSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->command->info('⏭️ SiswaSeeder dilewati. Data siswa akan diambil dari SIPINTU.');
+        $this->command->info('⏭️ GuruSeeder dilewati. Data guru akan diambil dari SIPINTU.');
     }
 }
