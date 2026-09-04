@@ -75,8 +75,12 @@
                     <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
                         <i class="fas fa-book-open w-5 mr-3 text-center"></i> Panduan
                     </a>
-                    <a href="{{ route('profil.show') }}" class="{{ request()->routeIs('profil.show') ? $navOn : $navOff }}">
-                        <i class="fas fa-user-circle mr-2"></i> Profil
+                    {{-- PROFIL --}}
+                    <a href="{{ route('profil.show') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                              {{ request()->routeIs('profil.show') ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                        <i class="fas fa-user-circle w-5 text-center"></i>
+                        <span class="font-medium">Profil Saya</span>
                     </a>
                 </div>
             </nav>
@@ -221,9 +225,12 @@
                 class="w-full flex items-center justify-center px-4 py-3 mb-2.5 rounded-xl text-sm font-bold text-gray-700 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
                     <i class="fas fa-book-open text-blue-600 mr-2"></i> Panduan Penggunaan
                 </a>
-                            <a href="{{ route('profil.show') }}" @click="sheet = false"
-                class="w-full flex items-center justify-center px-4 py-3 mb-2.5 rounded-xl text-sm font-bold text-gray-700 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <i class="fas fa-user-circle text-red-600 mr-2"></i> Profil Siswa
+                {{-- PROFIL MOBILE --}}
+                <a href="{{ route('profil.show') }}"
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                          {{ request()->routeIs('profil.show') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                    <i class="fas fa-user-circle w-5 text-center"></i>
+                    <span class="font-medium">Profil Saya</span>
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

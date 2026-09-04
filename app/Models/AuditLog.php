@@ -11,7 +11,20 @@ class AuditLog extends Model
     use Prunable;
 
     protected $table = 'audit_logs';
-    protected $fillable = ['user_id', 'action', 'table_name', 'record_id', 'old_value', 'new_value', 'ip_address'];
+
+    protected $fillable = [
+        'user_id',
+        'action',
+        'table_name',
+        'record_id',
+        'old_value',
+        'new_value',
+        'ip_address',
+        'device_type',
+        'os',
+        'browser',
+        'user_agent',
+    ];
 
     protected function casts(): array
     {
@@ -22,14 +35,20 @@ class AuditLog extends Model
     }
 
     /**
-     * Audit log yang berumur lebih dari 24 jam
-     * akan dihapus otomatis oleh command model:prune.
+     * Hapus audit log yang lebih dari 24 jam.
      */
     public function prunable()
     {
-        return static::where('created_at', '<=', now()->subHours(24));
+        return static::where(
+            'created_at',
+            '<=',
+            now()->subHours(24)
+        );
     }
 
+    /**
+     * Relasi ke user.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

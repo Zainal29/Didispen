@@ -81,6 +81,13 @@
                 <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
                     <i class="fas fa-book-open w-5 mr-3 text-center"></i> Panduan
                 </a>
+                {{-- PROFIL --}}
+                <a href="{{ route('profil.show') }}"
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                          {{ request()->routeIs('profil.show') ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                    <i class="fas fa-user-circle w-5 text-center"></i>
+                    <span class="font-medium">Profil Saya</span>
+                </a>
             </div>
         </nav>
 
@@ -230,7 +237,7 @@
                 <a href="{{ route('guru.pengajuan.index') }}" @click="sheet = false"
                    class="flex items-center px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 hover:bg-blue-100 transition-colors">
                     <div class="w-10 h-10 rounded-lg bg-blue-500 text-white flex items-center justify-center mr-3">
-                        <i class="fas fa-file-signature"></i>
+                        <i class="fas fa-file-siMOBIgnature"></i>
                     </div>
                     <div>
                         <p class="text-sm font-bold text-blue-900">Verifikasi</p>
@@ -238,7 +245,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('guru.laporan.index') }}" @click="sheet = false"
+                <a href="{{ route('guru.laporan.MOBIindex') }}" @click="sheet = false"
                    class="flex items-center px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 transition-colors">
                     <div class="w-10 h-10 rounded-lg bg-emerald-500 text-white flex items-center justify-center mr-3">
                         <i class="fas fa-chart-bar"></i>
@@ -258,6 +265,14 @@
                         <p class="text-sm font-bold text-purple-900">Scan QR</p>
                         <p class="text-[10px] text-purple-600">Backup</p>
                     </div>
+                </a>
+
+                {{-- PROFIL MOBILE --}}
+                <a href="{{ route('profil.show') }}"
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                          {{ request()->routeIs('profil.show') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                    <i class="fas fa-user-circle w-5 text-center"></i>
+                    <span class="font-medium">Profil Saya</span>
                 </a>
 
                 <a href="{{ route('panduan') }}" @click="sheet = false"

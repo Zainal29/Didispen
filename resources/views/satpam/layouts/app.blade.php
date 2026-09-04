@@ -56,6 +56,13 @@
                 <i class="fas fa-qrcode w-5 mr-3 text-center text-base"></i> Scan QR Code
                 <i class="fas fa-arrow-right ml-auto text-[11px]"></i>
             </a>
+            {{-- PROFIL --}}
+            <a href="{{ route('profil.show') }}"
+               class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                      {{ request()->routeIs('profil.show') ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                <i class="fas fa-user-circle w-5 text-center"></i>
+                <span class="font-medium">Profil Saya</span>
+            </a>
             <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
                 <i class="fas fa-book-open w-5 mr-3 text-center"></i> Panduan
             </a>
@@ -216,7 +223,13 @@
                    class="w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-bold text-gray-700 bg-gray-50 border border-gray-100 hover:bg-gray-100 active:scale-[0.98] transition-all">
                     <i class="fas fa-book-open text-red-600 mr-3 text-lg"></i> Panduan Penggunaan
                 </a>
-
+                {{-- PROFIL MOBILE --}}
+                <a href="{{ route('profil.show') }}"
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                          {{ request()->routeIs('profil.show') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                    <i class="fas fa-user-circle w-5 text-center"></i>
+                    <span class="font-medium">Profil Saya</span>
+                </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit"

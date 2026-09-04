@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
+    public function __construct(
+        private AuditLogService $auditLog
+    ) {}
+
     /**
-     * Halaman login
+     * Halaman login.
      */
     public function showLoginForm()
     {
@@ -19,7 +24,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Proses login
+     * Proses login.
      */
     public function login(Request $request)
     {
@@ -34,13 +39,17 @@ class LoginController extends Controller
         | NORMALISASI INPUT
         |--------------------------------------------------------------------------
         */
-        $loginInput = strtolower(trim($credentials['email']));
+
+        $loginInput = strtolower(
+            trim($credentials['email'])
+        );
 
         /*
         |--------------------------------------------------------------------------
         | CARI IDENTITAS
         |--------------------------------------------------------------------------
         */
+
         $identifier = str_contains($loginInput, '@')
             ? strstr($loginInput, '@', true)
             : $loginInput;
@@ -49,10 +58,14 @@ class LoginController extends Controller
             ? $loginInput
             : null;
 
-        $user = User::where(function ($query) use ($emailFull, $identifier) {
+        $user = User::where(function ($query) use (
+            $emailFull,
+            $identifier
+        ) {
             if ($emailFull) {
                 $query->where('email', $emailFull);
             }
+
             $query->orWhere('nis_nip', $identifier);
         })->first();
 
@@ -61,9 +74,12 @@ class LoginController extends Controller
         | USER TIDAK DITEMUKAN
         |--------------------------------------------------------------------------
         */
-        if (!$user) {
+
+        if (! $user) {
             return back()
-                ->withErrors(['email' => 'Data akun tidak ditemukan.'])
+                ->withErrors([
+                    'email' => 'Data akun tidak ditemukan.',
+                ])
                 ->withInput();
         }
 
@@ -72,35 +88,68 @@ class LoginController extends Controller
         | VALIDASI ROLE
         |--------------------------------------------------------------------------
         */
+
         $isRoleValid = match ($credentials['role']) {
             'siswa' => $user->role === 'siswa',
-            'guru' => in_array($user->role, ['guru', 'admin'], true),
+
+            'guru' => in_array(
+                $user->role,
+                ['guru', 'admin'],
+                true
+            ),
+
             'satpam' => $user->role === 'satpam',
+
             'admin' => $user->role === 'admin',
+
             default => false,
         };
 
-        if (!$isRoleValid) {
+        if (! $isRoleValid) {
             return back()
-                ->withErrors(['email' => 'Akun tidak memiliki akses untuk portal ini.'])
+                ->withErrors([
+                    'email' =>
+                        'Akun tidak memiliki akses untuk portal ini.',
+                ])
                 ->withInput();
         }
 
         /*
         |--------------------------------------------------------------------------
-        | VALIDASI STATUS AKTIF (SISWA / GURU)
+        | VALIDASI STATUS SISWA
         |--------------------------------------------------------------------------
         */
+
         if ($user->role === 'siswa') {
-            if (!$user->siswa || !$user->siswa->status_aktif) {
+            if (
+                ! $user->siswa ||
+                ! $user->siswa->status_aktif
+            ) {
                 return back()
-                    ->withErrors(['email' => 'Akun siswa tidak aktif atau terdaftar sebagai alumni.'])
+                    ->withErrors([
+                        'email' =>
+                            'Akun siswa tidak aktif atau terdaftar sebagai alumni.',
+                    ])
                     ->withInput();
             }
-        } elseif ($user->role === 'guru') {
-            if ($user->guru && !$user->guru->status_aktif) {
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDASI STATUS GURU
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user->role === 'guru') {
+            if (
+                $user->guru &&
+                ! $user->guru->status_aktif
+            ) {
                 return back()
-                    ->withErrors(['email' => 'Akun guru tidak aktif.'])
+                    ->withErrors([
+                        'email' =>
+                            'Akun guru tidak aktif.',
+                    ])
                     ->withInput();
             }
         }
@@ -110,24 +159,17 @@ class LoginController extends Controller
         | VALIDASI PASSWORD
         |--------------------------------------------------------------------------
         */
+
         $passwordValid = false;
 
-        if ($user->role === 'siswa') {
-            if (!empty($user->password) && Hash::check($credentials['password'], $user->password)) {
-                $passwordValid = true;
-            }
-        } elseif ($user->role === 'guru') {
-            if (!empty($user->password) && Hash::check($credentials['password'], $user->password)) {
-                $passwordValid = true;
-            }
-        } elseif ($user->role === 'admin') {
-            if (!empty($user->password) && Hash::check($credentials['password'], $user->password)) {
-                $passwordValid = true;
-            }
-        } elseif ($user->role === 'satpam') {
-            if (!empty($user->password) && Hash::check($credentials['password'], $user->password)) {
-                $passwordValid = true;
-            }
+        if (
+            ! empty($user->password) &&
+            Hash::check(
+                $credentials['password'],
+                $user->password
+            )
+        ) {
+            $passwordValid = true;
         }
 
         /*
@@ -135,9 +177,13 @@ class LoginController extends Controller
         | PASSWORD SALAH
         |--------------------------------------------------------------------------
         */
-        if (!$passwordValid) {
+
+        if (! $passwordValid) {
             return back()
-                ->withErrors(['email' => 'Password yang dimasukkan salah.'])
+                ->withErrors([
+                    'email' =>
+                        'Password yang dimasukkan salah.',
+                ])
                 ->withInput();
         }
 
@@ -146,22 +192,84 @@ class LoginController extends Controller
         | LOGIN
         |--------------------------------------------------------------------------
         */
-        Auth::login($user, $request->boolean('remember'));
+
+        Auth::login(
+            $user,
+            $request->boolean('remember')
+        );
+
         $request->session()->regenerate();
 
-        return redirect()->intended(url("/{$user->role}/dashboard"));
+        /*
+        |--------------------------------------------------------------------------
+        | AUDIT LOG LOGIN
+        |--------------------------------------------------------------------------
+        */
+
+        $this->auditLog->log(
+            $user->id,
+            'login',
+            'users',
+            $user->id,
+            null,
+            [
+                'role' => $user->role,
+            ]
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | REDIRECT
+        |--------------------------------------------------------------------------
+        */
+
+        return redirect()->intended(
+            url("/{$user->role}/dashboard")
+        );
     }
 
     /**
-     * Logout
+     * Logout.
      */
     public function logout(Request $request)
     {
+        $user = Auth::user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | AUDIT LOG LOGOUT
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user) {
+            $this->auditLog->log(
+                $user->id,
+                'logout',
+                'users',
+                $user->id,
+                null,
+                [
+                    'role' => $user->role,
+                ]
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOGOUT
+        |--------------------------------------------------------------------------
+        */
+
         Auth::logout();
+
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
         return redirect('/login')
-            ->with('success', 'Berhasil keluar.');
+            ->with(
+                'success',
+                'Berhasil keluar.'
+            );
     }
 }
