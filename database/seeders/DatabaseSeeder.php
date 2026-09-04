@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
             KelasSeeder::class,     // (Jika Anda punya file ini)
             SiswaSeeder::class,     // Membuat User & Siswa (Zainal)
             GuruSeeder::class,      // Membuat User & Guru (Budi)
-            DispensasiSeeder::class,// Membuat contoh dispensasi (Aman skip jika data kosong)
+          // Membuat contoh dispensasi (Aman skip jika data kosong)
         ]);
     }
 }
