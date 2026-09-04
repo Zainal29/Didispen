@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,31 +15,65 @@ class ProfileController extends Controller
         $this->auditLog = $auditLog ?? app(AuditLogService::class);
     }
 
-    /**
-     * ==========================================================
-     * TAMPILKAN PROFIL
-     * ==========================================================
-     *
-     * Semua role:
-     * - siswa
-     * - guru
-     * - satpam
-     * - admin
-     *
-     * akan dicatat ketika membuka halaman profil.
-     */
     public function show()
     {
         $user = Auth::user();
 
-        // Load relasi sesuai role agar data lengkap
-        if ($user->role === 'siswa' && $user->siswa) {
-            $user->load(['siswa.kelas.jurusan']);
-        } elseif ($user->role === 'guru' && $user->guru) {
-            $user->load('guru');
+        if (! $user) {
+            abort(401);
         }
 
-        // Activity Log: membuka profil
+        // Load relasi sesuai role
+        if ($user->role === 'siswa' && $user->siswa) {
+            $user->loadMissing([
+                'siswa.kelas.jurusan',
+            ]);
+        } elseif ($user->role === 'guru' && $user->guru) {
+            $user->loadMissing([
+                'guru',
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RIWAYAT LOGIN
+        |--------------------------------------------------------------------------
+        */
+        $loginHistory = AuditLog::query()
+            ->where('user_id', $user->id)
+            ->where('action', 'login')
+            ->latest('created_at')
+            ->take(10)
+            ->get();
+
+        $latestLogin = $loginHistory->first();
+
+        $previousLogin = $loginHistory->get(1);
+
+        /*
+        |--------------------------------------------------------------------------
+        | CEK PERUBAHAN PERANGKAT
+        |--------------------------------------------------------------------------
+        */
+        $deviceChanged = false;
+
+        if ($latestLogin && $previousLogin) {
+            $deviceChanged =
+                (string) ($latestLogin->device_type ?? '') !==
+                    (string) ($previousLogin->device_type ?? '')
+                ||
+                (string) ($latestLogin->os ?? '') !==
+                    (string) ($previousLogin->os ?? '')
+                ||
+                (string) ($latestLogin->browser ?? '') !==
+                    (string) ($previousLogin->browser ?? '');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | LOG AKTIVITAS PROFIL
+        |--------------------------------------------------------------------------
+        */
         try {
             $this->auditLog?->log(
                 $user->id,
@@ -47,42 +82,86 @@ class ProfileController extends Controller
                 $user->id
             );
         } catch (\Throwable $e) {
-            // Jangan sampai halaman profil gagal hanya karena audit log error
+            // Jangan sampai audit error membuat halaman profil gagal
         }
 
-        return view('profil.show', compact('user'));
+        return view('profil.show', [
+            'user'           => $user,
+            'loginHistory'   => $loginHistory,
+            'latestLogin'    => $latestLogin,
+            'previousLogin'  => $previousLogin,
+            'deviceChanged'  => $deviceChanged,
+        ]);
     }
 
-    /**
-     * ==========================================================
-     * UPDATE DATA TAMBAHAN SISWA
-     * ==========================================================
-     */
     public function updateAdditional(Request $request)
     {
         $user = Auth::user();
 
+        if (! $user) {
+            abort(401);
+        }
+
         if ($user->role !== 'siswa' || ! $user->siswa) {
-            abort(403, 'Hanya siswa yang dapat memperbarui data profil tambahan.');
+            abort(
+                403,
+                'Hanya siswa yang dapat memperbarui data profil tambahan.'
+            );
         }
 
         $validated = $request->validate([
-            'no_telepon'    => ['nullable', 'string', 'max:20'],
+            'no_telepon' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
+
             'tanggal_lahir' => [
                 'nullable',
                 'date',
-                'before_or_equal:' . now()->subYears(7)->format('Y-m-d'),
+                'before_or_equal:' . now()
+                    ->subYears(7)
+                    ->format('Y-m-d'),
             ],
-            'alamat'        => ['nullable', 'string', 'max:500'],
+
+            'alamat' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+        ], [
+            'no_telepon.max' =>
+                'Nomor telepon maksimal 20 karakter.',
+
+            'tanggal_lahir.date' =>
+                'Format tanggal lahir tidak valid.',
+
+            'tanggal_lahir.before_or_equal' =>
+                'Tanggal lahir tidak valid.',
+
+            'alamat.max' =>
+                'Alamat maksimal 500 karakter.',
         ]);
 
         $updateData = [
-            'tanggal_lahir' => $validated['tanggal_lahir'] ?? null,
-            'alamat'        => $validated['alamat'] ?? null,
+            'tanggal_lahir' =>
+                $validated['tanggal_lahir'] ?? null,
+
+            'alamat' =>
+                $validated['alamat'] ?? null,
         ];
 
-        if (filled($request->no_telepon)) {
-            $phone = preg_replace('/[^0-9]/', '', $request->no_telepon);
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALISASI NOMOR TELEPON
+        |--------------------------------------------------------------------------
+        */
+        if (filled($validated['no_telepon'] ?? null)) {
+            $phone = preg_replace(
+                '/[^0-9]/',
+                '',
+                $validated['no_telepon']
+            );
 
             if (str_starts_with($phone, '0')) {
                 $phone = '62' . substr($phone, 1);
@@ -97,7 +176,6 @@ class ProfileController extends Controller
 
         $user->siswa->update($updateData);
 
-        // Activity Log: siswa mengubah profil tambahan
         try {
             $this->auditLog?->log(
                 $user->id,
@@ -106,41 +184,68 @@ class ProfileController extends Controller
                 $user->siswa->id
             );
         } catch (\Throwable $e) {
-            // Jangan sampai update profil gagal hanya karena audit log error
+            // Abaikan jika audit gagal
         }
 
-        return back()->with('success', 'Data profil berhasil diperbarui!');
+        return back()->with(
+            'success',
+            'Data profil berhasil diperbarui!'
+        );
     }
 
     /**
-     * ==========================================================
-     * KHUSUS ADMIN: GANTI PASSWORD
-     * ==========================================================
+     * KHUSUS ADMIN: Ganti Password
      */
     public function updatePassword(Request $request)
     {
         $user = Auth::user();
 
+        if (! $user) {
+            abort(401);
+        }
+
         if ($user->role !== 'admin') {
-            abort(403, 'Hanya Administrator yang diizinkan mengubah password.');
+            abort(
+                403,
+                'Hanya Administrator yang diizinkan mengubah password.'
+            );
         }
 
         $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'new_password'     => ['required', 'string', 'min:8', 'confirmed'],
+            'current_password' => [
+                'required',
+                'current_password',
+            ],
+
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+            ],
         ], [
-            'current_password.required'         => 'Password saat ini wajib diisi.',
-            'current_password.current_password' => 'Password lama yang Anda masukkan salah.',
-            'new_password.required'             => 'Password baru wajib diisi.',
-            'new_password.min'                  => 'Password baru minimal 8 karakter.',
-            'new_password.confirmed'            => 'Konfirmasi password baru tidak cocok.',
+            'current_password.required' =>
+                'Password saat ini wajib diisi.',
+
+            'current_password.current_password' =>
+                'Password lama yang Anda masukkan salah.',
+
+            'new_password.required' =>
+                'Password baru wajib diisi.',
+
+            'new_password.min' =>
+                'Password baru minimal 8 karakter.',
+
+            'new_password.confirmed' =>
+                'Konfirmasi password baru tidak cocok.',
         ]);
 
         $user->update([
-            'password' => Hash::make($validated['new_password']),
+            'password' => Hash::make(
+                $validated['new_password']
+            ),
         ]);
 
-        // Activity Log: admin mengganti password
         try {
             $this->auditLog?->log(
                 $user->id,
@@ -149,9 +254,12 @@ class ProfileController extends Controller
                 $user->id
             );
         } catch (\Throwable $e) {
-            // Ignore audit logging failure
+            // Abaikan jika audit gagal
         }
 
-        return back()->with('success', 'Password Administrator berhasil diperbarui!');
+        return back()->with(
+            'success',
+            'Password Administrator berhasil diperbarui!'
+        );
     }
 }
