@@ -245,7 +245,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('guru.laporan.MOBIindex') }}" @click="sheet = false"
+                <a href="{{ route('guru.laporan.index') }}" @click="sheet = false"
                    class="flex items-center px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 transition-colors">
                     <div class="w-10 h-10 rounded-lg bg-emerald-500 text-white flex items-center justify-center mr-3">
                         <i class="fas fa-chart-bar"></i>
