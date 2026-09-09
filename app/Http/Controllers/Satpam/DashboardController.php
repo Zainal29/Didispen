@@ -8,13 +8,16 @@ use App\Services\NotifikasiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon; //
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request) // <i class="fas fa-check-circle"></i> 1. TAMBAHKAN Request $request
     {
         $today = now()->format('Y-m-d');
+
+        // <i class="fas fa-check-circle"></i> 2. TAMBAHKAN INI: Baca parameter filter dari URL (default: 'semua')
+        $filter = $request->get('filter', 'semua');
 
         $stats = [
             'total' => Dispensasi::whereDate('created_at', $today)->count(),
@@ -36,87 +39,85 @@ class DashboardController extends Controller
             ->get();
 
         $selesai = Dispensasi::with(['siswa.kelas.jurusan', 'guru'])
-            ->where('status', 'selesai')
+            ->where('status', 'selesai') // <i class="fas fa-check-circle"></i> Query ini sudah benar, hanya ambil status 'selesai'
             ->whereDate('created_at', $today)
             ->latest()
             ->get();
 
-        $dihubungi = Dispensasi::with(['siswa.kelas.jurusan', 'guru'])
-            ->where('is_warned', true)
-            ->whereDate('warned_at', today())
-            ->latest('warned_at')
-            ->limit(30)
-            ->get();
+      $dihubungi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+                ->where('is_warned', true)
+                ->whereDate('warned_at', today())
+                ->latest('warned_at')
+                ->limit(50)
+                ->get();
 
-        return view('satpam.dashboard', compact('stats', 'menungguKeluar', 'siswaKeluar', 'selesai', 'dihubungi'));
+
+        // <i class="fas fa-check-circle"></i> 3. TAMBAHKAN 'filter' ke dalam compact agar bisa dibaca oleh View
+        return view('satpam.dashboard', compact('stats', 'menungguKeluar', 'siswaKeluar', 'selesai', 'dihubungi', 'filter'));
     }
 
     /**
-     * ✅ PENCARIAN MANUAL DISPENSASI (Untuk Verifikasi Satpam)
+     * <i class="fas fa-check-circle"></i> PENCARIAN MANUAL DISPENSASI (Untuk Verifikasi Satpam)
      */
-     /**
-     /**
-      * Search dispensasi untuk verifikasi manual
-      */
-     public function searchDispensasi(Request $request)
-     {
-         try {
-             $request->validate([
-                 'query' => 'required|string|min:2|max:255'
-             ]);
+    public function searchDispensasi(Request $request)
+    {
+        try {
+            $request->validate([
+                'query' => 'required|string|min:2|max:255'
+            ]);
 
-             $query = $request->input('query');
+            $query = $request->input('query');
 
-             $dispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas'])
-                 ->whereDate('created_at', now()->toDateString())
-                 ->where(function($q) use ($query) {
-                     $q->where('nomor_surat', 'like', "%{$query}%")
-                       ->orWhereHas('siswa', function($q2) use ($query) {
-                           $q2->where('nama_lengkap', 'like', "%{$query}%")
-                              ->orWhereHas('user', function($q3) use ($query) {
-                                  $q3->where('nis_nip', 'like', "%{$query}%");
-                              });
-                       });
-                 })
-                 ->latest()
-                 ->limit(5)
-                 ->get();
+            $dispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas'])
+                ->whereDate('created_at', now()->toDateString())
+                ->where(function($q) use ($query) {
+                    $q->where('nomor_surat', 'like', "%{$query}%")
+                      ->orWhereHas('siswa', function($q2) use ($query) {
+                          $q2->where('nama_lengkap', 'like', "%{$query}%")
+                             ->orWhereHas('user', function($q3) use ($query) {
+                                 $q3->where('nis_nip', 'like', "%{$query}%");
+                             });
+                      });
+                })
+                ->latest()
+                ->limit(5)
+                ->get();
 
-             if ($dispensasi->isEmpty()) {
-                 return response()->json([
-                     'success' => false,
-                     'message' => 'Dispensasi tidak ditemukan'
-                 ], 404);
-             }
+            if ($dispensasi->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dispensasi tidak ditemukan'
+                ], 404);
+            }
 
-             $results = $dispensasi->map(function($d) {
-                 return [
-                     'id' => $d->id,
-                     'nomor_surat' => $d->nomor_surat,
-                     'status' => $d->status,
-                     'siswa_nama' => $d->siswa?->nama_lengkap ?? 'Tidak Diketahui',
-                     'siswa_nis' => $d->siswa?->user?->nis_nip ?? '-',
-                     'siswa_kelas' => $d->siswa?->kelas?->nama_kelas ?? '-',
-                     'jam_keluar' => $d->jam_keluar,
-                     'jam_kembali' => $d->jam_kembali,
-                 ];
-             });
+            $results = $dispensasi->map(function($d) {
+                return [
+                    'id' => $d->id,
+                    'nomor_surat' => $d->nomor_surat,
+                    'status' => $d->status,
+                    'siswa_nama' => $d->siswa?->nama_lengkap ?? 'Tidak Diketahui',
+                    'siswa_nis' => $d->siswa?->user?->nis_nip ?? '-',
+                    'siswa_kelas' => $d->siswa?->kelas?->nama_kelas ?? '-',
+                    'jam_keluar' => $d->jam_keluar,
+                    'jam_kembali' => $d->jam_kembali,
+                ];
+            });
 
-             return response()->json([
-                 'success' => true,
-                 'data' => $results
-             ]);
+            return response()->json([
+                'success' => true,
+                'data' => $results
+            ]);
 
-         } catch (\Exception $e) {
-             \Log::error('Search Dispensasi Error: ' . $e->getMessage());
-             \Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+        } catch (\Exception $e) {
+            \Log::error('Search Dispensasi Error: ' . $e->getMessage());
+            \Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
 
-             return response()->json([
-                 'success' => false,
-                 'message' => 'Error: ' . $e->getMessage()
-             ], 500);
-         }
-     }
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Konfirmasi keluar (Mendukung AJAX & Form)
@@ -160,16 +161,23 @@ class DashboardController extends Controller
             Storage::disk('public')->delete($dispensasi->foto_verifikasi);
         }
 
+        // // <i class="fas fa-check-circle"></i> BARU: HAPUS FOTO BUKTI (jika ada)
+            if ($dispensasi->foto_bukti) {
+                Storage::disk('public')->delete($dispensasi->foto_bukti);
+            }
+
         $dispensasi->update([
             'status' => 'selesai',
             'waktu_kembali_aktual' => now(),
             'satpam_kembali_id' => auth()->id(),
             'foto_verifikasi' => null,
+            'foto_bukti' => null, // <i class="fas fa-check-circle"></i> Reset field foto bukti
+
         ]);
 
         app(NotifikasiService::class)->send(
             $dispensasi->siswa->user_id,
-            "🏁 Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI. Terima kasih sudah kembali ke sekolah.",
+            "Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI. Terima kasih sudah kembali ke sekolah.",
             route('siswa.pengajuan.show', $dispensasi, false)
         );
 

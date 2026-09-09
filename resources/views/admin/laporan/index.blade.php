@@ -28,12 +28,17 @@
     </div>
 
     <div class="p-5 border-b bg-gray-50 flex flex-wrap gap-2">
-        <a href="{{ route('admin.laporan.pdf', request()->all()) }}" target="_blank" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">
+        {{-- Tombol Export PDF - HAPUS target="_blank" --}}
+        <a href="{{ route('admin.laporan.pdf', request()->all()) }}"
+           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">
             <i class="fas fa-file-pdf mr-1"></i> Export PDF
         </a>
-        <a href="{{ route('admin.laporan.excel', request()->all()) }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
-    <i class="fas fa-file-csv mr-1"></i> Export CSV (Excel)
-</a>
+
+        <a href="{{ route('admin.laporan.excel', request()->all()) }}"
+           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
+            <i class="fas fa-file-csv mr-1"></i> Export CSV (Excel)
+        </a>
+
         <span class="ml-auto text-sm text-gray-600 self-center">
             Total: <strong>{{ $dispensasi->count() }}</strong> data
         </span>

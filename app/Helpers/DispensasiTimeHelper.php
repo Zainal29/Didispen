@@ -2,46 +2,42 @@
 
 namespace App\Helpers;
 
+use App\Models\Setting;
 use Carbon\Carbon;
 
 class DispensasiTimeHelper
 {
-    /**
-     * Cek apakah sekarang dalam jam pengajuan dispensasi
-     *
-     * Aturan:
-     * - Senin-Kamis: 08.00 - 15.00 WIB
-     * - Jumat: 08.00 - 14.00 WIB (sesuai jadwal sesi 3)
-     * - Sabtu-Minggu: Tidak bisa
-     */
     public static function isWithinDispensasiTime(?Carbon $time = null): array
     {
         $now = $time ?? Carbon::now('Asia/Jakarta');
-
-        $dayOfWeek = $now->dayOfWeek; // 0=Minggu, 1=Senin, ..., 6=Sabtu
+        $dayOfWeek = $now->dayOfWeek; // Integer (0-6)
         $currentTime = $now->format('H:i');
 
-        // Cek hari (Senin=1 sampai Jumat=5)
-        if ($dayOfWeek < 1 || $dayOfWeek > 5) {
+        $jamBuka = Setting::get('dispensasi_start_time', '07:00');
+        $jamTutupRegular = Setting::get('dispensasi_end_time', '15:00');
+        $jamTutupJumat = Setting::get('dispensasi_end_time_friday', '14:00');
+        $allowedDays = Setting::get('dispensasi_days', '1,2,3,4,5');
+
+        // ✅ PERBAIKAN: Ubah ke array integer untuk strict comparison
+        $allowedDaysArray = array_map('intval', explode(',', $allowedDays));
+        $jamTutup = ($dayOfWeek === 5) ? $jamTutupJumat : $jamTutupRegular;
+
+        // 1. Cek Hari (Strict)
+        if (!in_array($dayOfWeek, $allowedDaysArray, true)) {
             return [
                 'allowed' => false,
-                'reason' => 'Pengajuan dispensasi hanya dapat dilakukan pada hari Senin sampai Jumat.',
+                'reason' => 'Pengajuan dispensasi hanya dapat dilakukan pada hari yang diizinkan oleh admin.',
                 'current_day' => $now->isoFormat('dddd'),
-                'allowed_days' => 'Senin - Jumat',
             ];
         }
 
-        // Tentukan jam tutup berdasarkan hari
-        $jamBuka = '08:00';
-        $jamTutup = ($dayOfWeek === 5) ? '14:00' : '15:00'; // Jumat tutup lebih awal
-
+        // 2. Cek Jam
         if ($currentTime < $jamBuka || $currentTime > $jamTutup) {
             return [
                 'allowed' => false,
                 'reason' => "Pengajuan dispensasi hanya dapat dilakukan pada pukul {$jamBuka} - {$jamTutup} WIB.",
                 'current_time' => $currentTime,
                 'allowed_time' => "{$jamBuka} - {$jamTutup} WIB",
-                'current_day' => $now->isoFormat('dddd'),
             ];
         }
 
@@ -52,20 +48,66 @@ class DispensasiTimeHelper
         ];
     }
 
-    /**
-     * Dapatkan pesan lengkap untuk ditampilkan ke user
-     */
     public static function getRestrictionMessage(): string
     {
-        $now = Carbon::now('Asia/Jakarta');
-        $dayOfWeek = $now->dayOfWeek;
+        $jamBuka = Setting::get('dispensasi_start_time', '07:00');
+        $jamTutupRegular = Setting::get('dispensasi_end_time', '15:00');
+        $jamTutupJumat = Setting::get('dispensasi_end_time_friday', '14:00');
+        $allowedDays = Setting::get('dispensasi_days', '1,2,3,4,5');
 
-        if ($dayOfWeek < 1 || $dayOfWeek > 5) {
-            return 'Pengajuan dispensasi hanya dapat dilakukan pada hari <strong>Senin sampai Jumat</strong>.';
+        $hariMap = [1=>'Senin', 2=>'Selasa', 3=>'Rabu', 4=>'Kamis', 5=>'Jumat', 6=>'Sabtu', 0=>'Minggu'];
+        $hariText = implode(', ', array_map(fn($d) => $hariMap[$d] ?? '', explode(',', $allowedDays)));
+
+        return "Pengajuan dispensasi hanya dapat dilakukan pada hari <strong>{$hariText}</strong>, pukul <strong>{$jamBuka} - {$jamTutupRegular} WIB</strong> (Jumat s.d. {$jamTutupJumat} WIB).";
+    }
+
+    /**
+     * ✅ METHOD INI YANG SEBELUMNYA HILANG/TIDAK TERBACA
+     * Mendapatkan jumlah jam pelajaran maksimal berdasarkan hari
+     */
+    public static function getMaxJamPelajaran(?int $dayOfWeek = null): int
+    {
+        if ($dayOfWeek === null) {
+            $dayOfWeek = now()->dayOfWeek;
         }
 
-        $jamTutup = ($dayOfWeek === 5) ? '14:00' : '15:00';
+        // Jumat (5) = 8 jam pelajaran, hari lain (1-4) = 10 jam pelajaran
+        return ($dayOfWeek === 5) ? 8 : 10;
+    }
 
-        return "Pengajuan dispensasi hanya dapat dilakukan pada pukul <strong>08:00 - {$jamTutup} WIB</strong>.";
+    /**
+     * Hitung selisih menit keterlambatan
+     */
+    public static function hitungMenitTerlambat($batasWaktu, $referenceTime = null): int
+    {
+        if (empty($batasWaktu)) return 0;
+
+        $batas = $batasWaktu instanceof \Carbon\Carbon ? $batasWaktu : \Carbon\Carbon::parse($batasWaktu);
+        $referensi = $referenceTime ?? now();
+
+        if ($referensi->lessThanOrEqualTo($batas)) return 0;
+
+        return (int) ceil($batas->diffInSeconds($referensi) / 60);
+    }
+
+    /**
+     * Format teks keterlambatan
+     */
+    public static function formatDurasiTerlambat(int $menit, bool $short = false): string
+    {
+        if ($menit <= 0) return '0 menit';
+
+        $jam = floor($menit / 60);
+        $sisaMenit = $menit % 60;
+
+        if ($short) {
+            return $jam > 0 ? "{$jam}j {$sisaMenit}m" : "{$menit}m";
+        }
+
+        $bagian = [];
+        if ($jam > 0) $bagian[] = "{$jam} jam";
+        if ($sisaMenit > 0 || $jam === 0) $bagian[] = "{$sisaMenit} menit";
+
+        return implode(' ', $bagian);
     }
 }

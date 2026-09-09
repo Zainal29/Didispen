@@ -12,8 +12,9 @@ class DashboardController extends Controller
     {
         $today = now()->format('Y-m-d');
         $filter = $request->get('filter', 'semua');
+        $search = $request->get('search', ''); // <i class="fas fa-check-circle"></i> BARU: Ambil kata kunci pencarian
 
-        // 1. STATISTIK HARI INI
+        // 1. STATISTIK HARI INI (Tetap global untuk hari ini)
         $stats = [
             'menunggu' => Dispensasi::where('status', 'menunggu')->whereDate('created_at', $today)->count(),
             'disetujui' => Dispensasi::where('status', 'disetujui')->whereDate('created_at', $today)->count(),
@@ -22,40 +23,31 @@ class DashboardController extends Controller
             'total' => Dispensasi::whereDate('created_at', $today)->count(),
         ];
 
-        // 2. QUERY DATA
-        // Catatan: Untuk 'menunggu', guru_id masih null, jadi kita ambil semua yang menunggu hari ini
-        $menunggu = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
-            ->where('status', 'menunggu')
-            ->whereDate('created_at', $today)
-            ->latest()
-            ->get();
+        // 2. QUERY DASAR DENGAN PENCARIAN <i class="fas fa-check-circle"></i>
+        $baseQuery = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+            ->whereDate('created_at', $today);
 
-        $disetujui = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-            ->where('status', 'disetujui')
-            ->whereDate('created_at', $today)
-            ->latest()
-            ->get();
+        // Jika ada kata kunci pencarian, filter query-nya
+        if ($search) {
+            $baseQuery->where(function($q) use ($search) {
+                $q->where('nomor_surat', 'like', "%{$search}%")
+                  ->orWhereHas('siswa', function($q2) use ($search) {
+                      $q2->where('nama_lengkap', 'like', "%{$search}%")
+                         ->orWhereHas('user', function($q3) use ($search) {
+                             $q3->where('nis_nip', 'like', "%{$search}%");
+                         });
+                  });
+            });
+        }
 
-        $sedangKeluar = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-            ->where('status', 'keluar')
-            ->whereDate('created_at', $today)
-            ->latest()
-            ->get();
+        // 3. CLONE QUERY UNTUK SETIAP KATEGORI (Agar search berlaku di semua tab)
+        $menunggu = (clone $baseQuery)->where('status', 'menunggu')->latest()->get();
+        $disetujui = (clone $baseQuery)->where('status', 'disetujui')->latest()->get();
+        $sedangKeluar = (clone $baseQuery)->where('status', 'keluar')->latest()->get();
+        $selesai = (clone $baseQuery)->where('status', 'selesai')->latest()->get();
+        $terlambat = (clone $baseQuery)->where('status', 'keluar')->where('batas_waktu_kembali', '<', now())->latest()->get();
 
-        $selesai = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-            ->where('status', 'selesai')
-            ->whereDate('created_at', $today)
-            ->latest()
-            ->get();
-
-        $terlambat = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-            ->where('status', 'keluar')
-            ->whereDate('created_at', $today)
-            ->where('batas_waktu_kembali', '<', now())
-            ->latest()
-            ->get();
-
-        // 3. TENTUKAN DATA YANG DITAMPILKAN
+        // 4. TENTUKAN DATA YANG DITAMPILKAN
         $displayData = match($filter) {
             'menunggu' => $menunggu,
             'keluar' => $sedangKeluar,
@@ -65,8 +57,32 @@ class DashboardController extends Controller
             default => $menunggu->merge($disetujui)->merge($sedangKeluar)->merge($selesai)->sortByDesc('created_at')->values(),
         };
 
+        $dihubungi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+            ->where('is_warned', true)
+            ->whereDate('warned_at', today())
+            ->latest('warned_at')
+            ->limit(30)
+            ->get();
+
         return view('guru.dashboard', compact(
-            'stats', 'filter', 'menunggu', 'sedangKeluar', 'selesai', 'terlambat', 'disetujui', 'displayData'
+            'stats', 'filter', 'search', 'menunggu', 'sedangKeluar', 'selesai', 'terlambat', 'disetujui', 'displayData', 'dihubungi'
         ));
+    }
+
+    /**
+     * Tandai dispensasi sudah dihubungi via WhatsApp
+     */
+    public function markWaContacted(Dispensasi $dispensasi)
+    {
+        if ($dispensasi->status !== 'keluar') {
+            return response()->json(['success' => false, 'message' => 'Dispensasi tidak valid']);
+        }
+
+        $dispensasi->update([
+            'is_warned' => true,
+            'warned_at' => now(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

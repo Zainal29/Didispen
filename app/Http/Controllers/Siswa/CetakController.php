@@ -36,7 +36,7 @@ class CetakController extends Controller
                 ->with('error', "Batas cetak Anda telah tercapai ({$maxPrint} kali). Hubungi guru untuk mencetak.");
         }
 
-        // 4. ✅ Increment counter SISWA
+        // 4. <i class="fas fa-check-circle"></i> Increment counter SISWA
         $dispensasi->update([
             'student_print_count' => $currentCount + 1,
             'printed_at' => now(),

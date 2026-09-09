@@ -34,22 +34,11 @@ class PengajuanController extends Controller
     public function create()
     {
         $siswa = auth()->user()->siswa;
-
-        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
-
-        if (! $timeCheck['allowed']) {
-            return redirect()->route('siswa.pengajuan.index')
-                ->with('error', $timeCheck['reason'].' Saat ini: '.($timeCheck['current_day'] ?? '').' '.($timeCheck['current_time'] ?? ''));
+        if (! $siswa) {
+            abort(403, 'Profil siswa tidak ditemukan.');
         }
 
-        $pending = Dispensasi::where('siswa_id', $siswa->id)
-            ->where('status', 'menunggu')
-            ->first();
-
-        if ($pending) {
-            return redirect()->route('siswa.pengajuan.index')
-                ->with('warning', 'Anda masih memiliki pengajuan yang belum diproses (No. '.$pending->nomor_surat.'). Tunggu persetujuan terlebih dahulu.');
-        }
+        $siswa->load(['kelas.jurusan', 'user']);
 
         return view('siswa.pengajuan.create', compact('siswa'));
     }
@@ -59,7 +48,7 @@ class PengajuanController extends Controller
         $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
         if (! $timeCheck['allowed']) {
             return redirect()->route('siswa.pengajuan.index')
-                ->with('error', 'Pengajuan ditolak: '.$timeCheck['reason']);
+                ->with('error', 'Pengajuan ditolak: ' . $timeCheck['reason']);
         }
 
         $validated = $request->validate([
@@ -74,60 +63,64 @@ class PengajuanController extends Controller
         ], [
             'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
             'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',
-            'no_telepon.regex' => 'Format nomor tidak valid. Contoh: 081234567890 atau 6281234567890.',
+            'no_telepon.regex' => 'Format nomor tidak valid.',
         ]);
 
-        $currentLessonHour = $this->getCurrentLessonHour();
-
-        if ($validated['jam_keluar'] < $currentLessonHour) {
-            return back()->withErrors([
-                'jam_keluar' => 'Anda tidak dapat memilih jam yang sudah berlalu. Jam pelajaran saat ini adalah ke-'.$currentLessonHour.'. Silakan pilih mulai dari Jam Pelajaran ke-'.$currentLessonHour.'.',
-            ])->withInput();
-        }
-
-        $siswa = auth()->user()->siswa;
-
-        $pendingExists = Dispensasi::where('siswa_id', $siswa->id)
-            ->where('status', 'menunggu')
-            ->exists();
-        if ($pendingExists) {
-            return redirect()->route('siswa.pengajuan.index')
-                ->with('error', 'Anda masih memiliki pengajuan yang belum diproses.');
-        }
+        $fotoPath = null; // ✅ Definisikan di luar agar bisa diakses catch block
 
         try {
-            $normalizedPhone = $this->normalizePhoneNumber($validated['no_telepon']);
-            $siswa->update(['no_telepon' => $normalizedPhone]);
+            \DB::transaction(function () use ($request, $validated, &$fotoPath) {
+                $siswa = auth()->user()->siswa;
 
-            $fotoPath = null;
-            if ($request->hasFile('foto_verifikasi')) {
-                $fotoPath = $request->file('foto_verifikasi')->store('foto-verifikasi', ['disk' => 'public']);
-            }
+                $pendingDispensasi = Dispensasi::where('siswa_id', $siswa->id)
+                    ->where('status', 'menunggu')
+                    ->lockForUpdate()
+                    ->first();
 
-            $batasWaktu = $this->hitungBatasWaktuKembali($validated['jam_kembali']);
+                if ($pendingDispensasi) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'kategori' => 'Anda masih memiliki pengajuan yang belum diproses.'
+                    ]);
+                }
 
-            Dispensasi::create([
-                'siswa_id' => $siswa->id,
-                'guru_id' => null,
-                'nomor_surat' => $this->generateNomorSurat(),
-                'status' => 'menunggu',
-                'kategori' => $validated['kategori'],
-                'alasan' => $validated['alasan'],
-                'tujuan' => $validated['tujuan'],
-                'lokasi' => $validated['lokasi'] ?? null,
-                'jam_keluar' => 'Jam Pelajaran ke-'.$validated['jam_keluar'],
-                'jam_kembali' => 'Jam Pelajaran ke-'.$validated['jam_kembali'],
-                'batas_waktu_kembali' => $batasWaktu,
-                'foto_verifikasi' => $fotoPath,
-            ]);
+                $normalizedPhone = $this->normalizePhoneNumber($validated['no_telepon']);
+                $siswa->update(['no_telepon' => $normalizedPhone]);
+
+                if ($request->hasFile('foto_verifikasi')) {
+                    $fotoPath = $request->file('foto_verifikasi')->store('foto-verifikasi', ['disk' => 'public']);
+                }
+
+                $batasWaktu = $this->hitungBatasWaktuKembali($validated['jam_kembali']);
+
+                Dispensasi::create([
+                    'siswa_id' => $siswa->id,
+                    'guru_id' => null,
+                    'nomor_surat' => $this->generateNomorSurat(),
+                    'status' => 'menunggu',
+                    'kategori' => $validated['kategori'],
+                    'alasan' => $validated['alasan'],
+                    'tujuan' => $validated['tujuan'],
+                    'lokasi' => $validated['lokasi'] ?? null,
+                    'jam_keluar' => 'Jam Pelajaran ke-' . $validated['jam_keluar'],
+                    'jam_kembali' => 'Jam Pelajaran ke-' . $validated['jam_kembali'],
+                    'batas_waktu_kembali' => $batasWaktu,
+                    'foto_verifikasi' => $fotoPath,
+                ]);
+            });
 
             return redirect()->route('siswa.pengajuan.index')
-                ->with('success', 'Pengajuan dispensasi berhasil dibuat. Menunggu persetujuan guru piket.');
+                ->with('success', 'Pengajuan dispensasi berhasil dibuat.');
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // ✅ Hapus foto jika validasi gagal di dalam transaction
+            if ($fotoPath) \Illuminate\Support\Facades\Storage::disk('public')->delete($fotoPath);
+            throw $e;
         } catch (\Exception $e) {
-            Log::error('Gagal membuat dispensasi: '.$e->getMessage());
+            // ✅ Hapus foto jika database error/rollback
+            if ($fotoPath) \Illuminate\Support\Facades\Storage::disk('public')->delete($fotoPath);
+            Log::error('Gagal membuat dispensasi: ' . $e->getMessage());
             return redirect()->back()->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan pengajuan. Silakan coba lagi.');
+                ->with('error', 'Terjadi kesalahan saat menyimpan pengajuan.');
         }
     }
 
@@ -142,7 +135,7 @@ class PengajuanController extends Controller
     }
 
     /**
-     * ✅ PERBAIKAN: Generate QR Code hanya berisi Token JSON, dan kembalikan URL absolut
+     * <i class="fas fa-check-circle"></i> PERBAIKAN: Generate QR Code hanya berisi Token JSON, dan kembalikan URL absolut
      */
     public function getQRCode(Dispensasi $dispensasi)
     {
@@ -150,10 +143,10 @@ class PengajuanController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        if ($dispensasi->status !== 'disetujui') {
+        if (! in_array($dispensasi->status, ['disetujui', 'keluar'], true)) {
             return response()->json([
                 'success' => false,
-                'message' => 'QR Code hanya tersedia untuk pengajuan yang sudah DISETUJUI.',
+                'message' => 'QR Code hanya tersedia untuk pengajuan yang sudah disetujui atau sedang keluar.',
             ], 400);
         }
 
@@ -162,7 +155,7 @@ class PengajuanController extends Controller
                 $dispensasi->qr_token = Str::random(64);
             }
 
-            // ✅ HANYA TOKEN DALAM FORMAT JSON (Agnostik terhadap domain)
+            // <i class="fas fa-check-circle"></i> HANYA TOKEN DALAM FORMAT JSON (Agnostik terhadap domain)
             $qrContent = json_encode(['token' => $dispensasi->qr_token]);
             $qrCodePath = 'qr_codes/dispensasi_'.$dispensasi->id.'.png';
 
@@ -180,7 +173,7 @@ class PengajuanController extends Controller
         return response()->json([
             'success' => true,
             'qr_code' => $dispensasi->qr_code,
-            // ✅ URL ABSOLUT agar frontend bisa menampilkannya di localhost MAUPUN production
+            // <i class="fas fa-check-circle"></i> URL ABSOLUT agar frontend bisa menampilkannya di localhost MAUPUN production
             'qr_code_url' => asset('storage/' . $dispensasi->qr_code),
             'nomor_surat' => $dispensasi->nomor_surat,
             'jam_keluar' => $dispensasi->jam_keluar,
@@ -247,5 +240,63 @@ class PengajuanController extends Controller
         $parts = explode(' - ', $waktuAktual);
         $waktuSelesai = $parts[1] ?? '15:15';
         return Carbon::parse($waktuSelesai)->addMinutes(15);
+    }
+    /**
+     * Upload Foto Bukti (Siswa)
+     */
+    public function uploadFotoBukti(Request $request, Dispensasi $dispensasi)
+    {
+        $request->validate([
+            'foto_bukti' => 'required|image|mimes:jpeg,png,jpg|max:5120', // Max 5MB (aman karena dikompres client-side)
+        ], [
+            'foto_bukti.required' => 'Foto bukti wajib diupload.',
+        ]);
+
+        if ($dispensasi->siswa_id !== auth()->user()->siswa->id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        if ($dispensasi->status !== 'keluar') {
+            return response()->json(['success' => false, 'message' => 'Hanya bisa upload saat status Keluar'], 400);
+        }
+
+        // Hapus foto lama jika ada
+        if ($dispensasi->foto_bukti) {
+            Storage::disk('public')->delete($dispensasi->foto_bukti);
+        }
+
+        $fotoPath = $request->file('foto_bukti')->store('foto-bukti', 'public');
+
+        $dispensasi->update([
+            'foto_bukti' => $fotoPath,
+            'foto_bukti_uploaded_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Foto bukti berhasil diupload',
+            'foto_url' => asset('storage/' . $fotoPath),
+        ]);
+    }
+
+    /**
+     * Hapus Foto Bukti (Siswa)
+     */
+    public function hapusFotoBukti(Dispensasi $dispensasi)
+    {
+        if ($dispensasi->siswa_id !== auth()->user()->siswa->id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        if ($dispensasi->foto_bukti) {
+            Storage::disk('public')->delete($dispensasi->foto_bukti);
+        }
+
+        $dispensasi->update([
+            'foto_bukti' => null,
+            'foto_bukti_uploaded_at' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Foto bukti berhasil dihapus']);
     }
 }

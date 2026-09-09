@@ -16,7 +16,7 @@ class RegenerateQrCode extends Command
 
     public function handle()
     {
-        $this->info('🔍 Mencari dispensasi yang perlu di-regenerate QR Code...');
+        $this->info('Mencari dispensasi yang perlu di-regenerate QR Code...');
 
         // Cari dispensasi yang statusnya disetujui/keluar/selesai tapi qr_code NULL
         $dispensasiList = Dispensasi::whereIn('status', ['disetujui', 'keluar', 'selesai'])
@@ -28,7 +28,7 @@ class RegenerateQrCode extends Command
             ->get();
 
         if ($dispensasiList->count() === 0) {
-            $this->info('✅ Tidak ada dispensasi yang perlu di-regenerate.');
+            $this->info('Tidak ada dispensasi yang perlu di-regenerate.');
             return 0;
         }
 
@@ -37,7 +37,7 @@ class RegenerateQrCode extends Command
         // Pastikan folder ada
         if (!Storage::disk('public')->exists('qr_codes')) {
             Storage::disk('public')->makeDirectory('qr_codes');
-            $this->info("📁 Folder qr_codes dibuat.");
+            $this->info("Folder qr_codes dibuat.");
         }
 
         $success = 0;
@@ -45,7 +45,7 @@ class RegenerateQrCode extends Command
 
         foreach ($dispensasiList as $dispensasi) {
             try {
-                $this->line("\n🔄 Processing: {$dispensasi->nomor_surat}...");
+                $this->line("\nProcessing: {$dispensasi->nomor_surat}...");
 
                 $dispensasi->qr_token ??= Str::random(64);
                 $qrData = ['token' => $dispensasi->qr_token];
@@ -62,12 +62,12 @@ class RegenerateQrCode extends Command
                     'qr_token' => $dispensasi->qr_token,
                 ]);
 
-                $this->info("✅ {$dispensasi->nomor_surat} - QR Code berhasil dibuat");
+                $this->info("[OK] {$dispensasi->nomor_surat} - QR Code berhasil dibuat");
                 $success++;
 
             } catch (\Exception $e) {
                 Log::error("Gagal regenerate QR untuk {$dispensasi->nomor_surat}: " . $e->getMessage());
-                $this->error("❌ {$dispensasi->nomor_surat} - Gagal: " . $e->getMessage());
+                $this->error("[ERROR] {$dispensasi->nomor_surat} - Gagal: " . $e->getMessage());
                 $failed++;
             }
         }
@@ -75,8 +75,8 @@ class RegenerateQrCode extends Command
         $this->newLine();
         $this->info('═══════════════════════════════════════');
         $this->info(' SELESAI!');
-        $this->info("✅ Berhasil: {$success}");
-        $this->info("❌ Gagal: {$failed}");
+        $this->info("Berhasil: {$success}");
+        $this->info("Gagal: {$failed}");
         $this->info('═══════════════════════════════════════');
 
         return 0;

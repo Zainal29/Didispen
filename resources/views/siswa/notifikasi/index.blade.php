@@ -29,22 +29,26 @@
         {{-- List Notifikasi --}}
         <div class="divide-y divide-gray-100">
             @forelse($notifikasi as $notif)
-                @php
-                    $isRead = $notif->is_read;
-                    $message = $notif->message;
+            @php
+                $isRead = $notif->is_read;
+                $message = $notif->message;
 
-                    // Penentuan Icon & Warna berdasarkan isi notifikasi
-                    $iconClass = 'fa-info-circle text-blue-500 bg-blue-50';
-                    if (str_contains($message, 'DISETUJUI')) {
-                        $iconClass = 'fa-check-circle text-emerald-600 bg-emerald-50';
-                    } elseif (str_contains($message, 'DITOLAK')) {
-                        $iconClass = 'fa-times-circle text-red-600 bg-red-50';
-                    } elseif (str_contains($message, 'di-scan') || str_contains($message, 'Keluar')) {
-                        $iconClass = 'fa-door-open text-sky-600 bg-sky-50';
-                    } elseif (str_contains($message, 'SELESAI')) {
-                        $iconClass = 'fa-flag-checkered text-gray-600 bg-gray-100';
-                    }
-                @endphp
+                // Penentuan Icon & Warna berdasarkan isi notifikasi
+                $iconClass = 'fa-info-circle text-blue-500 bg-blue-50';
+
+                // <i class="fas fa-check-circle"></i> TAMBAHKAN KONDISI TERLAMBAT DI SINI
+                if (str_contains($message, 'TERLAMBAT') || str_contains($message, 'terlambat')) {
+                    $iconClass = 'fa-exclamation-triangle text-red-600 bg-red-50';
+                } elseif (str_contains($message, 'DISETUJUI')) {
+                    $iconClass = 'fa-check-circle text-emerald-600 bg-emerald-50';
+                } elseif (str_contains($message, 'DITOLAK')) {
+                    $iconClass = 'fa-times-circle text-red-600 bg-red-50';
+                } elseif (str_contains($message, 'di-scan') || str_contains($message, 'Keluar')) {
+                    $iconClass = 'fa-door-open text-sky-600 bg-sky-50';
+                } elseif (str_contains($message, 'SELESAI')) {
+                    $iconClass = 'fa-flag-checkered text-gray-600 bg-gray-100';
+                }
+            @endphp
                 <div class="p-4 sm:p-5 flex items-start gap-3.5 transition-colors {{ !$isRead ? 'bg-blue-50/40 border-l-4 border-l-blue-600' : 'bg-white hover:bg-gray-50/50' }}">
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-base shadow-sm {{ explode(' ', $iconClass)[2] ?? 'bg-blue-50' }}">
                         <i class="fas {{ explode(' ', $iconClass)[0] }} {{ explode(' ', $iconClass)[1] }}"></i>

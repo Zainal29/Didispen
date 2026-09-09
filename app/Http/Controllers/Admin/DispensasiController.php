@@ -7,8 +7,8 @@ use App\Models\Dispensasi;
 use App\Models\Kelas;
 use App\Models\Jurusan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; // ✅ Tambahkan ini
-use Illuminate\Support\Facades\Log;      // ✅ Tambahkan ini
+use Illuminate\Support\Facades\Storage; // <i class="fas fa-check-circle"></i> Tambahkan ini
+use Illuminate\Support\Facades\Log;      // <i class="fas fa-check-circle"></i> Tambahkan ini
 
 class DispensasiController extends Controller
 {
@@ -50,37 +50,35 @@ class DispensasiController extends Controller
     }
 
     /**
-     * ✅ BARU: Hapus data dispensasi beserta file terkait
+     * <i class="fas fa-check-circle"></i> BARU: Hapus data dispensasi beserta file terkait
      */
      /**
       * Hapus data dispensasi beserta file terkait
       */
-     public function destroy(Dispensasi $dispensasi)
-     {
-         try {
-             // 1. Hapus file QR Code jika ada
-             if ($dispensasi->qr_code && Storage::disk('public')->exists($dispensasi->qr_code)) {
-                 Storage::disk('public')->delete($dispensasi->qr_code);
-             }
+      public function destroy(Dispensasi $dispensasi)
+      {
+          try {
+              \Illuminate\Support\Facades\DB::transaction(function () use ($dispensasi) {
+                  $files = array_filter([
+                      $dispensasi->qr_code,
+                      $dispensasi->foto_verifikasi,
+                      $dispensasi->foto_bukti,
+                  ]);
 
-             // 2. Hapus file foto verifikasi jika ada
-             if ($dispensasi->foto_verifikasi && Storage::disk('public')->exists($dispensasi->foto_verifikasi)) {
-                 Storage::disk('public')->delete($dispensasi->foto_verifikasi);
-             }
+                  foreach ($files as $file) {
+                      if (\Illuminate\Support\Facades\Storage::disk('public')->exists($file)) {
+                          \Illuminate\Support\Facades\Storage::disk('public')->delete($file);
+                      }
+                  }
+                  $dispensasi->delete();
+              });
 
-             // 3. Hapus data dari database
-             $dispensasi->delete();
-
-             // ✅ PERBAIKAN: Redirect ke route yang benar
-             return redirect()->route('admin.semua.pengajuan')
-                 ->with('success', 'Data dispensasi berhasil dihapus secara permanen.');
-
-         } catch (\Exception $e) {
-             Log::error('Gagal menghapus dispensasi: ' . $e->getMessage());
-
-             // ✅ PERBAIKAN: Redirect ke route yang benar juga di error
-             return redirect()->route('admin.semua.pengajuan')
-                 ->with('error', 'Data berhasil dihapus, tetapi terjadi kesalahan: ' . $e->getMessage());
-         }
-     }
+              return redirect()->route('admin.semua.pengajuan')
+                  ->with('success', 'Data dispensasi berhasil dihapus secara permanen.');
+          } catch (\Exception $e) {
+              \Illuminate\Support\Facades\Log::error('Gagal menghapus dispensasi: ' . $e->getMessage());
+              return redirect()->route('admin.semua.pengajuan')
+                  ->with('error', 'Terjadi kesalahan saat menghapus data.');
+          }
+      }
 }

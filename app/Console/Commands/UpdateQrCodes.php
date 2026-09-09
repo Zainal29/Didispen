@@ -46,7 +46,7 @@ class UpdateQrCodes extends Command
 
         $bar->finish();
         $this->newLine();
-        $this->info("✅ Selesai! {$dispensasis->count()} QR Code berhasil di-update.");
+        $this->info("Selesai! {$dispensasis->count()} QR Code berhasil di-update.");
 
         return 0;
     }

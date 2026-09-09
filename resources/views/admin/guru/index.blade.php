@@ -109,7 +109,7 @@
                             @endif
                         </td>
 
-                        {{-- ✅ KOLOM ALAMAT LENGKAP DENGAN FITUR COPY --}}
+                        {{-- <i class="fas fa-check-circle"></i> KOLOM ALAMAT LENGKAP DENGAN FITUR COPY --}}
                         <td class="p-4 align-top">
                             @if($g->alamat)
                                 <div class="group/address relative max-w-[240px]">

@@ -4,7 +4,6 @@
 @section('page-title', 'Riwayat Pengajuan Dispensasi')
 
 @section('content')
-
 @include('components.alert')
 
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -23,6 +22,7 @@
                     <option value="menunggu"  {{ request('status') == 'menunggu'  ? 'selected' : '' }}>Menunggu</option>
                     <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                     <option value="ditolak"   {{ request('status') == 'ditolak'   ? 'selected' : '' }}>Ditolak</option>
+                    <option value="keluar"    {{ request('status') == 'keluar'    ? 'selected' : '' }}>Sedang Keluar</option>
                     <option value="selesai"   {{ request('status') == 'selesai'   ? 'selected' : '' }}>Selesai</option>
                 </select>
             </form>
@@ -54,15 +54,24 @@
                 </div>
                 <p class="text-[11px] text-gray-500">{{ $p->created_at->format('d/m/Y') }} • <span class="capitalize">{{ str_replace('_', ' ', $p->kategori) }}</span></p>
                 <p class="text-[11px] text-gray-500 mt-0.5 truncate"><i class="far fa-clock mr-1"></i>{{ $p->jam_keluar }} – {{ $p->jam_kembali }} • {{ $p->tujuan }}</p>
+
                 <div class="flex items-center justify-between mt-3">
                     <a href="{{ route('siswa.pengajuan.show', $p) }}"
                        class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-transform">
-                        <i class="fas fa-eye mr-1.5"></i>Lihat Detail
+                        <i class="fas fa-eye mr-1.5"></i>Detail
                     </a>
-                    @if($p->qr_code && $p->status === 'disetujui')
-                        <button onclick="showQRCode({{ $p->id }})" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 active:bg-blue-600 active:text-white transition-colors" title="Lihat QR Code">
-                            <i class="fas fa-qrcode"></i>
-                        </button>
+
+                    {{-- <i class="fas fa-check-circle"></i> TOMBOL FOTO BUKTI (MOBILE) --}}
+                    @if($p->status === 'keluar')
+                        @if($p->foto_bukti)
+                            <button onclick="showPreview('{{ asset('storage/' . $p->foto_bukti) }}', '{{ $p->nomor_surat }}')" class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 active:bg-emerald-600 active:text-white transition-colors flex items-center justify-center" title="Lihat Foto Bukti">
+                                <i class="fas fa-image"></i>
+                            </button>
+                        @else
+                            <button onclick="openUploadModal({{ $p->id }})" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 active:bg-blue-600 active:text-white transition-colors flex items-center justify-center" title="Upload Foto Bukti">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -85,7 +94,7 @@
                     <th class="p-4 text-left">Tujuan</th>
                     <th class="p-4 text-left">Waktu</th>
                     <th class="p-4 text-left">Status</th>
-                    <th class="p-4 text-center">QR Code</th>
+                    <th class="p-4 text-center">Foto Bukti</th> {{-- <i class="fas fa-check-circle"></i> DIGANTI DARI QR CODE --}}
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -110,19 +119,31 @@
                                 {{ ucfirst($p->status) }}
                             </span>
                         </td>
+                        {{-- <i class="fas fa-check-circle"></i> KOLOM DATA FOTO BUKTI --}}
                         <td class="p-4 text-center">
-                            @if($p->qr_code && $p->status === 'disetujui')
-                                <button onclick="showQRCode({{ $p->id }})" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all inline-flex items-center justify-center" title="Lihat QR Code">
-                                    <i class="fas fa-qrcode"></i>
-                                </button>
+                            @if($p->status === 'keluar')
+                                @if($p->foto_bukti)
+                                    <div class="flex items-center justify-center gap-2">
+                                        <img src="{{ asset('storage/' . $p->foto_bukti) }}"
+                                             class="w-10 h-10 object-cover rounded-lg border border-emerald-300 cursor-pointer hover:scale-110 transition-transform"
+                                             onclick="showPreview('{{ asset('storage/' . $p->foto_bukti) }}', '{{ $p->nomor_surat }}')">
+                                        <button onclick="hapusFoto({{ $p->id }})" class="text-red-500 hover:text-red-700 p-1" title="Hapus Foto">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                @else
+                                    <button onclick="openUploadModal({{ $p->id }})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                        <i class="fas fa-camera mr-1"></i> Upload
+                                    </button>
+                                @endif
                             @else
-                                <span class="text-gray-300">—</span>
+                                <span class="text-gray-400 text-xs">—</span>
                             @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="p-12 text-center">
+                        <td colspan="7" class="p-12 text-center"> {{-- <i class="fas fa-check-circle"></i> Colspan disesuaikan jadi 7 --}}
                             <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-50 text-blue-300 flex items-center justify-center text-2xl mb-3"><i class="fas fa-inbox"></i></div>
                             <p class="text-gray-500 font-semibold text-sm">Belum ada pengajuan dispensasi</p>
                         </td>
@@ -137,63 +158,144 @@
     @endif
 </div>
 
-{{-- ============ MODAL QR CODE ============ --}}
-<div id="qrModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-5 max-w-sm w-full text-center">
-        <div class="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center text-xl shadow-lg shadow-blue-500/30 mb-3">
-            <i class="fas fa-qrcode"></i>
-        </div>
-        <h3 class="text-base font-bold text-gray-900">QR Code Dispensasi</h3>
-        <p class="text-xs text-gray-500 mt-1 mb-4">Tunjukkan layar ini ke Petugas Satpam</p>
+{{-- ============ MODAL UPLOAD FOTO BUKTI ============ --}}
+<div id="uploadModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        <h3 class="text-lg font-bold mb-4 flex items-center"><i class="fas fa-camera text-emerald-600 mr-2"></i>Upload Foto Bukti</h3>
+        <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
+            @csrf
+            <input type="hidden" id="dispensasiId">
 
-        <div id="qrContent" class="flex justify-center items-center bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 mb-4 min-h-[200px]">
-            <p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat...</p>
-        </div>
+            <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                <img id="previewImg" class="hidden max-h-48 mx-auto rounded-lg mb-3 shadow-sm">
+                <p class="text-sm text-gray-600 mb-3">Foto akan dikompres otomatis agar cepat diupload</p>
+                <label class="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors inline-flex items-center">
+                    <i class="fas fa-image mr-2"></i> Pilih Foto / Kamera
+                    <input type="file" id="fotoInput" name="foto_bukti" accept="image/*" capture="environment" class="hidden" required>
+                </label>
+            </div>
 
-        <button onclick="closeQRModal()" class="w-full px-4 py-2.5 rounded-xl text-sm font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors">
-            Tutup
-        </button>
+            <div class="flex gap-2">
+                <button type="button" onclick="closeUploadModal()" class="flex-1 py-2.5 bg-gray-200 rounded-xl font-bold hover:bg-gray-300 transition-colors">Batal</button>
+                <button type="submit" id="btnSubmit" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-500/20">Upload</button>
+            </div>
+        </form>
     </div>
 </div>
 
 @push('scripts')
+{{-- <i class="fas fa-check-circle"></i> Library Auto-Compress Client-Side --}}
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+
 <script>
-function showQRCode(dispensasiId) {
-    const modal = document.getElementById('qrModal');
-    const content = document.getElementById('qrContent');
-
-    modal.classList.remove('hidden');
-    content.innerHTML = '<p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat QR Code...</p>';
-
-    fetch(`/siswa/qr-code/${dispensasiId}`)
-        .then(response => {
-            if (!response.ok) throw new Error('Gagal memuat data');
-            return response.json();
-        })
-        .then(data => {
-            if (data.qr_code) {
-                const image = document.createElement('img');
-                image.src = '/storage/' + data.qr_code.split('/').map(encodeURIComponent).join('/');
-                image.alt = 'QR Code';
-                image.className = 'w-52 h-52 object-contain rounded-lg';
-                content.replaceChildren(image);
-            } else {
-                content.innerHTML = '<p class="text-red-500 text-sm">QR Code belum tersedia.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            content.innerHTML = '<p class="text-red-500 text-sm">Gagal memuat QR Code.</p>';
-        });
+// 1. Modal Functions
+function openUploadModal(id) {
+    document.getElementById('dispensasiId').value = id;
+    document.getElementById('uploadModal').classList.remove('hidden');
 }
 
-function closeQRModal() {
-    document.getElementById('qrModal').classList.add('hidden');
+function closeUploadModal() {
+    document.getElementById('uploadModal').classList.add('hidden');
+    document.getElementById('uploadForm').reset();
+    document.getElementById('previewImg').classList.add('hidden');
 }
 
-document.getElementById('qrModal').addEventListener('click', function(e) {
-    if (e.target === this) closeQRModal();
+// 2. Auto-Compress Logic
+document.getElementById('fotoInput').addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    Swal.fire({ title: 'Mengompres foto...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    try {
+        const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1024, useWebWorker: true };
+        const compressedFile = await imageCompression(file, options);
+
+        // <i class="fas fa-check-circle"></i> PERBAIKAN: Simpan compressedFile ke variabel global untuk form submit
+        window.compressedFotoBukti = compressedFile;
+
+        // Preview
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            document.getElementById('previewImg').src = ev.target.result;
+            document.getElementById('previewImg').classList.remove('hidden');
+        };
+        reader.readAsDataURL(compressedFile);
+        Swal.close();
+    } catch (error) {
+        Swal.close();
+        Swal.fire('Error', 'Gagal mengompres: ' + error.message, 'error');
+    }
 });
+
+// 3. Handle Submit Upload
+document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('dispensasiId').value;
+    const formData = new FormData(this);
+
+    // <i class="fas fa-check-circle"></i> PERBAIKAN: Hapus file lama dan tambahkan compressed file
+    formData.delete('foto_bukti');
+    if (window.compressedFotoBukti) {
+        formData.append('foto_bukti', window.compressedFotoBukti, window.compressedFotoBukti.name);
+    }
+
+    const btn = document.getElementById('btnSubmit');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Mengupload...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`/siswa/pengajuan/${id}/upload-foto-bukti`, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+            body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: data.message, timer: 1500, showConfirmButton: false }).then(() => location.reload());
+        } else {
+            Swal.fire('Gagal', data.message || 'Terjadi kesalahan', 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error', 'Terjadi kesalahan jaringan', 'error');
+    } finally {
+        btn.innerHTML = 'Upload';
+        btn.disabled = false;
+        window.compressedFotoBukti = null; // Reset
+    }
+});
+
+// 4. Hapus Foto
+async function hapusFoto(id) {
+    if (await Swal.fire({ title: 'Hapus foto?', text: 'Foto bukti akan dihapus permanen.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Ya, Hapus' }).then(r => r.isConfirmed)) {
+        try {
+            const res = await fetch(`/siswa/pengajuan/${id}/hapus-foto-bukti`, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' }
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1500, showConfirmButton: false }).then(() => location.reload());
+            } else {
+                Swal.fire('Gagal', data.message, 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Gagal menghapus foto', 'error');
+        }
+    }
+}
+
+// 5. Preview Foto Besar
+function showPreview(url, nomorSurat) {
+    Swal.fire({
+        imageUrl: url,
+        imageAlt: 'Foto Bukti ' + nomorSurat,
+        showConfirmButton: false,
+        background: '#fff',
+        padding: '1rem'
+    });
+}
 </script>
 @endpush
 @endsection

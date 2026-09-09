@@ -9,12 +9,13 @@
 ---
 
 ## 📌 Tentang Proyek
-**DIDISPEN (Digital Dispensasi Pendidikan)** adalah sistem manajemen perizinan dan dispensasi keluar-masuk siswa berbasis web yang dirancang khusus untuk **SMKN 1 Bangsri**. 
+**DIDISPEN (Digital Dispensasi Pendidikan)** adalah sistem manajemen perizinan dan dispensasi keluar-masuk siswa berbasis web yang dirancang khusus untuk **SMKN 1 Bangsri**.
 
 Sistem ini menggantikan dispensasi kertas dengan alur digital *real-time*: pengajuan oleh siswa, verifikasi oleh Guru Piket, pemindaian **Kode QR** dinamis di pos Satpam, hingga pencetakan struk thermal dan laporan rekapitulasi.
 
 **Fitur Utama:**
-- ✅ **Multi-Role Access:** Hak akses terpisah untuk Siswa, Guru Piket, Satpam, dan Admin.
+-
+**Multi-Role Access:** Hak akses terpisah untuk Siswa, Guru Piket, Satpam, dan Admin.
 - ✅ **Dynamic QR Code:** QR Code unik yang hanya bisa di-scan 1 kali untuk mencegah penyalahgunaan.
 - ✅ **Real-time Validation:** Validasi jam keluar, jam kembali, dan status keterlambatan secara otomatis.
 - ✅ **Thermal Printing:** Dukungan cetak struk dispensasi ukuran 58mm untuk arsip satpam.
@@ -93,7 +94,7 @@ Akses aplikasi melalui browser di: `http://127.0.0.1:8000`
 
 ### 👨‍🎓 1. Panduan untuk SISWA
 1. **Login:** Masuk menggunakan NIS dan password default (`password`).
-2. **Buat Pengajuan:** 
+2. **Buat Pengajuan:**
    - Klik tombol **"+ Buat Pengajuan"** di Dashboard.
    - Pilih Kategori (Sakit/Izin/Keperluan Sekolah), isi Lokasi, Alasan, serta estimasi Jam Keluar dan Jam Kembali.
    - Klik **Kirim**. Status akan berubah menjadi *"Menunggu"*.
@@ -113,7 +114,7 @@ Akses aplikasi melalui browser di: `http://127.0.0.1:8000`
 1. **Izinkan Kamera:** Saat pertama kali membuka menu **"Scan QR"**, browser akan meminta izin akses kamera. Klik **"Allow" / "Izinkan"**.
 2. **Scan Saat Siswa Keluar:**
    - Arahkan kamera ke QR Code siswa.
-   - Jika valid, sistem akan berbunyi/bernotifikasi **"✅ Siswa berhasil dicatat KELUAR"**. 
+   - Jika valid, sistem akan berbunyi/bernotifikasi **"✅ Siswa berhasil dicatat KELUAR"**.
    - *Catatan:* QR Code hanya bisa di-scan **1 kali**. Scan kedua akan ditolak.
 3. **Konfirmasi Saat Siswa Kembali:**
    - Buka Dashboard Satpam, lihat tabel **"Siswa Sedang Keluar"**.
@@ -122,7 +123,7 @@ Akses aplikasi melalui browser di: `http://127.0.0.1:8000`
 
 ### 👨‍💼 4. Panduan untuk ADMIN
 1. **Manajemen Data:** Admin dapat melihat data Siswa, Guru, dan Jadwal Piket di menu sidebar.
-2. **Sinkronisasi SiPintu:** 
+2. **Sinkronisasi SiPintu:**
    - Buka menu **"Sinkronisasi SiPintu"**.
    - Klik **"Test Koneksi"** untuk memastikan API sekolah aktif.
    - Klik **"Sinkronisasi"** untuk menarik data terbaru siswa/guru agar akun login mereka otomatis terbuat/terupdate.
@@ -160,10 +161,10 @@ Akses aplikasi melalui browser di: `http://127.0.0.1:8000`
 
 ---
 
-© 2026 **DIDISPEN - SMKN 1 Bangsri**. All rights reserved.  
+© 2026 **DIDISPEN - SMKN 1 Bangsri**. All rights reserved.
 Developed by **By 3M** *(Maulana Fahri Oktavian • Muhammad Sabrian Nuh • Muhammad Zainal Arief)*.
 
---- 
+---
 
 ### 💡 **Apa yang diperbaiki dari versi sebelumnya?**
 1. **Menambahkan "Fitur Utama"** agar pembaca langsung tahu keunggulan sistem.

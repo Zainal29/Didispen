@@ -71,9 +71,10 @@ class SatpamScanVerifyTest extends TestCase
 
     public function test_verify_with_url_payload_from_struk_returns_success(): void
     {
+        // ✅ PERBAIKAN: Tambahkan actingAs agar terautentikasi sebagai satpam
         $response = $this->actingAs($this->satpam)
             ->postJson('/satpam/scan/verify', [
-                'qr_data' => url('/verifikasi/'.$this->dispensasi->id),
+                'qr_data' => url('/verifikasi/' . $this->dispensasi->id . '?token=' . $this->dispensasi->qr_token),
             ]);
 
         $response->assertOk()->assertJson(['success' => true]);

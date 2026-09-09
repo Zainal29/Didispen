@@ -5,7 +5,7 @@
 
 @section('content')
 
-{{-- ✅ NOTIFIKASI SUKSES / ERROR --}}
+{{-- <i class="fas fa-check-circle"></i> NOTIFIKASI SUKSES / ERROR --}}
 @if(session('success'))
     <div class="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
         <i class="fas fa-check-circle text-emerald-600 text-xl"></i>
@@ -94,14 +94,14 @@
                     <td class="p-3 text-sm">{{ $d->guru?->nama_lengkap ?? '-' }}</td>
                     <td class="p-3 text-center">
                         <div class="flex items-center justify-center gap-2">
-                            {{-- ✅ DIPERBAIKI: Menggunakan route 'admin.semua.pengajuan.show' --}}
+                            {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Menggunakan route 'admin.semua.pengajuan.show' --}}
                             <a href="{{ route('admin.semua.pengajuan.show', $d->id) }}"
                                class="inline-flex items-center justify-center w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
                                title="Lihat Detail">
                                 <i class="fas fa-eye text-sm"></i>
                             </a>
 
-                            {{-- ✅ DIPERBAIKI: Menggunakan route 'admin.semua.pengajuan.destroy' --}}
+                            {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Menggunakan route 'admin.semua.pengajuan.destroy' --}}
                             <button type="button"
                                     onclick="confirmDelete({{ $d->id }}, '{{ $d->nomor_surat }}', '{{ $d->siswa->nama_lengkap }}')"
                                     class="inline-flex items-center justify-center w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
@@ -128,7 +128,7 @@
     @endif
 </div>
 
-{{-- ✅ SCRIPT SWEETALERT UNTUK KONFIRMASI HAPUS --}}
+{{-- <i class="fas fa-check-circle"></i> SCRIPT SWEETALERT UNTUK KONFIRMASI HAPUS --}}
 @push('scripts')
 <script>
 function confirmDelete(id, nomorSurat, namaSiswa) {
@@ -168,7 +168,7 @@ function confirmDelete(id, nomorSurat, namaSiswa) {
 
             // Buat form dinamis untuk method DELETE
             const form = document.createElement('form');
-            // ✅ DIPERBAIKI: URL disesuaikan dengan route 'semua-pengajuan'
+            // <i class="fas fa-check-circle"></i> DIPERBAIKI: URL disesuaikan dengan route 'semua-pengajuan'
             form.method = 'POST';
             form.action = `/admin/semua-pengajuan/${id}`;
 

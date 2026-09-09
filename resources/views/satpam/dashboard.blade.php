@@ -6,7 +6,7 @@
 @section('content')
 @include('components.alert')
 
-{{-- ✅ CSS UNTUK SMOOTH TRANSITIONS --}}
+{{-- <i class="fas fa-check-circle"></i> CSS UNTUK SMOOTH TRANSITIONS --}}
 <style>
     .filter-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .filter-btn:hover { transform: translateY(-2px); }
@@ -37,7 +37,7 @@
             <p class="text-red-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">
                 {{ now()->isoFormat('dddd, D MMMM Y') }} • Pos Gerbang
             </p>
-            {{-- ✅ DIPERBAIKI: Emoji 👋 diganti dengan icon fa-hand-sparkles --}}
+            {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Emoji 👋 diganti dengan icon fa-hand-sparkles --}}
             <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5 truncate">
                 Halo, {{ auth()->user()->name }} <i class="fas fa-hand-sparkles text-yellow-300 ml-1"></i>
             </h2>
@@ -87,32 +87,61 @@
 
     {{-- SECTION: MENUNGGU --}}
     <div id="section-menunggu" class="space-y-3 {{ $currentFilter !== 'menunggu' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-clock text-amber-500 mr-1.5"></i>Menunggu Konfirmasi Keluar</h3>
-        @foreach($menungguKeluar as $dispensasi)
-            @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
-        @endforeach
+        <h3 class="text-sm font-bold text-gray-700 mb-3">
+            <i class="fas fa-clock text-amber-500 mr-1.5"></i>Menunggu Konfirmasi Keluar
+        </h3>
+
+        @if($menungguKeluar->count() > 0)
+            @foreach($menungguKeluar as $dispensasi)
+                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
+            @endforeach
+        @else
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-50 text-amber-300 flex items-center justify-center text-3xl mb-3">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <p class="text-gray-500 text-sm font-semibold">Belum ada siswa yang menunggu konfirmasi keluar hari ini</p>
+                <p class="text-gray-400 text-xs mt-1">Siswa yang sudah disetujui guru akan muncul di sini</p>
+            </div>
+        @endif
     </div>
 
     {{-- SECTION: KELUAR --}}
     <div id="section-keluar" class="space-y-3 {{ $currentFilter !== 'keluar' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-person-walking text-sky-500 mr-1.5"></i>Sedang Keluar</h3>
-        @foreach($siswaKeluar as $dispensasi)
-            @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp
-            @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue])
-        @endforeach
+        <h3 class="text-sm font-bold text-gray-700 mb-3">
+            <i class="fas fa-person-walking text-sky-500 mr-1.5"></i>Sedang Keluar
+        </h3>
+
+        @if($siswaKeluar->count() > 0)
+            @foreach($siswaKeluar as $dispensasi)
+                @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp
+                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue])
+            @endforeach
+        @else
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-sky-50 text-sky-300 flex items-center justify-center text-3xl mb-3">
+                    <i class="fas fa-person-walking"></i>
+                </div>
+                <p class="text-gray-500 text-sm font-semibold">Belum ada siswa yang sedang keluar hari ini</p>
+                <p class="text-gray-400 text-xs mt-1">Siswa yang sudah di-scan keluar oleh satpam akan muncul di sini</p>
+            </div>
+        @endif
     </div>
 
     {{-- SECTION: TERLAMBAT --}}
     <div id="section-terlambat" class="space-y-3 {{ $currentFilter !== 'terlambat' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-exclamation-triangle text-red-500 mr-1.5"></i>Siswa Terlambat</h3>
+        <h3 class="text-sm font-bold text-gray-700 mb-3">
+            <i class="fas fa-exclamation-triangle text-red-500 mr-1.5"></i>Siswa Terlambat
+        </h3>
         @php $renderedTerlambat = 0; @endphp
+
         @foreach($siswaKeluar as $dispensasi)
             @php
                 $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
                 if (!$isOverdue) continue;
                 $renderedTerlambat++;
-                $lateMinutes = now()->diffInMinutes($dispensasi->batas_waktu_kembali);
-                $lateText = floor($lateMinutes / 60) > 0 ? floor($lateMinutes / 60).'j '.($lateMinutes % 60).'m' : $lateMinutes.'m';
+                $lateMinutes = \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($dispensasi->batas_waktu_kembali);
+                $lateText = \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat($lateMinutes, short: true);
             @endphp
             <div class="bg-white rounded-2xl border-2 border-red-200 shadow-sm overflow-hidden" data-dispensasi="{{ $dispensasi->id }}" data-status="terlambat" data-overdue="true" data-deadline="{{ $dispensasi->batas_waktu_kembali->format('Y-m-d H:i:s') }}">
                 <div class="px-4 py-3.5 bg-red-50 border-b border-red-100">
@@ -120,73 +149,143 @@
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2 mb-1 flex-wrap">
                                 <p class="font-mono font-bold text-gray-800 text-xs">{{ $dispensasi->nomor_surat }}</p>
-                                <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 uppercase animate-pulse"><i class="fas fa-exclamation-triangle mr-1"></i>TERLAMBAT {{ $lateText }}</span>
-                                @if($dispensasi->is_warned)<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700 uppercase"><i class="fas fa-phone-alt mr-1"></i>DIHUBUNGI</span>@endif
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 uppercase animate-pulse">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>TERLAMBAT {{ $lateText }}
+                                </span>
+                                @if($dispensasi->is_warned)
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700 uppercase">
+                                        <i class="fas fa-phone-alt mr-1"></i>DIHUBUNGI
+                                    </span>
+                                @endif
                             </div>
                             <p class="font-bold text-gray-900 text-sm truncate">{{ $dispensasi->siswa->nama_lengkap }}</p>
                             <p class="text-[11px] text-gray-500 truncate">{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} • {{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
                         </div>
-                        <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}" class="inline-flex items-center justify-center w-9 h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex-shrink-0"><i class="fas fa-eye text-sm"></i></a>
+                        <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}" class="inline-flex items-center justify-center w-9 h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex-shrink-0">
+                            <i class="fas fa-eye text-sm"></i>
+                        </a>
                     </div>
                 </div>
                 <div class="p-4 space-y-3 bg-gray-50/50">
                     <div class="grid grid-cols-2 gap-3 text-xs">
-                        <div class="bg-white p-2.5 rounded-lg border border-gray-200"><p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Keluar</p><p class="font-bold text-gray-800">{{ $dispensasi->jam_keluar }}</p></div>
-                        <div class="bg-white p-2.5 rounded-lg border border-gray-200"><p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Kembali</p><p class="font-bold text-red-700">{{ $dispensasi->jam_kembali }}</p></div>
+                        <div class="bg-white p-2.5 rounded-lg border border-gray-200">
+                            <p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Keluar</p>
+                            <p class="font-bold text-gray-800">{{ $dispensasi->jam_keluar }}</p>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-gray-200">
+                            <p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Kembali</p>
+                            <p class="font-bold text-red-700">{{ $dispensasi->jam_kembali }}</p>
+                        </div>
                     </div>
                     @if(!empty($dispensasi->siswa->no_telepon))
                         @php
                             $hp = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
                             if (str_starts_with($hp, '0')) $hp = '62' . substr($hp, 1);
-                            // ✅ DIPERBAIKI: Emoji di WhatsApp message diganti dengan text yang lebih profesional
                             $waLink = "https://wa.me/{$hp}?text=" . urlencode("*PERINGATAN KETERLAMBATAN*\n\nYth. *{$dispensasi->siswa->nama_lengkap}*,\nBatas waktu kembali dispensasi Anda telah LEWAT.\n\nLokasi Tujuan: {$dispensasi->tujuan}\nSEGERA KEMBALI ke sekolah.\n\nPetugas Satpam SMKN 1 Bangsri");
                         @endphp
                         <div id="wa-section-{{ $dispensasi->id }}" class="bg-green-50 border-2 border-green-200 rounded-xl p-3">
                             <div class="flex items-center justify-between mb-2">
-                                <div><p class="text-[10px] font-bold text-green-700 uppercase">Kontak Darurat</p><p class="text-sm font-bold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p></div>
-                                <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}')" class="inline-flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all active:scale-95 shadow-md shadow-green-500/30"><i class="fab fa-whatsapp text-xl"></i></button>
+                                <div>
+                                    <p class="text-[10px] font-bold text-green-700 uppercase">Kontak Darurat</p>
+                                    <p class="text-sm font-bold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
+                                </div>
+                                <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}')"
+                                        class="inline-flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all active:scale-95 shadow-md shadow-green-500/30 {{ $dispensasi->is_warned ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                        {{ $dispensasi->is_warned ? 'disabled' : '' }}>
+                                    <i class="fab fa-whatsapp text-xl"></i>
+                                </button>
                             </div>
                         </div>
                     @endif
-                    <form method="POST" action="{{ route('satpam.konfirmasi.kembali', $dispensasi) }}">@csrf<button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all"><i class="fas fa-door-closed mr-1.5"></i>Konfirmasi Kembali</button></form>
+                    <a href="{{ route('satpam.scan') }}"
+                       class="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-emerald-700 shadow-md shadow-emerald-500/20 hover:-translate-y-0.5 transition-all active:scale-[0.98]">
+                        <i class="fas fa-camera mr-1.5"></i>Scan QR Code untuk Kembali
+                    </a>
+                    <p class="text-[10px] text-gray-500 text-center font-medium">
+                        <i class="fas fa-info-circle mr-1"></i>Scan QR siswa saat kembali ke sekolah
+                    </p>
                 </div>
             </div>
         @endforeach
+
         @if($renderedTerlambat === 0)
-            <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center"><i class="fas fa-check-circle text-4xl text-emerald-300 mb-3"></i><p class="text-gray-500 text-sm">Tidak ada siswa yang terlambat hari ini</p></div>
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-300 flex items-center justify-center text-3xl mb-3">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <p class="text-gray-500 text-sm font-semibold">Tidak ada siswa yang terlambat hari ini</p>
+                <p class="text-gray-400 text-xs mt-1">Semua siswa yang keluar telah kembali tepat waktu</p>
+            </div>
         @endif
     </div>
 
     {{-- SECTION: SELESAI --}}
     <div id="section-selesai" class="space-y-3 {{ $currentFilter !== 'selesai' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-check-circle text-emerald-500 mr-1.5"></i>Sudah Kembali</h3>
+        <h3 class="text-sm font-bold text-gray-700 mb-3">
+            <i class="fas fa-check-circle text-emerald-500 mr-1.5"></i>Sudah Kembali
+        </h3>
         @if(isset($selesai) && $selesai->count() > 0)
             @foreach($selesai as $dispensasi)
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'selesai', 'isOverdue' => false])
             @endforeach
         @else
-            <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center"><div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-300 flex items-center justify-center text-3xl mb-3"><i class="fas fa-check-circle"></i></div><p class="text-gray-500 text-sm font-semibold">Belum ada siswa yang kembali hari ini</p></div>
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-300 flex items-center justify-center text-3xl mb-3">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <p class="text-gray-500 text-sm font-semibold">Belum ada siswa yang kembali hari ini</p>
+                <p class="text-gray-400 text-xs mt-1">Siswa yang sudah di-scan kembali akan muncul di sini</p>
+            </div>
         @endif
     </div>
 
     {{-- SECTION: DIHUBUNGI --}}
     <div id="section-dihubungi" class="space-y-3 {{ $currentFilter !== 'dihubungi' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-phone-alt text-purple-500 mr-1.5"></i>Riwayat Siswa yang Sudah Dihubungi <span class="text-xs font-normal text-gray-500 ml-2">({{ $dihubungi->count() }} siswa)</span></h3>
+        <h3 class="text-sm font-bold text-gray-700 mb-3">
+            <i class="fas fa-phone-alt text-purple-500 mr-1.5"></i>Riwayat Siswa yang Sudah Dihubungi
+            <span class="text-xs font-normal text-gray-500 ml-2">({{ $dihubungi->count() }} siswa)</span>
+        </h3>
         @if($dihubungi->count() > 0)
             @foreach($dihubungi as $dispensasi)
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'dihubungi', 'isOverdue' => false])
             @endforeach
         @else
-            <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center"><div class="w-16 h-16 mx-auto rounded-2xl bg-purple-50 text-purple-300 flex items-center justify-center text-3xl mb-3"><i class="fas fa-phone-slash"></i></div><p class="text-gray-500 text-sm font-semibold">Belum ada siswa yang dihubungi hari ini</p></div>
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-purple-50 text-purple-300 flex items-center justify-center text-3xl mb-3">
+                    <i class="fas fa-phone-slash"></i>
+                </div>
+                <p class="text-gray-500 text-sm font-semibold">Belum ada siswa yang dihubungi hari ini</p>
+                <p class="text-gray-400 text-xs mt-1">Gunakan tombol "Hubungi" pada kartu siswa yang terlambat</p>
+            </div>
         @endif
     </div>
 
     {{-- SECTION: SEMUA --}}
     <div id="section-semua" class="space-y-3 {{ $currentFilter !== 'semua' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-layer-group text-gray-500 mr-1.5"></i>Semua Dispensasi Hari Ini</h3>
-        @foreach($menungguKeluar as $dispensasi) @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false]) @endforeach
-        @foreach($siswaKeluar as $dispensasi) @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue]) @endforeach
-        @foreach($selesai as $dispensasi) @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'selesai', 'isOverdue' => false]) @endforeach
+        <h3 class="text-sm font-bold text-gray-700 mb-3">
+            <i class="fas fa-layer-group text-gray-500 mr-1.5"></i>Semua Dispensasi Hari Ini
+        </h3>
+
+        @if($menungguKeluar->count() > 0 || $siswaKeluar->count() > 0 || (isset($selesai) && $selesai->count() > 0))
+            @foreach($menungguKeluar as $dispensasi)
+                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
+            @endforeach
+            @foreach($siswaKeluar as $dispensasi)
+                @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp
+                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue])
+            @endforeach
+            @foreach($selesai as $dispensasi)
+                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'selesai', 'isOverdue' => false])
+            @endforeach
+        @else
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center text-3xl mb-3">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <p class="text-gray-500 text-sm font-semibold">Belum ada data dispensasi hari ini</p>
+                <p class="text-gray-400 text-xs mt-1">Semua aktivitas dispensasi akan muncul di sini</p>
+            </div>
+        @endif
     </div>
 
 </div> {{-- Tutup #content-area --}}
@@ -204,7 +303,7 @@
 <script>
 let currentFilter = '{{ $currentFilter }}';
 
-// ✅ 1. FUNGSI SWITCH FILTER (AJAX SMOOTH)
+// <i class="fas fa-check-circle"></i> 1. FUNGSI SWITCH FILTER (AJAX SMOOTH)
 function switchFilter(filterKey, color, event) {
     if (event) event.preventDefault();
     if (filterKey === currentFilter) return;
@@ -257,7 +356,7 @@ function switchFilter(filterKey, color, event) {
     });
 }
 
-// ✅ 2. HANDLE TOMBOL BACK/FORWARD BROWSER
+// <i class="fas fa-check-circle"></i> 2. HANDLE TOMBOL BACK/FORWARD BROWSER
 window.addEventListener('popstate', function(event) {
     const urlParams = new URLSearchParams(window.location.search);
     const filter = urlParams.get('filter') || 'semua';
@@ -275,7 +374,7 @@ window.addEventListener('popstate', function(event) {
     }
 });
 
-// ✅ 3. FUNGSI LENGKAP: Klik WA langsung tandai dihubungi & buka WA
+// <i class="fas fa-check-circle"></i> 3. FUNGSI LENGKAP: Klik WA langsung tandai dihubungi & buka WA
 function handleWaContacted(dispensasiId, waLink) {
     fetch(`/satpam/dispensasi/${dispensasiId}/wa-contacted`, {
         method: 'POST',
@@ -328,7 +427,7 @@ function handleWaContacted(dispensasiId, waLink) {
     });
 }
 
-// ✅ 4. COUNTDOWN REALTIME
+// <i class="fas fa-check-circle"></i> 4. COUNTDOWN REALTIME
 function tickCountdowns() {
     document.querySelectorAll('.live-countdown[data-deadline]').forEach(el => {
         const deadline = new Date(el.dataset.deadline);
@@ -357,7 +456,7 @@ function tickCountdowns() {
     });
 }
 
-// ✅ 5. WATCHER: Deteksi kartu yang baru melewati batas waktu
+// <i class="fas fa-check-circle"></i> 5. WATCHER: Deteksi kartu yang baru melewati batas waktu
 const overdueNotified = new Set();
 function watchOverdue() {
     document.querySelectorAll('[data-status="keluar"][data-deadline][data-overdue="false"]').forEach(card => {
@@ -367,7 +466,7 @@ function watchOverdue() {
             const nama = card.querySelector('.font-bold.text-gray-900')?.textContent.trim() || 'Siswa';
             if (!overdueNotified.has(card.dataset.dispensasi)) {
                 overdueNotified.add(card.dataset.dispensasi);
-                // ✅ DIPERBAIKI: Emoji di SweetAlert diganti dengan icon HTML
+                // <i class="fas fa-check-circle"></i> DIPERBAIKI: Emoji di SweetAlert diganti dengan icon HTML
                 Swal.fire({
                     icon: 'warning',
                     html: '<i class="fas fa-exclamation-triangle text-amber-500 text-5xl mb-3"></i><h3 style="color: #1f2937; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Siswa Terlambat!</h3>',
@@ -381,7 +480,7 @@ function watchOverdue() {
     });
 }
 
-// ✅ 6. INITIALIZE SAAT HALAMAN DIMUAT
+// <i class="fas fa-check-circle"></i> 6. INITIALIZE SAAT HALAMAN DIMUAT
 document.addEventListener('DOMContentLoaded', function() {
     tickCountdowns();
     setInterval(tickCountdowns, 1000);

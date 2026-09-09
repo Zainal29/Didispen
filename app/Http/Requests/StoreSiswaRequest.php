@@ -17,7 +17,7 @@ class StoreSiswaRequest extends FormRequest
         $siswa = $this->route('siswa');
         $userId = $siswa ? $siswa->user_id : null;
 
-        // ✅ REVISI SIPINTU: Tidak ada rule password, alamat, dan no_telepon.
+        // <i class="fas fa-check-circle"></i> REVISI SIPINTU: Tidak ada rule password, alamat, dan no_telepon.
         // Password dikelola SiPintu; no_telepon & alamat tersinkronisasi otomatis dari SiPintu.
         return [
             'nama_lengkap' => 'required|string|max:255',

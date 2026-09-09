@@ -52,7 +52,6 @@ class LaporanController extends Controller
     {
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
 
-        // Terapkan logika filter yang SAMA PERSIS dengan method index
         if ($request->filled('status')) $query->where('status', $request->status);
         if ($request->filled('tanggal_dari')) $query->whereDate('created_at', '>=', $request->tanggal_dari);
         if ($request->filled('tanggal_sampai')) $query->whereDate('created_at', '<=', $request->tanggal_sampai);
@@ -67,10 +66,13 @@ class LaporanController extends Controller
             });
         }
 
-        $dispensasi = $query->latest()->get();
-        
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.laporan-dispensasi', compact('dispensasi'));
-        return $pdf->download('laporan-dispensasi-' . now()->format('Y-m-d') . '.pdf');
+        // Batasi data agar DomPDF tidak kehabisan memori
+        $dispensasi = $query->latest()->limit(500)->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.laporan-dispensasi', compact('dispensasi'))
+            ->setPaper('a4', 'landscape'); // Landscape agar tabel muat
+
+        return $pdf->download('Laporan_Dispensasi_' . now()->format('Y-m-d') . '.pdf');
     }
 
     public function exportExcel(Request $request)
@@ -94,52 +96,72 @@ class LaporanController extends Controller
 
         $dispensasi = $query->latest()->get();
 
-        $filename = 'laporan-dispensasi-' . now()->format('Y-m-d') . '.csv';
+        // ✅ UBAH EKSTENSI MENJADI .xls
+        $filename = 'Laporan_Dispensasi_' . now()->format('Y-m-d') . '.xls';
 
+        // ✅ HEADER KHUSUS AGAR DIBACA SEBAGAI EXCEL NATIVE
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
+            'Cache-Control' => 'max-age=0',
         ];
 
         $callback = function() use ($dispensasi) {
-            // BOM untuk memastikan karakter UTF-8 terbaca benar di Excel
-            echo "\xEF\xBB\xBF"; 
-            
-            $file = fopen('php://output', 'w');
-            
-            // 1. Tulis Header Kolom
-            fputcsv($file, [
-                'No', 'No. Surat', 'Tanggal', 'NIS', 'Nama Siswa', 
-                'Kelas', 'Jurusan', 'Kategori', 'Alasan', 'Tujuan', 
-                'Jam Keluar', 'Jam Kembali', 'Status', 'Guru Piket'
-            ]);
+            // 1. Deklarasi XML Excel agar dikenali sebagai file Excel asli
+            echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+            echo '<head>';
+            echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>';
+            echo '<style>
+                table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 11px; }
+                th, td { border: 1px solid #000000; padding: 6px; text-align: left; }
+                th { background-color: #d9d9d9; font-weight: bold; text-align: center; }
+                .text-center { text-align: center; }
+            </style>';
+            echo '</head><body>';
 
-            // 2. Tulis Data
+            echo '<table>';
+            echo '<thead><tr>';
+            echo '<th width="3%">No</th>';
+            echo '<th width="10%">No. Surat</th>';
+            echo '<th width="8%">Tanggal</th>';
+            echo '<th width="8%">NIS</th>';
+            echo '<th width="15%">Nama Siswa</th>';
+            echo '<th width="8%">Kelas</th>';
+            echo '<th width="10%">Jurusan</th>';
+            echo '<th width="8%">Kategori</th>';
+            echo '<th width="15%">Alasan</th>';
+            echo '<th width="15%">Tujuan</th>';
+            echo '<th width="8%">Jam Keluar</th>';
+            echo '<th width="8%">Jam Kembali</th>';
+            echo '<th width="8%">Status</th>';
+            echo '<th width="10%">Guru Piket</th>';
+            echo '</tr></thead><tbody>';
+
             $no = 1;
             foreach ($dispensasi as $row) {
-                fputcsv($file, [
-                    $no++,
-                    $row->nomor_surat,
-                    $row->created_at->format('d-m-Y H:i'),
-                    $row->siswa->user->nis_nip ?? '-',
-                    $row->siswa->nama_lengkap,
-                    $row->siswa->kelas->nama_kelas ?? '-',
-                    $row->siswa->kelas->jurusan->nama_jurusan ?? '-',
-                    ucfirst(str_replace('_', ' ', $row->kategori)),
-                    $row->alasan,
-                    $row->tujuan,
-                    
-                    // ✅ PERBAIKAN PENTING: 
-                    // jam_keluar dan jam_kembali sekarang adalah STRING (VARCHAR), 
-                    // jadi TIDAK BOLEH pakai ->format(). Langsung panggil saja.
-                    $row->jam_keluar, 
-                    $row->jam_kembali,
-                    
-                    ucfirst($row->status),
-                    $row->guru->nama_lengkap ?? '-',
-                ]);
+                echo '<tr>';
+                echo '<td class="text-center">' . $no++ . '</td>';
+                echo '<td>' . htmlspecialchars($row->nomor_surat) . '</td>';
+                echo '<td class="text-center">' . $row->created_at->format('d-m-Y') . '</td>';
+                echo '<td class="text-center">' . htmlspecialchars($row->siswa->user->nis_nip ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($row->siswa->nama_lengkap) . '</td>';
+                echo '<td class="text-center">' . htmlspecialchars($row->siswa->kelas->nama_kelas ?? '-') . '</td>';
+                echo '<td class="text-center">' . htmlspecialchars($row->siswa->kelas->jurusan->nama_jurusan ?? '-') . '</td>';
+                echo '<td class="text-center">' . htmlspecialchars(ucfirst(str_replace('_', ' ', $row->kategori))) . '</td>';
+                echo '<td>' . htmlspecialchars($row->alasan) . '</td>';
+                echo '<td>' . htmlspecialchars($row->tujuan) . '</td>';
+
+                // Jam keluar & kembali (String)
+                echo '<td class="text-center">' . htmlspecialchars($row->jam_keluar) . '</td>';
+                echo '<td class="text-center">' . htmlspecialchars($row->jam_kembali) . '</td>';
+
+                echo '<td class="text-center">' . htmlspecialchars(ucfirst($row->status)) . '</td>';
+                echo '<td>' . htmlspecialchars($row->guru->nama_lengkap ?? '-') . '</td>';
+                echo '</tr>';
             }
-            fclose($file);
+
+            echo '</tbody></table>';
+            echo '</body></html>';
         };
 
         return response()->stream($callback, 200, $headers);

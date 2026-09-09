@@ -29,7 +29,7 @@ class CleanupFotoVerifikasi extends Command
             $count++;
         }
 
-        $this->info("✅ Berhasil menghapus {$count} foto verifikasi lama.");
+        $this->info("Berhasil menghapus {$count} foto verifikasi lama.");
 
         return 0;
     }

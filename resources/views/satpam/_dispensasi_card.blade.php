@@ -7,14 +7,14 @@
             'dihubungi' => 'border-purple-200 bg-purple-50/30',
             default => 'border-gray-200 bg-gray-50/30'
         };
-        
+
         $deadlineStr = $dispensasi->batas_waktu_kembali ? $dispensasi->batas_waktu_kembali->format('Y-m-d H:i:s') : '';
         $waktuKeluarAktual = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar);
         $waktuKembaliAktual = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali);
         $isWarned = $dispensasi->is_warned ?? false;
     @endphp
 
-    <div 
+    <div
         class="bg-white rounded-2xl border-2 {{ $statusColor }} shadow-sm overflow-hidden transition-all hover:shadow-md"
         data-dispensasi="{{ $dispensasi->id }}"
         data-status="{{ $status }}"
@@ -46,15 +46,15 @@
                         {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} • {{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}
                     </p>
                 </div>
-                
+
                 <div class="flex flex-col items-end gap-1">
                     {{-- Tombol Mata (Eye Icon) --}}
-                    <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}" 
-                    class="inline-flex items-center justify-center w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors" 
+                    <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}"
+                    class="inline-flex items-center justify-center w-8 h-8 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
                     title="Lihat Detail Dispensasi">
                         <i class="fas fa-eye text-sm"></i>
                     </a>
-                    
+
                     {{-- Badge Status --}}
                     @if($status === 'menunggu')
                         <span class="px-2 py-1 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700">Menunggu</span>
@@ -67,10 +67,10 @@
                     @elseif($status === 'dihubungi')
                         <span class="px-2 py-1 rounded-full text-[9px] font-bold bg-purple-100 text-purple-700">Dihubungi</span>
                     @endif
-                    
+
                     {{-- Live Countdown --}}
                     @if($deadlineStr && in_array($status, ['keluar', 'terlambat']))
-                        <span class="live-countdown px-2 py-0.5 rounded text-[9px] font-bold {{ $isOverdue ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-amber-100 text-amber-700' }}" 
+                        <span class="live-countdown px-2 py-0.5 rounded text-[9px] font-bold {{ $isOverdue ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-amber-100 text-amber-700' }}"
                             data-deadline="{{ $deadlineStr }}">
                             Menghitung...
                         </span>
@@ -109,7 +109,7 @@
             <i class="fas fa-id-card mr-1"></i> Foto Verifikasi Siswa
         </p>
         <div class="flex items-center gap-3">
-            <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}" 
+            <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}"
                 alt="Foto {{ $dispensasi->siswa->nama_lengkap }}"
                 class="w-20 h-20 object-cover rounded-lg border-2 border-blue-300">
             <div class="flex-1">
@@ -139,8 +139,8 @@
                             <p class="text-[10px] font-bold text-green-700 uppercase">Kontak Darurat</p>
                             <p class="text-xs font-bold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
                         </div>
-                        <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}'); event.stopPropagation();" 
-                                class="inline-flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all active:scale-95 shadow-md shadow-green-500/30 flex-shrink-0" 
+                        <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}'); event.stopPropagation();"
+                                class="inline-flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all active:scale-95 shadow-md shadow-green-500/30 flex-shrink-0"
                                 title="Hubungi via WhatsApp & Tandai">
                             <i class="fab fa-whatsapp text-xl"></i>
                         </button>
@@ -154,9 +154,22 @@
                     </button>
                 </form>
             @endif
-            
+
             <div class="text-center text-[10px] text-gray-400 mt-2">
                 <i class="fas fa-info-circle mr-1"></i>Klik area ini untuk lihat detail lengkap
             </div>
         </div>
     </div>
+    <script>
+    // Pastikan fungsi ini ada di layout utama atau di sini
+    function handleWaContacted(dispensasiId, waLink) {
+        fetch(`/satpam/dispensasi/${dispensasiId}/wa-contacted`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            keepalive: true
+        }).finally(() => window.open(waLink, '_blank'));
+    }
+    </script>

@@ -30,7 +30,7 @@
                     </div>
                 @endif
 
-                {{-- ✅ BANNER PERINGATAN WAKTU (Real-time check) --}}
+                {{-- <i class="fas fa-check-circle"></i> BANNER PERINGATAN WAKTU (Real-time check) --}}
                 <div id="timeWarningBanner" class="hidden mb-4 p-4 rounded-xl bg-amber-50 border-2 border-amber-300">
                     <div class="flex items-start">
                         <i class="fas fa-clock text-amber-600 text-xl mr-3 mt-0.5"></i>
@@ -227,15 +227,208 @@
     </div>
 
     @push('scripts')
+    {{-- Library Auto-Compress Client-Side --}}
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // --- 1. CEK WAKTU REAL-TIME ---
+        // --- 1. AUTO-COMPRESS FOTO VERIFIKASI ---
+        const fotoInput = document.querySelector('input[name="foto_verifikasi"]');
+
+        if (fotoInput) {
+            fotoInput.addEventListener('change', async function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Tampilkan loading
+                Swal.fire({
+                    title: 'Mengompres foto...',
+                    text: 'Mohon tunggu sebentar',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                try {
+                    const options = {
+                        maxSizeMB: 0.5,           // Target maksimal 500 KB
+                        maxWidthOrHeight: 1024,   // Resize dimensi agar tidak terlalu besar
+                        useWebWorker: true,
+                        initialQuality: 0.8
+                    };
+
+                    const compressedBlob = await imageCompression(file, options);
+
+                    // <i class="fas fa-check-circle"></i> PERBAIKAN: Buat objek File baru secara eksplisit agar kompatibel dengan semua browser
+                    const validFile = new File([compressedBlob], file.name, {
+                        type: compressedBlob.type,
+                        lastModified: Date.now()
+                    });
+
+                    // Ganti file asli di input dengan file yang sudah divalidasi
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(validFile); // Sekarang tidak akan error lagi
+                    fotoInput.files = dataTransfer.files;
+
+                    // Tampilkan info berhasil
+                    const sizeBefore = (file.size / 1024 / 1024).toFixed(2);
+                    const sizeAfter = (validFile.size / 1024 / 1024).toFixed(2);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Foto Berhasil Dikompres!',
+                        text: `Ukuran: ${sizeBefore}MB → ${sizeAfter}MB`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                } catch (error) {
+                    console.error('Compression error:', error);
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Kompresi Gagal',
+                        text: 'File akan diupload tanpa kompresi. Pastikan ukuran tidak melebihi 2MB.',
+                        timer: 3000
+                    });
+                }
+            });
+        }
+
+        // --- 2. LOGIKA JAM KELUAR & KEMBALI (Kode asli Anda tetap dipertahankan) ---
+        const jamKeluar = document.getElementById('jamKeluar');
+        const jamKembali = document.getElementById('jamKembali');
+        const infoJam = document.getElementById('infoJam');
+
+        function disablePastLessons() {
+            if (!jamKeluar) return;
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            const jadwal = [
+                { jam: 1, start: 7 * 60 + 0, end: 7 * 60 + 45 },
+                { jam: 2, start: 7 * 60 + 45, end: 8 * 60 + 30 },
+                { jam: 3, start: 8 * 60 + 30, end: 9 * 60 + 15 },
+                { jam: 4, start: 9 * 60 + 30, end: 10 * 60 + 15 },
+                { jam: 5, start: 10 * 60 + 15, end: 11 * 60 + 0 },
+                { jam: 6, start: 11 * 60 + 0, end: 11 * 60 + 45 },
+                { jam: 7, start: 12 * 60 + 15, end: 13 * 60 + 0 },
+                { jam: 8, start: 13 * 60 + 0, end: 13 * 60 + 45 },
+                { jam: 9, start: 13 * 60 + 45, end: 14 * 60 + 30 },
+                { jam: 10, start: 14 * 60 + 30, end: 15 * 60 + 15 },
+            ];
+            let currentLesson = 1;
+            for (const item of jadwal) {
+                if (currentTime >= item.start) {
+                    if (currentTime <= item.end) { currentLesson = item.jam; }
+                    else { currentLesson = item.jam + 1; }
+                }
+            }
+            const options = jamKeluar.querySelectorAll('option');
+            options.forEach(option => {
+                const val = parseInt(option.value);
+                if (option.value === '') return;
+                if (val < currentLesson) {
+                    option.disabled = true;
+                    option.classList.add('text-gray-300', 'cursor-not-allowed');
+                    option.textContent = `Jam ke-${val} (Sudah Lewat)`;
+                } else {
+                    option.disabled = false;
+                    option.classList.remove('text-gray-300', 'cursor-not-allowed');
+                    option.textContent = `Jam ke-${val}`;
+                }
+            });
+            const selectedValue = parseInt(jamKeluar.value);
+            if (!isNaN(selectedValue) && selectedValue < currentLesson) jamKeluar.value = '';
+        }
+
+        function updateJamKembaliOptions() {
+            if (!jamKeluar || !jamKembali) return;
+            const keluarValue = parseInt(jamKeluar.value);
+            const semuaOption = jamKembali.querySelectorAll('option');
+            let adaOptionAktif = false;
+
+            if (isNaN(keluarValue) || keluarValue <= 0) {
+                jamKembali.disabled = true; jamKembali.value = '';
+                jamKembali.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-400');
+                jamKembali.classList.remove('bg-white', 'text-gray-800');
+                if (infoJam) infoJam.classList.add('hidden');
+                return;
+            }
+
+            jamKembali.disabled = false;
+            jamKembali.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-400');
+            jamKembali.classList.add('bg-white', 'text-gray-800');
+
+            semuaOption.forEach(option => {
+                const val = parseInt(option.value);
+                if (option.value === '') return;
+                if (val <= keluarValue) {
+                    option.disabled = true; option.classList.add('text-gray-300');
+                } else {
+                    option.disabled = false; option.classList.remove('text-gray-300');
+                    adaOptionAktif = true;
+                }
+            });
+
+            if (infoJam) {
+                infoJam.classList.remove('hidden');
+                const spanInfo = infoJam.querySelector('span');
+                if (spanInfo) {
+                    spanInfo.textContent = 'Jam kembali harus lebih dari Jam Pelajaran ke-' + keluarValue;
+                    spanInfo.classList.remove('text-red-500');
+                }
+            }
+
+            const kembaliValue = parseInt(jamKembali.value);
+            if (!isNaN(kembaliValue) && kembaliValue <= keluarValue) jamKembali.value = '';
+
+            if (!adaOptionAktif && keluarValue >= 10) {
+                if (infoJam) {
+                    infoJam.classList.remove('hidden');
+                    const spanInfo = infoJam.querySelector('span');
+                    if (spanInfo) {
+                        spanInfo.textContent = 'Tidak ada jam kembali yang tersedia (sudah jam terakhir).';
+                        spanInfo.classList.add('text-red-500');
+                    }
+                }
+            }
+        }
+
+        if (jamKeluar) {
+            jamKeluar.addEventListener('change', updateJamKembaliOptions);
+            disablePastLessons();
+            updateJamKembaliOptions();
+        }
+
+        // --- 3. CHARACTER COUNTER ---
+        const alasan = document.getElementById('alasan');
+        const charCount = document.getElementById('charCount');
+        const charCounter = document.getElementById('charCounter');
+
+        function updateCharCounter() {
+            if (!alasan) return;
+            const length = alasan.value.length;
+            if (charCount) charCount.textContent = length;
+            if (charCounter) {
+                if (length < 10) {
+                    charCounter.classList.remove('text-emerald-600');
+                    charCounter.classList.add('text-red-500');
+                } else {
+                    charCounter.classList.remove('text-red-500');
+                    charCounter.classList.add('text-emerald-600');
+                }
+            }
+        }
+
+        if (alasan) {
+            alasan.addEventListener('input', updateCharCounter);
+            updateCharCounter();
+        }
+
+        // --- 4. CEK WAKTU REAL-TIME ---
         function checkDispensasiTime() {
             const now = new Date();
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
             const wib = new Date(utc + (3600000 * 7));
-
-            const dayOfWeek = wib.getDay(); // 0=Minggu, 1=Senin, ..., 6=Sabtu
+            const dayOfWeek = wib.getDay();
             const hours = wib.getHours();
             const minutes = wib.getMinutes();
             const currentTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
@@ -260,7 +453,6 @@
             } else {
                 const jamTutup = (dayOfWeek === 5) ? 14 : 15;
                 const currentHour = hours + (minutes / 60);
-
                 if (currentHour < 8 || currentHour > jamTutup) {
                     isAllowed = false;
                     restrictionMsg = `Pengajuan dispensasi hanya dapat dilakukan pada pukul <strong>08:00 - ${jamTutup}:00 WIB</strong>.`;
@@ -270,7 +462,6 @@
             if (!isAllowed) {
                 if (banner) banner.classList.remove('hidden');
                 if (message) message.innerHTML = restrictionMsg;
-
                 if (form) {
                     form.querySelectorAll('input, select, textarea, button').forEach(el => {
                         el.disabled = true;
@@ -285,10 +476,8 @@
                 }
             } else {
                 if (banner) banner.classList.add('hidden');
-
                 if (form) {
                     form.querySelectorAll('input, select, textarea, button').forEach(el => {
-                        // Jangan enable submitBtn di sini, biarkan dikontrol oleh logika normal
                         if (el.id !== 'submitBtn') {
                             el.disabled = false;
                             el.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -303,199 +492,8 @@
                 }
             }
         }
-
-        // Jalankan cek waktu saat load dan setiap 60 detik
         checkDispensasiTime();
         setInterval(checkDispensasiTime, 60000);
-
-
-    // --- 2. LOGIKA JAM KELUAR & KEMBALI ---
-    const jamKeluar = document.getElementById('jamKeluar');
-    const jamKembali = document.getElementById('jamKembali');
-    const infoJam = document.getElementById('infoJam');
-
-    // ✅ BARU: Disable jam yang sudah lewat berdasarkan waktu saat ini
-    function disablePastLessons() {
-        if (!jamKeluar) return;
-
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const currentTime = currentHour * 60 + currentMinute;
-
-        // Jadwal KBM (sama dengan di server)
-        const jadwal = [
-            { jam: 1, start: 7 * 60 + 0, end: 7 * 60 + 45 },   // 07:00 - 07:45
-            { jam: 2, start: 7 * 60 + 45, end: 8 * 60 + 30 },  // 07:45 - 08:30
-            { jam: 3, start: 8 * 60 + 30, end: 9 * 60 + 15 },  // 08:30 - 09:15
-            { jam: 4, start: 9 * 60 + 30, end: 10 * 60 + 15 }, // 09:30 - 10:15
-            { jam: 5, start: 10 * 60 + 15, end: 11 * 60 + 0 }, // 10:15 - 11:00
-            { jam: 6, start: 11 * 60 + 0, end: 11 * 60 + 45 }, // 11:00 - 11:45
-            { jam: 7, start: 12 * 60 + 15, end: 13 * 60 + 0 }, // 12:15 - 13:00
-            { jam: 8, start: 13 * 60 + 0, end: 13 * 60 + 45 }, // 13:00 - 13:45
-            { jam: 9, start: 13 * 60 + 45, end: 14 * 60 + 30 },// 13:45 - 14:30
-            { jam: 10, start: 14 * 60 + 30, end: 15 * 60 + 15 },// 14:30 - 15:15
-        ];
-
-        // Cari jam pelajaran yang sedang berjalan
-        let currentLesson = 1;
-        for (const item of jadwal) {
-            if (currentTime >= item.start) {
-                if (currentTime <= item.end) {
-                    currentLesson = item.jam; // Masih dalam jam pelajaran
-                } else {
-                    currentLesson = item.jam + 1; // Sudah lewat, jam berikutnya
-                }
-            }
-        }
-
-        // Disable semua jam yang sudah lewat
-        const options = jamKeluar.querySelectorAll('option');
-        options.forEach(option => {
-            const val = parseInt(option.value);
-            if (option.value === '') return;
-
-            if (val < currentLesson) {
-                option.disabled = true;
-                option.classList.add('text-gray-300', 'cursor-not-allowed');
-                option.textContent = `Jam ke-${val} (Sudah Lewat)`;
-            } else {
-                option.disabled = false;
-                option.classList.remove('text-gray-300', 'cursor-not-allowed');
-                option.textContent = `Jam ke-${val}`;
-            }
-        });
-
-        // Jika jam keluar yang dipilih sudah disabled, reset
-        const selectedValue = parseInt(jamKeluar.value);
-        if (!isNaN(selectedValue) && selectedValue < currentLesson) {
-            jamKeluar.value = '';
-        }
-    }
-
-    function updateJamKembaliOptions() {
-        if (!jamKeluar || !jamKembali) return;
-
-        const keluarValue = parseInt(jamKeluar.value);
-        const semuaOption = jamKembali.querySelectorAll('option');
-        let adaOptionAktif = false;
-
-        if (isNaN(keluarValue) || keluarValue <= 0) {
-            jamKembali.disabled = true;
-            jamKembali.value = '';
-            jamKembali.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-400');
-            jamKembali.classList.remove('bg-white', 'text-gray-800');
-            if (infoJam) infoJam.classList.add('hidden');
-            return;
-        }
-
-        jamKembali.disabled = false;
-        jamKembali.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-400');
-        jamKembali.classList.add('bg-white', 'text-gray-800');
-
-        semuaOption.forEach(option => {
-            const val = parseInt(option.value);
-            if (option.value === '') return;
-
-            if (val <= keluarValue) {
-                option.disabled = true;
-                option.classList.add('text-gray-300');
-            } else {
-                option.disabled = false;
-                option.classList.remove('text-gray-300');
-                adaOptionAktif = true;
-            }
-        });
-
-        if (infoJam) {
-            infoJam.classList.remove('hidden');
-            const spanInfo = infoJam.querySelector('span');
-            if (spanInfo) {
-                spanInfo.textContent = 'Jam kembali harus lebih dari Jam Pelajaran ke-' + keluarValue;
-                spanInfo.classList.remove('text-red-500');
-            }
-        }
-
-        const kembaliValue = parseInt(jamKembali.value);
-        if (!isNaN(kembaliValue) && kembaliValue <= keluarValue) {
-            jamKembali.value = '';
-        }
-
-        if (!adaOptionAktif && keluarValue >=10) {
-            if (infoJam) {
-                infoJam.classList.remove('hidden');
-                const spanInfo = infoJam.querySelector('span');
-                if (spanInfo) {
-                    spanInfo.textContent = 'Tidak ada jam kembali yang tersedia (sudah jam terakhir).';
-                    spanInfo.classList.add('text-red-500');
-                }
-            }
-        }
-    }
-
-    if (jamKeluar) {
-        jamKeluar.addEventListener('change', updateJamKembaliOptions);
-        disablePastLessons(); // ✅ Jalankan saat load
-        updateJamKembaliOptions(); // Jalankan saat load jika ada nilai old()
-    }
-
-
-        // --- 3. CHARACTER COUNTER ---
-        const alasan = document.getElementById('alasan');
-        const charCount = document.getElementById('charCount');
-        const charCounter = document.getElementById('charCounter');
-
-        function updateCharCounter() {
-            if (!alasan) return;
-            const length = alasan.value.length;
-            if (charCount) charCount.textContent = length;
-
-            if (charCounter) {
-                if (length < 10) {
-                    charCounter.classList.remove('text-emerald-600');
-                    charCounter.classList.add('text-red-500');
-                } else {
-                    charCounter.classList.remove('text-red-500');
-                    charCounter.classList.add('text-emerald-600');
-                }
-            }
-        }
-
-        if (alasan) {
-            alasan.addEventListener('input', updateCharCounter);
-            updateCharCounter(); // Jalankan saat load jika ada nilai old()
-        }
-
-
-        // --- 4. FORM SUBMIT VALIDATION ---
-        const formDisp = document.getElementById('formDispensasi');
-        if (formDisp) {
-            formDisp.addEventListener('submit', function (e) {
-                const keluar = parseInt(jamKeluar.value);
-                const kembali = parseInt(jamKembali.value);
-
-                if (!keluar || isNaN(keluar)) {
-                    e.preventDefault();
-                    alert('Silakan pilih Jam Keluar terlebih dahulu!');
-                    jamKeluar.focus();
-                    return false;
-                }
-
-                if (!kembali || isNaN(kembali) || kembali <= keluar) {
-                    e.preventDefault();
-                    alert('Jam Kembali harus dipilih dan bernilai lebih besar dari Jam Keluar!');
-                    jamKembali.focus();
-                    return false;
-                }
-
-                if (alasan.value.length < 10) {
-                    e.preventDefault();
-                    alert('Alasan harus minimal 10 karakter!');
-                    alasan.focus();
-                    return false;
-                }
-            });
-        }
     });
     </script>
     @endpush

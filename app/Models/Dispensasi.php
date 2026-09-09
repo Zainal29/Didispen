@@ -4,54 +4,50 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage; // ✅ TAMBAHKAN INI
 use Illuminate\Support\Str;
 
 class Dispensasi extends Model
 {
-    
+
 
     protected $table = 'dispensasi';
 
     protected $fillable = [
-        'siswa_id',
-        'guru_id',              // ✅ Guru yang menyetujui/menolak (terisi saat approve)
-        'nomor_surat',
-        'kategori',
-        'alasan',
-        'tujuan',
-        'lokasi',
-        'jam_keluar',
-        'jam_kembali',
-        'batas_waktu_kembali',  // ✅ BARU
-        'status',
-        'catatan_admin',
-        'qr_code',
-        'qr_token',
-        'bukti_file',
-        'print_count',
-        'max_print_limit',
-        'printed_at',
-        'student_print_count',
-        'teacher_print_count',
-        'waktu_keluar_aktual',
-        'waktu_kembali_aktual',
-        'satpam_keluar_id',
-        'satpam_kembali_id',
-        'is_warned',            // ✅ BARU
-        'warned_at',            // ✅ BARU
-        'foto_verifikasi',
+        'siswa_id', 'guru_id', 'nomor_surat', 'kategori', 'alasan', 'tujuan', 'lokasi',
+        'jam_keluar', 'jam_kembali', 'batas_waktu_kembali', 'status', 'catatan_admin',
+        'qr_code', 'qr_token', 'print_count', 'max_print_limit', 'printed_at',
+        'student_print_count', 'teacher_print_count', 'waktu_keluar_aktual', 'waktu_kembali_aktual',
+        'satpam_keluar_id', 'satpam_kembali_id', 'is_warned', 'warned_at',
+        'foto_verifikasi', 'foto_bukti', 'foto_bukti_uploaded_at', // ✅ Hapus 'bukti_file'
     ];
+
 
     protected $casts = [
         'batas_waktu_kembali' => 'datetime',
         'is_warned' => 'boolean',
         'warned_at' => 'datetime',
+        'foto_bukti_uploaded_at' => 'datetime', // <i class="fas fa-check-circle"></i> TAMBAHKAN INI
     ];
 
     protected static function booted(): void
     {
         static::creating(function (Dispensasi $dispensasi) {
             $dispensasi->qr_token ??= Str::random(64);
+        });
+
+        static::deleted(function (Dispensasi $dispensasi) {
+            $files = array_filter([
+                $dispensasi->qr_code,
+                $dispensasi->foto_verifikasi,
+                $dispensasi->foto_bukti,
+            ]);
+
+            foreach ($files as $file) {
+                if (Storage::disk('public')->exists($file)) {
+                    Storage::disk('public')->delete($file);
+                }
+            }
         });
     }
 
@@ -66,7 +62,7 @@ class Dispensasi extends Model
     }
 
     /**
-     * ✅ HELPER: Cek apakah dispensasi ini sudah overdue (terlambat)
+     * <i class="fas fa-check-circle"></i> HELPER: Cek apakah dispensasi ini sudah overdue (terlambat)
      */
     public function isOverdue(): bool
     {
@@ -79,7 +75,7 @@ class Dispensasi extends Model
     }
 
     /**
-     * ✅ HELPER: Tandai sebagai sudah diberi peringatan
+     * <i class="fas fa-check-circle"></i> HELPER: Tandai sebagai sudah diberi peringatan
      */
     public function markAsWarned(): void
     {
@@ -89,15 +85,4 @@ class Dispensasi extends Model
         ]);
     }
 
-    public static function boot()
-    {
-        parent::boot();
-
-        // Auto-delete foto saat dispensasi dihapus
-        static::deleted(function ($dispensasi) {
-            if ($dispensasi->foto_verifikasi && \Storage::disk('public')->exists($dispensasi->foto_verifikasi)) {
-                \Storage::disk('public')->delete($dispensasi->foto_verifikasi);
-            }
-        });
-    }
 }

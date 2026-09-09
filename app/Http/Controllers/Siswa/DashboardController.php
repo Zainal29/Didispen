@@ -15,28 +15,45 @@ class DashboardController extends Controller
     {
         $siswa = auth()->user()->siswa;
 
-        // ✅ Cari dispensasi disetujui yang belum di-scan untuk ditampilkan QR Code-nya di dashboard
+        // ✅ UBAH MENJADI whereIn AGAR BISA MENANGKAP STATUS 'keluar'
         $dispensasiAktif = Dispensasi::with(['guru', 'siswa.kelas.jurusan'])
             ->where('siswa_id', $siswa->id)
-            ->where('status', 'disetujui')
+            ->whereIn('status', ['disetujui', 'keluar']) // ✅ PERBAIKAN
             ->latest()
             ->first();
 
-        // ✅ TAMBAHKAN INI: Auto-generate QR Code jika status disetujui tapi qr_code masih kosong
+        $isTerlambat = false;
+        $terlambatJam = 0;
+        $terlambatMenit = 0;
+
+        if ($dispensasiAktif && $dispensasiAktif->status === 'keluar' && $dispensasiAktif->batas_waktu_kembali) {
+            $batasWaktu = \Carbon\Carbon::parse($dispensasiAktif->batas_waktu_kembali);
+            if (now()->greaterThan($batasWaktu)) {
+                $isTerlambat = true;
+                $totalMenit = now()->diffInMinutes($batasWaktu);
+                $terlambatJam = floor($totalMenit / 60);
+                $terlambatMenit = $totalMenit % 60;
+            }
+        }
+
+
+
+
+        // <i class="fas fa-check-circle"></i> TAMBAHKAN INI: Auto-generate QR Code jika status disetujui tapi qr_code masih kosong
         if ($dispensasiAktif && $dispensasiAktif->status === 'disetujui' && empty($dispensasiAktif->qr_code)) {
             if (empty($dispensasiAktif->qr_token)) {
                 $dispensasiAktif->qr_token = Str::random(64);
             }
 
-            // ✅ SESUDAH (Ganti dengan ini):
+            // <i class="fas fa-check-circle"></i> SESUDAH (Ganti dengan ini):
             $qrContent = $dispensasiAktif->qr_token; // Hanya token murni
-            // ✅ PERBAIKAN 1: Gunakan ekstensi .png agar lebih stabil di tag <img>
+            // <i class="fas fa-check-circle"></i> PERBAIKAN 1: Gunakan ekstensi .png agar lebih stabil di tag <img>
             $qrCodePath = 'qr_codes/dispensasi_' . $dispensasiAktif->id . '.svg';
 
             // Buat direktori jika belum ada
             Storage::disk('public')->makeDirectory('qr_codes');
 
-            // ✅ PERBAIKAN 2: Tambahkan slash '/' setelah 'public' agar path menjadi app/public/qr_codes/...
+            // <i class="fas fa-check-circle"></i> PERBAIKAN 2: Tambahkan slash '/' setelah 'public' agar path menjadi app/public/qr_codes/...
             QrCode::format('svg')
                 ->size(300)
                 ->margin(0)

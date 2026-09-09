@@ -8,14 +8,17 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// Membersihkan model yang menggunakan trait Prunable (jika ada)
 Schedule::command('model:prune')->hourly();
 
-// ✅ OPSI B: Jalankan setiap 15 menit dari jam 15:00 - 17:00
+// Auto-complete dispensasi yang terlambat (15:00 - 17:00, setiap 15 menit)
 Schedule::command('dispensasi:auto-complete')
     ->between('15:00', '17:00')
     ->everyFifteenMinutes()
     ->withoutOverlapping();
 
-// Jalankan setiap hari jam 00:00
+// Hapus riwayat dispensasi lama (30 hari) + FOTO-nya otomatis terhapus via Model Hook
 Schedule::command('dispensasi:cleanup-history')->dailyAt('00:00');
-Schedule::command('dispensasi:cleanup-foto')->dailyAt('02:00');
+
+// ❌ HAPUS/KOMENTARI INI (Sudah ditangani oleh cleanup-history):
+// Schedule::command('dispensasi:cleanup-foto')->dailyAt('02:00');

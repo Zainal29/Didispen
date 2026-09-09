@@ -113,7 +113,7 @@
             @endforelse
         </div>
 
-        {{-- ✅ DIPERBAIKI: Mengganti panah teks (→) dengan icon Font Awesome agar konsisten --}}
+        {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Mengganti panah teks (→) dengan icon Font Awesome agar konsisten --}}
         <a href="{{ route('admin.semua.pengajuan') }}" class="block text-center text-sm text-indigo-600 hover:text-indigo-800 font-medium mt-4 transition-colors">
             Lihat Semua Pengajuan <i class="fas fa-arrow-right ml-1"></i>
         </a>

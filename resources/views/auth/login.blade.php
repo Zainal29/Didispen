@@ -721,7 +721,7 @@
                                     <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                                 </button>
                             </div>
-                            <!-- ✅ HINT PENTING AGAR SISWA TIDAK BINGUNG -->
+                            <!-- <i class="fas fa-check-circle"></i> HINT PENTING AGAR SISWA TIDAK BINGUNG -->
                                 <!--<p class="text-[11px] text-slate-400 mt-1.5 ml-1">
                                     Gunakan <strong>NIS</strong> Anda sebagai password jika belum pernah diubah.
                                 </p>-->

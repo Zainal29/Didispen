@@ -23,23 +23,23 @@ class DashboardController extends Controller
             'total_guru' => Guru::count(),
         ];
 
-        // 2. Data Grafik 7 Hari Terakhir
-        $dates = [];
-        $counts = [];
-        
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i)->format('Y-m-d');
-            $dates[] = Carbon::parse($date)->isoFormat('dddd, D MMM'); // Contoh: "Senin, 29 Jul"
-            
-            $counts[] = Dispensasi::whereDate('created_at', $date)->count();
-        }
+        // 2. ✅ DATA GRAFIK 7 HARI TERAKHIR (1 QUERY SAJA)
+         $chartData = Dispensasi::selectRaw('DATE(created_at) as date, count(*) as count')
+             ->where('created_at', '>=', now()->subDays(6)->startOfDay())
+             ->groupBy('date')
+             ->pluck('count', 'date');
 
-        // 3. Data Pengajuan Terbaru (5 terakhir)
-        $recent = Dispensasi::with(['siswa.user', 'siswa.kelas', 'guru'])
-            ->latest()
-            ->take(5)
-            ->get();
+         $dates = [];
+         $counts = [];
+         for ($i = 6; $i >= 0; $i--) {
+             $date = now()->subDays($i)->format('Y-m-d');
+             $dates[] = \Carbon\Carbon::parse($date)->isoFormat('dddd, D MMM');
+             $counts[] = $chartData->get($date, 0); // Ambil dari collection, default 0
+         }
 
-        return view('admin.dashboard', compact('stats', 'dates', 'counts', 'recent'));
-    }
+         // 3. Data Terbaru (tetap sama)
+         $recent = Dispensasi::with(['siswa.user', 'siswa.kelas', 'guru'])->latest()->take(5)->get();
+
+         return view('admin.dashboard', compact('stats', 'dates', 'counts', 'recent'));
+     }
 }

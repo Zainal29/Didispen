@@ -125,7 +125,7 @@
     {{-- HEADER --}}
     <div class="header">
         @php
-            $logoPath = public_path('images/logo.png');
+            $logoPath = public_path('images/logo-didispen.jpeg');
             $logoBase64 = null;
             if (file_exists($logoPath)) {
                 $logoBase64 = base64_encode(file_get_contents($logoPath));
@@ -135,7 +135,7 @@
         @if($logoBase64)
             <img src="data:image/png;base64,{{ $logoBase64 }}" class="logo" alt="Logo">
         @else
-            <div style="font-size: 30px; margin-bottom: 5px;">🏫</div>
+            <div style="margin-bottom: 5px;"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;"><path d="M14 22v-4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4"/><path d="M18 10h4l-10-8-10 8h4v12h12v-12z"/><path d="M6 10v12"/><path d="M18 10v12"/></svg></div>
         @endif
 
         <p class="school-name">SMKN 1 BANGSRI</p>

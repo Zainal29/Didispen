@@ -39,7 +39,61 @@
                 </div>
             </div>
 
+
+
             <div class="p-4 sm:p-6 space-y-4">
+
+            {{-- Foto Verifikasi (Jika Ada) --}}
+            @if($dispensasi->foto_verifikasi)
+            <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
+                <div class="flex items-start gap-4">
+                    <div class="w-20 h-20 rounded-xl overflow-hidden border-2 border-blue-300 flex-shrink-0">
+                        <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}"
+                             alt="Foto {{ $dispensasi->siswa->nama_lengkap }}"
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-bold text-blue-900 mb-1">
+                            <i class="fas fa-camera mr-1"></i> Foto Verifikasi Siswa
+                        </h4>
+                        <p class="text-xs text-blue-700 mb-2">
+                            Gunakan foto ini untuk memverifikasi identitas siswa secara visual sebelum melakukan scan QR Code.
+                        </p>
+                        <p class="text-[10px] text-blue-600">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Foto akan dihapus otomatis setelah siswa kembali.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+
+            {{-- <i class="fas fa-check-circle"></i> BARU: Foto Bukti Siswa (Ditambahkan setelah siswa kembali) --}}
+            @if($dispensasi->foto_bukti)
+            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-4 mb-4">
+                <div class="flex items-start gap-4">
+                    <div class="w-20 h-20 rounded-xl overflow-hidden border-2 border-emerald-300 flex-shrink-0">
+                        <img src="{{ Storage::url($dispensasi->foto_bukti) }}"
+                             alt="Foto Bukti {{ $dispensasi->siswa->nama_lengkap }}"
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-bold text-emerald-900 mb-1">
+                            <i class="fas fa-image mr-1"></i> Foto Bukti Kedatangan
+                        </h4>
+                        <p class="text-xs text-emerald-700 mb-2">
+                            Foto ini diupload oleh siswa sebagai bukti kedatangan di lokasi tujuan.
+                        </p>
+                        @if($dispensasi->foto_bukti_uploaded_at)
+                        <p class="text-[10px] text-emerald-600">
+                            <i class="far fa-clock mr-1"></i> Diupload: {{ $dispensasi->foto_bukti_uploaded_at->isoFormat('D MMMM Y, HH:mm') }} WIB
+                        </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
 
                 {{-- Info Grid --}}
                 <div class="grid grid-cols-2 gap-3 text-xs">
@@ -90,7 +144,7 @@
                 @endif
 
                 {{-- Cetak Struk Thermal 58mm (Muncul jika sudah disetujui/keluar/selesai) --}}
-                {{-- ✅ Validasi & tampilan KONSISTEN dengan panel Siswa (App\Helpers\PrintHelper) --}}
+                {{-- <i class="fas fa-check-circle"></i> Validasi & tampilan KONSISTEN dengan panel Siswa (App\Helpers\PrintHelper) --}}
                 @if(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
                 @php
                     $maxPrint = \App\Helpers\PrintHelper::maxTeacherLimit();
@@ -129,9 +183,9 @@
                             <i class="fas fa-info-circle mr-1"></i>
                             Saat ini: {{ $currentTime }} WIB -
                             @if($isWithinTime)
-                                <span class="text-emerald-600 font-bold">✓ Dalam jam operasional</span>
+                                <span class="text-emerald-600 font-bold"><i class="fas fa-check mr-1"></i>Dalam jam operasional</span>
                             @else
-                                <span class="text-red-600 font-bold">✗ Di luar jam operasional</span>
+                                <span class="text-red-600 font-bold"><i class="fas fa-times mr-1"></i>Di luar jam operasional</span>
                             @endif
                         </p>
                     </div>
@@ -166,6 +220,108 @@
                         </p>
                     @endif
                 </div>
+                @endif
+
+                <!--{-- PERINGATAN TERLAMBAT --}}-->
+                @php
+                    $isTerlambat = $dispensasi->status === 'keluar' &&
+                                   $dispensasi->batas_waktu_kembali &&
+                                   now()->greaterThan($dispensasi->batas_waktu_kembali);
+
+                       if ($isTerlambat) {
+                                         // <i class="fas fa-check-circle"></i> Menggunakan Helper agar selalu positif & bulat
+                                         $terlambatMenit = \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($dispensasi->batas_waktu_kembali);
+                                         $terlambatJam = floor($terlambatMenit / 60);
+                                         $terlambatSisaMenit = $terlambatMenit % 60;
+                                         $lateText = \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat($terlambatMenit, short: false);
+                                     }
+                                 @endphp
+
+                @if($isTerlambat)
+                <div class="bg-gradient-to-r from-red-500 to-rose-600 rounded-2xl shadow-lg shadow-red-500/30 p-5 mb-6 text-white">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center flex-shrink-0 animate-pulse">
+                            <i class="fas fa-exclamation-triangle text-2xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-white font-black text-lg mb-1 flex items-center gap-2">
+                                <i class="fas fa-clock"></i>
+                                SISWA TERLAMBAT KEMBALI
+                            </h3>
+                            <p class="text-red-100 text-sm mb-3">
+                                Siswa telah melewati batas waktu kembali selama
+                                <span class="font-bold text-white bg-white/20 px-2 py-0.5 rounded-lg">
+                                    @if($terlambatJam > 0)
+                                        {{ $terlambatJam }} jam {{ $terlambatSisaMenit }} menit
+                                    @else
+                                        {{ $terlambatMenit }} menit
+                                    @endif
+                                </span>
+                            </p>
+
+                            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-3 border border-white/20">
+                                <div class="grid grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                        <p class="text-red-200 text-[10px] font-bold uppercase mb-0.5">Batas Kembali</p>
+                                        <p class="font-bold text-white">
+                                            <i class="far fa-clock mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') }} WIB
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="text-red-200 text-[10px] font-bold uppercase mb-0.5">Status Saat Ini</p>
+                                        <p class="font-bold text-white">
+                                            <i class="fas fa-walking mr-1"></i>
+                                            Keluar (Belum Kembali)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                @if(!empty($dispensasi->siswa->no_telepon))
+                                    @php
+                                        $hp = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
+                                        $hp = str_starts_with($hp, '0') ? '62' . substr($hp, 1) : $hp;
+                                        $waPesan = "*PERINGATAN TERLAMBAT DISPENSASI*\n\n" .
+                                                   "Yth. {$dispensasi->siswa->nama_lengkap},\n" .
+                                                   "Anda tercatat TELAT kembali dari dispensasi.\n\n" .
+                                                   "No. Surat: {$dispensasi->nomor_surat}\n" .
+                                                   "Terlambat: " . ($terlambatJam > 0 ? "{$terlambatJam}j {$terlambatSisaMenit}m" : "{$terlambatMenit}m") . "\n" .
+                                                   "Batas Kembali: " . \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') . " WIB\n\n" .
+                                                   "Segera LAPOR ke Guru Piket/Satpam!";
+                                        $waLink = "https://wa.me/{$hp}?text=" . urlencode($waPesan);
+                                    @endphp
+                                    <!--<a href="{{ $waLink }}" target="_blank"
+                                       class="inline-flex items-center px-4 py-2 bg-white text-red-600 hover:bg-red-50 font-bold rounded-xl transition-colors shadow-md text-sm">
+                                        <i class="fab fa-whatsapp mr-2 text-lg"></i> Hubungi Siswa
+                                    </a>-->
+                                @endif
+                                <a href="{{ route('guru.scan') }}"
+                                   class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-colors shadow-md text-sm">
+                                    <i class="fas fa-qrcode mr-2"></i> Scan QR Kembali
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @else
+                    {{-- Info normal jika tidak terlambat --}}
+                    @if($dispensasi->status === 'keluar' && $dispensasi->batas_waktu_kembali)
+                    <div class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl shadow-lg shadow-amber-500/20 p-4 mb-6 text-white">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-clock text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-white font-bold text-sm">Siswa Sedang Keluar</p>
+                                <p class="text-amber-100 text-xs">
+                                    Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') }} WIB</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 @endif
 
                 {{-- Action Buttons --}}

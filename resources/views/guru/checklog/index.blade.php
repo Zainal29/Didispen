@@ -151,7 +151,7 @@
                             </div>
                             @if($log->status === 'keluar')
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 animate-pulse flex-shrink-0">
-                                    ● Sedang Keluar
+                                    <i class="fas fa-circle text-[8px] mr-1"></i>Sedang Keluar
                                 </span>
                             @else
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 flex-shrink-0">

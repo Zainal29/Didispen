@@ -35,10 +35,11 @@
     {{-- Hasil Scan QR --}}
     <div id="scanResult" class="hidden rounded-2xl border-2 p-4"></div>
 
-    {{-- VERIFIKASI MANUAL --}}
+    {{-- ✅ VERIFIKASI MANUAL (Dengan @csrf untuk keamanan) --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mt-4">
         <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Verifikasi Manual</p>
         <form onsubmit="manualVerify(event)" class="flex gap-2">
+            @csrf
             <input type="text"
                    id="manualCode"
                    required
@@ -64,7 +65,8 @@
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script>
 let html5QrCode;
-let isScanning = false;
+let isScanning = true;
+let isProcessing = false;
 
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -79,6 +81,16 @@ function setStatus(text, ok = true) {
     el.className = `inline-flex items-center text-[11px] font-bold ${ok ? 'text-emerald-600' : 'text-amber-600'}`;
 }
 
+function onScanSuccess(decodedText) {
+    if (!isScanning || isProcessing) return;
+
+    isProcessing = true;
+    isScanning = false;
+
+    try { html5QrCode.pause(); } catch (e) {}
+    verify(decodedText);
+}
+
 function verify(code) {
     setStatus('Memverifikasi data...', false);
 
@@ -90,7 +102,15 @@ function verify(code) {
         },
         body: JSON.stringify({ qr_data: code })
     })
-    .then(r => r.json())
+    .then(r => {
+        if (r.status === 429) {
+            return {
+                success: false,
+                message: '️ QR Code baru saja di-scan! Mohon tunggu 5 detik sebelum scan berikutnya.'
+            };
+        }
+        return r.json();
+    })
     .then(data => {
         const result = document.getElementById('scanResult');
         result.classList.remove('hidden');
@@ -129,18 +149,23 @@ function verify(code) {
                     </button>
                 </div>`;
             setStatus('Selesai — data ditampilkan', true);
+            setTimeout(() => { restartScanner(); }, 5000);
         } else {
             if (navigator.vibrate) navigator.vibrate(300);
-            result.className = 'rounded-2xl border-2 p-4 bg-red-50 border-red-300';
+            result.className = 'rounded-2xl border-2 p-4 bg-amber-50 border-amber-300';
             result.innerHTML = `
                 <div class="flex items-center space-x-3">
-                    <div class="w-11 h-11 rounded-full bg-red-500 text-white flex items-center justify-center text-lg shadow-lg shadow-red-500/40"><i class="fas fa-xmark"></i></div>
-                    <div><p class="font-black text-red-800 text-base leading-tight">GAGAL</p><p class="text-xs text-red-700 font-semibold">${escapeHtml(data.message)}</p></div>
+                    <div class="w-11 h-11 rounded-full bg-amber-500 text-white flex items-center justify-center text-lg shadow-lg"><i class="fas fa-clock"></i></div>
+                    <div>
+                        <p class="font-black text-amber-800 text-base leading-tight">TUNGGU SEBENTAR</p>
+                        <p class="text-xs text-amber-700 font-semibold">${escapeHtml(data.message)}</p>
+                    </div>
                 </div>
                 <div class="mt-3 text-right">
-                    <button onclick="restartScanner()" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold shadow hover:bg-red-700"><i class="fas fa-redo mr-1"></i> Coba Lagi</button>
+                    <button onclick="restartScanner()" class="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold shadow hover:bg-amber-700"><i class="fas fa-redo mr-1"></i> Coba Lagi</button>
                 </div>`;
-            setStatus('Gagal memverifikasi', false);
+            setStatus('Cooldown aktif', false);
+            setTimeout(() => { restartScanner(); }, 3000);
         }
     })
     .catch(() => {
@@ -149,42 +174,37 @@ function verify(code) {
         result.className = 'rounded-2xl border-2 p-4 bg-red-50 border-red-300';
         result.innerHTML = '<p class="text-red-800 font-bold text-sm"><i class="fas fa-triangle-exclamation mr-1"></i>Terjadi kesalahan koneksi.</p>';
         setStatus('Kesalahan koneksi', false);
+        isProcessing = false;
     });
-}
-
-function onScanSuccess(decodedText) {
-    if (!isScanning) return;
-    isScanning = false;
-    try { html5QrCode.pause(); } catch (e) {}
-    verify(decodedText);
 }
 
 function restartScanner() {
     document.getElementById('scanResult').classList.add('hidden');
     document.getElementById('manualSearchResult').classList.add('hidden');
+
+    isProcessing = false;
     isScanning = true;
+
     if (html5QrCode) {
         try { html5QrCode.resume(); } catch (e) {}
         setStatus('Kamera aktif — menunggu scan');
     }
 }
 
-// ✅ VERIFIKASI MANUAL - PERBAIKAN LENGKAP
+// ✅ VERIFIKASI MANUAL - AJAX (TIDAK REFRESH HALAMAN)
 function manualVerify(e) {
-    e.preventDefault();
-    const code = document.getElementById('manualCode').value.trim();
-    if (!code) return;
+    e.preventDefault(); // ✅ INI YANG MENCEGAH REFRESH
 
-    const resultDiv = document.getElementById('manualSearchResult');
-    if (!resultDiv) {
-        alert('Element tidak ditemukan. Silakan refresh halaman.');
+    const code = document.getElementById('manualCode').value.trim();
+    if (!code) {
+        Swal.fire('Error', 'Masukkan nomor surat, NIS, atau nama siswa', 'error');
         return;
     }
 
+    const resultDiv = document.getElementById('manualSearchResult');
     resultDiv.classList.remove('hidden');
     resultDiv.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin text-red-500 text-2xl"></i><p class="text-xs text-gray-500 mt-2">Mencari data...</p></div>';
 
-    // ✅ PERBAIKAN: Gunakan route() helper, bukan URL hardcoded
     fetch('{{ route("satpam.search-dispensasi") }}', {
         method: 'POST',
         headers: {
@@ -195,10 +215,9 @@ function manualVerify(e) {
         body: JSON.stringify({ query: code })
     })
     .then(r => {
-        // ✅ PERBAIKAN: Cek apakah response adalah JSON
         const contentType = r.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server mengembalikan HTML, bukan JSON. Kemungkinan ada error di server.');
+            throw new Error('Server mengembalikan HTML, bukan JSON.');
         }
         return r.json();
     })
@@ -246,40 +265,50 @@ function manualVerify(e) {
         console.error('Error:', error);
         resultDiv.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center"><p class="text-red-700 font-bold text-sm">Terjadi kesalahan</p><p class="text-xs text-red-600 mt-1">${error.message}</p></div>`;
     });
-
-    document.getElementById('manualCode').value = '';
 }
 
-// ✅ QUICK ACTION - PERBAIKAN LENGKAP
+// ✅ QUICK ACTION - KONFIRMASI CEPAT
 function quickAction(action, dispensasiId) {
     const confirmMsg = action === 'keluar' ? 'Konfirmasi siswa KELUAR dari sekolah?' : 'Konfirmasi siswa KEMBALI ke sekolah?';
-    if (!confirm(confirmMsg)) return;
 
-    // ✅ PERBAIKAN: Gunakan route() helper
-    const url = action === 'keluar'
-        ? '{{ route("satpam.konfirmasi.keluar", ":id") }}'.replace(':id', dispensasiId)
-        : '{{ route("satpam.konfirmasi.kembali", ":id") }}'.replace(':id', dispensasiId);
+    Swal.fire({
+        title: 'Konfirmasi',
+        text: confirmMsg,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: action === 'keluar' ? '#0ea5e9' : '#10b981',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Konfirmasi',
+        cancelButtonText: 'Batal'
+    }).then(result => {
+        if (result.isConfirmed) {
+            const url = action === 'keluar'
+                ? '{{ route("satpam.konfirmasi.keluar", ":id") }}'.replace(':id', dispensasiId)
+                : '{{ route("satpam.konfirmasi.kembali", ":id") }}'.replace(':id', dispensasiId);
 
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json'
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Berhasil!', data.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Gagal', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
+            });
         }
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ ' + data.message);
-            location.reload();
-        } else {
-            alert('❌ ' + (data.message || 'Gagal memproses'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('❌ Terjadi kesalahan koneksi');
     });
 }
 

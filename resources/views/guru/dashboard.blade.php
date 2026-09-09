@@ -34,7 +34,7 @@
     <div class="flex items-center justify-between">
         <div class="min-w-0">
             <p class="text-blue-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-            {{-- ✅ DIPERBAIKI: Emoji 👋 diganti dengan icon fa-hand-sparkles --}}
+            {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Emoji 👋 diganti dengan icon fa-hand-sparkles --}}
             <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">Halo, {{ auth()->user()->name }}! <i class="fas fa-hand-sparkles text-yellow-300 ml-1"></i></h2>
             <p class="text-blue-100 text-xs sm:text-sm mt-1">
                 Pantau dan kelola dispensasi siswa hari ini.
@@ -44,6 +44,49 @@
             <i class="fas fa-plus mr-2"></i> Buat Dispensasi
         </a>
     </div>
+</div>
+
+{{-- ========================================== --}}
+{{-- <i class="fas fa-check-circle"></i> BARU: KOLOM PENCARIAN SISWA --}}
+{{-- ========================================== --}}
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-4">
+    <form method="GET" action="{{ route('guru.dashboard') }}" class="flex gap-2">
+        <input type="hidden" name="filter" value="{{ $filter ?? 'semua' }}">
+
+        <div class="flex-1 relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                <i class="fas fa-search"></i>
+            </span>
+            <input
+                type="text"
+                name="search"
+                value="{{ $search ?? '' }}"
+                placeholder="Cari nama siswa, NIS, atau nomor surat..."
+                class="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all"
+                autofocus
+            >
+            @if($search)
+                <a href="{{ route('guru.dashboard', ['filter' => $filter]) }}"
+                   class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 transition-colors" title="Hapus pencarian">
+                    <i class="fas fa-times-circle text-lg"></i>
+                </a>
+            @endif
+        </div>
+
+        <button type="submit"
+                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md shadow-blue-500/30">
+            <i class="fas fa-search mr-1.5 hidden sm:inline"></i>Cari
+        </button>
+    </form>
+
+    @if($search)
+        <div class="mt-2 text-xs text-gray-500 flex items-center">
+            <i class="fas fa-info-circle mr-1"></i>
+            Menampilkan hasil pencarian untuk: <strong class="text-gray-800 mx-1">"{{ $search }}"</strong>
+            <span class="mx-1">•</span>
+            <span>{{ $displayData->count() }} data ditemukan</span>
+        </div>
+    @endif
 </div>
 
 {{-- ========================================== --}}
@@ -125,7 +168,27 @@ $cards = [
 
     <div class="divide-y divide-gray-100">
         @forelse($displayData as $item)
-        <div class="p-4 hover:bg-gray-50/80 transition-colors">
+        @php
+            // <i class="fas fa-check-circle"></i> BARU: Highlight teks yang dicari
+            $highlightName = $search ?
+                preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark class="bg-yellow-200 text-gray-900 rounded px-0.5">$1</mark>', $item->siswa->nama_lengkap) :
+                $item->siswa->nama_lengkap;
+
+            // <i class="fas fa-check-circle"></i> DETEKSI KETERLAMBATAN SECARA REALTIME
+            $isLate = $item->status === 'keluar' && $item->batas_waktu_kembali && now()->greaterThan($item->batas_waktu_kembali);
+            $lateMinutes = $isLate ? \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($item->batas_waktu_kembali) : 0;
+            $lateText = $isLate ? \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat($lateMinutes, short: true) : '';
+
+            // Format nomor HP untuk WA
+            $waLink = '';
+            if ($isLate && !empty($item->siswa->no_telepon)) {
+                $hp = preg_replace('/[^0-9]/', '', $item->siswa->no_telepon);
+                $hp = str_starts_with($hp, '0') ? '62' . substr($hp, 1) : $hp;
+                $waLink = "https://wa.me/{$hp}?text=" . urlencode("*PERINGATAN DISPENSASI*\n\nYth. {$item->siswa->nama_lengkap},\nAnda telah melewati batas waktu kembali dispensasi (Terlambat {$lateText}).\n\nSegera kembali ke sekolah atau lapor ke Guru Piket.\n\nTerima kasih.");
+            }
+        @endphp
+
+        <div class="p-4 transition-colors {{ $isLate ? 'bg-red-50/60 hover:bg-red-100/60 border-l-4 border-red-500' : 'hover:bg-gray-50/80' }}">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
 
                 {{-- Info Siswa & Dispensasi --}}
@@ -145,9 +208,18 @@ $cards = [
                         <span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-wide {{ $badgeClass }}">
                             {{ $item->status }}
                         </span>
+
+                        {{-- <i class="fas fa-check-circle"></i> BADGE TERLAMBAT (Muncul hanya jika terlambat) --}}
+                        @if($isLate)
+                            <span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-wide bg-red-100 text-red-800 border-red-300 animate-pulse">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>Terlambat {{ $lateText }}
+                            </span>
+                        @endif
                     </div>
 
-                    <p class="font-bold text-gray-900 text-sm truncate mt-1">{{ $item->siswa->nama_lengkap }}</p>
+                    <p class="font-bold text-gray-900 text-sm truncate mt-1">
+                        {!! $highlightName !!} {{-- <i class="fas fa-check-circle"></i> Gunakan ini agar highlight bekerja --}}
+                    </p>
                     <p class="text-xs font-medium text-gray-600 mb-1">
                         {{ $item->siswa->kelas?->nama_kelas ?? '-' }} • {{ $item->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}
                     </p>
@@ -155,10 +227,29 @@ $cards = [
                         <span class="font-bold text-gray-900">{{ ucfirst(str_replace('_', ' ', $item->kategori)) }}:</span>
                         {{ Str::limit($item->alasan, 70) }}
                     </p>
+
+                    {{-- <i class="fas fa-check-circle"></i> INFO TAMBAHAN JIKA TERLAMBAT --}}
+                    @if($isLate)
+                        <p class="text-xs text-red-600 font-bold mt-1.5 flex items-center">
+                            <i class="far fa-clock mr-1.5"></i>
+                            Batas kembali: {{ \Carbon\Carbon::parse($item->batas_waktu_kembali)->format('H:i') }} WIB
+                        </p>
+                    @endif
                 </div>
 
                 {{-- Tombol Aksi --}}
-                <div class="flex items-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                <div class="flex flex-wrap items-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 sm:border-gray-100">
+
+                    {{-- <i class="fas fa-check-circle"></i> TOMBOL HUBUNGI WA (Khusus Terlambat) --}}
+                    @if($isLate && $waLink)
+                        <button onclick="handleGuruWaContacted({{ $item->id }}, '{{ $waLink }}', this)"
+                                class="inline-flex items-center justify-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm {{ $item->is_warned ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                {{ $item->is_warned ? 'disabled' : '' }}>
+                            <i class="fab fa-whatsapp mr-1.5"></i>
+                            <span class="wa-text">{{ $item->is_warned ? 'Sudah Dihubungi' : 'Hubungi' }}</span>
+                        </button>
+                    @endif
+
                     <a href="{{ route('guru.pengajuan.show', $item) }}"
                        class="inline-flex items-center justify-center px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-colors border border-blue-200"
                        title="Lihat Detail">
@@ -195,13 +286,28 @@ $cards = [
                 </div>
             </div>
         </div>
+
+
+
         @empty
         <div class="p-10 text-center">
             <div class="w-16 h-16 mx-auto rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3">
-                <i class="fas fa-inbox"></i>
+                <i class="fas fa-search"></i>
             </div>
-            <p class="text-gray-800 font-bold text-sm">Tidak ada data dispensasi untuk filter ini</p>
-            <p class="text-gray-600 text-xs mt-1">Data akan muncul ketika siswa mengajukan dispensasi.</p>
+            <p class="text-gray-800 font-bold text-sm">
+                @if($search)
+                    Tidak ada hasil pencarian untuk "{{ $search }}"
+                @else
+                    Tidak ada data dispensasi untuk filter ini
+                @endif
+            </p>
+            <p class="text-gray-600 text-xs mt-1">
+                @if($search)
+                    Coba ubah kata kunci pencarian atau hapus filter
+                @else
+                    Data akan muncul ketika siswa mengajukan dispensasi
+                @endif
+            </p>
         </div>
         @endforelse
     </div>
@@ -229,69 +335,48 @@ function switchFilter(filterKey, color, event) {
     if (event) event.preventDefault();
     if (filterKey === currentFilter) return;
 
-    // Reset Stat Card Active State
     document.querySelectorAll('.stat-card-btn').forEach(card => {
         card.classList.remove('active', 'ring-2', 'shadow-md');
         card.classList.add('border-gray-200', 'shadow-sm');
         card.className = card.className.replace(/border-\w+-500/g, '');
         card.className = card.className.replace(/ring-\w+-500\/20/g, '');
-
         const iconContainer = card.querySelector('div > div');
-        if (iconContainer) {
-            iconContainer.className = iconContainer.className.replace(/bg-\w+-500 text-white/g, '');
-        }
+        if (iconContainer) iconContainer.className = iconContainer.className.replace(/bg-\w+-500 text-white/g, '');
     });
 
-    // Reset Secondary Button Active State
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active', 'bg-blue-600', 'bg-red-600', 'text-white', 'shadow-md', 'border-transparent');
         btn.classList.add('bg-white', 'border-gray-200');
     });
 
-    // Set Active State untuk elemen terpilih
     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
     if (activeStatCard) {
         activeStatCard.classList.add('active', `border-${color}-500`, `ring-2`, `ring-${color}-500/20`, 'shadow-md');
         const iconContainer = activeStatCard.querySelector('div > div');
-        if (iconContainer) {
-            iconContainer.classList.add(`bg-${color}-500`, 'text-white');
-        }
+        if (iconContainer) iconContainer.classList.add(`bg-${color}-500`, 'text-white');
     }
 
     const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
-    if (activeBtn) {
-        activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-md', 'border-transparent');
-    }
+    if (activeBtn) activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-md', 'border-transparent');
 
-    // Smooth Content Transition
     const contentArea = document.getElementById('content-area');
     const loading = document.getElementById('loading-overlay');
-
     contentArea.classList.remove('fade-in');
     contentArea.classList.add('fade-out');
     loading.classList.remove('hidden');
 
-    fetch(`{{ url()->current() }}?filter=${filterKey}`, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'text/html'
-        }
-    })
+    fetch(`{{ url()->current() }}?filter=${filterKey}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
     .then(response => response.text())
     .then(html => {
         const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const newContent = doc.getElementById('content-area');
-
+        const newContent = parser.parseFromString(html, 'text/html').getElementById('content-area');
         if (newContent) {
             setTimeout(() => {
                 contentArea.innerHTML = newContent.innerHTML;
                 contentArea.classList.remove('fade-out');
                 contentArea.classList.add('fade-in');
                 loading.classList.add('hidden');
-
                 currentFilter = filterKey;
-
                 const newUrl = new URL(window.location);
                 newUrl.searchParams.set('filter', filterKey);
                 window.history.pushState({ filter: filterKey }, '', newUrl);
@@ -315,11 +400,11 @@ window.addEventListener('popstate', function(event) {
         if(filter === 'keluar') color = 'sky';
         if(filter === 'selesai') color = 'gray';
         if(filter === 'terlambat') color = 'red';
-
         switchFilter(filter, color, null);
     }
 });
 
+// <i class="fas fa-check-circle"></i> FUNGSI 1: Tolak Dispensasi
 function rejectDispensasi(id, namaSiswa) {
     Swal.fire({
         title: 'Tolak Dispensasi',
@@ -341,21 +426,64 @@ function rejectDispensasi(id, namaSiswa) {
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/guru/pengajuan/${id}/reject`;
-
             const csrf = document.createElement('input');
             csrf.type = 'hidden';
             csrf.name = '_token';
             csrf.value = document.querySelector('meta[name="csrf-token"]').content;
-
             const reason = document.createElement('input');
             reason.type = 'hidden';
             reason.name = 'catatan_admin';
             reason.value = result.value;
-
             form.append(csrf, reason);
             document.body.appendChild(form);
             form.submit();
         }
+    });
+}
+
+// <i class="fas fa-check-circle"></i> FUNGSI 2: Klik WA di panel Guru - tandai dihubungi & buka WA (DIPISAHKAN DARI rejectDispensasi)
+function handleGuruWaContacted(dispensasiId, waLink, button) {
+    if (button.disabled) {
+        window.open(waLink, '_blank');
+        return;
+    }
+
+    fetch(`/guru/dispensasi/${dispensasiId}/wa-contacted`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        keepalive: true
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.disabled = true;
+            button.classList.add('opacity-50', 'cursor-not-allowed');
+            const waText = button.querySelector('.wa-text');
+            if (waText) waText.textContent = 'Sudah Dihubungi';
+
+            const card = button.closest('.p-4');
+            if (card) {
+                const badgeRow = card.querySelector('.flex.items-center.gap-2.mb-1');
+                if (badgeRow && !badgeRow.querySelector('.warned-badge')) {
+                    badgeRow.insertAdjacentHTML('beforeend',
+                        `<span class="warned-badge px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-wide bg-purple-100 text-purple-800 border-purple-200 ml-2">
+                            <i class="fas fa-phone-alt mr-1"></i>Dihubungi
+                        </span>`
+                    );
+                }
+            }
+            window.open(waLink, '_blank');
+        } else {
+            alert('Gagal menandai status: ' + data.message);
+            window.open(waLink, '_blank');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        window.open(waLink, '_blank');
     });
 }
 </script>

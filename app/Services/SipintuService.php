@@ -757,21 +757,14 @@ use Illuminate\Support\Facades\Log;
                             );
 
                             $users = User::query()
-                                ->where(function ($query) use (
-                                    $nisList,
-                                    $emailList
-                                ) {
+                                ->where('role', 'siswa') // ✅ TAMBAHKAN INI: BATASI HANYA ROLE SISWA
+                                ->where(function ($query) use ($nisList, $emailList) {
                                     $query
-                                        ->whereIn(
-                                            'nis_nip',
-                                            $nisList
-                                        )
-                                        ->orWhereIn(
-                                            'email',
-                                            $emailList
-                                        );
+                                        ->whereIn('nis_nip', $nisList)
+                                        ->orWhereIn('email', $emailList);
                                 })
                                 ->get();
+
 
                             $userMap = [];
 
@@ -1637,15 +1630,12 @@ use Illuminate\Support\Facades\Log;
                                 * USER
                                 * ==================================================
                                 */
-                                $user =
-                                    User::where(
-                                        'nis_nip',
-                                        $nip
-                                    )
-                                    ->orWhere(
-                                        'email',
-                                        $email
-                                    )
+                                // ✅ TAMBAHKAN ->where('role', 'guru')
+                                $user = User::whereIn('role', ['guru', 'admin'])
+                                    ->where(function ($q) use ($nip, $email) {
+                                        $q->where('nis_nip', $nip)
+                                          ->orWhere('email', $email);
+                                    })
                                     ->first();
 
                                 if ($user) {

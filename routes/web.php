@@ -23,6 +23,7 @@ Route::get('/', fn () => redirect()->route('login'));
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1'); // 5x percobaan per menit
 });
 
 // Logout (Authenticated)
@@ -68,8 +69,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('semua-pengajuan/{dispensasi}', [Admin\DispensasiController::class, 'destroy'])->name('semua.pengajuan.destroy');
 
         Route::get('laporan', [Admin\LaporanController::class, 'index'])->name('laporan.index');
-        Route::get('laporan/pdf', [Admin\LaporanController::class, 'exportPdf'])->name('laporan.pdf');
-        Route::get('laporan/excel', [Admin\LaporanController::class, 'exportExcel'])->name('laporan.excel');
+        Route::get('laporan/pdf', [Admin\LaporanController::class, 'exportPdf'])->name('laporan.pdf'); // ✅ PASTIKAN ADA
+        Route::get('laporan/excel', [Admin\LaporanController::class, 'exportExcel'])->name('laporan.excel'); // ✅ PASTIKAN ADA
 
         Route::get('pengaturan', [Admin\SettingsController::class, 'index'])->name('settings.index');
         Route::put('pengaturan', [Admin\SettingsController::class, 'update'])->name('settings.update');
@@ -79,7 +80,14 @@ Route::middleware(['auth'])->group(function () {
         // Sinkronisasi SiPintu Gateway
         Route::post('sipintu/sync-siswa', [Admin\SipintuSyncController::class, 'syncSiswa'])->name('sipintu.sync-siswa');
         Route::post('sipintu/sync-guru', [Admin\SipintuSyncController::class, 'syncGuru'])->name('sipintu.sync-guru');
+
+        // wa template
+        Route::resource('whatsapp-templates', Admin\WhatsappTemplateController::class)->except(['show', 'create', 'edit']);
+        Route::post('whatsapp-templates/preview', [Admin\WhatsappTemplateController::class, 'preview'])->name('whatsapp-templates.preview');
+
+
     });
+
 
     // ==========================================
     // GURU ROUTES
@@ -123,9 +131,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('warning/{dispensasi}/send', [Guru\WarningController::class, 'sendWarning'])
             ->name('warning.send');
 
-        // Scan QR Backup
-        Route::get('scan', [\App\Http\Controllers\Guru\ScanController::class, 'index'])->name('scan');
-        Route::post('scan/verify', [\App\Http\Controllers\Guru\ScanController::class, 'verify'])->name('scan.verify');
+            // Scan QR Backup - ✅ TAMBAHKAN RATE LIMITING
+                    Route::get('scan', [\App\Http\Controllers\Guru\ScanController::class, 'index'])->name('scan');
+                    Route::post('scan/verify', [\App\Http\Controllers\Guru\ScanController::class, 'verify'])
+              ->middleware('throttle:10,1') // ✅ TAMBAHKAN INI
+                ->name('scan.verify');
+
+          // ✅ TAMBAHKAN INI: Route untuk tandai sudah dihubungi via WA
+         Route::post('dispensasi/{dispensasi}/wa-contacted', [\App\Http\Controllers\Guru\DashboardController::class, 'markWaContacted'])
+             ->name('dispensasi.wa-contacted');
     });
 
     // ==========================================
@@ -145,7 +159,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
         Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead'])->name('notifikasi.read');
         Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.readAll');
-    });
+
+        // ✅ TAMBAHKAN 2 ROUTE INI:
+        Route::post('pengajuan/{dispensasi}/upload-foto-bukti', [\App\Http\Controllers\Siswa\PengajuanController::class, 'uploadFotoBukti'])->name('pengajuan.upload-foto-bukti');
+        Route::delete('pengajuan/{dispensasi}/hapus-foto-bukti', [\App\Http\Controllers\Siswa\PengajuanController::class, 'hapusFotoBukti'])->name('pengajuan.hapus-foto-bukti');
+       });
 
     // ==========================================
     // SATPAM ROUTES

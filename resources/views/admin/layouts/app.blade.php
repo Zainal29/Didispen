@@ -70,6 +70,10 @@
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.laporan.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-bar w-5 mr-3"></i> Laporan
                 </a>
+                <a href="{{ route('admin.whatsapp-templates.index') }}"
+                                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.whatsapp-templates.*') ? 'active' : '' }}">
+                                    <i class="fab fa-whatsapp w-5 mr-3"></i> Template WA
+                                </a>
 
                 <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Sistem</p>
                 <a href="{{ route('admin.settings.index') }}"

@@ -25,7 +25,7 @@ class CetakStrukController extends Controller
 
         $user = auth()->user();
 
-        // ✅ OTORISASI: Izinkan Admin atau Guru (tanpa perlu cocokkan guru_id)
+        // <i class="fas fa-check-circle"></i> OTORISASI: Izinkan Admin atau Guru (tanpa perlu cocokkan guru_id)
         if (!in_array($user->role, ['admin', 'guru'])) {
             abort(403, 'Akses ditolak. Hanya Admin atau Guru yang dapat mencetak.');
         }
@@ -35,7 +35,7 @@ class CetakStrukController extends Controller
             abort(403, 'Dispensasi harus dalam status disetujui untuk dicetak.');
         }
 
-        // ✅ Cek limit cetak GURU
+        // <i class="fas fa-check-circle"></i> Cek limit cetak GURU
         $maxPrint = PrintHelper::maxTeacherLimit();
         $currentTeacherCount = $dispensasi->teacher_print_count ?? 0;
 
@@ -45,7 +45,7 @@ class CetakStrukController extends Controller
 
         $format = $request->query('format', 'thermal');
 
-        // ✅ Increment counter GURU (bukan print_count!)
+        // <i class="fas fa-check-circle"></i> Increment counter GURU (bukan print_count!)
         $dispensasi->update([
             'teacher_print_count' => $currentTeacherCount + 1,
             'printed_at' => now(),

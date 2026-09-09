@@ -55,6 +55,7 @@ class Siswa extends Model
 
     public function getNamaLengkapAttribute($value): string
     {
-        return strtoupper($value);
+        // ✅ CASTING STRING AGAR AMAN DARI NILAI NULL
+        return strtoupper((string) ($value ?? ''));
     }
 }

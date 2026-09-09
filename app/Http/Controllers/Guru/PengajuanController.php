@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
 use App\Models\Siswa;
 use App\Helpers\TimeHelper;
+use App\Helpers\DispensasiTimeHelper; // <i class="fas fa-check-circle"></i> TAMBAHKAN INI
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -39,59 +40,103 @@ class PengajuanController extends Controller
      */
     public function create()
     {
+        // <i class="fas fa-check-circle"></i> VALIDASI HARI: Hanya Senin-Jumat
+        $dayOfWeek = now()->dayOfWeek; // 0 = Minggu, 6 = Sabtu
+        $dayName = now()->locale('id')->isoFormat('dddd');
+
+        // if ($dayOfWeek === 0 || $dayOfWeek === 6) {
+        //     return redirect()->route('guru.pengajuan.index')
+        //           ->with('error', $timeCheck['reason'].' Saat ini: '.($timeCheck['current_day'] ?? '').' '.($timeCheck['current_time'] ?? ''));
+        // }
+
+        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
+
+        if (! $timeCheck['allowed']) {
+            return redirect()->route('guru.pengajuan.index')
+                ->with('error', $timeCheck['reason'].' Saat ini: '.($timeCheck['current_day'] ?? '').' '.($timeCheck['current_time'] ?? ''));
+        }
+
+        // <i class="fas fa-check-circle"></i> VALIDASI JAM: Cek apakah masih dalam jam pengajuan
+        // $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
+
+        // if (!$timeCheck['allowed']) {
+        //     return redirect()->route('guru.pengajuan.index')
+        //         ->with('error', $timeCheck['reason']);
+        // }
+
         return view('guru.pengajuan.create');
     }
 
     /**
-     * Endpoint pencarian siswa (AJAX untuk Select2)
+     * AJAX Search Siswa untuk Select2
      */
     public function searchSiswa(Request $request)
     {
-        $query = $request->get('q', '');
+        $query = trim($request->get('q', ''));
 
-        $siswas = Siswa::with(['user', 'kelas.jurusan'])
-            ->where('status_aktif', 1)
+        // Jika query kosong, kembalikan hasil kosong
+        if (empty($query)) {
+            return response()->json(['results' => []]);
+        }
+
+        $siswas = \App\Models\Siswa::with(['user', 'kelas.jurusan'])
             ->where(function($q) use ($query) {
                 $q->where('nama_lengkap', 'like', "%{$query}%")
-                  ->orWhereHas('user', function($q2) use ($query) {
-                      $q2->where('nis_nip', 'like', "%{$query}%");
+                  ->orWhereHas('user', function($u) use ($query) {
+                      $u->where('nis_nip', 'like', "%{$query}%")
+                        ->orWhere('name', 'like', "%{$query}%");
+                  })
+                  ->orWhereHas('kelas', function($k) use ($query) {
+                      $k->where('nama_kelas', 'like', "%{$query}%");
                   });
             })
-            ->limit(15)
+            ->limit(15) // Batasi hasil agar tidak berat
             ->get()
-            ->map(function($s) {
-                $nis = $s->user ? $s->user->nis_nip : 'Tanpa NIS';
-                $kelas = $s->kelas ? $s->kelas->nama_kelas : 'Tanpa Kelas';
-
+            ->map(function($siswa) {
                 return [
-                    'id' => $s->id,
-                    'text' => "{$nis} - {$s->nama_lengkap} ({$kelas})",
+                    'id' => $siswa->id,
+                    'text' => $siswa->nama_lengkap . ' | NIS: ' . ($siswa->user->nis_nip ?? '-') . ' | ' . ($siswa->kelas->nama_kelas ?? '-') . ' ' . ($siswa->kelas->jurusan->nama_jurusan ?? ''),
+                    'nama' => $siswa->nama_lengkap,
+                    'nis' => $siswa->user->nis_nip ?? '-',
+                    'kelas' => ($siswa->kelas->nama_kelas ?? '-') . ' ' . ($siswa->kelas->jurusan->nama_jurusan ?? '')
                 ];
             });
 
-        return response()->json(['results' => $siswas]);
+        return response()->json([
+            'results' => $siswas
+        ]);
     }
 
     /**
-     * Simpan pengajuan manual — Langsung Disetujui + Generate QR
+     * Simpan pengajuan manual
      */
     public function store(Request $request)
     {
+        $dayOfWeek = now()->dayOfWeek;
+        $maxJam = DispensasiTimeHelper::getMaxJamPelajaran($dayOfWeek);
+
         $validated = $request->validate([
             'siswa_id'        => 'required|exists:siswa,id',
             'kategori'        => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
             'alasan'          => 'required|string|min:10',
             'tujuan'          => 'required|string|max:255',
-            'jam_keluar'      => 'required|integer|between:1,10',
-            'jam_kembali'     => 'required|integer|between:1,10|gt:jam_keluar',
+            'jam_keluar'      => "required|integer|min:1|max:{$maxJam}",
+            'jam_kembali'     => "required|integer|min:1|max:{$maxJam}|gt:jam_keluar",
             'foto_verifikasi' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
+            'jam_keluar.max' => "Jam keluar maksimal adalah jam ke-{$maxJam} untuk hari ini (" . now()->isoFormat('dddd') . ").",
+            'jam_kembali.max' => "Jam kembali maksimal adalah jam ke-{$maxJam} untuk hari ini (" . now()->isoFormat('dddd') . ").",
             'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',
             'foto_verifikasi.image' => 'File harus berupa gambar (JPG/PNG).',
             'foto_verifikasi.max'   => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        $waktuAktual = TimeHelper::getWaktuAktual('Jam Pelajaran ke-'.$validated['jam_kembali']);
+        // <i class="fas fa-check-circle"></i> PERBAIKAN: Gunakan dayOfWeek saat ini untuk getWaktuAktual
+        $waktuAktual = TimeHelper::getWaktuAktual(
+            'Jam Pelajaran ke-'.$validated['jam_kembali'],
+            $dayOfWeek
+        );
+
         $parts = explode(' - ', $waktuAktual);
         $batasWaktu = Carbon::parse($parts[1] ?? '15:15')->addMinutes(15);
 
@@ -119,7 +164,6 @@ class PengajuanController extends Controller
             'catatan_admin'       => 'Dibuatkan manual oleh Guru Piket: ' . auth()->user()->name,
         ]);
 
-        // Generate QR Code
         $this->generateQRCode($dispensasi);
 
         return redirect()->route('guru.pengajuan.index')
@@ -192,24 +236,24 @@ class PengajuanController extends Controller
     /**
      * Helper: Generate QR Code untuk dispensasi
      */
-     private function generateQRCode(Dispensasi $dispensasi)
-     {
-         if (empty($dispensasi->qr_token)) {
-             $dispensasi->qr_token = \Illuminate\Support\Str::random(64);
-         }
+    private function generateQRCode(Dispensasi $dispensasi)
+    {
+        if (empty($dispensasi->qr_token)) {
+            $dispensasi->qr_token = \Illuminate\Support\Str::random(64);
+        }
 
-         // ✅ Gunakan URL lengkap
-         $qrContent = url('/verify-qr/' . $dispensasi->id . '?token=' . $dispensasi->qr_token);
+        // <i class="fas fa-check-circle"></i> Gunakan format JSON seperti Siswa (agnostik domain)
+        $qrContent = json_encode(['token' => $dispensasi->qr_token]);
 
-         $qrCodePath = 'qr_codes/dispensasi_' . $dispensasi->id . '.svg';
+        $qrCodePath = 'qr_codes/dispensasi_' . $dispensasi->id . '.svg';
 
-         \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory('qr_codes');
+        \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory('qr_codes');
 
-         \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
-             ->size(300)
-             ->margin(0)
-             ->generate($qrContent, storage_path('app/public/' . $qrCodePath));
+        \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(300)
+            ->margin(0)
+            ->generate($qrContent, storage_path('app/public/' . $qrCodePath));
 
-         $dispensasi->update(['qr_code' => $qrCodePath]);
-     }
+        $dispensasi->update(['qr_code' => $qrCodePath]);
+    }
 }

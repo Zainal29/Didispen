@@ -1,74 +1,265 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Surat Dispensasi {{ $dispensasi->nomor_surat }}</title>
-<style>
-    body { font-family: 'Times New Roman', Arial, sans-serif; font-size: 12pt; line-height: 1.5; color: #000; margin: 40px; }
-    .header { text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 25px; }
-    .header h2 { margin: 0; font-size: 16pt; text-transform: uppercase; }
-    .header p { margin: 3px 0; font-size: 11pt; }
-    .title { text-align: center; margin: 25px 0; font-weight: bold; text-decoration: underline; font-size: 14pt; }
-    .content { line-height: 1.6; }
-    .table-data { width: 100%; margin: 15px 0; border-collapse: collapse; }
-    .table-data td { padding: 4px 8px; vertical-align: top; }
-    .table-data td:first-child { width: 160px; font-weight: bold; }
-    .signature { margin-top: 60px; text-align: right; page-break-inside: avoid; }
-    .signature img { max-width: 150px; max-height: 80px; margin-bottom: 5px; }
-    .signature-name { font-weight: bold; text-decoration: underline; margin-top: 60px; display: block; }
-    .footer { font-size: 9pt; color: #555; margin-top: 50px; border-top: 1px dashed #999; padding-top: 8px; text-align: center; }
-</style>
+    <meta charset="utf-8">
+    <title>Surat Dispensasi {{ $dispensasi->nomor_surat }}</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #000;
+            margin: 20px 30px;
+        }
+
+        /* HEADER / KOP SURAT */
+        .header-table {
+            width: 100%;
+            border-bottom: 3px double #000;
+            padding-bottom: 6px;
+            margin-bottom: 15px;
+        }
+
+        .header-table td {
+            vertical-align: middle;
+        }
+
+        .logo-left {
+            width: 65px;
+            text-align: center;
+        }
+
+        .logo-left img {
+            width: 55px; /* Ukuran logo diperkecil agar pas */
+            height: auto;
+        }
+
+        .school-info {
+            text-align: center;
+        }
+
+        .school-info h2 {
+            margin: 0;
+            font-size: 13pt;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .school-info p {
+            margin: 2px 0;
+            font-size: 9pt;
+        }
+
+        .tagline-img {
+            max-width: 220px;
+            height: auto;
+            margin-top: 4px;
+        }
+
+        /* JUDUL SURAT */
+        .title {
+            text-align: center;
+            margin: 12px 0 15px 0;
+        }
+
+        .title h3 {
+            margin: 0;
+            font-size: 12pt;
+            text-decoration: underline;
+            text-transform: uppercase;
+        }
+
+        .title span {
+            font-size: 10.5pt;
+            font-weight: normal;
+        }
+
+        /* ISI SURAT */
+        .content {
+            font-size: 11pt;
+        }
+
+        .table-data {
+            width: 100%;
+            margin: 10px 0;
+            border-collapse: collapse;
+        }
+
+        .table-data td {
+            padding: 3px 5px;
+            vertical-align: top;
+        }
+
+        .table-data td.label {
+            width: 140px;
+            font-weight: bold;
+        }
+
+        .table-data td.colon {
+            width: 10px;
+            text-align: center;
+        }
+
+        .catatan-box {
+            margin: 8px 0;
+            padding: 5px 8px;
+            background-color: #f9f9f9;
+            border-left: 3px solid #666;
+            font-style: italic;
+            font-size: 10pt;
+        }
+
+        /* TANDA TANGAN */
+        .ttd-container {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .ttd-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ttd-table td {
+            vertical-align: top;
+        }
+
+        .ttd-space {
+            height: 50px;
+        }
+
+        /* FOOTER (Mengikuti alur dokumen, tidak melayang di paling bawah) */
+        .footer {
+            margin-top: 25px;
+            font-size: 8pt;
+            color: #555;
+            border-top: 1px dashed #999;
+            padding-top: 6px;
+            text-align: center;
+        }
+
+        /* WATERMARK */
+        .watermark-logo {
+            position: fixed;
+            top: 40%;
+            left: 30%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            opacity: 0.04;
+            z-index: -1000;
+            width: 250px;
+        }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h2>SEKOLAH MENENGAH KEJURUAN</h2>
-        <p>Jl. Pendidikan No. 1, Kota | Telp. (021) 1234567</p>
-        <p>Email: info@smk.sch.id | Website: www.smk.sch.id</p>
-    </div>
 
+    <!-- WATERMARK LOGO DI BACKGROUND -->
+    <img src="{{ public_path('images/logo-didispen.jpeg') }}" class="watermark-logo" alt="Watermark">
+
+    <!-- HEADER / KOP SURAT -->
+    <table class="header-table">
+        <tr>
+            <td class="logo-left">
+                <img src="{{ public_path('images/logo-didispen.jpeg') }}" alt="Logo SMK">
+            </td>
+            <td class="school-info">
+                <h2>SMK NEGERI 1 BANGSRI</h2>
+                <p><strong>NPSN:</strong> 20360586 | <strong>Telp:</strong> (0291) 772322</p>
+                <p>Jl. KH Achmad Fauzan No.17, Krasak, Bangsri, Kec. Bangsri, Kab. Jepara, Jawa Tengah 59415</p>
+                @if(file_exists(public_path('images/tagline.png')))
+                    <img src="{{ public_path('images/tagline.png') }}" class="tagline-img" alt="Tagline">
+                @endif
+            </td>
+        </tr>
+    </table>
+
+    <!-- JUDUL SURAT -->
     <div class="title">
-        SURAT DISPENSASI<br>
-        <span style="font-size: 12pt; font-weight: normal; text-decoration: none;">Nomor: {{ $dispensasi->nomor_surat }}</span>
+        <h3>SURAT DISPENSASI</h3>
+        <span>Nomor: {{ $dispensasi->nomor_surat }}</span>
     </div>
 
+    <!-- ISI SURAT -->
     <div class="content">
-        <p>Yang bertanda tangan di bawah ini, Guru Piket, menerangkan bahwa:</p>
+        <p style="margin-bottom: 8px;">Yang bertanda tangan di bawah ini, Guru Piket SMK Negeri 1 Bangsri menerangkan bahwa:</p>
 
         <table class="table-data">
-            <tr><td>Nama Siswa</td><td>: {{ $dispensasi->siswa->nama_lengkap }}</td></tr>
-            <tr><td>NIS / NISN</td><td>: {{ $dispensasi->siswa->user->nis_nip ?? '-' }}</td></tr>
-            <tr><td>Kelas / Jurusan</td><td>: {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} ({{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }})</td></tr>
-            <tr><td>Kategori Izin</td><td>: {{ ucfirst(str_replace('_', ' ', $dispensasi->kategori)) }}</td></tr>
-            <tr><td>Alasan</td><td>: {{ $dispensasi->alasan }}</td></tr>
-            <tr><td>Tujuan</td><td>: {{ $dispensasi->tujuan }}</td></tr>
-            <tr><td>Lokasi</td><td>: {{ $dispensasi->lokasi ?? '-' }}</td></tr>
-            <tr><td>Jam Keluar</td><td>: <strong>{{ $dispensasi->jam_keluar }}</strong></td></tr>
-            <tr><td>Jam Kembali</td><td>: <strong>{{ $dispensasi->jam_kembali }}</strong></td></tr>
+            <tr>
+                <td class="label">Nama Siswa</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->siswa->nama_lengkap }}</td>
+            </tr>
+            <tr>
+                <td class="label">NIS / NISN</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->siswa->user->nis_nip ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Kelas / Jurusan</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} ({{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }})</td>
+            </tr>
+            <tr>
+                <td class="label">Kategori Izin</td>
+                <td class="colon">:</td>
+                <td>{{ ucfirst(str_replace('_', ' ', $dispensasi->kategori)) }}</td>
+            </tr>
+            <tr>
+                <td class="label">Alasan</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->alasan }}</td>
+            </tr>
+            <tr>
+                <td class="label">Tujuan</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->tujuan }}</td>
+            </tr>
+            <tr>
+                <td class="label">Lokasi</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->lokasi ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Jam Keluar</td>
+                <td class="colon">:</td>
+                <td><strong>{{ $dispensasi->jam_keluar }}</strong></td>
+            </tr>
+            <tr>
+                <td class="label">Jam Kembali</td>
+                <td class="colon">:</td>
+                <td><strong>{{ $dispensasi->jam_kembali }}</strong></td>
+            </tr>
         </table>
 
         @if($dispensasi->catatan_admin)
-        <p style="margin-top: 15px;"><strong>Catatan Guru:</strong> <em>"{{ $dispensasi->catatan_admin }}"</em></p>
+        <div class="catatan-box">
+            <strong>Catatan Guru:</strong> "{{ $dispensasi->catatan_admin }}"
+        </div>
         @endif
 
-        <p style="margin-top: 20px;">Demikian surat dispensasi ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
+        <p style="margin-top: 10px;">Demikian surat dispensasi ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
     </div>
 
-    <div class="signature">
-        <p>Bangsri, {{ now()->isoFormat('D MMMM Y') }}<br>Guru Piket,</p>
-        
-        @if($dispensasi->guru?->digital_signature)
-            <img src="{{ public_path('storage/' . $dispensasi->guru->digital_signature) }}" alt="Tanda Tangan Digital">
-        @else
-            <div style="height: 60px;"></div>
-        @endif
-        
-        <span class="signature-name">{{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }}</span>
-        <span>NIP. {{ $dispensasi->guru?->nip ?? '-' }}</span>
+    <!-- TANDA TANGAN -->
+    <div class="ttd-container">
+        <table class="ttd-table">
+            <tr>
+                <td style="width: 50%;"></td>
+                <td style="width: 50%; text-align: center;">
+                    Bangsri, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                    Guru Piket,<br>
+                    <div class="ttd-space"></div>
+                    <strong><u>{{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }}</u></strong><br>
+                    NIP. {{ $dispensasi->guru?->nip ?? '-' }}
+                </td>
+            </tr>
+        </table>
     </div>
 
+    <!-- FOOTER -->
     <div class="footer">
-        Dokumen ini dicetak secara otomatis oleh sistem. | 
-        Dicetak: {{ now()->format('d-m-Y H:i') }}
+        <strong>Dokumen Resmi Sekolah - Dikeluarkan Secara Otomatis oleh Sistem</strong><br>
+        Dicetak: {{ now()->format('d-m-Y H:i') }} WIB | Sistem Informasi Dispensasi SMK Negeri 1 Bangsri
     </div>
+
 </body>
 </html>

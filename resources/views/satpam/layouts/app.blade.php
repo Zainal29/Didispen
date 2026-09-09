@@ -59,7 +59,7 @@
             {{-- PROFIL --}}
             <a href="{{ route('profil.show') }}"
                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all
-                      {{ request()->routeIs('profil.show') ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                      {{ request()->routeIs('profil.show') ? 'bg-red-600 text-white shadow-lg shadow-blue-500/20' : 'text-gray-600 hover:bg-blue-50 hover:text-red-600' }}">
                 <i class="fas fa-user-circle w-5 text-center"></i>
                 <span class="font-medium">Profil Saya</span>
             </a>

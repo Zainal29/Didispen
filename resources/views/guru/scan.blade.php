@@ -13,7 +13,7 @@
 
         <div id="scan-result" class="mt-4 hidden p-4 rounded-xl"></div>
 
-        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">
+        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">
             <i class="fas fa-redo mr-1"></i> Reset Scanner
         </button>
     </div>
@@ -24,15 +24,21 @@
 <script>
     const html5QrCode = new Html5Qrcode("reader");
     const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    let isProcessing = false; // <i class="fas fa-check-circle"></i> Flag untuk mencegah double scan
 
     html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
-    .catch(err => console.error("Gagal start kamera", err));
+        .catch(err => console.error("Gagal start kamera", err));
 
     function onScanSuccess(decodedText) {
+        // <i class="fas fa-check-circle"></i> CEK FLAG SEBELUM PROSES
+        if (isProcessing) return;
+
+        isProcessing = true;
         html5QrCode.pause();
+
         const resultDiv = document.getElementById('scan-result');
         resultDiv.classList.remove('hidden');
-        resultDiv.innerHTML = '<p class="text-blue-600 font-bold"><i class="fas fa-spinner fa-spin"></i> Memverifikasi...</p>';
+        resultDiv.innerHTML = '<p class="text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-1"></i> Memverifikasi...</p>';
 
         fetch('{{ route("guru.scan.verify") }}', {
             method: 'POST',
@@ -42,24 +48,57 @@
             },
             body: JSON.stringify({ qr_data: decodedText })
         })
-        .then(r => r.json())
+        .then(r => {
+            // <i class="fas fa-check-circle"></i> CEK JIKA TERKENA THROTTLE/COOLDOWN (429)
+            if (r.status === 429) {
+                return {
+                    success: false,
+                    message: '⏱️ QR Code baru saja di-scan! Mohon tunggu 5 detik.'
+                };
+            }
+            return r.json();
+        })
         .then(data => {
             if (data.success) {
-                resultDiv.className = 'mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200';
+                resultDiv.className = 'mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-left';
                 resultDiv.innerHTML = `
-                    <p class="text-emerald-700 font-bold text-lg mb-1">${data.message}</p>
-                    <p class="text-sm text-emerald-600">Nama: ${data.data.siswa.nama_lengkap}</p>
-                    <p class="text-sm text-emerald-600">Kelas: ${data.data.siswa.kelas?.nama_kelas ?? '-'}</p>
+                    <p class="text-emerald-700 font-bold text-lg mb-2"><i class="fas fa-check-circle mr-1"></i> ${data.message}</p>
+                    <div class="space-y-1 text-sm text-emerald-700">
+                        <p><strong>Nama:</strong> ${data.data.siswa.nama_lengkap}</p>
+                        <p><strong>Kelas:</strong> ${data.data.siswa.kelas?.nama_kelas ?? '-'}</p>
+                        <p><strong>Status:</strong> ${data.data.status === 'keluar' ? 'Berhasil Kembali' : 'Berhasil Keluar'}</p>
+                    </div>
                 `;
+
+                // <i class="fas fa-check-circle"></i> Resume setelah 5 detik
+                setTimeout(() => {
+                    html5QrCode.resume();
+                    resultDiv.classList.add('hidden');
+                    isProcessing = false; // <i class="fas fa-check-circle"></i> Reset flag
+                }, 5000);
+
             } else {
-                resultDiv.className = 'mt-4 p-4 rounded-xl bg-red-50 border border-red-200';
-                resultDiv.innerHTML = `<p class="text-red-700 font-bold">❌ ${data.message}</p>`;
+                resultDiv.className = 'mt-4 p-4 rounded-xl bg-amber-50 border border-amber-300 text-left';
+                resultDiv.innerHTML = `
+                    <p class="text-amber-700 font-bold"><i class="fas fa-clock mr-1"></i> ${data.message}</p>
+                `;
+
+                // <i class="fas fa-check-circle"></i> Resume lebih cepat untuk error/cooldown
+                setTimeout(() => {
+                    html5QrCode.resume();
+                    resultDiv.classList.add('hidden');
+                    isProcessing = false; // <i class="fas fa-check-circle"></i> Reset flag
+                }, 3000);
             }
-            setTimeout(() => html5QrCode.resume(), 3000); // Resume setelah 3 detik
         })
-        .catch(() => {
-            resultDiv.innerHTML = '<p class="text-red-700 font-bold">❌ Terjadi kesalahan koneksi.</p>';
+        .catch((error) => {
+            console.error('Error:', error);
+            const resultDiv = document.getElementById('scan-result');
+            resultDiv.className = 'mt-4 p-4 rounded-xl bg-red-50 border border-red-200 text-left';
+            resultDiv.innerHTML = '<p class="text-red-700 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Terjadi kesalahan koneksi.</p>';
+
             html5QrCode.resume();
+            isProcessing = false; // <i class="fas fa-check-circle"></i> Reset flag
         });
     }
 </script>

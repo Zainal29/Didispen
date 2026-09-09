@@ -59,7 +59,7 @@ class PrintBluetoothController extends Controller
             $printer->text("Keluar  : " . $dispensasi->jam_keluar . "\n");
             $printer->text("Kembali : " . $dispensasi->jam_kembali . "\n");
 
-            // ✅ Tambahkan info waktu cetak real-time
+            // <i class="fas fa-check-circle"></i> Tambahkan info waktu cetak real-time
             $printer->text("Dicetak : " . now()->format('d/m/Y H:i:s') . "\n");
             $printer->text(str_repeat("-", 32) . "\n");
 
@@ -67,13 +67,13 @@ class PrintBluetoothController extends Controller
             $printer->setJustification(Printer::JUSTIFY_CENTER);
             $printer->text("\n[ QR CODE VALIDASI ]\n");
 
-            // ✅ Generate data QR Code dengan timestamp REAL-TIME (bukan dari waktu approve)
+            // <i class="fas fa-check-circle"></i> Generate data QR Code dengan timestamp REAL-TIME (bukan dari waktu approve)
             $qrDataRealtime = json_encode([
                 'token' => $dispensasi->qr_token,
             ], JSON_UNESCAPED_SLASHES);
 
             try {
-                // ✅ Print QR Code dengan data real-time
+                // <i class="fas fa-check-circle"></i> Print QR Code dengan data real-time
                 // Ukuran 6 = optimal untuk kertas 58mm (cukup besar untuk di-scan)
                 $printer->qrCode($qrDataRealtime, Printer::QR_ECLEVEL_M, 6);
                 $printer->text("\nScan di Pos Satpam\n");
@@ -105,7 +105,7 @@ class PrintBluetoothController extends Controller
             $printer->cut();
             $printer->close();
 
-            // ✅ Update counter cetak di database (real-time tracking)
+            // <i class="fas fa-check-circle"></i> Update counter cetak di database (real-time tracking)
             $dispensasi->increment('print_count');
             $dispensasi->update(['printed_at' => now()]);
 

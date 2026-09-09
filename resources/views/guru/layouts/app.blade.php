@@ -59,21 +59,20 @@
 
             <p class="px-4 mb-2 mt-5 text-[11px] font-bold uppercase tracking-wider text-gray-400">Dispensasi</p>
             <div class="space-y-1">
-                <a href="{{ route('guru.pengajuan.index') }}" class="{{ request()->routeIs('guru.pengajuan.*') ? $navOn : $navOff }}">
+                <a href="{{ route('guru.pengajuan.index') }}" class="{{ request()->routeIs('guru.pengajuan.index') ? $navOn : $navOff }}">
                     <i class="fas fa-file-signature w-5 mr-3 text-center"></i> Verifikasi
                     @if($pending > 0)
                         <span class="ml-auto bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $pending }}</span>
                     @endif
                 </a>
 
-                <a href="{{ route('guru.scan') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors">
-                    <i class="fas fa-qrcode w-6 text-center"></i>
-                    <span class="font-medium">Scan QR (Backup)</span>
+                <a href="{{ route('guru.scan') }}" class="{{ request()->routeIs('guru.scan') ? $navOn : $navOff }}">
+                    <i class="fas fa-qrcode w-5 mr-3 text-center"></i> Scan QR
                 </a>
 
-                <a href="{{ route('guru.pengajuan.create') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors">
-                    <i class="fas fa-plus-circle w-6 text-center"></i>
-                    <span class="font-medium">Buat Dispensasi</span>
+                {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Tambahkan class dinamis agar berwarna saat aktif --}}
+                <a href="{{ route('guru.pengajuan.create') }}" class="{{ request()->routeIs('guru.pengajuan.create') ? $navOn : $navOff }}">
+                    <i class="fas fa-plus-circle w-5 mr-3 text-center"></i> Buat Dispensasi
                 </a>
                 <a href="{{ route('guru.laporan.index') }}" class="{{ request()->routeIs('guru.laporan.*') ? $navOn : $navOff }}">
                     <i class="fas fa-chart-bar w-5 mr-3 text-center"></i> Laporan
@@ -308,7 +307,7 @@
     </div>
 @stack('scripts')
 
-{{-- ✅ GLOBAL SWEETALERT NOTIFICATION --}}
+{{-- <i class="fas fa-check-circle"></i> GLOBAL SWEETALERT NOTIFICATION --}}
 {{-- @if(session('success'))
 <script>
     Swal.fire({

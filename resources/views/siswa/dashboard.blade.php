@@ -11,7 +11,7 @@
     <div class="absolute -top-16 -right-16 w-56 h-56 bg-white/10 rounded-full"></div>
     <div class="relative z-10 p-4 sm:p-6">
         <p class="text-blue-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-        {{-- ✅ DIPERBAIKI: Emoji 👋 diganti dengan icon --}}
+        {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Emoji 👋 diganti dengan icon --}}
         <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">Halo, {{ auth()->user()->name }}! <i class="fas fa-hand-sparkles text-yellow-300 ml-1"></i></h2>
         <div class="mt-3 flex flex-wrap items-center gap-2">
             <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-white/15 border border-white/20 text-white text-[11px] font-bold">
@@ -23,6 +23,45 @@
         </div>
     </div>
 </div>
+{{-- ============ PERINGATAN TERLAMBAT ============ --}}
+@if(isset($isTerlambat) && $isTerlambat && $dispensasiAktif)
+<div class="bg-gradient-to-r from-red-500 to-rose-600 rounded-2xl shadow-lg shadow-red-500/30 p-5 mb-6 text-white animate-pulse">
+    <div class="flex items-start gap-4">
+        <div class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-exclamation-triangle text-2xl"></i>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-white font-black text-lg mb-2">
+                ⚠️ PERINGATAN: ANDA TERLAMBAT!
+            </h3>
+            <p class="text-red-100 text-sm mb-3">
+                Anda telah melewati batas waktu kembali dispensasi
+                <strong class="text-white">({{ $dispensasiAktif->nomor_surat }})</strong>
+                selama
+                <span class="bg-white/20 px-3 py-1 rounded-lg font-bold">
+                    @if($terlambatJam > 0)
+                        {{ $terlambatJam }} jam {{ $terlambatMenit }} menit
+                    @else
+                        {{ $terlambatMenit }} menit
+                    @endif
+                </span>
+            </p>
+            <div class="bg-white/10 rounded-xl p-3 mb-3">
+                <p class="text-xs text-red-100">
+                    <i class="far fa-clock mr-1"></i>
+                    Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasiAktif->batas_waktu_kembali)->format('H:i') }} WIB</strong>
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
+                   class="inline-flex items-center px-4 py-2 bg-white text-red-600 hover:bg-red-50 font-bold rounded-xl transition-colors text-sm">
+                    <i class="fas fa-qrcode mr-2"></i>Lihat QR Code
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 {{-- ============ STATUS DISPENSASI AKTIF (SEDERHANA) ============ --}}
 @if(isset($dispensasiAktif))
@@ -75,7 +114,7 @@
             <div class="w-12 h-12 rounded-full bg-sky-500 text-white flex items-center justify-center flex-shrink-0">
                 <i class="fas fa-walking text-xl"></i>
             </div>
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
                 <h3 class="font-bold text-sky-800">Anda Sedang di Luar Sekolah</h3>
                 <p class="text-sm text-sky-600">
                     Keluar pukul: {{ $dispensasiAktif->waktu_keluar_aktual ? \Carbon\Carbon::parse($dispensasiAktif->waktu_keluar_aktual)->format('H:i') : '-' }} WIB
@@ -84,6 +123,14 @@
                     <i class="fas fa-info-circle mr-1"></i>Harap kembali sebelum pukul {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali) }}
                 </p>
             </div>
+        </div>
+
+        {{-- <i class="fas fa-check-circle"></i> PERBAIKAN: Tambahkan tombol Lihat QR Code agar bisa discan saat kembali --}}
+        <div class="mt-4 pt-3 border-t border-sky-200">
+            <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
+               class="w-full inline-flex items-center justify-center px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm active:scale-95">
+                <i class="fas fa-qrcode mr-1.5"></i>Lihat QR Code (Untuk Scan Kembali)
+            </a>
         </div>
     </div>
     @endif
@@ -133,7 +180,7 @@
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
     <div class="px-4 py-3 sm:p-5 border-b border-gray-100 flex justify-between items-center">
         <h3 class="text-sm font-bold text-gray-900"><i class="fas fa-history mr-1.5 text-blue-600"></i>Pengajuan Terbaru</h3>
-        {{-- ✅ DIPERBAIKI: Panah teks diganti dengan icon --}}
+        {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Panah teks diganti dengan icon --}}
         <a href="{{ route('siswa.pengajuan.index') }}" class="text-[11px] font-bold text-blue-600">Lihat Semua <i class="fas fa-arrow-right ml-1"></i></a>
     </div>
 
@@ -184,8 +231,8 @@
                             <i class="fas fa-eye mr-1.5"></i>Detail
                         </a>
 
-                        {{-- Tombol Cetak --}}
-                        @if(in_array($pengajuan->status, ['disetujui', 'keluar', 'selesai']))
+                        {{-- Tombol Cetak (HANYA untuk disetujui & keluar) --}}
+                        @if(in_array($pengajuan->status, ['disetujui', 'keluar']))
                             @if($pengajuan->print_count < $maxPrint && $isWithinTime)
                                 <a href="{{ route('siswa.cetak', $pengajuan) }}" target="_blank"
                                    class="inline-flex items-center px-3.5 py-2 rounded-xl text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-500/20 active:scale-95 transition-transform">

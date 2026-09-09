@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Dispensasi - {{ $dispensasi->nomor_surat }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: Arial, sans-serif; background: #f0f0f0; margin: 0; padding: 20px; }
         .actions { text-align: center; margin-bottom: 15px; }
@@ -24,15 +25,15 @@
 <body>
 
     <div class="actions">
-    <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" target="_blank" class="btn btn-primary">📄 Buka PDF Struk (58mm)</a>
+    <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf mr-1"></i> Buka PDF Struk (58mm)</a>
     <a href="{{ route('guru.pengajuan.show', $dispensasi) }}" class="btn btn-secondary">Tutup</a>
 </div>
 
     @if(session('success'))
-        <div class="alert alert-success">✅ {{ session('success') }}</div>
+        <div class="alert alert-success"><i class="fas fa-check-circle mr-1"></i> {{ session('success') }}</div>
     @endif
     @if(session('error'))
-        <div class="alert alert-error">⚠️ {{ session('error') }}</div>  
+  <div class="alert alert-error"><i class="fas fa-exclamation-circle mr-1"></i> {{ session('error') }}</div>
     @endif
 
     <div class="struk">
@@ -73,7 +74,7 @@
             </div>
         @else
             <div class="qr-warning text-center">
-                ⚠️ QR Code Tidak Ditemukan<br>
+                <i class="fas fa-exclamation-triangle mr-1"></i> QR Code Tidak Ditemukan<br>
                 Status saat ini: {{ strtoupper($dispensasi->status) }}<br>
                 Pastikan Anda sudah mengklik tombol "Setujui & Generate QR".
             </div>

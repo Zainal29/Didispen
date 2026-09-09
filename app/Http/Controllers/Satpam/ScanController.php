@@ -32,40 +32,70 @@ class ScanController extends Controller
             if (isset($qrData['token']) && is_string($qrData['token'])) {
                 $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('qr_token', $qrData['token'])->first();
             }
-        } elseif (preg_match('/^[A-Za-z0-9]{64}$/', $input)) {
-            // Format: Token murni (64 karakter)
-            $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('qr_token', $input)->first();
         } elseif (preg_match('#/verify-qr/(\d+)#', $input, $matches)) {
-            // Format URL: /verify-qr/18?token=...
-            $id = (int) $matches[1];
-            parse_str(parse_url($input, PHP_URL_QUERY) ?? '', $queryParams);
-            $token = $queryParams['token'] ?? null;
+                  $id = (int) $matches[1];
+                  parse_str(parse_url($input, PHP_URL_QUERY) ?? '', $queryParams);
+                  $token = $queryParams['token'] ?? null;
 
-            if ($token) {
-                $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('id', $id)->where('qr_token', $token)->first();
-            } else {
-                $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('id', $id)->whereNotNull('qr_token')->first();
-            }
-        } elseif (preg_match('#/verifikasi/(\d+)#', $input, $matches)) {
-            // Format URL alternatif: /verifikasi/18
-            $id = (int) $matches[1];
-            $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('id', $id)->whereNotNull('qr_token')->first();
+                  // ✅ PERBAIKAN: Wajibkan token, jangan pakai fallback whereNotNull
+                  if ($token) {
+                      $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('id', $id)->where('qr_token', $token)->first();
+                  } else {
+                      return response()->json(['success' => false, 'message' => 'Token QR wajib disertakan.'], 400);
+                  }
+
+              } elseif (preg_match('#/verifikasi/(\d+)#', $input, $matches)) {
+                  $id = (int) $matches[1];
+                  parse_str(parse_url($input, PHP_URL_QUERY) ?? '', $queryParams);
+                  $token = $queryParams['token'] ?? null;
+
+                  // ✅ PERBAIKAN: Hapus blok else yang tidak aman
+                  if ($token) {
+                      $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->where('id', $id)->where('qr_token', $token)->first();
+                  } else {
+                      return response()->json(['success' => false, 'message' => 'Token QR wajib disertakan.'], 400);
+                  }
+              }
+
+              // ✅ TAMBAHKAN BLOK INI: Hard stop jika dispensasi tidak ditemukan
+                    if (! $dispensasi) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'QR Code tidak ditemukan atau tidak valid!'
+                        ], 404);
+                    }
+
+        // LAYER 1: CEK COOLDOWN TIMESTAMP (Anti Double Scan)
+        $now = now();
+        $lastScanTime = null;
+
+        if ($dispensasi->status === 'disetujui') {
+            $lastScanTime = $dispensasi->waktu_keluar_aktual;
+        } elseif ($dispensasi->status === 'keluar') {
+            $lastScanTime = $dispensasi->waktu_kembali_aktual;
         }
 
-        if (! $dispensasi) {
+        if ($lastScanTime && $now->diffInSeconds($lastScanTime) < 5) {
             return response()->json([
                 'success' => false,
-                'message' => 'QR Code tidak ditemukan atau tidak valid!'
-            ], 404);
+                'message' => '⏱️ QR Code baru saja di-scan! Tunggu 5 detik sebelum scan ulang.',
+                'cooldown' => true,
+                'remaining_seconds' => 5 - $now->diffInSeconds($lastScanTime)
+            ], 429); // 429 = Too Many Requests
         }
 
         // 2. LOGIKA SCAN PERTAMA: KELUAR (disetujui -> keluar)
         if ($dispensasi->status === 'disetujui') {
-            $updated = Dispensasi::whereKey($dispensasi->id)->where('status', 'disetujui')->update([
-                'status' => 'keluar',
-                'waktu_keluar_aktual' => now(),
-                'satpam_keluar_id' => auth()->id(),
-            ]);
+            $updated = \DB::transaction(function () use ($dispensasi) {
+                return Dispensasi::whereKey($dispensasi->id)
+                    ->where('status', 'disetujui')
+                    ->lockForUpdate() // ✅ ANTI RACE CONDITION
+                    ->update([
+                        'status' => 'keluar',
+                        'waktu_keluar_aktual' => now(),
+                        'satpam_keluar_id' => auth()->id(),
+                    ]);
+            }); // ✅ Tutup transaction dengan benar
 
             if ($updated !== 1) {
                 return response()->json([
@@ -75,7 +105,7 @@ class ScanController extends Controller
             }
 
             $isSampaiPulang = str_contains(strtolower($dispensasi->jam_kembali), 'ke-9') || str_contains(strtolower($dispensasi->jam_kembali), 'ke-10');
-            $pesanSukses = '✅ Siswa berhasil dicatat KELUAR.';
+            $pesanSukses = 'Siswa berhasil dicatat KELUAR.';
 
             if ($isSampaiPulang) {
                 $pesanSukses .= ' Dispensasi berlaku sampai pulang sekolah.';
@@ -87,7 +117,7 @@ class ScanController extends Controller
             if (class_exists(\App\Services\NotifikasiService::class)) {
                 app(\App\Services\NotifikasiService::class)->send(
                     $dispensasi->siswa->user_id,
-                    "🚪 Dispensasi ({$dispensasi->nomor_surat}) telah di-scan (Siswa Keluar).",
+                    "Dispensasi ({$dispensasi->nomor_surat}) telah di-scan (Siswa Keluar).",
                     route('siswa.pengajuan.show', $dispensasi, false)
                 );
             }
@@ -105,14 +135,19 @@ class ScanController extends Controller
         if ($dispensasi->status === 'keluar') {
             $isTerlambat = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
 
-            // ✅ OPTIMASI: Update status dan flag keterlambatan dalam 1 query
-            $updated = Dispensasi::whereKey($dispensasi->id)->where('status', 'keluar')->update([
-                'status' => 'selesai',
-                'waktu_kembali_aktual' => now(),
-                'satpam_kembali_id' => auth()->id(),
-                'is_warned' => $isTerlambat ? true : $dispensasi->is_warned,
-                'warned_at' => $isTerlambat ? now() : $dispensasi->warned_at,
-            ]);
+            // ✅ PERBAIKAN: Menambahkan }); yang hilang di sini untuk menutup closure transaction
+            $updated = \DB::transaction(function () use ($dispensasi, $isTerlambat) {
+                return Dispensasi::whereKey($dispensasi->id)
+                    ->where('status', 'keluar')
+                    ->lockForUpdate() // ✅ ANTI RACE CONDITION
+                    ->update([
+                        'status' => 'selesai',
+                        'waktu_kembali_aktual' => now(),
+                        'satpam_kembali_id' => auth()->id(),
+                        'is_warned' => $isTerlambat ? true : $dispensasi->is_warned,
+                        'warned_at' => $isTerlambat ? now() : $dispensasi->warned_at,
+                    ]);
+            }); // ✅ <--- INI YANG SEBELUMNYA HILANG
 
             if ($updated !== 1) {
                 return response()->json([
@@ -122,14 +157,14 @@ class ScanController extends Controller
             }
 
             $pesanKembali = $isTerlambat
-                ? '✅ Siswa berhasil dicatat KEMBALI. ⚠️ PERINGATAN: Terlambat dari batas waktu!'
-                : '✅ Siswa berhasil dicatat KEMBALI (Tepat Waktu).';
+                ? 'Siswa berhasil dicatat KEMBALI. PERINGATAN: Terlambat dari batas waktu!'
+                : 'Siswa berhasil dicatat KEMBALI (Tepat Waktu).';
 
             // Kirim notifikasi jika service tersedia
             if (class_exists(\App\Services\NotifikasiService::class)) {
                 app(\App\Services\NotifikasiService::class)->send(
                     $dispensasi->siswa->user_id,
-                    "🏁 Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI (Siswa Kembali).",
+                    "Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI (Siswa Kembali).",
                     route('siswa.pengajuan.show', $dispensasi, false)
                 );
             }

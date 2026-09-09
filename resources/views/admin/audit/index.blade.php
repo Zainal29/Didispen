@@ -4,82 +4,99 @@
 
 @section('content')
 <div class="space-y-6">
-    {{-- HEADER DENGAN FILTER --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+{{-- HEADER DENGAN FILTER LENGKAP --}}
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+        <div>
+            <h3 class="text-xl font-bold text-gray-800">Log Aktivitas Sistem</h3>
+            <p class="text-sm text-gray-500 mt-1">Catatan semua aktivitas pengguna dan sinkronisasi.</p>
+        </div>
+
+        <form method="GET" class="flex flex-wrap gap-2 w-full xl:w-auto">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari User / IP..."
+                   class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full xl:w-40">
+
+            <input type="date" name="date_from" value="{{ request('date_from') }}"
+                   class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            <input type="date" name="date_to" value="{{ request('date_to') }}"
+                   class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+
+            <select name="filter_type" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="">Semua Role</option>
+                <option value="admin" {{ request('filter_type') == 'admin' ? 'selected' : '' }}>Admin Only</option>
+                <option value="satpam" {{ request('filter_type') == 'satpam' ? 'selected' : '' }}>Satpam Only</option>
+                <option value="sync" {{ request('filter_type') == 'sync' ? 'selected' : '' }}>Sinkronisasi</option>
+            </select>
+
+            <select name="action" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="">Semua Aksi</option>
+                @foreach(['sync_sipintu_siswa', 'sync_sipintu_guru', 'approve', 'reject', 'konfirmasi_keluar', 'konfirmasi_kembali', 'create_siswa', 'create_guru', 'update_siswa', 'update_guru'] as $a)
+                    <option value="{{ $a }}" {{ request('action') == $a ? 'selected' : '' }}>{{ str_replace('_', ' ', $a) }}</option>
+                @endforeach
+            </select>
+
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700">
+                <i class="fas fa-filter mr-1"></i> Filter
+            </button>
+            @if(request()->anyFilled(['search', 'date_from', 'date_to', 'filter_type', 'action']))
+                <a href="{{ route('admin.audit.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300">
+                    Reset
+                </a>
+            @endif
+        </form>
+    </div>
+</div>
+
+{{-- STATS CARDS (DIPERBAIKI: Menggunakan $stats dari Controller) --}}
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-xl font-bold text-gray-800">Log Aktivitas Sistem</h3>
-                <p class="text-sm text-gray-500 mt-1">Catatan semua aktivitas pengguna dan sinkronisasi.</p>
+                <p class="text-xs text-gray-500 uppercase font-semibold">Total Aktivitas</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['total']) }}</p>
             </div>
-
-            <form method="GET" class="flex flex-wrap gap-2">
-                <select name="filter_type" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <option value="">Semua Aktivitas</option>
-                    <option value="admin" {{ request('filter_type') == 'admin' ? 'selected' : '' }}>Admin Only</option>
-                    <option value="satpam" {{ request('filter_type') == 'satpam' ? 'selected' : '' }}>Satpam Only</option>
-                    <option value="sync" {{ request('filter_type') == 'sync' ? 'selected' : '' }}>Sinkronisasi</option>
-                </select>
-
-                <select name="action" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <option value="">Semua Aksi</option>
-                    @foreach(['sync_sipintu_siswa', 'sync_sipintu_guru', 'approve', 'reject', 'konfirmasi_keluar', 'konfirmasi_kembali', 'create_siswa', 'create_guru', 'update_siswa', 'update_guru'] as $a)
-                        <option value="{{ $a }}" {{ request('action') == $a ? 'selected' : '' }}>{{ str_replace('_', ' ', $a) }}</option>
-                    @endforeach
-                </select>
-            </form>
-        </div>
-    </div>
-
-    {{-- STATS CARDS --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-500 uppercase font-semibold">Total Aktivitas</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $logs->total() }}</p>
-                </div>
-                <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-500 uppercase font-semibold">Sinkronisasi</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $logs->where('action', 'like', '%sync%')->count() }}</p>
-                </div>
-                <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                    <i class="fas fa-sync-alt"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-500 uppercase font-semibold">Aktivitas Admin</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $logs->where('user.role', 'admin')->count() }}</p>
-                </div>
-                <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <i class="fas fa-user-shield"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-500 uppercase font-semibold">Aktivitas Satpam</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $logs->where('user.role', 'satpam')->count() }}</p>
-                </div>
-                <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <i class="fas fa-user-secret"></i>
-                </div>
+            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <i class="fas fa-clipboard-list"></i>
             </div>
         </div>
     </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-gray-500 uppercase font-semibold">Sinkronisasi</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['sync']) }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                <i class="fas fa-sync-alt"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-gray-500 uppercase font-semibold">Aktivitas Admin</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['admin']) }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <i class="fas fa-user-shield"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-gray-500 uppercase font-semibold">Aktivitas Satpam</p>
+                <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['satpam']) }}</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <i class="fas fa-user-secret"></i>
+            </div>
+        </div>
+    </div>
+</div>
 
     {{-- TABLE --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Dispensasi;
 use App\Models\Guru;
 use App\Models\Siswa;
 use App\Models\Setting;
+use App\Models\WhatsappTemplate; // <--- TAMBAHKAN INI
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
@@ -15,46 +17,62 @@ class DispensasiService
         private AuditLogService $auditLogService
     ) {}
 
-    /** Generate nomor surat: DISP-YYYY-NNNN */
     public function generateNomorSurat(): string
     {
-        $year = now()->year;
-        $last = Dispensasi::whereYear('created_at', $year)->max('id') ?? 0;
-        return sprintf('DISP-%d-%04d', $year, $last + 1);
+        return \DB::transaction(function () {
+            $year = now()->year;
+            $count = Dispensasi::whereYear('created_at', $year)
+                ->lockForUpdate() // ✅ MENCEGAH DUPLIKAT SAAT REQUEST SERENTAK
+                ->count();
+            return sprintf('DISP-%d-%04d', $year, $count + 1);
+        });
     }
 
-    /** Buat dispensasi baru — ✅ guru_id NULL, terisi saat guru approve */
     public function create(array $data, Siswa $siswa): Dispensasi
     {
-        return Dispensasi::create([
-            'nomor_surat' => $this->generateNomorSurat(),
-            'siswa_id' => $siswa->id,
-            'guru_id' => null, // ✅ Terisi saat disetujui guru
-            'kategori' => $data['kategori'],
-            'alasan' => $data['alasan'],
-            'tujuan' => $data['tujuan'],
-            'lokasi' => $data['lokasi'] ?? null,
-            'jam_keluar' => $data['jam_keluar'],
-            'jam_kembali' => $data['jam_kembali'],
-            'status' => 'menunggu',
-            'max_print_limit' => (int) Setting::get('print_max_limit', 3),
-        ]);
+        return \DB::transaction(function () use ($data, $siswa) {
+            $year = now()->year;
+
+            // ✅ AMAN: Menghitung jumlah dispensasi tahun ini untuk reset nomor urut per tahun
+            $count = Dispensasi::whereYear('created_at', $year)->count();
+            $nomorSurat = sprintf('DISP-%d-%04d', $year, $count + 1);
+
+            return Dispensasi::create(array_merge($data, [
+                'nomor_surat' => $nomorSurat,
+                'siswa_id' => $siswa->id,
+                'guru_id' => null,
+                'status' => 'menunggu',
+                // ✅ PASTIKAN KEY INI SAMA DENGAN DI SettingsController
+                'max_print_limit' => (int) Setting::get('student_print_limit', 3),
+            ]));
+        });
     }
 
-    /** Approve dispensasi */
     public function approve(Dispensasi $dispensasi, Guru $guru, ?string $catatan = null): void
     {
         $token = Str::uuid()->toString();
         $dispensasi->update([
             'status' => 'disetujui',
-            'guru_id' => $guru->id, // ✅ Catat guru penanggung jawab
+            'guru_id' => $guru->id,
             'catatan_admin' => $catatan,
-            'verification_token' => $token,
+            'qr_token' => $token, // ✅ GANTI dari 'verification_token'
+// Pastikan kolom ini ada di migration dispensasi, atau hapus baris ini jika tidak dipakai
         ]);
+
+        // ✅ GUNAKAN TEMPLATE
+        $template = WhatsappTemplate::where('slug', 'disetujui')->where('is_active', true)->first();
+        if ($template) {
+            $message = $template->render([
+                'nama_siswa' => $dispensasi->siswa->nama_lengkap,
+                'nomor_surat' => $dispensasi->nomor_surat,
+            ]);
+        } else {
+            $message = "Pengajuan Anda ({$dispensasi->nomor_surat}) telah DISETUJUI."; // Fallback
+        }
 
         $this->notifikasiService->send(
             $dispensasi->siswa->user_id,
-            "✅ Pengajuan Anda ({$dispensasi->nomor_surat}) telah DISETUJUI.",
+            $message,
             route('siswa.pengajuan.show', $dispensasi->id, false)
         );
 
@@ -63,18 +81,29 @@ class DispensasiService
         ]);
     }
 
-    /** Reject dispensasi */
     public function reject(Dispensasi $dispensasi, Guru $guru, string $catatan): void
     {
         $dispensasi->update([
             'status' => 'ditolak',
-            'guru_id' => $guru->id, // ✅ Catat guru yang menolak
+            'guru_id' => $guru->id,
             'catatan_admin' => $catatan,
         ]);
 
+        // ✅ GUNAKAN TEMPLATE
+        $template = WhatsappTemplate::where('slug', 'ditolak')->where('is_active', true)->first();
+        if ($template) {
+            $message = $template->render([
+                'nama_siswa' => $dispensasi->siswa->nama_lengkap,
+                'nomor_surat' => $dispensasi->nomor_surat,
+                'catatan' => $catatan,
+            ]);
+        } else {
+            $message = "Pengajuan Anda ({$dispensasi->nomor_surat}) DITOLAK. Alasan: {$catatan}";
+        }
+
         $this->notifikasiService->send(
             $dispensasi->siswa->user_id,
-            "❌ Pengajuan Anda ({$dispensasi->nomor_surat}) DITOLAK. Alasan: {$catatan}",
+            $message,
             route('siswa.pengajuan.show', $dispensasi->id, false)
         );
 
@@ -83,29 +112,72 @@ class DispensasiService
         ]);
     }
 
-    /** Konfirmasi siswa keluar */
-    public function konfirmasiKeluar(Dispensasi $dispensasi, Guru $guru): void
+    public function konfirmasiKeluar(Dispensasi $dispensasi, $satpamId): void // Sesuaikan parameter dengan controller Anda
     {
         $dispensasi->update([
             'status' => 'keluar',
-            'waktu_konfirmasi' => now(),
+            'waktu_keluar_aktual' => now(),
+            'satpam_keluar_id' => $satpamId,
         ]);
 
-        $this->auditLogService->log($guru->user_id, 'konfirmasi_keluar', 'dispensasi', $dispensasi->id);
-    }
-
-    /** Konfirmasi siswa kembali */
-    public function konfirmasiKembali(Dispensasi $dispensasi, Guru $guru): void
-    {
-        $dispensasi->update(['status' => 'selesai']);
+        $template = WhatsappTemplate::where('slug', 'keluar')->where('is_active', true)->first();
+        if ($template) {
+            $message = $template->render([
+                'nama_siswa' => $dispensasi->siswa->nama_lengkap,
+                'nomor_surat' => $dispensasi->nomor_surat,
+                'waktu_aktual' => now()->format('H:i'),
+                'jam_kembali' => $dispensasi->jam_kembali,
+            ]);
+        } else {
+            $message = "Anda telah tercatat KELUAR dari sekolah.";
+        }
 
         $this->notifikasiService->send(
             $dispensasi->siswa->user_id,
-            "🏁 Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI.",
+            $message,
             route('siswa.pengajuan.show', $dispensasi->id, false)
         );
 
-        $this->auditLogService->log($guru->user_id, 'konfirmasi_kembali', 'dispensasi', $dispensasi->id);
+        $this->auditLogService->log($satpamId, 'konfirmasi_keluar', 'dispensasi', $dispensasi->id);
+    }
+
+    public function konfirmasiKembali(Dispensasi $dispensasi, $satpamId): void
+    {
+        $isLate = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
+        $slug = $isLate ? 'terlambat' : 'kembali';
+
+        $dispensasi->update([
+            'status' => 'selesai',
+            'waktu_kembali_aktual' => now(),
+            'satpam_kembali_id' => $satpamId,
+            'is_warned' => $isLate ? true : $dispensasi->is_warned,
+            'warned_at' => $isLate ? now() : $dispensasi->warned_at,
+        ]);
+
+        // ✅ GUNAKAN TEMPLATE (Otomatis pilih 'terlambat' atau 'kembali')
+        $template = WhatsappTemplate::where('slug', $slug)->where('is_active', true)->first();
+        if ($template) {
+            $durasi = $isLate ? \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat(
+                \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($dispensasi->batas_waktu_kembali)
+            ) : '0 menit';
+
+            $message = $template->render([
+                'nama_siswa' => $dispensasi->siswa->nama_lengkap,
+                'nomor_surat' => $dispensasi->nomor_surat,
+                'durasi_terlambat' => $durasi,
+                'jam_kembali' => $dispensasi->jam_kembali,
+            ]);
+        } else {
+            $message = "Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI.";
+        }
+
+        $this->notifikasiService->send(
+            $dispensasi->siswa->user_id,
+            $message,
+            route('siswa.pengajuan.show', $dispensasi->id, false)
+        );
+
+        $this->auditLogService->log($satpamId, 'konfirmasi_kembali', 'dispensasi', $dispensasi->id);
     }
 
     /** Cek apakah boleh cetak */
@@ -138,4 +210,3 @@ class DispensasiService
         $dispensasi->update(['printed_at' => now()]);
     }
 }
-

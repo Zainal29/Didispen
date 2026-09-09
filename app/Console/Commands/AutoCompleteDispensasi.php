@@ -5,57 +5,35 @@ namespace App\Console\Commands;
 use App\Models\Dispensasi;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Storage;
 
 class AutoCompleteDispensasi extends Command
 {
     protected $signature = 'dispensasi:auto-complete';
-
-    protected $description = 'Otomatis menyelesaikan dispensasi yang melewati jam pulang sekolah (15:00)';
+    protected $description = 'Otomatis menyelesaikan dispensasi yang sudah melewati batas waktu kembali';
 
     public function handle()
     {
-        $now = Carbon::now('Asia/Jakarta');
-        $currentTime = $now->format('H:i');
+        $now = now();
 
-        // ✅ REVISI: Hanya jalankan setelah jam 15:00
-        if ($currentTime < '15:00') {
-            $this->info("ℹ️ Belum jam pulang sekolah. Saat ini: {$currentTime}");
-
-            return;
-        }
-
-        // Cari dispensasi yang:
-        // 1. Status masih 'keluar'
-        // 2. Tanggal hari ini
-        // 3. Jam kembali adalah jam ke-9 atau ke-10 (jam pulang)
-        $dispensasiList = Dispensasi::where('status', 'keluar')
-            ->whereDate('created_at', today())
-            ->where(function ($query) {
-                $query->where('jam_kembali', 'like', '%ke-9%')
-                    ->orWhere('jam_kembali', 'like', '%ke-10%');
-            })
+        $dispensasis = Dispensasi::where('status', 'keluar')
+            ->whereNotNull('batas_waktu_kembali')
+            ->where('batas_waktu_kembali', '<', $now)
             ->get();
 
-        $count = 0;
-        foreach ($dispensasiList as $dispensasi) {
-            // ✅ HAPUS FOTO sebelum auto-complete
-            if ($dispensasi->foto_verifikasi) {
-                \Storage::disk('public')->delete($dispensasi->foto_verifikasi);
-            }
+        foreach ($dispensasis as $dispensasi) {
             $dispensasi->update([
                 'status' => 'selesai',
-                'waktu_kembali_aktual' => now(),
-                'satpam_kembali_id' => null, // Null karena otomatis, bukan scan satpam
-                'catatan_admin' => 'Otomatis selesai (melewati jam pulang sekolah)',
+                // ✅ JUJUR: Isi dengan waktu cron berjalan, bukan waktu batas
+                'waktu_kembali_aktual' => $now,
+                'is_warned' => true,
+                'warned_at' => $now,
             ]);
-            $count++;
+
+            // ✅ HAPUS BLOK INI (Jangan hapus foto di sini, biarkan cleanup command)
+            // if ($dispensasi->foto_verifikasi) { ... }
         }
 
-        // ✅ REVISI: Output lebih rapi
-        if ($count > 0) {
-            $this->info("✅ Berhasil menyelesaikan {$count} dispensasi secara otomatis.");
-        } else {
-            $this->info('ℹ️ Tidak ada dispensasi yang perlu diselesaikan otomatis saat ini.');
-        }
+        $this->info("Berhasil auto-selesaikan {$dispensasis->count()} dispensasi yang terlambat.");
     }
 }

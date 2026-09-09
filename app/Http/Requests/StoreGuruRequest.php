@@ -11,7 +11,7 @@ class StoreGuruRequest extends FormRequest
 
     public function rules(): array
     {
-        // ✅ REVISI SIPINTU: Tidak ada rule password.
+        // <i class="fas fa-check-circle"></i> REVISI SIPINTU: Tidak ada rule password.
         // Password dikelola SiPintu (sudah di-hash saat sinkronisasi).
         $userId = $this->route('guru')?->user_id;
         return [
