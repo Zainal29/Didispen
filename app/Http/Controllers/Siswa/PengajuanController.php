@@ -6,6 +6,7 @@ use App\Helpers\DispensasiTimeHelper;
 use App\Helpers\TimeHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -40,8 +41,17 @@ class PengajuanController extends Controller
 
         $siswa->load(['kelas.jurusan', 'user']);
 
-        return view('siswa.pengajuan.create', compact('siswa'));
-    }
+        // ✅ AMBIL SETTINGS DINAMIS DARI DATABASE
+               $settings = [
+                   'start_time' => Setting::get('dispensasi_start_time', '07:00'),
+                   'end_time' => Setting::get('dispensasi_end_time', '15:00'),
+                   'end_time_friday' => Setting::get('dispensasi_end_time_friday', '14:00'),
+                   'allowed_days' => array_map('intval', explode(',', Setting::get('dispensasi_days', '1,2,3,4,5'))),
+               ];
+
+               // ✅ KIRIM KEDUA VARIABLE KE VIEW
+               return view('siswa.pengajuan.create', compact('siswa', 'settings'));
+           }
 
     public function store(Request $request)
     {

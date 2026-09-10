@@ -8,7 +8,6 @@
 
     <div class="max-w-3xl mx-auto">
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-
             {{-- Header --}}
             <div class="px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-100 flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center shadow-md shadow-blue-500/30 flex-shrink-0">
@@ -30,15 +29,13 @@
                     </div>
                 @endif
 
-                {{-- <i class="fas fa-check-circle"></i> BANNER PERINGATAN WAKTU (Real-time check) --}}
+                {{-- Banner Peringatan Waktu --}}
                 <div id="timeWarningBanner" class="hidden mb-4 p-4 rounded-xl bg-amber-50 border-2 border-amber-300">
                     <div class="flex items-start">
                         <i class="fas fa-clock text-amber-600 text-xl mr-3 mt-0.5"></i>
                         <div class="flex-1">
                             <h4 class="font-bold text-amber-900 text-sm mb-1">Pengajuan Dispensasi Tidak Tersedia</h4>
-                            <p class="text-amber-800 text-xs" id="timeWarningMessage">
-                                Pengajuan hanya dapat dilakukan pada hari <strong>Senin - Jumat</strong>, pukul <strong>08:00 - 15:00 WIB</strong>.
-                            </p>
+                            <p class="text-amber-800 text-xs" id="timeWarningMessage"></p>
                             <p class="text-amber-700 text-xs mt-2">
                                 <i class="fas fa-info-circle mr-1"></i>
                                 Waktu saat ini: <span id="currentTimeDisplay" class="font-mono font-bold"></span>
@@ -47,15 +44,18 @@
                     </div>
                 </div>
 
-                {{-- Banner Info Jam Operasional (selalu tampil) --}}
+                {{-- Banner Info Jam Operasional --}}
                 <div class="mb-4 p-3 rounded-xl bg-blue-50 border border-blue-200">
                     <div class="flex items-center">
                         <i class="fas fa-info-circle text-blue-600 mr-2"></i>
                         <p class="text-blue-800 text-xs">
-                            <strong>Jam Pengajuan:</strong> Senin - Kamis (08:00 - 15:00 WIB) | Jumat (08:00 - 14:00 WIB)
+                            <strong>Jam Pengajuan:</strong>
+                            Senin - Kamis ({{ $settings['start_time'] }} - {{ $settings['end_time'] }} WIB) |
+                            Jumat ({{ $settings['start_time'] }} - {{ $settings['end_time_friday'] }} WIB)
                         </p>
                     </div>
                 </div>
+
 
                <form method="POST" action="{{ route('siswa.pengajuan.store') }}" enctype="multipart/form-data" id="formDispensasi" class="space-y-4">
                     @csrf
@@ -423,12 +423,13 @@
             updateCharCounter();
         }
 
-        // --- 4. CEK WAKTU REAL-TIME ---
+        // --- 4. CEK WAKTU REAL-TIME (100% DINAMIS DARI ADMIN) ---
         function checkDispensasiTime() {
             const now = new Date();
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
             const wib = new Date(utc + (3600000 * 7));
-            const dayOfWeek = wib.getDay();
+
+            const dayOfWeek = wib.getDay(); // 0=Minggu, 1=Senin, ..., 6=Sabtu
             const hours = wib.getHours();
             const minutes = wib.getMinutes();
             const currentTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
@@ -439,29 +440,47 @@
             const form = document.getElementById('formDispensasi');
             const submitBtn = document.getElementById('submitBtn');
 
+            // Update tampilan jam real-time
             if (timeDisplay) {
                 const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
                 timeDisplay.textContent = `${days[dayOfWeek]}, ${currentTime} WIB`;
             }
 
+            // ✅ AMBIL SETTINGS DARI BLADE
+            const settings = @json($settings);
+
+            console.log('Settings:', settings); // Debug log
+            console.log('Current Time:', currentTime);
+            console.log('Day of Week:', dayOfWeek);
+
             let isAllowed = true;
             let restrictionMsg = '';
 
-            if (dayOfWeek === 0 || dayOfWeek === 6) {
+            // 1. Cek Hari (Dinamis sesuai checkbox Admin)
+            if (!settings.allowed_days || !settings.allowed_days.includes(dayOfWeek)) {
                 isAllowed = false;
-                restrictionMsg = 'Pengajuan dispensasi hanya dapat dilakukan pada hari <strong>Senin sampai Jumat</strong>.';
+                restrictionMsg = 'Pengajuan dispensasi tidak diizinkan pada hari ini berdasarkan pengaturan sekolah.';
             } else {
-                const jamTutup = (dayOfWeek === 5) ? 14 : 15;
-                const currentHour = hours + (minutes / 60);
-                if (currentHour < 8 || currentHour > jamTutup) {
+                // 2. Cek Jam (Dinamis, support menit seperti 07:30)
+                const jamTutup = (dayOfWeek === 5) ? settings.end_time_friday : settings.end_time;
+
+                console.log('Start Time:', settings.start_time);
+                console.log('End Time:', jamTutup);
+
+                // Perbandingan string "HH:MM" di JS sangat akurat
+                if (currentTime < settings.start_time || currentTime > jamTutup) {
                     isAllowed = false;
-                    restrictionMsg = `Pengajuan dispensasi hanya dapat dilakukan pada pukul <strong>08:00 - ${jamTutup}:00 WIB</strong>.`;
+                    restrictionMsg = `Pengajuan dispensasi hanya dapat dilakukan pada pukul <strong>${settings.start_time} - ${jamTutup} WIB</strong>.`;
                 }
             }
 
+            console.log('Is Allowed:', isAllowed);
+
+            // Terapkan UI jika tidak diizinkan
             if (!isAllowed) {
                 if (banner) banner.classList.remove('hidden');
                 if (message) message.innerHTML = restrictionMsg;
+
                 if (form) {
                     form.querySelectorAll('input, select, textarea, button').forEach(el => {
                         el.disabled = true;
@@ -475,6 +494,7 @@
                     submitBtn.classList.add('from-gray-400', 'to-gray-500');
                 }
             } else {
+                // Buka kembali form jika waktu sudah masuk
                 if (banner) banner.classList.add('hidden');
                 if (form) {
                     form.querySelectorAll('input, select, textarea, button').forEach(el => {
@@ -492,9 +512,12 @@
                 }
             }
         }
+
+        // Jalankan saat load
         checkDispensasiTime();
+        // Update setiap menit
         setInterval(checkDispensasiTime, 60000);
-    });
-    </script>
-    @endpush
-    @endsection
+           });
+           </script>
+           @endpush
+           @endsection

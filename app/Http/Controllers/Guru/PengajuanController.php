@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
 use App\Models\Siswa;
+use App\Models\Setting;
 use App\Helpers\TimeHelper;
 use App\Helpers\DispensasiTimeHelper; // <i class="fas fa-check-circle"></i> TAMBAHKAN INI
 use Carbon\Carbon;
@@ -40,31 +41,20 @@ class PengajuanController extends Controller
      */
     public function create()
     {
-        // <i class="fas fa-check-circle"></i> VALIDASI HARI: Hanya Senin-Jumat
-        $dayOfWeek = now()->dayOfWeek; // 0 = Minggu, 6 = Sabtu
-        $dayName = now()->locale('id')->isoFormat('dddd');
+        // ✅ AMBIL SETTINGS DINAMIS DARI DATABASE
+        $settings = [
+            'start_time' => Setting::get('dispensasi_start_time', '07:00'),
+            'end_time' => Setting::get('dispensasi_end_time', '15:00'),
+            'end_time_friday' => Setting::get('dispensasi_end_time_friday', '14:00'),
+            'allowed_days' => array_map('intval', explode(',', Setting::get('dispensasi_days', '1,2,3,4,5'))),
+        ];
 
-        // if ($dayOfWeek === 0 || $dayOfWeek === 6) {
-        //     return redirect()->route('guru.pengajuan.index')
-        //           ->with('error', $timeCheck['reason'].' Saat ini: '.($timeCheck['current_day'] ?? '').' '.($timeCheck['current_time'] ?? ''));
-        // }
-
+        // ✅ JANGAN REDIRECT - BIARKAN VIEW YANG HANDLE
+        // Time check tetap dijalankan untuk log, tapi tidak redirect
         $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
 
-        if (! $timeCheck['allowed']) {
-            return redirect()->route('guru.pengajuan.index')
-                ->with('error', $timeCheck['reason'].' Saat ini: '.($timeCheck['current_day'] ?? '').' '.($timeCheck['current_time'] ?? ''));
-        }
-
-        // <i class="fas fa-check-circle"></i> VALIDASI JAM: Cek apakah masih dalam jam pengajuan
-        // $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
-
-        // if (!$timeCheck['allowed']) {
-        //     return redirect()->route('guru.pengajuan.index')
-        //         ->with('error', $timeCheck['reason']);
-        // }
-
-        return view('guru.pengajuan.create');
+        // ✅ KIRIM SETTINGS KE VIEW
+        return view('guru.pengajuan.create', compact('settings'));
     }
 
     /**
