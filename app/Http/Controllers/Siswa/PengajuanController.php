@@ -41,46 +41,75 @@ class PengajuanController extends Controller
 
         $siswa->load(['kelas.jurusan', 'user']);
 
-        // ✅ AMBIL SETTINGS DINAMIS DARI DATABASE
-               $settings = [
-                   'start_time' => Setting::get('dispensasi_start_time', '07:00'),
-                   'end_time' => Setting::get('dispensasi_end_time', '15:00'),
-                   'end_time_friday' => Setting::get('dispensasi_end_time_friday', '14:00'),
-                   'allowed_days' => array_map('intval', explode(',', Setting::get('dispensasi_days', '1,2,3,4,5'))),
-               ];
+        $settings = [
+            'start_time' => Setting::get('dispensasi_start_time', '07:00'),
+            'end_time' => Setting::get('dispensasi_end_time', '15:00'),
+            'end_time_friday' => Setting::get('dispensasi_end_time_friday', '14:00'),
+            'allowed_days' => array_map('intval', explode(',', Setting::get('dispensasi_days', '1,2,3,4,5'))),
+        ];
 
-               // ✅ KIRIM KEDUA VARIABLE KE VIEW
-               return view('siswa.pengajuan.create', compact('siswa', 'settings'));
-           }
+        $maxJam = \App\Helpers\DispensasiTimeHelper::getMaxJamPelajaran(now()->dayOfWeek);
 
-    public function store(Request $request)
-    {
-        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
-        if (! $timeCheck['allowed']) {
-            return redirect()->route('siswa.pengajuan.index')
-                ->with('error', 'Pengajuan ditolak: ' . $timeCheck['reason']);
-        }
-
-        $validated = $request->validate([
-            'kategori' => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
-            'alasan' => 'required|string|min:10|max:500',
-            'tujuan' => 'required|string|max:255',
-            'lokasi' => 'nullable|string|max:255',
-            'no_telepon' => ['required', 'string', 'regex:/^(?:\+?62|0)?8[0-9]{7,12}$/'],
-            'jam_keluar' => 'required|integer|between:1,10',
-            'jam_kembali' => 'required|integer|between:1,10|gt:jam_keluar',
-            'foto_verifikasi' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ], [
-            'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
-            'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',
-            'no_telepon.regex' => 'Format nomor tidak valid.',
+        // ✅ AMBIL JADWAL DINAMIS DARI DATABASE
+        $defaultJadwal = json_encode([
+            'regular' => array_fill(1, 10, ['start' => '00:00', 'end' => '00:00']),
+            'friday'  => array_fill(1, 8, ['start' => '00:00', 'end' => '00:00'])
         ]);
+        $jadwalPelajaran = json_decode(Setting::get('jam_pelajaran', $defaultJadwal), true);
+
+        return view('siswa.pengajuan.create', compact('siswa', 'settings', 'maxJam', 'jadwalPelajaran'));
+    }
+
+    // ... (method lainnya tetap sama) ...
+
+    private function hitungBatasWaktuKembali(int $jamPelajaran): Carbon
+     {
+         // ✅ TAMBAHKAN $dayOfWeek AGAR JADWAL JUMAT TERBACA
+         $dayOfWeek = now()->dayOfWeek;
+         $waktuAktual = TimeHelper::getWaktuAktual('Jam Pelajaran ke-' . $jamPelajaran, $dayOfWeek);
+
+         $parts = explode(' - ', $waktuAktual);
+         $waktuSelesai = $parts[1] ?? '15:15';
+
+         return Carbon::parse($waktuSelesai)->addMinutes(15);
+     }
+
+     public function store(Request $request)
+        {
+            // ✅ DOUBLE CHECK: Validasi waktu di server
+            $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
+            if (!$timeCheck['allowed']) {
+                return redirect()->route('siswa.pengajuan.index')
+                    ->with('error', 'Pengajuan ditolak: ' . $timeCheck['reason']);
+            }
+
+            // ✅ TAMBAHKAN: Validasi jam keluar/kembali tidak melebihi batas
+            $dayOfWeek = now()->dayOfWeek;
+            $maxJam = DispensasiTimeHelper::getMaxJamPelajaran($dayOfWeek);
+
+            $validated = $request->validate([
+                'kategori' => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
+                'alasan' => 'required|string|min:10|max:500',
+                'tujuan' => 'required|string|max:255',
+                'lokasi' => 'nullable|string|max:255',
+                'no_telepon' => ['required', 'string', 'regex:/^(?:\+?62|0)?8[0-9]{7,12}$/'],
+                'jam_keluar' => "required|integer|between:1,{$maxJam}", // ✅ Dinamis
+                'jam_kembali' => "required|integer|between:1,{$maxJam}|gt:jam_keluar", // ✅ Dinamis
+                'foto_verifikasi' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            ], [
+                'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
+                'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',
+                'no_telepon.regex' => 'Format nomor tidak valid.',
+                'jam_keluar.between' => "Jam keluar harus antara 1 dan {$maxJam}.",
+                'jam_kembali.between' => "Jam kembali harus antara 1 dan {$maxJam}.",
+            ]);
 
         $fotoPath = null; // ✅ Definisikan di luar agar bisa diakses catch block
 
         try {
-            \DB::transaction(function () use ($request, $validated, &$fotoPath) {
-                $siswa = auth()->user()->siswa;
+                  // ✅ PERBAIKAN TYPO: Hapus "throw" di depan DB::transaction
+                  \Illuminate\Support\Facades\DB::transaction(function () use ($request, $validated, &$fotoPath) {
+                      $siswa = auth()->user()->siswa;
 
                 $pendingDispensasi = Dispensasi::where('siswa_id', $siswa->id)
                     ->where('status', 'menunggu')
@@ -244,13 +273,7 @@ class PengajuanController extends Controller
         return 10;
     }
 
-    private function hitungBatasWaktuKembali(int $jamPelajaran): Carbon
-    {
-        $waktuAktual = TimeHelper::getWaktuAktual('Jam Pelajaran ke-'.$jamPelajaran);
-        $parts = explode(' - ', $waktuAktual);
-        $waktuSelesai = $parts[1] ?? '15:15';
-        return Carbon::parse($waktuSelesai)->addMinutes(15);
-    }
+
     /**
      * Upload Foto Bukti (Siswa)
      */

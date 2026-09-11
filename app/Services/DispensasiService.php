@@ -6,8 +6,9 @@ use App\Models\Dispensasi;
 use App\Models\Guru;
 use App\Models\Siswa;
 use App\Models\Setting;
-use App\Models\WhatsappTemplate; // <--- TAMBAHKAN INI
+use App\Models\WhatsappTemplate;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DispensasiService
@@ -22,7 +23,7 @@ class DispensasiService
         return \DB::transaction(function () {
             $year = now()->year;
             $count = Dispensasi::whereYear('created_at', $year)
-                ->lockForUpdate() // ✅ MENCEGAH DUPLIKAT SAAT REQUEST SERENTAK
+                ->lockForUpdate()
                 ->count();
             return sprintf('DISP-%d-%04d', $year, $count + 1);
         });
@@ -33,7 +34,6 @@ class DispensasiService
         return \DB::transaction(function () use ($data, $siswa) {
             $year = now()->year;
 
-            // ✅ AMAN: Menghitung jumlah dispensasi tahun ini untuk reset nomor urut per tahun
             $count = Dispensasi::whereYear('created_at', $year)->count();
             $nomorSurat = sprintf('DISP-%d-%04d', $year, $count + 1);
 
@@ -42,7 +42,6 @@ class DispensasiService
                 'siswa_id' => $siswa->id,
                 'guru_id' => null,
                 'status' => 'menunggu',
-                // ✅ PASTIKAN KEY INI SAMA DENGAN DI SettingsController
                 'max_print_limit' => (int) Setting::get('student_print_limit', 3),
             ]));
         });
@@ -55,11 +54,9 @@ class DispensasiService
             'status' => 'disetujui',
             'guru_id' => $guru->id,
             'catatan_admin' => $catatan,
-            'qr_token' => $token, // ✅ GANTI dari 'verification_token'
-// Pastikan kolom ini ada di migration dispensasi, atau hapus baris ini jika tidak dipakai
+            'qr_token' => $token,
         ]);
 
-        // ✅ GUNAKAN TEMPLATE
         $template = WhatsappTemplate::where('slug', 'disetujui')->where('is_active', true)->first();
         if ($template) {
             $message = $template->render([
@@ -67,7 +64,7 @@ class DispensasiService
                 'nomor_surat' => $dispensasi->nomor_surat,
             ]);
         } else {
-            $message = "Pengajuan Anda ({$dispensasi->nomor_surat}) telah DISETUJUI."; // Fallback
+            $message = "Pengajuan Anda ({$dispensasi->nomor_surat}) telah DISETUJUI.";
         }
 
         $this->notifikasiService->send(
@@ -89,7 +86,6 @@ class DispensasiService
             'catatan_admin' => $catatan,
         ]);
 
-        // ✅ GUNAKAN TEMPLATE
         $template = WhatsappTemplate::where('slug', 'ditolak')->where('is_active', true)->first();
         if ($template) {
             $message = $template->render([
@@ -112,7 +108,7 @@ class DispensasiService
         ]);
     }
 
-    public function konfirmasiKeluar(Dispensasi $dispensasi, $satpamId): void // Sesuaikan parameter dengan controller Anda
+    public function konfirmasiKeluar(Dispensasi $dispensasi, $satpamId): void
     {
         $dispensasi->update([
             'status' => 'keluar',
@@ -146,15 +142,25 @@ class DispensasiService
         $isLate = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
         $slug = $isLate ? 'terlambat' : 'kembali';
 
+        // Hapus foto verifikasi & foto bukti fisik saat dispensasi selesai
+        if ($dispensasi->foto_verifikasi && Storage::disk('public')->exists($dispensasi->foto_verifikasi)) {
+            Storage::disk('public')->delete($dispensasi->foto_verifikasi);
+        }
+        if ($dispensasi->foto_bukti && Storage::disk('public')->exists($dispensasi->foto_bukti)) {
+            Storage::disk('public')->delete($dispensasi->foto_bukti);
+        }
+
         $dispensasi->update([
             'status' => 'selesai',
             'waktu_kembali_aktual' => now(),
             'satpam_kembali_id' => $satpamId,
             'is_warned' => $isLate ? true : $dispensasi->is_warned,
             'warned_at' => $isLate ? now() : $dispensasi->warned_at,
+            'foto_verifikasi' => null,
+            'foto_bukti' => null,
         ]);
 
-        // ✅ GUNAKAN TEMPLATE (Otomatis pilih 'terlambat' atau 'kembali')
+        // GUNAKAN TEMPLATE
         $template = WhatsappTemplate::where('slug', $slug)->where('is_active', true)->first();
         if ($template) {
             $durasi = $isLate ? \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat(
@@ -193,20 +199,13 @@ class DispensasiService
         }
 
         $start = Setting::get('print_start_time', '06:00');
-        $end = Setting::get('print_end_time', '17:00');
+        $end = Setting::get('print_end_time', '18:00');
         $now = now()->format('H:i');
 
         if ($now < $start || $now > $end) {
             return ['allowed' => false, 'reason' => "Cetak hanya diperbolehkan pukul {$start} - {$end}."];
         }
 
-        return ['allowed' => true];
-    }
-
-    /** Lakukan cetak */
-    public function doPrint(Dispensasi $dispensasi): void
-    {
-        $dispensasi->increment('print_count');
-        $dispensasi->update(['printed_at' => now()]);
+        return ['allowed' => true, 'reason' => ''];
     }
 }

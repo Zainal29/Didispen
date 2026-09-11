@@ -262,4 +262,33 @@ class ProfileController extends Controller
             'Password Administrator berhasil diperbarui!'
         );
     }
+    /**
+        * Keluarkan sesi dari perangkat lain (Logout Other Devices)
+        */
+       public function logoutOtherDevices(Request $request)
+       {
+           $user = Auth::user();
+
+           if (! $user) {
+               abort(401);
+           }
+
+           $validated = $request->validate([
+               'current_password' => ['required', 'current_password'],
+           ], [
+               'current_password.current_password' => 'Password yang Anda masukkan salah.',
+           ]);
+
+           // Fitur bawaan Laravel untuk invalidate session di device lain
+           Auth::logoutOtherDevices($validated['current_password']);
+
+           try {
+               $this->auditLog?->log($user->id, 'logout_other_devices', 'users', $user->id);
+           } catch (\Throwable $e) {
+               // Abaikan jika audit gagal
+           }
+
+           return back()->with('success', 'Semua perangkat lain berhasil dikeluarkan dari akun Anda.');
+       }
+
 }

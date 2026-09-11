@@ -9,6 +9,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\AuthenticateSession; // ✅ TAMBAHKAN INI
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,36 +18,22 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // 1. DAFTARKAN MIDDLEWARE ALIAS DI SINI
-        // Ini menggantikan fungsi $routeMiddleware di app/Http/Kernel.php versi lama
+        // 1. DAFTARKAN MIDDLEWARE ALIAS
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'guru.piket' => GuruPiketMiddleware::class,
             'print.limit' => PrintLimitMiddleware::class,
-            'must.change.password' => MustChangePassword::class,
-
-            // ✅ BARU: Middleware untuk membatasi waktu pengajuan dispensasi
             'check.dispensasi.time' => CheckDispensasiTime::class,
         ]);
 
-        // 2. (Opsional) Menambahkan middleware ke group web secara global
-        // $middleware->web(append: [
-        //     \App\Http\Middleware\EnsureEmailIsVerified::class,
-        // ]);
-
-        // 3. (Opsional) Mengecualikan URI tertentu dari CSRF protection
-        // $middleware->validateCsrfTokens(except: [
-        //     'stripe/*',
-        // ]);
+        // 2. ✅ AKTIFKAN AUTHENTICATE SESSION UNTUK FORCE LOGOUT
+        $middleware->web(append: [
+            AuthenticateSession::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
-
-        // Opsional: Custom error handling jika diperlukan
-        // $exceptions->render(function (AuthenticationException $e, Request $request) {
-        //     return $request->is('api/*') ? response()->json(['message' => $e->getMessage()], 401) : redirect()->guest(route('login'));
-        // });
     })
     ->create();

@@ -10,19 +10,28 @@ class DispensasiTimeHelper
     public static function isWithinDispensasiTime(?Carbon $time = null): array
     {
         $now = $time ?? Carbon::now('Asia/Jakarta');
-        $dayOfWeek = $now->dayOfWeek; // Integer (0-6)
+        $dayOfWeek = $now->dayOfWeek;
         $currentTime = $now->format('H:i');
 
+        // ✅ FORCE REFRESH: Clear cache untuk setting ini
         $jamBuka = Setting::get('dispensasi_start_time', '07:00');
         $jamTutupRegular = Setting::get('dispensasi_end_time', '15:00');
         $jamTutupJumat = Setting::get('dispensasi_end_time_friday', '14:00');
         $allowedDays = Setting::get('dispensasi_days', '1,2,3,4,5');
 
-        // ✅ PERBAIKAN: Ubah ke array integer untuk strict comparison
         $allowedDaysArray = array_map('intval', explode(',', $allowedDays));
         $jamTutup = ($dayOfWeek === 5) ? $jamTutupJumat : $jamTutupRegular;
 
-        // 1. Cek Hari (Strict)
+        // ✅ DEBUG LOG
+        \Illuminate\Support\Facades\Log::info('Time Validation', [
+            'current_time' => $currentTime,
+            'jam_buka' => $jamBuka,
+            'jam_tutup' => $jamTutup,
+            'day_of_week' => $dayOfWeek,
+            'allowed_days' => $allowedDaysArray,
+        ]);
+
+        // 1. Cek Hari
         if (!in_array($dayOfWeek, $allowedDaysArray, true)) {
             return [
                 'allowed' => false,
@@ -31,11 +40,11 @@ class DispensasiTimeHelper
             ];
         }
 
-        // 2. Cek Jam
+        // 2. Cek Jam (String comparison untuk format HH:MM)
         if ($currentTime < $jamBuka || $currentTime > $jamTutup) {
             return [
                 'allowed' => false,
-                'reason' => "Pengajuan dispensasi hanya dapat dilakukan pada pukul {$jamBuka} - {$jamTutup} WIB.",
+                'reason' => "Pengajuan dispensasi hanya dapat dilakukan pada pukul {$jamBuka} - {$jamTutup} WIB. Waktu saat ini: {$currentTime} WIB.",
                 'current_time' => $currentTime,
                 'allowed_time' => "{$jamBuka} - {$jamTutup} WIB",
             ];
@@ -65,16 +74,33 @@ class DispensasiTimeHelper
      * ✅ METHOD INI YANG SEBELUMNYA HILANG/TIDAK TERBACA
      * Mendapatkan jumlah jam pelajaran maksimal berdasarkan hari
      */
+    /**
+     * ✅ METHOD INI DINAMIS: Mendapatkan jumlah jam pelajaran maksimal berdasarkan hari
+     * Dihitung dari jumlah entri yang diisi di pengaturan Admin
+     */
     public static function getMaxJamPelajaran(?int $dayOfWeek = null): int
     {
         if ($dayOfWeek === null) {
             $dayOfWeek = now()->dayOfWeek;
         }
 
-        // Jumat (5) = 8 jam pelajaran, hari lain (1-4) = 10 jam pelajaran
-        return ($dayOfWeek === 5) ? 8 : 10;
-    }
+        $defaultJadwal = json_encode([
+            'regular' => array_fill(1, 10, ['start' => '00:00', 'end' => '00:00']),
+            'friday'  => array_fill(1, 8, ['start' => '00:00', 'end' => '00:00'])
+        ]);
 
+        $jadwalData = json_decode(Setting::get('jam_pelajaran', $defaultJadwal), true);
+
+        if ($dayOfWeek === 5) {
+            // Hitung jumlah jam yang diisi untuk Jumat, fallback ke 8
+            $count = count(array_filter($jadwalData['friday'] ?? [], fn($j) => !empty($j['start'])));
+            return $count > 0 ? $count : 8;
+        }
+
+        // Hitung jumlah jam yang diisi untuk Regular, fallback ke 10
+        $count = count(array_filter($jadwalData['regular'] ?? [], fn($j) => !empty($j['start'])));
+        return $count > 0 ? $count : 10;
+    }
     /**
      * Hitung selisih menit keterlambatan
      */

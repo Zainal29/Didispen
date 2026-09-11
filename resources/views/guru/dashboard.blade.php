@@ -1,70 +1,44 @@
 @extends('guru.layouts.app')
-
 @section('title', 'Dashboard Guru Piket')
 @section('page-title', 'Dashboard')
-
 @section('content')
 @include('components.alert')
 
 <style>
-    .stat-card-btn {
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .stat-card-btn:hover {
-        transform: translateY(-2px);
-    }
-    .stat-card-btn.active {
-        transform: scale(1.02);
-    }
-    #content-area {
-        transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
-    }
-    .fade-out {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    .fade-in {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.stat-card-btn { transition: all 0.2s ease; }
+.stat-card-btn:hover { transform: translateY(-1px); }
+.stat-card-btn.active { transform: scale(1.01); }
+#content-area { transition: opacity 0.2s ease; }
+.fade-out { opacity: 0; }
+.fade-in { opacity: 1; }
 </style>
 
-{{-- HERO SECTION --}}
-<div class="bg-gradient-to-br from-blue-600 to-sky-500 rounded-2xl shadow-lg shadow-blue-500/20 p-4 sm:p-6 mb-4 text-white">
+{{-- HERO SECTION - Clean, solid color --}}
+<div class="bg-blue-600 rounded-xl p-4 sm:p-6 mb-4 text-white">
     <div class="flex items-center justify-between">
         <div class="min-w-0">
-            <p class="text-blue-100 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-            {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Emoji 👋 diganti dengan icon fa-hand-sparkles --}}
-            <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">Halo, {{ auth()->user()->name }}! <i class="fas fa-hand-sparkles text-yellow-300 ml-1"></i></h2>
-            <p class="text-blue-100 text-xs sm:text-sm mt-1">
-                Pantau dan kelola dispensasi siswa hari ini.
-            </p>
+            <p class="text-blue-100 text-[10px] sm:text-xs font-semibold uppercase tracking-wider">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
+            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Halo, {{ auth()->user()->name }}!</h2>
+            <p class="text-blue-100 text-xs sm:text-sm mt-1">Pantau dan kelola dispensasi siswa hari ini.</p>
         </div>
-        <a href="{{ route('guru.pengajuan.create') }}" class="hidden sm:inline-flex items-center px-4 py-2.5 rounded-xl bg-white text-blue-700 text-xs font-extrabold shadow-md hover:-translate-y-0.5 transition-all flex-shrink-0">
-            <i class="fas fa-plus mr-2"></i> Buat Dispensasi
+        <a href="{{ route('guru.pengajuan.create') }}" class="hidden sm:inline-flex items-center px-4 py-2 rounded-lg bg-white text-blue-700 text-xs font-semibold hover:bg-blue-50 transition-colors flex-shrink-0">
+            <i class="fas fa-plus mr-1.5"></i>Buat Dispensasi
         </a>
     </div>
 </div>
 
-{{-- ========================================== --}}
-{{-- <i class="fas fa-check-circle"></i> BARU: KOLOM PENCARIAN SISWA --}}
-{{-- ========================================== --}}
-<div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-4">
+{{-- KOLOM PENCARIAN SISWA --}}
+<div class="bg-white border border-gray-200 rounded-xl p-4 mb-4">
     <form method="GET" action="{{ route('guru.dashboard') }}" class="flex gap-2">
         <input type="hidden" name="filter" value="{{ $filter ?? 'semua' }}">
-
         <div class="flex-1 relative">
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                <i class="fas fa-search"></i>
+                <i class="fas fa-search text-sm"></i>
             </span>
-            <input
-                type="text"
-                name="search"
-                value="{{ $search ?? '' }}"
-                placeholder="Cari nama siswa, NIS, atau nomor surat..."
-                class="w-full pl-10 pr-10 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all"
-                autofocus
-            >
+            <input type="text" name="search" value="{{ $search ?? '' }}"
+                   placeholder="Cari nama siswa, NIS, atau nomor surat..."
+                   class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all"
+                   autofocus>
             @if($search)
                 <a href="{{ route('guru.dashboard', ['filter' => $filter]) }}"
                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 transition-colors" title="Hapus pencarian">
@@ -72,13 +46,10 @@
                 </a>
             @endif
         </div>
-
-        <button type="submit"
-                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md shadow-blue-500/30">
+        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors">
             <i class="fas fa-search mr-1.5 hidden sm:inline"></i>Cari
         </button>
     </form>
-
     @if($search)
         <div class="mt-2 text-xs text-gray-500 flex items-center">
             <i class="fas fa-info-circle mr-1"></i>
@@ -89,9 +60,7 @@
     @endif
 </div>
 
-{{-- ========================================== --}}
-{{-- STATISTIK SEBAGAI FILTER UTAMA (GABUNGAN)  --}}
-{{-- ========================================== --}}
+{{-- STATISTIK SEBAGAI FILTER UTAMA --}}
 @php
 $cards = [
     'menunggu' => ['Menunggu', $stats['menunggu'] ?? 0, 'fa-clock', 'amber'],
@@ -100,57 +69,53 @@ $cards = [
     'selesai'   => ['Selesai', $stats['selesai'] ?? 0, 'fa-check-double', 'gray'],
 ];
 @endphp
-
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-3">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-3">
     @foreach($cards as $key => $card)
-    @php
-        $isActive = $filter === $key;
-        $color = $card[3];
-    @endphp
-    <button type="button"
-            onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
-            data-filter="{{ $key }}"
-            class="stat-card-btn text-left rounded-2xl border p-3 sm:p-4 transition-all w-full
-            {{ $isActive
-                ? 'active bg-white border-' . $color . '-500 ring-2 ring-' . $color . '-500/20 shadow-md'
-                : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm' }}">
-        <div class="flex items-center justify-between mb-2">
-            <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors
-                        {{ $isActive ? 'bg-' . $color . '-500 text-white' : 'bg-' . $color . '-100 text-' . $color . '-600' }}">
-                <i class="fas {{ $card[2] }} text-sm"></i>
+        @php
+            $isActive = $filter === $key;
+            $color = $card[3];
+        @endphp
+        <button type="button"
+                onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
+                data-filter="{{ $key }}"
+                class="stat-card-btn text-left rounded-xl border p-3 sm:p-4 transition-all w-full
+                {{ $isActive
+                    ? 'active bg-white border-' . $color . '-500 ring-2 ring-' . $color . '-500/20 shadow-sm'
+                    : 'bg-white border-gray-200 hover:border-gray-300' }}">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors
+                    {{ $isActive ? 'bg-' . $color . '-500 text-white' : 'bg-' . $color . '-100 text-' . $color . '-600' }}">
+                    <i class="fas {{ $card[2] }} text-sm"></i>
+                </div>
+                <span class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $card[1] }}</span>
             </div>
-            <span class="text-2xl sm:text-3xl font-black text-gray-900">{{ $card[1] }}</span>
-        </div>
-        <p class="text-[11px] sm:text-xs font-bold text-gray-700 uppercase tracking-wider">{{ $card[0] }}</p>
-    </button>
+            <p class="text-[11px] sm:text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ $card[0] }}</p>
+        </button>
     @endforeach
 </div>
 
-{{-- SECONDARY FILTER BUTTONS (GRID 2-KOLOM RESPONSIP) --}}
+{{-- SECONDARY FILTER BUTTONS --}}
 <div class="grid grid-cols-2 gap-2 mb-4">
     <button type="button"
             onclick="switchFilter('semua', 'blue', event)"
             data-filter="semua"
-            class="filter-btn px-3 py-2 rounded-xl text-xs font-bold border transition-all text-center
-            {{ $filter === 'semua' ? 'active bg-blue-600 text-white shadow-md border-transparent' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200' }}">
-        <i class="fas fa-layer-group mr-1.5"></i> Tampilkan Semua ({{ $stats['total'] ?? 0 }})
+            class="filter-btn px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center
+            {{ $filter === 'semua' ? 'active bg-blue-600 text-white shadow-sm border-transparent' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200' }}">
+        <i class="fas fa-layer-group mr-1.5"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
     </button>
-
     <button type="button"
             onclick="switchFilter('terlambat', 'red', event)"
             data-filter="terlambat"
-            class="filter-btn px-3 py-2 rounded-xl text-xs font-bold border transition-all text-center
-            {{ $filter === 'terlambat' ? 'active bg-red-600 text-white shadow-md border-transparent' : 'bg-white text-red-600 hover:bg-red-50 border-gray-200' }}">
-        <i class="fas fa-exclamation-triangle mr-1.5"></i> Terlambat ({{ count($terlambat ?? []) }})
+            class="filter-btn px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center
+            {{ $filter === 'terlambat' ? 'active bg-red-600 text-white shadow-sm border-transparent' : 'bg-white text-red-600 hover:bg-red-50 border-gray-200' }}">
+        <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat ({{ count($terlambat ?? []) }})
     </button>
 </div>
 
-{{-- ========================================== --}}
-{{-- DAFTAR DISPENSASI                          --}}
-{{-- ========================================== --}}
-<div id="content-area" class="fade-in bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-16 sm:mb-0">
-    <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-        <h3 class="text-sm font-extrabold text-gray-900">
+{{-- DAFTAR DISPENSASI --}}
+<div id="content-area" class="fade-in bg-white border border-gray-200 rounded-xl overflow-hidden mb-16 sm:mb-0">
+    <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
+        <h3 class="text-sm font-bold text-gray-900">
             @php
             $titleMap = [
                 'semua' => 'Semua Dispensasi Hari Ini',
@@ -163,167 +128,143 @@ $cards = [
             @endphp
             {{ $titleMap[$filter] ?? 'Daftar Dispensasi' }}
         </h3>
-        <span class="text-xs font-bold text-gray-600 bg-gray-200 px-2.5 py-1 rounded-full">{{ count($displayData) }} data</span>
+        <span class="text-xs font-semibold text-gray-600 bg-gray-200 px-2.5 py-1 rounded-lg">{{ count($displayData) }} data</span>
     </div>
 
     <div class="divide-y divide-gray-100">
         @forelse($displayData as $item)
-        @php
-            // <i class="fas fa-check-circle"></i> BARU: Highlight teks yang dicari
-            $highlightName = $search ?
-                preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark class="bg-yellow-200 text-gray-900 rounded px-0.5">$1</mark>', $item->siswa->nama_lengkap) :
-                $item->siswa->nama_lengkap;
-
-            // <i class="fas fa-check-circle"></i> DETEKSI KETERLAMBATAN SECARA REALTIME
-            $isLate = $item->status === 'keluar' && $item->batas_waktu_kembali && now()->greaterThan($item->batas_waktu_kembali);
-            $lateMinutes = $isLate ? \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($item->batas_waktu_kembali) : 0;
-            $lateText = $isLate ? \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat($lateMinutes, short: true) : '';
-
-            // Format nomor HP untuk WA
-            $waLink = '';
-            if ($isLate && !empty($item->siswa->no_telepon)) {
-                $hp = preg_replace('/[^0-9]/', '', $item->siswa->no_telepon);
-                $hp = str_starts_with($hp, '0') ? '62' . substr($hp, 1) : $hp;
-                $waLink = "https://wa.me/{$hp}?text=" . urlencode("*PERINGATAN DISPENSASI*\n\nYth. {$item->siswa->nama_lengkap},\nAnda telah melewati batas waktu kembali dispensasi (Terlambat {$lateText}).\n\nSegera kembali ke sekolah atau lapor ke Guru Piket.\n\nTerima kasih.");
-            }
-        @endphp
-
-        <div class="p-4 transition-colors {{ $isLate ? 'bg-red-50/60 hover:bg-red-100/60 border-l-4 border-red-500' : 'hover:bg-gray-50/80' }}">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-
-                {{-- Info Siswa & Dispensasi --}}
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1 flex-wrap">
-                        <span class="font-mono text-xs font-extrabold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{{ $item->nomor_surat }}</span>
-
-                        @php
-                            $badgeClass = match($item->status) {
-                                'menunggu' => 'bg-amber-100 text-amber-800 border-amber-200',
-                                'disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                                'keluar' => 'bg-sky-100 text-sky-800 border-sky-200',
-                                'selesai' => 'bg-gray-200 text-gray-800 border-gray-300',
-                                default => 'bg-gray-100 text-gray-800 border-gray-200'
-                            };
-                        @endphp
-                        <span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-wide {{ $badgeClass }}">
-                            {{ $item->status }}
-                        </span>
-
-                        {{-- <i class="fas fa-check-circle"></i> BADGE TERLAMBAT (Muncul hanya jika terlambat) --}}
-                        @if($isLate)
-                            <span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-wide bg-red-100 text-red-800 border-red-300 animate-pulse">
-                                <i class="fas fa-exclamation-triangle mr-1"></i>Terlambat {{ $lateText }}
+            @php
+                $highlightName = $search ?
+                    preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark class="bg-yellow-200 text-gray-900 rounded px-0.5">$1</mark>', $item->siswa->nama_lengkap) :
+                    $item->siswa->nama_lengkap;
+                $isLate = $item->status === 'keluar' && $item->batas_waktu_kembali && now()->greaterThan($item->batas_waktu_kembali);
+                $lateMinutes = $isLate ? \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($item->batas_waktu_kembali) : 0;
+                $lateText = $isLate ? \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat($lateMinutes, short: true) : '';
+                $waLink = '';
+                if ($isLate && !empty($item->siswa->no_telepon)) {
+                    $hp = preg_replace('/[^0-9]/', '', $item->siswa->no_telepon);
+                    $hp = str_starts_with($hp, '0') ? '62' . substr($hp, 1) : $hp;
+                    $waLink = "https://wa.me/{$hp}?text=" . urlencode("*PERINGATAN DISPENSASI*\n\nYth. {$item->siswa->nama_lengkap},\nAnda telah melewati batas waktu kembali dispensasi (Terlambat {$lateText}).\n\nSegera kembali ke sekolah atau lapor ke Guru Piket.\n\nTerima kasih.");
+                }
+            @endphp
+            <div class="p-4 transition-colors {{ $isLate ? 'bg-red-50/60 hover:bg-red-100/60 border-l-4 border-l-red-500' : 'hover:bg-gray-50/80' }}">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                            <span class="font-mono text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{{ $item->nomor_surat }}</span>
+                            @php
+                                $badgeClass = match($item->status) {
+                                    'menunggu' => 'bg-amber-100 text-amber-800 border-amber-200',
+                                    'disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                    'keluar' => 'bg-sky-100 text-sky-800 border-sky-200',
+                                    'selesai' => 'bg-gray-200 text-gray-800 border-gray-300',
+                                    default => 'bg-gray-100 text-gray-800 border-gray-200'
+                                };
+                            @endphp
+                            <span class="px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide {{ $badgeClass }}">
+                                {{ $item->status }}
                             </span>
+                            @if($isLate)
+                                <span class="px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide bg-red-100 text-red-800 border-red-300">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>Terlambat {{ $lateText }}
+                                </span>
+                            @endif
+                        </div>
+                        <p class="font-semibold text-gray-900 text-sm truncate mt-1">
+                            {!! $highlightName !!}
+                        </p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">
+                            {{ $item->siswa->kelas?->nama_kelas ?? '-' }} • {{ $item->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}
+                        </p>
+                        <p class="text-xs text-gray-700 line-clamp-2">
+                            <span class="font-semibold text-gray-900">{{ ucfirst(str_replace('_', ' ', $item->kategori)) }}:</span>
+                            {{ Str::limit($item->alasan, 70) }}
+                        </p>
+                        @if($isLate)
+                            <p class="text-xs text-red-600 font-semibold mt-1.5 flex items-center">
+                                <i class="far fa-clock mr-1.5"></i>
+                                Batas kembali: {{ \Carbon\Carbon::parse($item->batas_waktu_kembali)->format('H:i') }} WIB
+                            </p>
                         @endif
                     </div>
-
-                    <p class="font-bold text-gray-900 text-sm truncate mt-1">
-                        {!! $highlightName !!} {{-- <i class="fas fa-check-circle"></i> Gunakan ini agar highlight bekerja --}}
-                    </p>
-                    <p class="text-xs font-medium text-gray-600 mb-1">
-                        {{ $item->siswa->kelas?->nama_kelas ?? '-' }} • {{ $item->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}
-                    </p>
-                    <p class="text-xs text-gray-700 line-clamp-2">
-                        <span class="font-bold text-gray-900">{{ ucfirst(str_replace('_', ' ', $item->kategori)) }}:</span>
-                        {{ Str::limit($item->alasan, 70) }}
-                    </p>
-
-                    {{-- <i class="fas fa-check-circle"></i> INFO TAMBAHAN JIKA TERLAMBAT --}}
-                    @if($isLate)
-                        <p class="text-xs text-red-600 font-bold mt-1.5 flex items-center">
-                            <i class="far fa-clock mr-1.5"></i>
-                            Batas kembali: {{ \Carbon\Carbon::parse($item->batas_waktu_kembali)->format('H:i') }} WIB
-                        </p>
-                    @endif
-                </div>
-
-                {{-- Tombol Aksi --}}
-                <div class="flex flex-wrap items-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 sm:border-gray-100">
-
-                    {{-- <i class="fas fa-check-circle"></i> TOMBOL HUBUNGI WA (Khusus Terlambat) --}}
-                    @if($isLate && $waLink)
-                        <button onclick="handleGuruWaContacted({{ $item->id }}, '{{ $waLink }}', this)"
-                                class="inline-flex items-center justify-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm {{ $item->is_warned ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                {{ $item->is_warned ? 'disabled' : '' }}>
-                            <i class="fab fa-whatsapp mr-1.5"></i>
-                            <span class="wa-text">{{ $item->is_warned ? 'Sudah Dihubungi' : 'Hubungi' }}</span>
-                        </button>
-                    @endif
-
-                    <a href="{{ route('guru.pengajuan.show', $item) }}"
-                       class="inline-flex items-center justify-center px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-colors border border-blue-200"
-                       title="Lihat Detail">
-                        <i class="fas fa-eye mr-1.5"></i> Detail
-                    </a>
-
-                    @if($item->status === 'menunggu')
-                        <form method="POST" action="{{ route('guru.pengajuan.approve', $item) }}" class="inline">
-                            @csrf
-                            <button type="submit"
-                                    onclick="return confirm('Setujui dispensasi {{ $item->siswa->nama_lengkap }}?')"
-                                    class="inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm"
-                                    title="Setujui">
-                                <i class="fas fa-check mr-1.5"></i> Setuju
+                    <div class="flex flex-wrap items-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 sm:border-gray-100">
+                        @if($isLate && $waLink)
+                            <button onclick="handleGuruWaContacted({{ $item->id }}, '{{ $waLink }}', this)"
+                                    class="inline-flex items-center justify-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors {{ $item->is_warned ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                    {{ $item->is_warned ? 'disabled' : '' }}>
+                                <i class="fab fa-whatsapp mr-1.5"></i>
+                                <span class="wa-text">{{ $item->is_warned ? 'Sudah Dihubungi' : 'Hubungi' }}</span>
                             </button>
-                        </form>
-
-                        <button type="button"
-                                onclick="rejectDispensasi({{ $item->id }}, '{{ $item->siswa->nama_lengkap }}')"
-                                class="inline-flex items-center justify-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm"
-                                title="Tolak">
-                            <i class="fas fa-times mr-1.5"></i> Tolak
-                        </button>
-                    @else
-                        @if(in_array($item->status, ['disetujui', 'keluar', 'selesai']))
-                            <a href="{{ route('guru.cetak-pdf', [$item, 'format' => 'thermal']) }}"
-                               target="_blank"
-                               class="inline-flex items-center justify-center px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-xl transition-colors border border-emerald-300"
-                               title="Cetak Struk">
-                                <i class="fas fa-print mr-1.5"></i> Struk
-                            </a>
                         @endif
-                    @endif
+                        <a href="{{ route('guru.pengajuan.show', $item) }}"
+                           class="inline-flex items-center justify-center px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition-colors border border-blue-200"
+                           title="Lihat Detail">
+                            <i class="fas fa-eye mr-1.5"></i>Detail
+                        </a>
+                        @if($item->status === 'menunggu')
+                            <form method="POST" action="{{ route('guru.pengajuan.approve', $item) }}" class="inline">
+                                @csrf
+                                <button type="submit"
+                                        onclick="return confirm('Setujui dispensasi {{ $item->siswa->nama_lengkap }}?')"
+                                        class="inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                                        title="Setujui">
+                                    <i class="fas fa-check mr-1.5"></i>Setuju
+                                </button>
+                            </form>
+                            <button type="button"
+                                    onclick="rejectDispensasi({{ $item->id }}, '{{ $item->siswa->nama_lengkap }}')"
+                                    class="inline-flex items-center justify-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                                    title="Tolak">
+                                <i class="fas fa-times mr-1.5"></i>Tolak
+                            </button>
+                        @else
+                            @if(in_array($item->status, ['disetujui', 'keluar', 'selesai']))
+                                <a href="{{ route('guru.cetak-pdf', [$item, 'format' => 'thermal']) }}"
+                                   target="_blank"
+                                   class="inline-flex items-center justify-center px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-lg transition-colors border border-emerald-300"
+                                   title="Cetak Struk">
+                                    <i class="fas fa-print mr-1.5"></i>Struk
+                                </a>
+                            @endif
+                        @endif
+                    </div>
                 </div>
             </div>
-        </div>
-
-
-
         @empty
-        <div class="p-10 text-center">
-            <div class="w-16 h-16 mx-auto rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3">
-                <i class="fas fa-search"></i>
+            <div class="p-10 text-center">
+                <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3">
+                    <i class="fas fa-search"></i>
+                </div>
+                <p class="text-gray-800 font-semibold text-sm">
+                    @if($search)
+                        Tidak ada hasil pencarian untuk "{{ $search }}"
+                    @else
+                        Tidak ada data dispensasi untuk filter ini
+                    @endif
+                </p>
+                <p class="text-gray-600 text-xs mt-1">
+                    @if($search)
+                        Coba ubah kata kunci pencarian atau hapus filter
+                    @else
+                        Data akan muncul ketika siswa mengajukan dispensasi
+                    @endif
+                </p>
             </div>
-            <p class="text-gray-800 font-bold text-sm">
-                @if($search)
-                    Tidak ada hasil pencarian untuk "{{ $search }}"
-                @else
-                    Tidak ada data dispensasi untuk filter ini
-                @endif
-            </p>
-            <p class="text-gray-600 text-xs mt-1">
-                @if($search)
-                    Coba ubah kata kunci pencarian atau hapus filter
-                @else
-                    Data akan muncul ketika siswa mengajukan dispensasi
-                @endif
-            </p>
-        </div>
         @endforelse
     </div>
 </div>
 
-{{-- FLOATING ACTION BUTTON (KHUSUS MOBILE) --}}
+{{-- FLOATING ACTION BUTTON (MOBILE) --}}
 <a href="{{ route('guru.pengajuan.create') }}"
-   class="sm:hidden fixed bottom-20 right-4 bg-blue-600 text-white p-4 rounded-full shadow-2xl shadow-blue-600/50 flex items-center justify-center z-40 active:scale-95 transition-transform">
+   class="sm:hidden fixed bottom-20 right-4 bg-blue-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center z-40 active:scale-95 transition-transform">
     <i class="fas fa-plus text-lg"></i>
 </a>
 
 {{-- Loading Overlay --}}
-<div id="loading-overlay" class="hidden fixed inset-0 bg-black/20 backdrop-blur-[2px] z-50 flex items-center justify-center">
-    <div class="bg-white rounded-2xl p-4 shadow-2xl flex items-center space-x-3 border border-gray-100">
+<div id="loading-overlay" class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl p-4 shadow-lg flex items-center space-x-3 border border-gray-200">
         <div class="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-        <span class="text-xs font-bold text-gray-800">Memuat data...</span>
+        <span class="text-xs font-semibold text-gray-800">Memuat data...</span>
     </div>
 </div>
 
@@ -336,8 +277,8 @@ function switchFilter(filterKey, color, event) {
     if (filterKey === currentFilter) return;
 
     document.querySelectorAll('.stat-card-btn').forEach(card => {
-        card.classList.remove('active', 'ring-2', 'shadow-md');
-        card.classList.add('border-gray-200', 'shadow-sm');
+        card.classList.remove('active', 'ring-2', 'shadow-sm');
+        card.classList.add('border-gray-200');
         card.className = card.className.replace(/border-\w+-500/g, '');
         card.className = card.className.replace(/ring-\w+-500\/20/g, '');
         const iconContainer = card.querySelector('div > div');
@@ -345,19 +286,19 @@ function switchFilter(filterKey, color, event) {
     });
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active', 'bg-blue-600', 'bg-red-600', 'text-white', 'shadow-md', 'border-transparent');
+        btn.classList.remove('active', 'bg-blue-600', 'bg-red-600', 'text-white', 'shadow-sm', 'border-transparent');
         btn.classList.add('bg-white', 'border-gray-200');
     });
 
     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
     if (activeStatCard) {
-        activeStatCard.classList.add('active', `border-${color}-500`, `ring-2`, `ring-${color}-500/20`, 'shadow-md');
+        activeStatCard.classList.add('active', `border-${color}-500`, `ring-2`, `ring-${color}-500/20`, 'shadow-sm');
         const iconContainer = activeStatCard.querySelector('div > div');
         if (iconContainer) iconContainer.classList.add(`bg-${color}-500`, 'text-white');
     }
 
     const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
-    if (activeBtn) activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-md', 'border-transparent');
+    if (activeBtn) activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-sm', 'border-transparent');
 
     const contentArea = document.getElementById('content-area');
     const loading = document.getElementById('loading-overlay');
@@ -380,7 +321,7 @@ function switchFilter(filterKey, color, event) {
                 const newUrl = new URL(window.location);
                 newUrl.searchParams.set('filter', filterKey);
                 window.history.pushState({ filter: filterKey }, '', newUrl);
-            }, 250);
+            }, 200);
         }
     })
     .catch(error => {
@@ -404,7 +345,6 @@ window.addEventListener('popstate', function(event) {
     }
 });
 
-// <i class="fas fa-check-circle"></i> FUNGSI 1: Tolak Dispensasi
 function rejectDispensasi(id, namaSiswa) {
     Swal.fire({
         title: 'Tolak Dispensasi',
@@ -441,7 +381,6 @@ function rejectDispensasi(id, namaSiswa) {
     });
 }
 
-// <i class="fas fa-check-circle"></i> FUNGSI 2: Klik WA di panel Guru - tandai dihubungi & buka WA (DIPISAHKAN DARI rejectDispensasi)
 function handleGuruWaContacted(dispensasiId, waLink, button) {
     if (button.disabled) {
         window.open(waLink, '_blank');
@@ -469,7 +408,7 @@ function handleGuruWaContacted(dispensasiId, waLink, button) {
                 const badgeRow = card.querySelector('.flex.items-center.gap-2.mb-1');
                 if (badgeRow && !badgeRow.querySelector('.warned-badge')) {
                     badgeRow.insertAdjacentHTML('beforeend',
-                        `<span class="warned-badge px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-wide bg-purple-100 text-purple-800 border-purple-200 ml-2">
+                        `<span class="warned-badge px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide bg-purple-100 text-purple-800 border-purple-200 ml-2">
                             <i class="fas fa-phone-alt mr-1"></i>Dihubungi
                         </span>`
                     );

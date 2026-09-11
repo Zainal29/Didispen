@@ -7,7 +7,7 @@ use App\Models\Dispensasi;
 use App\Models\Siswa;
 use App\Models\Setting;
 use App\Helpers\TimeHelper;
-use App\Helpers\DispensasiTimeHelper; // <i class="fas fa-check-circle"></i> TAMBAHKAN INI
+use App\Helpers\DispensasiTimeHelper;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -41,7 +41,6 @@ class PengajuanController extends Controller
      */
     public function create()
     {
-        // ✅ AMBIL SETTINGS DINAMIS DARI DATABASE
         $settings = [
             'start_time' => Setting::get('dispensasi_start_time', '07:00'),
             'end_time' => Setting::get('dispensasi_end_time', '15:00'),
@@ -49,12 +48,16 @@ class PengajuanController extends Controller
             'allowed_days' => array_map('intval', explode(',', Setting::get('dispensasi_days', '1,2,3,4,5'))),
         ];
 
-        // ✅ JANGAN REDIRECT - BIARKAN VIEW YANG HANDLE
-        // Time check tetap dijalankan untuk log, tapi tidak redirect
-        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
+        $maxJam = DispensasiTimeHelper::getMaxJamPelajaran(now()->dayOfWeek);
 
-        // ✅ KIRIM SETTINGS KE VIEW
-        return view('guru.pengajuan.create', compact('settings'));
+        // ✅ AMBIL JADWAL DINAMIS DARI DATABASE
+        $defaultJadwal = json_encode([
+            'regular' => array_fill(1, 10, ['start' => '00:00', 'end' => '00:00']),
+            'friday'  => array_fill(1, 8, ['start' => '00:00', 'end' => '00:00'])
+        ]);
+        $jadwalPelajaran = json_decode(Setting::get('jam_pelajaran', $defaultJadwal), true);
+
+        return view('guru.pengajuan.create', compact('settings', 'maxJam', 'jadwalPelajaran'));
     }
 
     /**
@@ -69,95 +72,118 @@ class PengajuanController extends Controller
             return response()->json(['results' => []]);
         }
 
-        $siswas = \App\Models\Siswa::with(['user', 'kelas.jurusan'])
+        // Cari siswa berdasarkan NIS atau Nama Siswa
+        $siswa = Siswa::with(['user', 'kelas.jurusan'])
             ->where(function($q) use ($query) {
+                // Pencarian berdasarkan nama lengkap
                 $q->where('nama_lengkap', 'like', "%{$query}%")
-                  ->orWhereHas('user', function($u) use ($query) {
-                      $u->where('nis_nip', 'like', "%{$query}%")
-                        ->orWhere('name', 'like', "%{$query}%");
-                  })
-                  ->orWhereHas('kelas', function($k) use ($query) {
-                      $k->where('nama_kelas', 'like', "%{$query}%");
+                  // ATAU pencarian berdasarkan NIS pada relasi user
+                  ->orWhereHas('user', function($userQuery) use ($query) {
+                      $userQuery->where('nis_nip', 'like', "%{$query}%");
                   });
             })
-            ->limit(15) // Batasi hasil agar tidak berat
-            ->get()
-            ->map(function($siswa) {
-                return [
-                    'id' => $siswa->id,
-                    'text' => $siswa->nama_lengkap . ' | NIS: ' . ($siswa->user->nis_nip ?? '-') . ' | ' . ($siswa->kelas->nama_kelas ?? '-') . ' ' . ($siswa->kelas->jurusan->nama_jurusan ?? ''),
-                    'nama' => $siswa->nama_lengkap,
-                    'nis' => $siswa->user->nis_nip ?? '-',
-                    'kelas' => ($siswa->kelas->nama_kelas ?? '-') . ' ' . ($siswa->kelas->jurusan->nama_jurusan ?? '')
-                ];
-            });
+            ->limit(20)
+            ->get();
 
-        return response()->json([
-            'results' => $siswas
-        ]);
+        // Format hasil untuk Select2
+        $results = $siswa->map(function($item) {
+            $kelas = $item->kelas ? $item->kelas->nama_kelas : '-';
+            $jurusan = ($item->kelas && $item->kelas->jurusan) ? $item->kelas->jurusan->nama_jurusan : '';
+            $kelasLengkap = $jurusan ? "{$kelas} - {$jurusan}" : $kelas;
+            $nis = $item->user ? $item->user->nis_nip : '-';
+
+            return [
+                'id' => $item->id,
+                'text' => "{$item->nama_lengkap} | NIS: {$nis} | {$kelasLengkap}",
+                'nama' => $item->nama_lengkap,
+                'nis' => $nis,
+                'kelas' => $kelasLengkap,
+            ];
+        });
+
+        return response()->json(['results' => $results]);
     }
 
     /**
-     * Simpan pengajuan manual
+     * Simpan pengajuan baru oleh guru
      */
     public function store(Request $request)
     {
+        $guru = auth()->user()->guru;
+
+        // ✅ PERBAIKAN: Gunakan method yang benar
+        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
+        if (!$timeCheck['allowed']) {
+            return back()->withInput()->with('error', $timeCheck['reason']);
+        }
+
         $dayOfWeek = now()->dayOfWeek;
         $maxJam = DispensasiTimeHelper::getMaxJamPelajaran($dayOfWeek);
 
         $validated = $request->validate([
             'siswa_id'        => 'required|exists:siswa,id',
             'kategori'        => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
-            'alasan'          => 'required|string|min:10',
+            'alasan'          => 'required|string|min:10|max:1000',
             'tujuan'          => 'required|string|max:255',
-            'jam_keluar'      => "required|integer|min:1|max:{$maxJam}",
-            'jam_kembali'     => "required|integer|min:1|max:{$maxJam}|gt:jam_keluar",
-            'foto_verifikasi' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'lokasi'          => 'nullable|string|max:255',
+            'jam_keluar'      => "required|integer|min:1|max:{$maxJam}", // ✅ Dinamis
+            'jam_kembali'     => "required|integer|min:1|max:{$maxJam}|gt:jam_keluar", // ✅ Dinamis
+            'foto_verifikasi' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'jam_keluar.max' => "Jam keluar maksimal adalah jam ke-{$maxJam} untuk hari ini (" . now()->isoFormat('dddd') . ").",
             'jam_kembali.max' => "Jam kembali maksimal adalah jam ke-{$maxJam} untuk hari ini (" . now()->isoFormat('dddd') . ").",
-            'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',
-            'foto_verifikasi.image' => 'File harus berupa gambar (JPG/PNG).',
-            'foto_verifikasi.max'   => 'Ukuran foto maksimal 2MB.',
+            'jam_kembali.gt' => 'Jam kembali harus lebih dari jam keluar.',
+            'foto_verifikasi.required' => 'Foto verifikasi siswa wajib diupload.',
+            'foto_verifikasi.image'    => 'File harus berupa gambar.',
+            'foto_verifikasi.mimes'    => 'Format gambar harus JPEG, PNG, atau JPG.',
+            'foto_verifikasi.max'      => 'Ukuran gambar maksimal 2MB.',
         ]);
 
-        // <i class="fas fa-check-circle"></i> PERBAIKAN: Gunakan dayOfWeek saat ini untuk getWaktuAktual
-        $waktuAktual = TimeHelper::getWaktuAktual(
-            'Jam Pelajaran ke-'.$validated['jam_kembali'],
-            $dayOfWeek
-        );
-
-        $parts = explode(' - ', $waktuAktual);
-        $batasWaktu = Carbon::parse($parts[1] ?? '15:15')->addMinutes(15);
-
-        $token = Str::random(64);
-        $guruId = auth()->user()->guru->id ?? null;
+        // ... (sisa kode tetap sama)
 
         $fotoPath = null;
         if ($request->hasFile('foto_verifikasi')) {
-            $fotoPath = $request->file('foto_verifikasi')->store('foto-verifikasi', ['disk' => 'public']);
+            $foto = $request->file('foto_verifikasi');
+            $filename = 'verif_' . time() . '_' . Str::random(10) . '.' . $foto->getClientOriginalExtension();
+            $fotoPath = $foto->storeAs('foto_verifikasi', $filename, 'public');
+        }
+
+        // ✅ PERBAIKAN: Gunakan getWaktuAktual dengan $dayOfWeek
+        $waktuAktual = TimeHelper::getWaktuAktual(
+            'Jam Pelajaran ke-' . $validated['jam_kembali'],
+            $dayOfWeek
+        );
+
+        $jamMasukCarbon = null;
+        if ($waktuAktual !== '-' && str_contains($waktuAktual, ' - ')) {
+            $parts = array_map('trim', explode(' - ', $waktuAktual, 2));
+            if (isset($parts[1]) && preg_match('/^\d{2}:\d{2}$/', $parts[1])) {
+                $jamMasukCarbon = Carbon::today()->setTimeFromTimeString($parts[1]);
+            }
         }
 
         $dispensasi = Dispensasi::create([
-            'siswa_id'            => $validated['siswa_id'],
-            'guru_id'             => $guruId,
-            'nomor_surat'         => 'DISP/' . now()->format('Ymd') . '/' . strtoupper(substr(md5($token), 0, 6)),
-            'status'              => 'disetujui',
-            'kategori'            => $validated['kategori'],
-            'alasan'              => $validated['alasan'],
-            'tujuan'              => $validated['tujuan'],
-            'jam_keluar'          => 'Jam Pelajaran ke-'.$validated['jam_keluar'],
-            'jam_kembali'         => 'Jam Pelajaran ke-'.$validated['jam_kembali'],
-            'batas_waktu_kembali' => $batasWaktu,
-            'qr_token'            => $token,
-            'foto_verifikasi'     => $fotoPath,
-            'catatan_admin'       => 'Dibuatkan manual oleh Guru Piket: ' . auth()->user()->name,
+            'nomor_surat'     => Dispensasi::generateNomorSurat(),
+            'siswa_id'        => $validated['siswa_id'],
+            'guru_id'         => $guru->id,
+            'kategori'        => $validated['kategori'],
+            'alasan'          => $validated['alasan'],
+            'tujuan'          => $validated['tujuan'],
+            'lokasi'          => $validated['lokasi'] ?? null,
+            'jam_keluar'      => $validated['jam_keluar'],
+            'jam_kembali'     => $validated['jam_kembali'],
+            'status'          => 'disetujui',
+            'disetujui_oleh'  => auth()->id(),
+            'disetujui_pada'  => now(),
+            'qr_token'        => Str::random(64),
+            'jam_masuk'       => $jamMasukCarbon,
+            'foto_verifikasi' => $fotoPath,
         ]);
 
         $this->generateQRCode($dispensasi);
 
-        return redirect()->route('guru.pengajuan.index')
-            ->with('success', 'Dispensasi berhasil dibuat dan disetujui. QR Code telah di-generate.');
+        return redirect()->route('guru.pengajuan.show', $dispensasi)
+            ->with('success', 'Dispensasi berhasil dibuat dan langsung disetujui. QR Code telah di-generate.');
     }
 
     /**
@@ -165,33 +191,27 @@ class PengajuanController extends Controller
      */
     public function show(Dispensasi $dispensasi)
     {
-        // Load relasi agar data lengkap di view
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru', 'approvedBy']);
 
         return view('guru.pengajuan.show', compact('dispensasi'));
     }
 
     /**
-     * Setujui pengajuan dispensasi + Generate QR
+     * Setujui pengajuan dispensasi
      */
-    public function approve(Dispensasi $dispensasi)
+    public function approve(Request $request, Dispensasi $dispensasi)
     {
         if ($dispensasi->status !== 'menunggu') {
             return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
         }
 
-        $guruId = auth()->user()->guru->id ?? null;
-
-        if (empty($dispensasi->qr_token)) {
-            $dispensasi->qr_token = Str::random(64);
-        }
-
         $dispensasi->update([
-            'status' => 'disetujui',
-            'guru_id' => $guruId,
+            'status'         => 'disetujui',
+            'disetujui_oleh' => auth()->id(),
+            'disetujui_pada' => now(),
+            'catatan_admin'  => $request->catatan_admin ?? null,
         ]);
 
-        // Generate QR Code
         $this->generateQRCode($dispensasi);
 
         return redirect()->route('guru.pengajuan.index')
@@ -232,7 +252,6 @@ class PengajuanController extends Controller
             $dispensasi->qr_token = \Illuminate\Support\Str::random(64);
         }
 
-        // <i class="fas fa-check-circle"></i> Gunakan format JSON seperti Siswa (agnostik domain)
         $qrContent = json_encode(['token' => $dispensasi->qr_token]);
 
         $qrCodePath = 'qr_codes/dispensasi_' . $dispensasi->id . '.svg';

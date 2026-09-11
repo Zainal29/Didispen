@@ -24,7 +24,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Proses login.
+     * Proses login (dengan Anti Brute-Force & Lockout).
      */
     public function login(Request $request)
     {
@@ -34,198 +34,119 @@ class LoginController extends Controller
             'role' => ['required', 'in:siswa,guru,satpam,admin'],
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALISASI INPUT
-        |--------------------------------------------------------------------------
-        */
+        $loginInput = strtolower(trim($credentials['email']));
+        $identifier = str_contains($loginInput, '@') ? strstr($loginInput, '@', true) : $loginInput;
+        $emailFull = str_contains($loginInput, '@') ? $loginInput : null;
 
-        $loginInput = strtolower(
-            trim($credentials['email'])
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | CARI IDENTITAS
-        |--------------------------------------------------------------------------
-        */
-
-        $identifier = str_contains($loginInput, '@')
-            ? strstr($loginInput, '@', true)
-            : $loginInput;
-
-        $emailFull = str_contains($loginInput, '@')
-            ? $loginInput
-            : null;
-
-        $user = User::where(function ($query) use (
-            $emailFull,
-            $identifier
-        ) {
+        $user = User::where(function ($query) use ($emailFull, $identifier) {
             if ($emailFull) {
                 $query->where('email', $emailFull);
             }
-
             $query->orWhere('nis_nip', $identifier);
         })->first();
 
         /*
         |--------------------------------------------------------------------------
-        | USER TIDAK DITEMUKAN
+        | 1. PENGECEKAN USER & PESAN ERROR GENERIK (Mencegah User Enumeration)
         |--------------------------------------------------------------------------
         */
-
         if (! $user) {
-            return back()
-                ->withErrors([
-                    'email' => 'Data akun tidak ditemukan.',
-                ])
-                ->withInput();
+            return back()->withErrors(['email' => 'NIS/Email atau password salah.'])->withInput();
         }
 
         /*
         |--------------------------------------------------------------------------
-        | VALIDASI ROLE
+        | 2. CEK STATUS LOCKOUT AKUN
         |--------------------------------------------------------------------------
         */
+        if ($user->locked_until && $user->locked_until->isFuture()) {
+            $minutesRemaining = $user->locked_until->diffInMinutes(now());
 
+            $this->auditLog->log(
+                $user->id, 'login_attempt_locked', 'users', $user->id, null,
+                ['reason' => "Account locked, {$minutesRemaining} mins remaining"]
+            );
+
+            return back()->withErrors([
+                'email' => "Akun terkunci sementara karena terlalu banyak percobaan gagal. Silakan coba lagi dalam {$minutesRemaining} menit atau hubungi Admin."
+            ])->withInput();
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. VALIDASI ROLE & STATUS (Dengan error generik jika gagal)
+        |--------------------------------------------------------------------------
+        */
         $isRoleValid = match ($credentials['role']) {
             'siswa' => $user->role === 'siswa',
-
-            'guru' => in_array(
-                $user->role,
-                ['guru', 'admin'],
-                true
-            ),
-
+            'guru' => in_array($user->role, ['guru', 'admin'], true),
             'satpam' => $user->role === 'satpam',
-
             'admin' => $user->role === 'admin',
-
             default => false,
         };
 
         if (! $isRoleValid) {
-            return back()
-                ->withErrors([
-                    'email' =>
-                        'Akun tidak memiliki akses untuk portal ini.',
-                ])
-                ->withInput();
+            return back()->withErrors(['email' => 'NIS/Email atau password salah.'])->withInput();
+        }
+
+        if ($user->role === 'siswa' && (! $user->siswa || ! $user->siswa->status_aktif)) {
+            return back()->withErrors(['email' => 'NIS/Email atau password salah.'])->withInput();
+        }
+
+        if ($user->role === 'guru' && $user->guru && ! $user->guru->status_aktif) {
+            return back()->withErrors(['email' => 'NIS/Email atau password salah.'])->withInput();
         }
 
         /*
         |--------------------------------------------------------------------------
-        | VALIDASI STATUS SISWA
+        | 4. VALIDASI PASSWORD & LOGIC BRUTE-FORCE
         |--------------------------------------------------------------------------
         */
+        if (! Hash::check($credentials['password'], $user->password)) {
+            // Password salah: Increment counter
+            $user->increment('failed_login_attempts');
+            $currentAttempts = $user->fresh()->failed_login_attempts;
 
-        if ($user->role === 'siswa') {
-            if (
-                ! $user->siswa ||
-                ! $user->siswa->status_aktif
-            ) {
-                return back()
-                    ->withErrors([
-                        'email' =>
-                            'Akun siswa tidak aktif atau terdaftar sebagai alumni.',
-                    ])
-                    ->withInput();
+            if ($currentAttempts >= 5) {
+                // Kunci akun selama 15 menit
+                $user->update(['locked_until' => now()->addMinutes(15)]);
+
+                $this->auditLog->log(
+                    $user->id, 'login_failed_locked', 'users', $user->id, null,
+                    ['attempts' => $currentAttempts, 'locked_for' => '15 minutes']
+                );
+
+                return back()->withErrors([
+                    'email' => 'Akun terkunci sementara karena 5 kali percobaan gagal. Silakan coba lagi dalam 15 menit.'
+                ])->withInput();
             }
+
+            $this->auditLog->log(
+                $user->id, 'login_failed', 'users', $user->id, null,
+                ['attempts' => $currentAttempts]
+            );
+
+            return back()->withErrors(['email' => 'NIS/Email atau password salah.'])->withInput();
         }
 
         /*
         |--------------------------------------------------------------------------
-        | VALIDASI STATUS GURU
+        | 5. LOGIN BERHASIL: RESET COUNTER
         |--------------------------------------------------------------------------
         */
-
-        if ($user->role === 'guru') {
-            if (
-                $user->guru &&
-                ! $user->guru->status_aktif
-            ) {
-                return back()
-                    ->withErrors([
-                        'email' =>
-                            'Akun guru tidak aktif.',
-                    ])
-                    ->withInput();
-            }
+        if ($user->failed_login_attempts > 0 || $user->locked_until) {
+            $user->update([
+                'failed_login_attempts' => 0,
+                'locked_until' => null,
+            ]);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI PASSWORD
-        |--------------------------------------------------------------------------
-        */
-
-        $passwordValid = false;
-
-        if (
-            ! empty($user->password) &&
-            Hash::check(
-                $credentials['password'],
-                $user->password
-            )
-        ) {
-            $passwordValid = true;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | PASSWORD SALAH
-        |--------------------------------------------------------------------------
-        */
-
-        if (! $passwordValid) {
-            return back()
-                ->withErrors([
-                    'email' =>
-                        'Password yang dimasukkan salah.',
-                ])
-                ->withInput();
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOGIN
-        |--------------------------------------------------------------------------
-        */
-
-        Auth::login(
-            $user,
-            $request->boolean('remember')
-        );
-
+        Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        /*
-        |--------------------------------------------------------------------------
-        | AUDIT LOG LOGIN
-        |--------------------------------------------------------------------------
-        */
+        $this->auditLog->log($user->id, 'login', 'users', $user->id, null, ['role' => $user->role]);
 
-        $this->auditLog->log(
-            $user->id,
-            'login',
-            'users',
-            $user->id,
-            null,
-            [
-                'role' => $user->role,
-            ]
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | REDIRECT
-        |--------------------------------------------------------------------------
-        */
-
-        return redirect()->intended(
-            url("/{$user->role}/dashboard")
-        );
+        return redirect()->intended(url("/{$user->role}/dashboard"));
     }
 
     /**
@@ -240,7 +161,6 @@ class LoginController extends Controller
         | AUDIT LOG LOGOUT
         |--------------------------------------------------------------------------
         */
-
         if ($user) {
             $this->auditLog->log(
                 $user->id,
@@ -259,7 +179,6 @@ class LoginController extends Controller
         | LOGOUT
         |--------------------------------------------------------------------------
         */
-
         Auth::logout();
 
         $request->session()->invalidate();

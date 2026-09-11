@@ -49,6 +49,11 @@ Route::middleware(['auth'])->group(function () {
         Route::match(['put', 'post'], '/update-password', [ProfileController::class, 'updatePassword'])
             ->middleware('role:admin')
             ->name('update-password');
+
+
+            // ✅ BARU: Logout Perangkat Lain
+            Route::post('/logout-other-devices', [ProfileController::class, 'logoutOtherDevices'])
+                ->name('logout-other-devices');
     });
 
     // ==========================================

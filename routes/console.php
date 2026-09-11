@@ -20,5 +20,5 @@ Schedule::command('dispensasi:auto-complete')
 // Hapus riwayat dispensasi lama (30 hari) + FOTO-nya otomatis terhapus via Model Hook
 Schedule::command('dispensasi:cleanup-history')->dailyAt('00:00');
 
-// ❌ HAPUS/KOMENTARI INI (Sudah ditangani oleh cleanup-history):
-// Schedule::command('dispensasi:cleanup-foto')->dailyAt('02:00');
+// Backup otomatis pembersihan foto verifikasi & bukti untuk dispensasi yang sudah selesai
+Schedule::command('dispensasi:cleanup-foto')->dailyAt('02:00');

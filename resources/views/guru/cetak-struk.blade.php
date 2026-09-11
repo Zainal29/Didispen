@@ -1,104 +1,66 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Dispensasi - {{ $dispensasi->nomor_surat }}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: Arial, sans-serif; background: #f0f0f0; margin: 0; padding: 20px; }
-        .actions { text-align: center; margin-bottom: 15px; }
-        .btn { display: inline-block; padding: 10px 18px; border: 0; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; }
-        .btn-primary { background: #0d6efd; }
-        .btn-secondary { background: #6c757d; }
-        .alert { max-width: 420px; margin: 0 auto 15px; padding: 10px 14px; border-radius: 6px; font-size: 14px; }
-        .alert-success { background: #d1e7dd; color: #0a7d2c; }
-        .alert-error { background: #f8d7da; color: #c0392b; }
-        .struk { max-width: 420px; margin: 0 auto; background: #fff; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.15); font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; }
-        .text-center { text-align: center; }
-        .judul { font-size: 18px; font-weight: bold; }
-        .divider { border-top: 1px dashed #000; margin: 10px 0; }
-        .qr-box { text-align: center; margin: 12px 0; }
-        .qr-warning { border: 1px dashed #c0392b; color: #c0392b; padding: 10px; font-size: 12px; }
-    </style>
-</head>
-<body>
+@extends('guru.layouts.app')
+@section('title', 'Cetak Dispensasi')
+@section('page-title', 'Cetak Struk')
+@section('content')
 
-    <div class="actions">
-    <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf mr-1"></i> Buka PDF Struk (58mm)</a>
-    <a href="{{ route('guru.pengajuan.show', $dispensasi) }}" class="btn btn-secondary">Tutup</a>
-</div>
+@include('components.alert')
 
-    @if(session('success'))
-        <div class="alert alert-success"><i class="fas fa-check-circle mr-1"></i> {{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-  <div class="alert alert-error"><i class="fas fa-exclamation-circle mr-1"></i> {{ session('error') }}</div>
-    @endif
-
-    <div class="struk">
-        {{-- Header Sekolah --}}
-        <div class="text-center">
-            <div class="judul">SMK NEGERI 1 BANGSRI</div>
-            <div>SURAT DISPENSASI</div>
-            <div>{{ $dispensasi->nomor_surat }}</div>
+<div class="max-w-2xl mx-auto space-y-4">
+    {{-- Header Card --}}
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-print text-lg"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-gray-900">Cetak Dispensasi</h3>
+                <p class="text-xs text-gray-500 font-mono">{{ $dispensasi->nomor_surat }}</p>
+            </div>
         </div>
 
-        <div class="divider"></div>
-
-        {{-- Data Siswa --}}
-        <div>Nama : {{ $dispensasi->siswa->nama_lengkap }}</div>
-        <div>NIS  : {{ $dispensasi->siswa->user->nis_nip ?? '-' }}</div>
-        <div>Kelas: {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} - {{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</div>
-
-        <div class="divider"></div>
-
-        {{-- Detail Dispensasi --}}
-        <div>Kategori: {{ ucfirst(str_replace('_', ' ', $dispensasi->kategori)) }}</div>
-        <div>Alasan  : {{ $dispensasi->alasan }}</div>
-        <div>Tujuan  : {{ $dispensasi->tujuan }}</div>
-        @if($dispensasi->lokasi)
-            <div>Lokasi  : {{ $dispensasi->lokasi }}</div>
-        @endif
-        <div>Keluar  : {{ $dispensasi->jam_keluar }}</div>
-        <div>Kembali : {{ $dispensasi->jam_kembali }}</div>
-
-        <div class="divider"></div>
-
-        {{-- QR Code Section --}}
-        @if(!empty($dispensasi->qr_code))
-            <div class="qr-box">
-                <div>QR Code Validasi</div>
-                <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code" width="120">
-                <div>Scan di Pos Satpam</div>
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-12 h-12 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-file-alt text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-xs text-gray-500 font-medium">Surat Dispensasi</p>
+                    <p class="text-sm font-bold text-gray-900">SMK NEGERI 1 BANGSRI</p>
+                </div>
             </div>
-        @else
-            <div class="qr-warning text-center">
-                <i class="fas fa-exclamation-triangle mr-1"></i> QR Code Tidak Ditemukan<br>
-                Status saat ini: {{ strtoupper($dispensasi->status) }}<br>
-                Pastikan Anda sudah mengklik tombol "Setujui & Generate QR".
-            </div>
-        @endif
 
-        {{-- Tanda Tangan Guru Piket --}}
-        <div class="text-center" style="margin-top: 24px;">
-            <div>Guru Piket,</div>
-            <div style="height: 60px;"></div>
-            <div><strong>{{ $dispensasi->guru?->nama_lengkap ?? '..........................' }}</strong></div>
-            @if(!empty($dispensasi->guru?->nip))
-                <div>NIP. {{ $dispensasi->guru?->nip }}</div>
-            @endif
+            <div class="space-y-2 text-xs border-t border-gray-200 pt-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Nama</span>
+                    <span class="font-semibold text-gray-900">{{ $dispensasi->siswa->nama_lengkap }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">NIS</span>
+                    <span class="font-mono font-semibold text-gray-900">{{ $dispensasi->siswa->user->nis_nip ?? '-' }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Kelas</span>
+                    <span class="font-semibold text-gray-900">{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Kategori</span>
+                    <span class="font-semibold text-gray-900 capitalize">{{ str_replace('_', ' ', $dispensasi->kategori) }}</span>
+                </div>
+            </div>
         </div>
 
-        <div class="divider"></div>
-
-        {{-- Footer --}}
-        <div class="text-center">
-            <div>Struk ini sah dan ditandatangani secara elektronik</div>
-            <div>Dicetak: {{ now()->format('d/m/Y H:i') }} WIB</div>
-            <div>SMK N 1 Bangsri - Jepara</div>
+        <div class="flex gap-2">
+            <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}"
+               target="_blank"
+               class="flex-1 inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+                <i class="fas fa-file-pdf mr-2"></i>Buka PDF Struk (58mm)
+            </a>
+            <a href="{{ route('guru.pengajuan.show', $dispensasi) }}"
+               class="inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+                <i class="fas fa-times mr-2"></i>Tutup
+            </a>
         </div>
     </div>
+</div>
 
-</body>
-</html>
+@endsection
