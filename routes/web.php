@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Route;
 // Redirect root ke login
 Route::get('/', fn () => redirect()->route('login'));
 
+// ✅ PERBAIKAN 1: Endpoint Health Check untuk SiPintu
+Route::get('/health', fn () => response()->json(['status' => 'ok']));
+// ✅ PERBAIKAN 1: Endpoint Health Check untuk SiPintu
+Route::get('/health', fn () => response()->json(['status' => 'ok']));
 // Route Auth (Guest)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
