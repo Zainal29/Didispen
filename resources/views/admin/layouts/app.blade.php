@@ -18,7 +18,7 @@
         .sidebar-link:hover:not(.active) { background-color: #e0e7ff; }
     </style>
 </head>
-<body class="bg-gray-100">png'
+<body class="bg-gray-100">
     <div class="flex h-screen overflow-hidden">
 
         {{-- SIDEBAR --}}
