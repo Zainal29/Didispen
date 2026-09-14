@@ -21,6 +21,7 @@
     <style>[x-cloak] { display: none !important; }</style>
 </head>
 <body class="bg-gray-100">
+
 @php
     $user    = auth()->user();
     $pending = $stats['pending'] ?? 0;
@@ -158,7 +159,7 @@
         </main>
     </div>
 
-    {{-- ================================================== --}}
+    <!--{{-- ================================================== --}}
     {{-- BOTTOM NAV — MOBILE (FAB DI TENGAH)                --}}
     {{-- ================================================== --}}
     <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
@@ -210,6 +211,55 @@
                 </div>
                 <span class="text-xs font-medium text-gray-700 mt-1">Verifikasi</span>
             </a>
+        </div>
+    </nav>-->
+
+    {{-- ================================================== --}}
+    {{-- BOTTOM NAV — MOBILE (GRID SYSTEM like Satpam)      --}}
+    {{-- ================================================== --}}
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style="padding-bottom: env(safe-area-inset-bottom);">
+        <div class="grid grid-cols-5 h-16 w-full">
+            {{-- 1. Beranda --}}
+            <a href="{{ route('guru.dashboard') }}"
+               class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('guru.dashboard') ? $mobOn : $mobOff }}">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-[9px] font-semibold leading-tight">Beranda</span>
+            </a>
+
+            {{-- 2. Keluar/Masuk --}}
+            <a href="{{ route('guru.checklog.index') }}"
+               class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('guru.checklog.*') ? $mobOn : $mobOff }}">
+                <i class="fas fa-door-open text-lg"></i>
+                <span class="text-[9px] font-semibold leading-tight">Keluar/Masuk</span>
+            </a>
+
+            {{-- 3. FAB: Verifikasi (tombol utama dengan badge) --}}
+            <div class="relative flex flex-col items-center justify-end pb-1">
+                <a href="{{ route('guru.pengajuan.index') }}"
+                   class="absolute -top-5 w-12 h-12 rounded-full bg-blue-600 text-white text-lg flex items-center justify-center shadow-md border-4 border-gray-50 active:scale-95 transition-transform relative">
+                    <i class="fas fa-check"></i>
+                    @if($pending > 0)
+                        <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white">{{ $pending }}</span>
+                    @endif
+                </a>
+                <span class="text-[9px] font-semibold leading-tight text-gray-700">Verifikasi</span>
+            </div>
+
+            {{-- 4. Scan QR --}}
+            <a href="{{ route('guru.scan') }}"
+               class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('guru.scan') ? $mobOn : $mobOff }}">
+                <i class="fas fa-qrcode text-lg"></i>
+                <span class="text-[9px] font-semibold leading-tight">Scan QR</span>
+            </a>
+
+            {{-- 5. Akun --}}
+            <button onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
+                    class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('profil.*') ? $mobOn : $mobOff }}">
+                <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                    <span class="text-[9px] font-bold text-gray-700">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                </div>
+                <span class="text-[9px] font-semibold leading-tight">Akun</span>
+            </button>
         </div>
     </nav>
 

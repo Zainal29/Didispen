@@ -159,7 +159,7 @@
         </div>
     </div>
 
-    {{-- ================================================== --}}
+    <!--{{-- ================================================== --}}
     {{-- BOTTOM NAVIGATION BAR — KHUSUS MOBILE               --}}
     {{-- ================================================== --}}
     <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-50">
@@ -207,7 +207,56 @@
                 <span class="text-xs font-medium">Akun</span>
             </button>
         </div>
-    </nav>
+    </nav>-->
+
+    {{-- ================================================== --}}
+        {{-- BOTTOM NAVIGATION BAR — KHUSUS MOBILE               --}}
+        {{-- ================================================== --}}
+        <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style="padding-bottom: env(safe-area-inset-bottom);">
+            <div class="grid grid-cols-5 h-16 w-full">
+                {{-- 1. Beranda --}}
+                <a href="{{ route('siswa.dashboard') }}"
+                   class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('siswa.dashboard') ? $mobOn : $mobOff }}">
+                    <i class="fas fa-home text-lg"></i>
+                    <span class="text-[9px] font-semibold leading-tight">Beranda</span>
+                </a>
+
+                {{-- 2. Riwayat --}}
+                <a href="{{ route('siswa.pengajuan.index') }}"
+                   class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('siswa.pengajuan.index') ? $mobOn : $mobOff }}">
+                    <i class="fas fa-history text-lg"></i>
+                    <span class="text-[9px] font-semibold leading-tight">Riwayat</span>
+                </a>
+
+                {{-- 3. FAB: Buat Pengajuan (tombol utama) --}}
+                <div class="relative flex flex-col items-center justify-end pb-1">
+                    <a href="{{ route('siswa.pengajuan.create') }}"
+                       class="absolute -top-5 w-12 h-12 rounded-full bg-blue-600 text-white text-lg flex items-center justify-center shadow-md border-4 border-gray-50 active:scale-95 transition-transform">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                    <span class="text-[9px] font-semibold leading-tight text-gray-700">Buat</span>
+                </div>
+
+                {{-- 4. Notifikasi (+badge) --}}
+                <a href="{{ route('siswa.notifikasi.index') }}"
+                   class="flex flex-col items-center justify-center gap-0.5 transition-colors relative {{ request()->routeIs('siswa.notifikasi.*') ? $mobOn : $mobOff }}">
+                    <i class="fas fa-bell text-lg"></i>
+                    @if($notif > 0)
+                        <span class="absolute top-1 right-2 w-4 h-4 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center border border-white">{{ $notif }}</span>
+                    @endif
+                    <span class="text-[9px] font-semibold leading-tight">Notifikasi</span>
+                </a>
+
+                {{-- 5. Akun --}}
+                <button onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
+                        class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('profil.*') ? $mobOn : $mobOff }}">
+                    <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                        <span class="text-[9px] font-bold text-gray-700">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                    </div>
+                    <span class="text-[9px] font-semibold leading-tight">Akun</span>
+                </button>
+            </div>
+        </nav>
 
     {{-- ================================================== --}}
     {{-- BOTTOM SHEET AKUN (muncul saat tombol Akun ditekan) --}}
