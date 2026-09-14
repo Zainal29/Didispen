@@ -88,7 +88,10 @@ class DashboardController extends Controller
             'stats',
             'pengajuanTerbaru',
             'notifikasiBelumDibaca',
-            'dispensasiAktif'
+            'dispensasiAktif',
+            'isTerlambat',
+            'terlambatJam',
+            'terlambatMenit'
         ));
     }
 }

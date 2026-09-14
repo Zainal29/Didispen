@@ -71,7 +71,7 @@ class PengajuanController extends Controller
          $parts = explode(' - ', $waktuAktual);
          $waktuSelesai = $parts[1] ?? '15:15';
 
-         return Carbon::parse($waktuSelesai)->addMinutes(15);
+         return Carbon::parse($waktuSelesai);
      }
 
      public function store(Request $request)
@@ -134,8 +134,7 @@ class PengajuanController extends Controller
                 Dispensasi::create([
                     'siswa_id' => $siswa->id,
                     'guru_id' => null,
-                    'nomor_surat' => $this->generateNomorSurat(),
-                    'status' => 'menunggu',
+                    'nomor_surat' => \App\Models\Dispensasi::generateNomorSurat(),                    'status' => 'menunggu',
                     'kategori' => $validated['kategori'],
                     'alasan' => $validated['alasan'],
                     'tujuan' => $validated['tujuan'],
@@ -220,12 +219,12 @@ class PengajuanController extends Controller
         ]);
     }
 
-    private function generateNomorSurat(): string
-    {
-        $tanggal = now()->format('Ymd');
-        $random = strtoupper(substr(md5(uniqid()), 0, 6));
-        return "DISP/{$tanggal}/{$random}";
-    }
+    // private function generateNomorSurat(): string
+    // {
+    //     $tanggal = now()->format('Ymd');
+    //     $random = strtoupper(substr(md5(uniqid()), 0, 6));
+    //     return "DISP/{$tanggal}/{$random}";
+    // }
 
     private function normalizePhoneNumber(string $phone): string
     {

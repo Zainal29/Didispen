@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Satpam;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
+use App\Services\QRScanService;
 use App\Services\NotifikasiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -122,25 +123,19 @@ class DashboardController extends Controller
     /**
      * Konfirmasi keluar (Mendukung AJAX & Form)
      */
-    public function konfirmasiKeluar(Dispensasi $dispensasi)
+    public function konfirmasiKeluar(Dispensasi $dispensasi, QRScanService $scanService)
     {
-        if ($dispensasi->status !== 'disetujui') {
-            $message = 'Dispensasi harus dalam status disetujui untuk dikonfirmasi keluar.';
+        $result = $scanService->processKeluar($dispensasi, (int) auth()->id());
+        $message = $result['message'];
+
+        if (! $result['success']) {
             return request()->wantsJson()
-                ? response()->json(['success' => false, 'message' => $message])
+                ? response()->json($result, $result['status_code'] ?? 400)
                 : redirect()->back()->with('error', $message);
         }
 
-        $dispensasi->update([
-            'status' => 'keluar',
-            'waktu_keluar_aktual' => now(),
-            'satpam_keluar_id' => auth()->id(),
-        ]);
-
-        $message = "Siswa {$dispensasi->siswa->nama_lengkap} berhasil dikonfirmasi KELUAR.";
-
         return request()->wantsJson()
-            ? response()->json(['success' => true, 'message' => $message])
+            ? response()->json($result)
             : redirect()->back()->with('success', $message);
     }
 

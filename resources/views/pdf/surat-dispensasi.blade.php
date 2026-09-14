@@ -153,13 +153,13 @@
 <body>
 
     <!-- WATERMARK LOGO DI BACKGROUND -->
-    <img src="{{ public_path('images/logo-didispen.jpeg') }}" class="watermark-logo" alt="Watermark">
+    <img src="{{ public_path('images/logo-didispen.png') }}" class="watermark-logo" alt="Watermark">
 
     <!-- HEADER / KOP SURAT -->
     <table class="header-table">
         <tr>
             <td class="logo-left">
-                <img src="{{ public_path('images/logo-didispen.jpeg') }}" alt="Logo SMK">
+                <img src="{{ public_path('images/logo-didispen.png') }}" alt="Logo SMK">
             </td>
             <td class="school-info">
                 <h2>SMK NEGERI 1 BANGSRI</h2>

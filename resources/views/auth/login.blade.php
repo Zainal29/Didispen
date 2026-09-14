@@ -10,6 +10,11 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+        <!-- ✅ TAMBAHKAN INI DI SINI (di dalam <head>) -->
+          <link rel="icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
+          <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
+          <link rel="apple-touch-icon" href="{{ asset('images/logo-didispen.png') }}">
+
     <script>
         tailwind.config = {
             theme: {
@@ -24,19 +29,19 @@
 </head>
 <body class="bg-slate-50 font-sans antialiased text-slate-800 min-h-screen flex flex-col">
 
-    <!-- BACKGROUND IMAGE -->
+    <!-- BACKGROUND IMAGE (Optimized) -->
     <div class="fixed inset-0 z-0">
-        <img src="{{ asset('images/foto-smk.png') }}" alt="Background" class="w-full h-full object-cover opacity-50">
-        <div class="absolute inset-0 bg-white/20"></div>
+        <img src="{{ asset('images/foto-smk.png') }}" alt="Background" class="w-full h-full object-cover opacity-50" decoding="async">
+        <div class="absolute inset-0 bg-white/30"></div>
     </div>
 
     <!-- MAIN CONTAINER -->
     <div class="relative z-10 flex-1 flex flex-col items-center justify-center p-4 sm:p-6" x-data="loginForm()">
 
-        <!-- TAGLINE BANNER - DIPERBAIKI CENTERING -->
-        <div class="w-full max-w-5xl mb-6 flex justify-center px-4">
-            <div class="bg-white/90 backdrop-blur-sm px-6 py-4 rounded-xl shadow-sm border border-gray-200 flex justify-center items-center">
-                <img src="{{ asset('images/tagline.png') }}" alt="Banner SMK" class="h-12 sm:h-16 lg:h-20 w-auto object-contain">
+        <!-- TAGLINE BANNER - OPTIMIZED FOR MOBILE PERFORMANCE -->
+        <div class="w-full max-w-md mb-4 sm:mb-6 flex justify-center px-4">
+            <div class="bg-white/95 px-4 py-2 sm:px-6 sm:py-3 rounded-lg shadow-sm border border-gray-200 flex justify-center items-center">
+                <img src="{{ asset('images/tagline.png') }}" alt="Banner SMK" class="h-10 sm:h-14 lg:h-16 w-auto object-contain" decoding="async">
             </div>
         </div>
 
@@ -49,13 +54,13 @@
 
                 <div class="relative z-10 flex flex-col items-center w-full">
                     <div class="w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4 shadow-sm">
-                        <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo" class="w-12 h-12 object-contain">
+                        <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-12 h-12 object-contain" decoding="async">
                     </div>
 
                     <h1 class="text-2xl font-bold text-white mb-1">DIDISPEN</h1>
                     <p class="text-blue-100 text-sm font-medium mb-6">Digital Dispensasi Pendidikan</p>
 
-                    <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 max-w-xs">
+                    <div class="bg-white/10 rounded-lg p-4 border border-white/20 max-w-xs">
                         <i class="fas fa-quote-left text-blue-200 text-sm mb-2 block"></i>
                         <p class="text-sm text-white/90 leading-relaxed">
                             "Pelacakan informasi manajemen izin dan ketidakhadiran siswa kini lebih cepat, aman, dan terintegrasi."

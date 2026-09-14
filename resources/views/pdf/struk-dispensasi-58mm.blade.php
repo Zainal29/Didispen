@@ -125,7 +125,7 @@
     {{-- HEADER --}}
     <div class="header">
         @php
-            $logoPath = public_path('images/logo-didispen.jpeg');
+            $logoPath = public_path('images/logo-didispen.png');
             $logoBase64 = null;
             if (file_exists($logoPath)) {
                 $logoBase64 = base64_encode(file_get_contents($logoPath));
@@ -139,7 +139,7 @@
         @endif
 
         <p class="school-name">SMKN 1 BANGSRI</p>
-        <p class="school-address">Desa Bangsri, Kab. Jepara</p>
+        <p class="school-address">SMKN1 Bangsri, Kab. Jepara</p>
         <p class="school-address">Sistem Informasi Dispensasi</p>
     </div>
 

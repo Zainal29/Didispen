@@ -11,6 +11,11 @@
     <title>@yield('title', 'Satpam') - DIDISPEN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- ✅ TAMBAHKAN INI DI SINI (di dalam <head>) -->
+          <link rel="icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
+          <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
+          <link rel="apple-touch-icon" href="{{ asset('images/logo-didispen.png') }}">
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>[x-cloak] { display: none !important; }</style>
@@ -33,8 +38,8 @@
 
         <div class="flex items-center space-x-3 px-5 py-5 border-b border-gray-200">
             <div class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 border border-red-100 flex-shrink-0">
-                @if(file_exists(public_path('images/logo-didispen.jpeg')))
-                    <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                @if(file_exists(public_path('images/logo-didispen.png')))
+                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
                 @else
                     <i class="fas fa-shield-alt text-red-600 text-lg"></i>
                 @endif
@@ -56,7 +61,7 @@
             </a>
             <a href="{{ route('profil.show') }}"
                class="flex items-center w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('profil.show') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600' }}">
+                      {{ request()->routeIs('profil.show') ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-red-50 hover:text-red-600' }}">
                 <i class="fas fa-user-circle w-5 mr-3 text-center"></i> Profil Saya
             </a>
             <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
@@ -85,8 +90,8 @@
             <div class="lg:hidden flex items-center justify-between px-4 py-3">
                 <div class="flex items-center space-x-2.5">
                     <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-red-50 border border-red-100 flex-shrink-0">
-                        @if(file_exists(public_path('images/logo-didispen.jpeg')))
-                            <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                        @if(file_exists(public_path('images/logo-didispen.png')))
+                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
                         @else
                             <i class="fas fa-shield-alt text-red-600 text-sm"></i>
                         @endif

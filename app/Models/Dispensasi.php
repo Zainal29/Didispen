@@ -62,6 +62,15 @@ class Dispensasi extends Model
     }
 
     /**
+        * Relasi ke User yang menyetujui dispensasi
+        */
+       public function approvedBy(): BelongsTo
+       {
+           return $this->belongsTo(User::class, 'disetujui_oleh');
+       }
+
+
+    /**
      * <i class="fas fa-check-circle"></i> HELPER: Cek apakah dispensasi ini sudah overdue (terlambat)
      */
     public function isOverdue(): bool
@@ -83,6 +92,16 @@ class Dispensasi extends Model
             'is_warned' => true,
             'warned_at' => now(),
         ]);
+    }
+
+    /**
+     * Generate nomor surat dispensasi secara unik
+     */
+    public static function generateNomorSurat(): string
+    {
+        $tanggal = now()->format('Ymd');
+        $random = strtoupper(substr(md5(uniqid()), 0, 6));
+        return "DISP/{$tanggal}/{$random}";
     }
 
 }

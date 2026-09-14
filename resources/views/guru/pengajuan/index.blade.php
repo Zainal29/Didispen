@@ -11,9 +11,9 @@
     <div class="p-4 sm:p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50">
         <div>
             <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <i class="fas fa-clock-rotate-left text-blue-600"></i> Daftar Pengajuan yang Anda Buat
+                <i class="fas fa-clock-rotate-left text-blue-600"></i> Daftar Pengajuan Dispensasi
             </h3>
-            <p class="text-xs text-gray-500 mt-0.5">Kelola dan pantau status dispensasi yang Anda buat secara manual.</p>
+            <p class="text-xs text-gray-500 mt-0.5">Verifikasi dan pantau status seluruh dispensasi siswa.</p>
         </div>
         <a href="{{ route('guru.pengajuan.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors flex-shrink-0">
             <i class="fas fa-plus mr-1.5"></i> Buat Pengajuan Baru

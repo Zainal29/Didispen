@@ -218,7 +218,7 @@ $cards = [
                                 <i class="fas fa-times mr-1.5"></i>Tolak
                             </button>
                         @else
-                            @if(in_array($item->status, ['disetujui', 'keluar', 'selesai']))
+                            @if(in_array($item->status, ['disetujui']))
                                 <a href="{{ route('guru.cetak-pdf', [$item, 'format' => 'thermal']) }}"
                                    target="_blank"
                                    class="inline-flex items-center justify-center px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-lg transition-colors border border-emerald-300"

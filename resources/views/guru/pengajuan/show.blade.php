@@ -108,7 +108,7 @@
             </div>
 
             {{-- Waktu --}}
-            <div class="grid grid-cols-2 gap-3">
+            <!--<div class="grid grid-cols-2 gap-3">
                 <div class="bg-blue-50 border border-blue-100 rounded-lg p-3">
                     <span class="text-blue-600 text-[10px] font-semibold uppercase tracking-wider block mb-1">Jam Keluar</span>
                     <p class="font-bold text-blue-900 text-sm">{{ $dispensasi->jam_keluar }}</p>
@@ -123,7 +123,44 @@
                         <i class="far fa-clock mr-1"></i>{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali) }}
                     </p>
                 </div>
+            </div>-->
+
+            {{-- Jam Keluar & Jam Kembali --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Jam Keluar</p>
+                    <p class="text-sm font-bold text-gray-900">
+                        {{ $dispensasi->jam_keluar }}
+                    </p>
+                    {{-- Tampilkan waktu aktual --}}
+                    @php
+                        $waktuKeluar = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar);
+                    @endphp
+                    @if($waktuKeluar !== '-' && str_contains($waktuKeluar, ' - '))
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="far fa-clock mr-1"></i>
+                            {{ explode(' - ', $waktuKeluar)[0] }} WIB
+                        </p>
+                    @endif
+                </div>
+                <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Jam Kembali</p>
+                    <p class="text-sm font-bold text-gray-900">
+                        {{ $dispensasi->jam_kembali }}
+                    </p>
+                    {{-- Tampilkan waktu aktual --}}
+                    @php
+                        $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali);
+                    @endphp
+                    @if($waktuKembali !== '-' && str_contains($waktuKembali, ' - '))
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="far fa-clock mr-1"></i>
+                            {{ explode(' - ', $waktuKembali)[1] }} WIB
+                        </p>
+                    @endif
+                </div>
             </div>
+
 
             {{-- Catatan Admin --}}
             @if($dispensasi->catatan_admin)
@@ -134,7 +171,7 @@
             @endif
 
             {{-- Cetak Struk Thermal 58mm --}}
-            @if(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
+            @if(in_array($dispensasi->status, ['disetujui','selesai']))
             @php
                 $maxPrint = \App\Helpers\PrintHelper::maxTeacherLimit();
                 $currentPrint = $dispensasi->teacher_print_count ?? 0;
@@ -144,6 +181,9 @@
                 $currentTime = \App\Helpers\PrintHelper::currentTime();
                 $isWithinTime = \App\Helpers\PrintHelper::isWithinOperatingHours($currentTime);
                 $canPrintStruk = $sisaCetak > 0 && $isWithinTime;
+                // ✅ PERBAIKAN: Tidak bisa cetak jika status sudah 'selesai'
+                               $isSelesai = $dispensasi->status === 'selesai';
+                               $canPrintStruk = !$isSelesai && $sisaCetak > 0 && $isWithinTime;
             @endphp
             <div class="mt-2 p-5 bg-emerald-50 border border-emerald-200 rounded-lg">
                 <div class="flex items-center justify-between mb-1">
@@ -185,12 +225,17 @@
                             <i id="iconCetak" class="fas fa-file-pdf mr-1.5 text-sm"></i> <span id="textCetak">Cetak PDF Thermal (58mm)</span>
                         </a>
                     @else
-                        <button disabled
+                        <!--<button disabled
                                 title="{{ $sisaCetak <= 0 ? 'Batas cetak tercapai (' . $maxPrint . ' kali)' : 'Pencetakan hanya diperbolehkan pukul ' . $startTime . ' - ' . $endTime . ' WIB' }}"
                                 class="px-5 py-2.5 bg-gray-200 text-gray-500 text-xs font-semibold rounded-lg cursor-not-allowed inline-flex items-center">
                             <i class="fas fa-lock mr-1.5 text-sm"></i>
                             @if($sisaCetak <= 0) Batas Cetak Tercapai @else Di Luar Jam Cetak @endif
-                        </button>
+                        </button>-->
+
+                        <button disabled class="w-full inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-400 bg-gray-100 cursor-not-allowed border border-gray-200">
+                         <i class="fas fa-lock mr-2"></i>Tidak Dapat Dicetak
+                         </button>
+                          <p class="text-center text-xs text-gray-500 mt-2"><i class="fas fa-shield-alt mr-1"></i>Dispensasi selesai tidak dapat dicetak ulang.</p>
                     @endif
                 </div>
 

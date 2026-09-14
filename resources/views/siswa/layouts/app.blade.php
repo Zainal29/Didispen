@@ -7,6 +7,11 @@
     <title>@yield('title', 'Siswa') - DIDISPEN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- ✅ TAMBAHKAN INI DI SINI (di dalam <head>) -->
+          <link rel="icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
+          <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
+          <link rel="apple-touch-icon" href="{{ asset('images/logo-didispen.png') }}">
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gray-50">
@@ -36,8 +41,8 @@
             <div class="p-5 border-b border-gray-200">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                        @if(file_exists(public_path('images/logo-didispen.jpeg')))
-                            <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo" class="w-full h-full object-contain">
+                        @if(file_exists(public_path('images/logo-didispen.png')))
+                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-full h-full object-contain">
                         @else
                             <i class="fas fa-school text-blue-600 text-lg"></i>
                         @endif
@@ -107,8 +112,8 @@
                 <div class="lg:hidden flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                            @if(file_exists(public_path('images/logo-didispen.jpeg')))
-                                <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo" class="w-full h-full object-contain">
+                            @if(file_exists(public_path('images/logo-didispen.png')))
+                                <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-full h-full object-contain">
                             @else
                                 <i class="fas fa-school text-blue-600 text-sm"></i>
                             @endif

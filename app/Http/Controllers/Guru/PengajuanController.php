@@ -22,16 +22,14 @@ class PengajuanController extends Controller
      */
     public function index(Request $request)
     {
-        $guruId = auth()->user()->guru->id ?? null;
-
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-            ->where('guru_id', $guruId);
+            ->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        $pengajuan = $query->latest()->paginate(15);
+        $pengajuan = $query->paginate(15);
 
         return view('guru.pengajuan.index', compact('pengajuan'));
     }
@@ -170,8 +168,8 @@ class PengajuanController extends Controller
             'alasan'          => $validated['alasan'],
             'tujuan'          => $validated['tujuan'],
             'lokasi'          => $validated['lokasi'] ?? null,
-            'jam_keluar'      => $validated['jam_keluar'],
-            'jam_kembali'     => $validated['jam_kembali'],
+            'jam_keluar'      => 'Jam Pelajaran ke-' . $validated['jam_keluar'],   // ✅ BENAR
+            'jam_kembali'     => 'Jam Pelajaran ke-' . $validated['jam_kembali'],  // ✅ BENAR
             'status'          => 'disetujui',
             'disetujui_oleh'  => auth()->id(),
             'disetujui_pada'  => now(),

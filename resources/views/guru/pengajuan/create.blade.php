@@ -565,7 +565,10 @@
             jamKembaliSelect.querySelectorAll('option').forEach(option => {
                 const val = parseInt(option.value);
                 if (option.value === '') return;
-                const isInvalid = (val <= keluarValue) || (dayOfWeek === 5 && val > 5);
+
+                // ✅ PERBAIKAN: Gunakan maxJam dinamis, JANGAN hardcode angka 5
+                const isInvalid = (val <= keluarValue) || (val > maxJam);
+
                 if (isInvalid) {
                     option.disabled = true;
                     option.classList.add('text-gray-400');
@@ -584,8 +587,9 @@
             if (infoJam) {
                 infoJam.classList.remove('hidden');
                 const spanInfo = infoJam.querySelector('span');
+                // ✅ PERBAIKAN: Tampilkan maxJam dinamis di pesan info
                 if (dayOfWeek === 5) {
-                    spanInfo.textContent = `Jam kembali harus lebih dari Jam ke-${keluarValue} (Maksimal Jam ke-5 untuk hari Jumat)`;
+                    spanInfo.textContent = `Jam kembali harus lebih dari Jam ke-${keluarValue} (Maksimal Jam ke-${maxJam} untuk hari Jumat)`;
                 } else {
                     spanInfo.textContent = `Jam kembali harus lebih dari Jam Pelajaran ke-${keluarValue}`;
                 }

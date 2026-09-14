@@ -3,7 +3,6 @@
 @section('page-title', 'Detail Pengajuan Dispensasi')
 @section('content')
 @include('components.alert')
-
 <div class="max-w-5xl mx-auto space-y-4">
 
     {{-- Header Card --}}

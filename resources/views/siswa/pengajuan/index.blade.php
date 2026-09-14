@@ -3,7 +3,6 @@
 @section('page-title', 'Riwayat Pengajuan Dispensasi')
 @section('content')
 @include('components.alert')
-
 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
     {{-- Header + Filter --}}
     <div class="p-4 sm:p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50">
@@ -87,7 +86,7 @@
                     <th class="p-4 text-left font-semibold">Tujuan</th>
                     <th class="p-4 text-left font-semibold">Waktu</th>
                     <th class="p-4 text-left font-semibold">Status</th>
-                    <th class="p-4 text-center font-semibold">Foto Bukti</th>
+                    <!--<th class="p-4 text-center font-semibold">Foto Bukti</th>-->
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -112,7 +111,7 @@
                                 {{ ucfirst($p->status) }}
                             </span>
                         </td>
-                        <td class="p-4 text-center">
+                        <!--<td class="p-4 text-center">
                             @if($p->status === 'keluar')
                                 @if($p->foto_bukti)
                                     <div class="flex items-center justify-center gap-2">
@@ -120,15 +119,15 @@
                                         <button onclick="hapusFoto({{ $p->id }})" class="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Hapus Foto">
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
-                                    </div>
-                                @else
+                                    </div>-->
+                                <!--@else
                                     <button onclick="openUploadModal({{ $p->id }})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5">
                                         <i class="fas fa-camera"></i> Ambil Foto
                                     </button>
-                                @endif
-                            @else
+                                @endif-->
+                            <!--@else
                                 <span class="text-gray-300 text-xs">—</span>
-                            @endif
+                            @endif-->
                         </td>
                     </tr>
                 @empty
@@ -149,7 +148,7 @@
 </div>
 
 {{-- MODAL AMBIL FOTO BUKTI LANGSUNG KAMERA --}}
-<div id="uploadModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+<!--<div id="uploadModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
         {{-- Header Modal --}}
         <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
@@ -241,9 +240,9 @@
             </div>
         </form>
     </div>
-</div>
+</div>-->
 
-@push('scripts')
+<!--@push('scripts')
 <script>
 let buktiStream = null;
 let currentFacingModeBukti = 'environment';
@@ -484,5 +483,5 @@ function showPreview(url, nomorSurat) {
     });
 }
 </script>
-@endpush
+@endpush-->
 @endsection

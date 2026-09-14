@@ -244,13 +244,8 @@ class QRScanService
      *
      * disetujui -> keluar
      */
-    public function processKeluar(
-        Dispensasi $dispensasi,
-        int $userId
-    ): array {
-        /*
-         * Pastikan status masih disetujui.
-         */
+    public function processKeluar(Dispensasi $dispensasi, int $userId): array
+    {
         if ($dispensasi->status !== 'disetujui') {
             return [
                 'success' => false,
@@ -259,37 +254,12 @@ class QRScanService
             ];
         }
 
-        /*
-         * Tentukan batas waktu kembali berdasarkan
-         * jam pelajaran yang dipilih.
-         *
-         * TimeHelper hanya menyediakan:
-         * getWaktuAktual("Jam Pelajaran ke-X")
-         */
-        $jamKembali = (int) $dispensasi->jam_kembali;
-
         $waktuAktual = \App\Helpers\TimeHelper::getWaktuAktual(
-            'Jam Pelajaran ke-' . $jamKembali
+            $dispensasi->jam_kembali
         );
+        $batasWaktu = $this->resolveBatasWaktu($waktuAktual);
 
-        /*
-         * Format:
-         * 07:00 - 07:45
-         */
-        $batasWaktu = $this->resolveBatasWaktu(
-            $waktuAktual,
-            $jamKembali
-        );
-
-        /*
-         * Gunakan transaction + lock untuk mencegah
-         * dua Satpam memproses QR yang sama bersamaan.
-         */
-        $updated = DB::transaction(function () use (
-            $dispensasi,
-            $batasWaktu,
-            $userId
-        ) {
+        $updated = DB::transaction(function () use ($dispensasi, $batasWaktu, $userId) {
             return Dispensasi::whereKey($dispensasi->id)
                 ->where('status', 'disetujui')
                 ->lockForUpdate()
@@ -309,15 +279,11 @@ class QRScanService
             ];
         }
 
-        $fresh = $dispensasi->fresh([
-            'siswa.kelas.jurusan',
-        ]);
-
         return [
             'success' => true,
             'message' => 'Siswa berhasil diverifikasi KELUAR sekolah.',
             'action' => 'keluar',
-            'data' => $fresh,
+            'data' => $dispensasi->fresh(['siswa.kelas.jurusan']),
         ];
     }
 
@@ -419,10 +385,8 @@ class QRScanService
      *
      * menjadi timestamp batas waktu kembali.
      */
-    private function resolveBatasWaktu(
-        string $waktuAktual,
-        int $jamKembali
-    ): Carbon {
+    private function resolveBatasWaktu(string $waktuAktual): Carbon
+    {
         if ($waktuAktual !== '-' && str_contains($waktuAktual, '-')) {
             $parts = array_map(
                 'trim',
@@ -434,11 +398,8 @@ class QRScanService
             }
         }
 
-        /*
-         * Fallback jika jam pelajaran tidak ditemukan.
-         *
-         * Ini hanya pengaman agar sistem tidak crash.
-         */
-        return now()->addHours(2);
+        throw new \InvalidArgumentException(
+            'Jadwal jam kembali tidak ditemukan sehingga batas waktu tidak dapat ditentukan.'
+        );
     }
 }

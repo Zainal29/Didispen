@@ -3,7 +3,6 @@
 @section('page-title', 'Form Pengajuan Dispensasi')
 @section('content')
 @include('components.alert')
-
 <div class="max-w-2xl mx-auto">
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         {{-- Header Card --}}

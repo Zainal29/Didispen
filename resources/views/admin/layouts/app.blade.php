@@ -7,13 +7,18 @@
     <title>@yield('title', 'Admin') - DIDISPEN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- ✅ TAMBAHKAN INI DI SINI (di dalam <head>) -->
+          <link rel="icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
+          <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
+          <link rel="apple-touch-icon" href="{{ asset('images/logo-didispen.png') }}">
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .sidebar-link.active { background-color: #1e40af; color: white; }
         .sidebar-link:hover:not(.active) { background-color: #e0e7ff; }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100">png'
     <div class="flex h-screen overflow-hidden">
 
         {{-- SIDEBAR --}}
@@ -21,8 +26,8 @@
             <div class="p-5 border-b">
                 <div class="flex items-center space-x-3">
                     <div class="w-14 h-14 rounded-xl bg-[#fbfcf6] shadow-md overflow-hidden flex items-center justify-center flex-shrink-0">
-                        @if(file_exists(public_path('images/logo-didispen.jpeg')))
-                            <img src="{{ asset('images/logo-didispen.jpeg') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                        @if(file_exists(public_path('images/logo-didispen.png')))
+                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
                         @else
                             <i class="fas fa-school text-blue-800 text-xl"></i>
                         @endif
