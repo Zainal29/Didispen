@@ -51,7 +51,7 @@
                 <i class="fas fa-file-alt text-blue-600 mr-2"></i>Informasi Dispensasi
             </h3>
 
-            @if($dispensasi->foto_verifikasi)
+            <!--@if($dispensasi->foto_verifikasi)
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5 flex flex-col sm:flex-row items-center gap-4">
                 <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}" alt="Foto {{ $dispensasi->siswa->nama_lengkap }}" class="w-20 h-20 object-cover rounded-lg border border-white shadow-sm flex-shrink-0">
                 <div class="text-center sm:text-left">
@@ -76,7 +76,86 @@
                     </div>
                 </div>
             </div>
+            @endif-->
+
+            {{-- Foto Verifikasi (Jika Ada) --}}
+            @if($dispensasi->foto_verifikasi)
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start gap-4">
+                    <div class="w-20 h-20 rounded-lg overflow-hidden border border-blue-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_verifikasi) }}', 'Foto Verifikasi - {{ $dispensasi->siswa->nama_lengkap }}')">
+                        <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}" alt="Foto {{ $dispensasi->siswa->nama_lengkap }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-bold text-blue-900 mb-1 flex items-center">
+                            <i class="fas fa-camera mr-1.5"></i> Foto Verifikasi Siswa
+                            <span class="ml-2 text-[10px] font-normal text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                                <i class="fas fa-expand mr-1"></i>Klik untuk memperbesar
+                            </span>
+                        </h4>
+                        <p class="text-xs text-blue-700 mb-2">
+                            Gunakan foto ini untuk memverifikasi identitas siswa secara visual sebelum melakukan scan QR Code.
+                        </p>
+                        <p class="text-[10px] text-blue-600">
+                            <i class="fas fa-info-circle mr-1"></i> Foto akan dihapus otomatis setelah siswa kembali.
+                        </p>
+                    </div>
+                </div>
+            </div>
             @endif
+
+            {{-- Foto Bukti Siswa --}}
+            @if($dispensasi->foto_bukti)
+            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                <div class="flex items-start gap-4">
+                    <div class="w-20 h-20 rounded-lg overflow-hidden border border-emerald-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_bukti) }}', 'Foto Bukti Kedatangan - {{ $dispensasi->siswa->nama_lengkap }}')">
+                        <img src="{{ Storage::url($dispensasi->foto_bukti) }}" alt="Foto Bukti {{ $dispensasi->siswa->nama_lengkap }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-bold text-emerald-900 mb-1 flex items-center">
+                            <i class="fas fa-image mr-1.5"></i> Foto Bukti Kedatangan
+                            <span class="ml-2 text-[10px] font-normal text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                <i class="fas fa-expand mr-1"></i>Klik untuk memperbesar
+                            </span>
+                        </h4>
+                        <p class="text-xs text-emerald-700 mb-2">
+                            Foto ini diupload oleh siswa sebagai bukti kedatangan di lokasi tujuan.
+                        </p>
+                        @if($dispensasi->foto_bukti_uploaded_at)
+                        <p class="text-[10px] text-emerald-600">
+                            <i class="far fa-clock mr-1"></i> Diupload: {{ $dispensasi->foto_bukti_uploaded_at->isoFormat('D MMMM Y, HH:mm') }} WIB
+                        </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+            {{-- MODAL PREVIEW FOTO --}}
+            <div id="photoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onclick="closePhotoModal(event)">
+                <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center" onclick="event.stopPropagation()">
+                    {{-- Header Modal --}}
+                    <div class="w-full bg-white rounded-t-xl px-4 py-3 flex items-center justify-between border-b border-gray-200">
+                        <h3 id="photoModalTitle" class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-image text-blue-600"></i>
+                            <span>Preview Foto</span>
+                        </h3>
+                        <button onclick="closePhotoModal()" class="w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    {{-- Body Modal --}}
+                    <div class="w-full bg-white rounded-b-xl p-4 flex items-center justify-center overflow-auto">
+                        <img id="photoModalImage" src="" alt="Preview" class="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg">
+                    </div>
+
+                    {{-- Footer Actions --}}
+                    <div class="absolute top-1/2 -translate-y-1/2 left-4">
+                        <button onclick="closePhotoModal()" class="w-10 h-10 rounded-full bg-white/90 hover:bg-white text-gray-700 shadow-lg flex items-center justify-center transition-all hover:scale-110">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="bg-gray-50 rounded-lg p-3.5 border border-gray-200">
@@ -326,6 +405,34 @@
 
 @push('scripts')
 <script>
+
+function openPhotoModal(imageUrl, title) {
+    const modal = document.getElementById('photoModal');
+    const image = document.getElementById('photoModalImage');
+    const titleEl = document.getElementById('photoModalTitle');
+
+    image.src = imageUrl;
+    titleEl.innerHTML = `<i class="fas fa-image text-blue-600"></i><span>${title}</span>`;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
+}
+
+function closePhotoModal(event) {
+    if (event && event.target !== event.currentTarget && !event.target.closest('button')) return;
+
+    const modal = document.getElementById('photoModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = ''; // Restore scroll
+}
+
+// Close modal dengan tombol ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closePhotoModal();
+    }
+});
+
+
 function handleDetailWaContacted(event, dispensasiId, waLink) {
     @if($dispensasi->status === 'keluar' && !$dispensasi->is_warned)
         event.preventDefault();
