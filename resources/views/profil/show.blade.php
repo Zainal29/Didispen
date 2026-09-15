@@ -403,9 +403,23 @@
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                             <span class="text-xs font-semibold text-indigo-900 uppercase tracking-wide">Login Terakhir</span>
                         </div>
-                        <span class="text-[11px] text-indigo-600 font-medium">
+                        <!--<span class="text-[11px] text-indigo-600 font-medium">
                             {{ $latestLogin->created_at?->format('d M Y, H:i:s') ?? '-' }}
-                        </span>
+                        </span>-->
+                        <!--<span class="text-[11px] text-indigo-600 font-medium">
+                            {{ $latestLogin->created_at?->diffForHumans() ?? '-' }}
+                        </span>-->
+                        <span class="text-[11px] text-gray-400" title="{{ $latestLogin->created_at?->format('d M Y, H:i:s') ?? '-' }}">
+                                                   @php
+                                                       $diff = $latestLogin->created_at?->diffForHumans();
+                                                       $isOld = $latestLogin->created_at?->diffInDays() > 0;
+                                                   @endphp
+                                                   @if($isOld)
+                                                       {{ $latestLogin->created_at?->format('d M Y') }}
+                                                   @else
+                                                       {{ $diff }}
+                                                   @endif
+                                               </span>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -445,7 +459,10 @@
                                                 <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-bold uppercase">Terakhir</span>
                                             @endif
                                         </div>
-                                        <span class="text-[11px] text-gray-400">{{ $login->created_at?->format('d M Y, H:i:s') ?? '-' }}</span>
+                                        <!--<span class="text-[11px] text-gray-400">{{ $login->created_at?->format('d M Y, H:i:s') ?? '-' }}</span>-->
+                                        <span class="text-[11px] text-gray-400" title="{{ $login->created_at?->format('d M Y, H:i:s') ?? '-' }}">
+                                            {{ $login->created_at?->diffForHumans() ?? '-' }}
+                                        </span>
                                     </div>
 
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

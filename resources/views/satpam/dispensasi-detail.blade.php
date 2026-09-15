@@ -81,21 +81,22 @@
             {{-- Foto Verifikasi (Jika Ada) --}}
             @if($dispensasi->foto_verifikasi)
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div class="flex items-start gap-4">
+                <div class="flex flex-col sm:flex-row items-start gap-4">
                     <div class="w-20 h-20 rounded-lg overflow-hidden border border-blue-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_verifikasi) }}', 'Foto Verifikasi - {{ $dispensasi->siswa->nama_lengkap }}')">
                         <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}" alt="Foto {{ $dispensasi->siswa->nama_lengkap }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
                     </div>
-                    <div class="flex-1">
-                        <h4 class="text-sm font-bold text-blue-900 mb-1 flex items-center">
-                            <i class="fas fa-camera mr-1.5"></i> Foto Verifikasi Siswa
-                            <span class="ml-2 text-[10px] font-normal text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-bold text-blue-900 mb-1 flex flex-wrap items-center gap-2">
+                            <i class="fas fa-camera mr-1.5"></i>
+                            <span class="break-words">Foto Verifikasi Siswa</span>
+                            <span class="text-[10px] font-normal text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full whitespace-nowrap">
                                 <i class="fas fa-expand mr-1"></i>Klik untuk memperbesar
                             </span>
                         </h4>
-                        <p class="text-xs text-blue-700 mb-2">
+                        <p class="text-xs text-blue-700 mb-2 break-words">
                             Gunakan foto ini untuk memverifikasi identitas siswa secara visual sebelum melakukan scan QR Code.
                         </p>
-                        <p class="text-[10px] text-blue-600">
+                        <p class="text-[10px] text-blue-600 break-words">
                             <i class="fas fa-info-circle mr-1"></i> Foto akan dihapus otomatis setelah siswa kembali.
                         </p>
                     </div>
@@ -106,22 +107,23 @@
             {{-- Foto Bukti Siswa --}}
             @if($dispensasi->foto_bukti)
             <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                <div class="flex items-start gap-4">
+                <div class="flex flex-col sm:flex-row items-start gap-4">
                     <div class="w-20 h-20 rounded-lg overflow-hidden border border-emerald-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_bukti) }}', 'Foto Bukti Kedatangan - {{ $dispensasi->siswa->nama_lengkap }}')">
                         <img src="{{ Storage::url($dispensasi->foto_bukti) }}" alt="Foto Bukti {{ $dispensasi->siswa->nama_lengkap }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
                     </div>
-                    <div class="flex-1">
-                        <h4 class="text-sm font-bold text-emerald-900 mb-1 flex items-center">
-                            <i class="fas fa-image mr-1.5"></i> Foto Bukti Kedatangan
-                            <span class="ml-2 text-[10px] font-normal text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-bold text-emerald-900 mb-1 flex flex-wrap items-center gap-2">
+                            <i class="fas fa-image mr-1.5"></i>
+                            <span class="break-words">Foto Bukti Kedatangan</span>
+                            <span class="text-[10px] font-normal text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full whitespace-nowrap">
                                 <i class="fas fa-expand mr-1"></i>Klik untuk memperbesar
                             </span>
                         </h4>
-                        <p class="text-xs text-emerald-700 mb-2">
+                        <p class="text-xs text-emerald-700 mb-2 break-words">
                             Foto ini diupload oleh siswa sebagai bukti kedatangan di lokasi tujuan.
                         </p>
                         @if($dispensasi->foto_bukti_uploaded_at)
-                        <p class="text-[10px] text-emerald-600">
+                        <p class="text-[10px] text-emerald-600 break-words">
                             <i class="far fa-clock mr-1"></i> Diupload: {{ $dispensasi->foto_bukti_uploaded_at->isoFormat('D MMMM Y, HH:mm') }} WIB
                         </p>
                         @endif
@@ -129,6 +131,7 @@
                 </div>
             </div>
             @endif
+
             {{-- MODAL PREVIEW FOTO --}}
             <div id="photoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onclick="closePhotoModal(event)">
                 <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center" onclick="event.stopPropagation()">
@@ -402,6 +405,16 @@
         </a>
     </div>
 </div>
+
+@push('styles')
+<style>
+    /* Mencegah teks panjang keluar dari kolom */
+    .break-words {
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>

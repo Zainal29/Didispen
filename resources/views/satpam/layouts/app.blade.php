@@ -19,6 +19,19 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>[x-cloak] { display: none !important; }</style>
+    <style>
+        /* Prevent text overflow */
+        .break-words {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Ensure bottom nav stays on top */
+        nav.fixed.bottom-0 {
+            position: fixed !important;
+            bottom: 0 !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
 @php
@@ -136,7 +149,7 @@
     {{-- ================================================== --}}
     {{-- BOTTOM NAV — MOBILE                                 --}}
     {{-- ================================================== --}}
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-lg" style="padding-bottom: max(env(safe-area-inset-bottom), 8px);">
         <div class="grid grid-cols-5 h-16 w-full">
             <a href="{{ route('satpam.dashboard') }}" class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('satpam.dashboard') ? $mobOn : $mobOff }}">
                 <i class="fas fa-house text-lg"></i>
@@ -147,7 +160,7 @@
                 <span class="text-[9px] font-semibold leading-tight">Manual</span>
             </a>
             <div class="relative flex flex-col items-center justify-end pb-1">
-                <a href="{{ route('satpam.scan') }}" class="absolute -top-5 w-12 h-12 rounded-full bg-red-600 text-white text-lg flex items-center justify-center shadow-md border-4 border-gray-50 active:scale-95 transition-transform {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-red-200' : '' }}">
+                <a href="{{ route('satpam.scan') }}" class="absolute -top-5 w-12 h-12 rounded-full bg-red-600 text-white text-lg flex items-center justify-center shadow-lg border-4 border-gray-50 active:scale-95 transition-transform {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-red-200' : '' }}">
                     <i class="fas fa-qrcode"></i>
                 </a>
                 <span class="text-[9px] font-semibold leading-tight {{ request()->routeIs('satpam.scan') ? $mobOn : $mobOff }}">Scan</span>
