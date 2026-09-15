@@ -7,6 +7,7 @@ use App\Http\Controllers\Guru;
 use App\Http\Controllers\Guru\CetakStrukController;
 use App\Http\Controllers\Guru\ChecklogController;
 use App\Http\Controllers\Guru\PengajuanController as GuruPengajuanController;
+use App\Http\Controllers\OAuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Satpam\DashboardController;
 use App\Http\Controllers\Satpam\ScanController;
@@ -19,10 +20,13 @@ use Illuminate\Support\Facades\Route;
 // Redirect root ke login
 Route::get('/', fn () => redirect()->route('login'));
 
-// ✅ PERBAIKAN 1: Endpoint Health Check untuk SiPintu
+// Endpoint Health Check untuk SiPintu Gateway
 Route::get('/health', fn () => response()->json(['status' => 'ok']));
-// ✅ PERBAIKAN 1: Endpoint Health Check untuk SiPintu
-Route::get('/health', fn () => response()->json(['status' => 'ok']));
+
+// =========================================================================
+// JALUR 1: CALLBACK SSO SIPINTU (MODEL HYBRID)
+// =========================================================================
+Route::get('/oauth/callback', [OAuthController::class, 'callback'])->name('oauth.callback');
 // Route Auth (Guest)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
