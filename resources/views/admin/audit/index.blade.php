@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 @section('title', 'Audit Log')
 @section('page-title', 'Audit Log Aktivitas')
-
+@include('components.alert')
 @section('content')
 <div class="space-y-6">
 {{-- HEADER DENGAN FILTER LENGKAP --}}
@@ -11,6 +11,22 @@
             <h3 class="text-xl font-bold text-gray-800">Log Aktivitas Sistem</h3>
             <p class="text-sm text-gray-500 mt-1">Catatan semua aktivitas pengguna dan sinkronisasi.</p>
         </div>
+
+        {{-- ✅ TAMBAHKAN BLOK INI UNTUK MENAMPILKAN HASIL TEST KONEKSI --}}
+        @if(session('success'))
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl flex items-center gap-3 mb-4 shadow-sm">
+                <i class="fas fa-check-circle text-lg"></i>
+                <p class="text-sm font-medium">{{ session('success') }}</p>
+            </div>
+        @endif
+        {{-- ✅ TAMBAHKAN TOMBOL INI --}}
+        <form method="POST" action="{{ route('admin.sipintu.test-sync') }}" class="inline">
+            @csrf
+            <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                <i class="fas fa-plug"></i> Test Koneksi SiPintu
+            </button>
+        </form>
+        {{-- ------------------- --}}
 
         <form method="GET" class="flex flex-wrap gap-2 w-full xl:w-auto">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari User / IP..."
@@ -30,7 +46,7 @@
 
             <select name="action" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                 <option value="">Semua Aksi</option>
-                @foreach(['sync_sipintu_siswa', 'sync_sipintu_guru', 'approve', 'reject', 'konfirmasi_keluar', 'konfirmasi_kembali', 'create_siswa', 'create_guru', 'update_siswa', 'update_guru'] as $a)
+                @foreach(['test_connection_sipintu','sync_sipintu_siswa', 'sync_sipintu_guru', 'approve', 'reject', 'konfirmasi_keluar', 'konfirmasi_kembali', 'create_siswa', 'create_guru', 'update_siswa', 'update_guru'] as $a)
                     <option value="{{ $a }}" {{ request('action') == $a ? 'selected' : '' }}>{{ str_replace('_', ' ', $a) }}</option>
                 @endforeach
             </select>
@@ -171,13 +187,13 @@
                         </td>
                         <td class="p-4 text-sm text-gray-600 font-mono">{{ $log->ip_address }}</td>
                         <td class="p-4">
-                            @if(str_contains($log->action, 'sync'))
+                            @if(str_contains($log->action, 'sync') || $log->action === 'test_connection_sipintu')
                                 @php
                                     $isSuccess = ($log->new_value['success'] ?? false) ||
                                                  ($log->new_value['stats']['failed'] ?? 0) == 0 ||
                                                  !isset($log->new_value['success']);
                                     $statusColor = $isSuccess ? 'emerald' : 'red';
-                                    $statusText = $isSuccess ? 'Berhasil' : 'Gagal';
+                                    $statusText = $isSuccess ? 'Terhubung' : 'Gagal';
                                     $statusIcon = $isSuccess ? 'fa-check-circle' : 'fa-times-circle';
                                 @endphp
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-{{ $statusColor }}-50 text-{{ $statusColor }}-700 border border-{{ $statusColor }}-100">

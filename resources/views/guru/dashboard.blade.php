@@ -94,7 +94,7 @@ $cards = [
     @endforeach
 </div>
 
-{{-- SECONDARY FILTER BUTTONS --}}
+<!--{{-- SECONDARY FILTER BUTTONS --}}
 <div class="grid grid-cols-2 gap-2 mb-4">
     <button type="button"
             onclick="switchFilter('semua', 'blue', event)"
@@ -108,6 +108,27 @@ $cards = [
             data-filter="terlambat"
             class="filter-btn px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center
             {{ $filter === 'terlambat' ? 'active bg-red-600 text-white shadow-sm border-transparent' : 'bg-white text-red-600 hover:bg-red-50 border-gray-200' }}">
+        <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat ({{ count($terlambat ?? []) }})
+    </button>
+</div>-->
+{{-- SECONDARY FILTER BUTTONS --}}
+<div class="grid grid-cols-2 gap-2 mb-4">
+    <button type="button"
+            onclick="switchFilter('semua', 'blue', event)"
+            data-filter="semua"
+            class="filter-btn px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center
+            {{ $filter === 'semua'
+                ? 'active bg-blue-600 text-white shadow-sm border-transparent hover:bg-blue-700'
+                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
+        <i class="fas fa-layer-group mr-1.5"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
+    </button>
+    <button type="button"
+            onclick="switchFilter('terlambat', 'red', event)"
+            data-filter="terlambat"
+            class="filter-btn px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center
+            {{ $filter === 'terlambat'
+                ? 'active bg-red-600 text-white shadow-sm border-transparent hover:bg-red-700'
+                : 'bg-white text-red-600 hover:bg-red-50 hover:text-white-700 border-gray-200' }}">
         <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat ({{ count($terlambat ?? []) }})
     </button>
 </div>
@@ -272,10 +293,79 @@ $cards = [
 <script>
 let currentFilter = '{{ $filter }}';
 
+// function switchFilter(filterKey, color, event) {
+//     if (event) event.preventDefault();
+//     if (filterKey === currentFilter) return;
+
+//     document.querySelectorAll('.stat-card-btn').forEach(card => {
+//         card.classList.remove('active', 'ring-2', 'shadow-sm');
+//         card.classList.add('border-gray-200');
+//         card.className = card.className.replace(/border-\w+-500/g, '');
+//         card.className = card.className.replace(/ring-\w+-500\/20/g, '');
+//         const iconContainer = card.querySelector('div > div');
+//         if (iconContainer) iconContainer.className = iconContainer.className.replace(/bg-\w+-500 text-white/g, '');
+//     });
+
+//     document.querySelectorAll('.filter-btn').forEach(btn => {
+//         btn.classList.remove('active', 'bg-blue-600', 'bg-red-600', 'text-white', 'shadow-sm', 'border-transparent');
+//         btn.classList.add('bg-white', 'border-gray-200');
+//     });
+
+//     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
+//     if (activeStatCard) {
+//         activeStatCard.classList.add('active', `border-${color}-500`, `ring-2`, `ring-${color}-500/20`, 'shadow-sm');
+//         const iconContainer = activeStatCard.querySelector('div > div');
+//         if (iconContainer) iconContainer.classList.add(`bg-${color}-500`, 'text-white');
+//     }
+
+//     const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
+//     if (activeBtn) activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-sm', 'border-transparent');
+
+//     const contentArea = document.getElementById('content-area');
+//     const loading = document.getElementById('loading-overlay');
+//     contentArea.classList.remove('fade-in');
+//     contentArea.classList.add('fade-out');
+//     loading.classList.remove('hidden');
+
+//     fetch(`{{ url()->current() }}?filter=${filterKey}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
+//     .then(response => response.text())
+//     .then(html => {
+//         const parser = new DOMParser();
+//         const newContent = parser.parseFromString(html, 'text/html').getElementById('content-area');
+//         if (newContent) {
+//             setTimeout(() => {
+//                 contentArea.innerHTML = newContent.innerHTML;
+//                 contentArea.classList.remove('fade-out');
+//                 contentArea.classList.add('fade-in');
+//                 loading.classList.add('hidden');
+//                 currentFilter = filterKey;
+//                 const newUrl = new URL(window.location);
+//                 newUrl.searchParams.set('filter', filterKey);
+//                 window.history.pushState({ filter: filterKey }, '', newUrl);
+//             }, 200);
+//         }
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//         loading.classList.add('hidden');
+//         window.location.href = `{{ url()->current() }}?filter=${filterKey}`;
+//     });
+// }
+
 function switchFilter(filterKey, color, event) {
     if (event) event.preventDefault();
     if (filterKey === currentFilter) return;
 
+    // ✅ RESET SEMUA TOMBOL FILTER - tambahkan warna teks yang jelas
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        // Hapus semua class aktif dan warna
+        btn.classList.remove('active', 'bg-blue-600', 'bg-red-600', 'bg-amber-600', 'bg-emerald-600', 'bg-sky-600', 'bg-gray-600', 'text-white', 'shadow-sm', 'border-transparent');
+
+        // ✅ TAMBAHKAN class warna teks yang jelas
+        btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
+    });
+
+    // Reset stat cards
     document.querySelectorAll('.stat-card-btn').forEach(card => {
         card.classList.remove('active', 'ring-2', 'shadow-sm');
         card.classList.add('border-gray-200');
@@ -285,10 +375,15 @@ function switchFilter(filterKey, color, event) {
         if (iconContainer) iconContainer.className = iconContainer.className.replace(/bg-\w+-500 text-white/g, '');
     });
 
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active', 'bg-blue-600', 'bg-red-600', 'text-white', 'shadow-sm', 'border-transparent');
-        btn.classList.add('bg-white', 'border-gray-200');
-    });
+    // ✅ SET TOMBOL AKTIF - tambahkan hover state yang konsisten
+    const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
+    if (activeBtn) {
+        // Hapus class default
+        activeBtn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
+
+        // Tambahkan class aktif dengan hover yang jelas
+        activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-sm', 'border-transparent', `hover:bg-${color}-700`);
+    }
 
     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
     if (activeStatCard) {
@@ -296,9 +391,6 @@ function switchFilter(filterKey, color, event) {
         const iconContainer = activeStatCard.querySelector('div > div');
         if (iconContainer) iconContainer.classList.add(`bg-${color}-500`, 'text-white');
     }
-
-    const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
-    if (activeBtn) activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-sm', 'border-transparent');
 
     const contentArea = document.getElementById('content-area');
     const loading = document.getElementById('loading-overlay');
@@ -330,6 +422,7 @@ function switchFilter(filterKey, color, event) {
         window.location.href = `{{ url()->current() }}?filter=${filterKey}`;
     });
 }
+
 
 window.addEventListener('popstate', function(event) {
     const urlParams = new URLSearchParams(window.location.search);

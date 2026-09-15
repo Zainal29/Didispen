@@ -60,44 +60,49 @@ Route::middleware(['auth'])->group(function () {
             // ✅ BARU: Logout Perangkat Lain
             Route::post('/logout-other-devices', [ProfileController::class, 'logoutOtherDevices'])
                 ->name('logout-other-devices');
-    });
-
-    // ==========================================
-    // ADMIN ROUTES
-    // ==========================================
-    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
-
-        Route::get('/dashboard', Admin\DashboardController::class)->name('dashboard');
-
-        Route::resource('siswa', Admin\SiswaController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
-        Route::resource('guru', Admin\GuruController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('piket', GuruPiketController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('satpam', Admin\SatpamController::class)->only(['index', 'store', 'update', 'destroy']);
-
-        // ✅ SEMUA PENGAJUAN (Dispensasi) - Termasuk Route Hapus
-        Route::get('semua-pengajuan', [Admin\DispensasiController::class, 'index'])->name('semua.pengajuan');
-        Route::get('semua-pengajuan/{dispensasi}', [Admin\DispensasiController::class, 'show'])->name('semua.pengajuan.show');
-        Route::delete('semua-pengajuan/{dispensasi}', [Admin\DispensasiController::class, 'destroy'])->name('semua.pengajuan.destroy');
-
-        Route::get('laporan', [Admin\LaporanController::class, 'index'])->name('laporan.index');
-        Route::get('laporan/pdf', [Admin\LaporanController::class, 'exportPdf'])->name('laporan.pdf'); // ✅ PASTIKAN ADA
-        Route::get('laporan/excel', [Admin\LaporanController::class, 'exportExcel'])->name('laporan.excel'); // ✅ PASTIKAN ADA
-
-        Route::get('pengaturan', [Admin\SettingsController::class, 'index'])->name('settings.index');
-        Route::put('pengaturan', [Admin\SettingsController::class, 'update'])->name('settings.update');
-        Route::get('audit-log', [Admin\AuditLogController::class, 'index'])->name('audit.index');
-        Route::get('guru/checklog', [Admin\GuruController::class, 'checklog'])->name('guru.checklog');
-
-        // Sinkronisasi SiPintu Gateway
-        Route::post('sipintu/sync-siswa', [Admin\SipintuSyncController::class, 'syncSiswa'])->name('sipintu.sync-siswa');
-        Route::post('sipintu/sync-guru', [Admin\SipintuSyncController::class, 'syncGuru'])->name('sipintu.sync-guru');
-
-        // wa template
-        Route::resource('whatsapp-templates', Admin\WhatsappTemplateController::class)->except(['show', 'create', 'edit']);
-        Route::post('whatsapp-templates/preview', [Admin\WhatsappTemplateController::class, 'preview'])->name('whatsapp-templates.preview');
-
 
     });
+
+            // ==========================================
+            // ADMIN ROUTES
+            // ==========================================
+            Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+                Route::get('/dashboard', Admin\DashboardController::class)->name('dashboard');
+
+                Route::resource('siswa', Admin\SiswaController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
+                Route::resource('guru', Admin\GuruController::class)->only(['index', 'store', 'update', 'destroy']);
+                Route::resource('piket', GuruPiketController::class)->only(['index', 'store', 'update', 'destroy']);
+                Route::resource('satpam', Admin\SatpamController::class)->only(['index', 'store', 'update', 'destroy']);
+
+                // ✅ SEMUA PENGAJUAN (Dispensasi) - Termasuk Route Hapus
+                Route::get('semua-pengajuan', [Admin\DispensasiController::class, 'index'])->name('semua.pengajuan');
+                Route::get('semua-pengajuan/{dispensasi}', [Admin\DispensasiController::class, 'show'])->name('semua.pengajuan.show');
+                Route::delete('semua-pengajuan/{dispensasi}', [Admin\DispensasiController::class, 'destroy'])->name('semua.pengajuan.destroy');
+
+                Route::get('laporan', [Admin\LaporanController::class, 'index'])->name('laporan.index');
+                Route::get('laporan/pdf', [Admin\LaporanController::class, 'exportPdf'])->name('laporan.pdf'); // ✅ PASTIKAN ADA
+                Route::get('laporan/excel', [Admin\LaporanController::class, 'exportExcel'])->name('laporan.excel'); // ✅ PASTIKAN ADA
+
+                Route::get('pengaturan', [Admin\SettingsController::class, 'index'])->name('settings.index');
+                Route::put('pengaturan', [Admin\SettingsController::class, 'update'])->name('settings.update');
+                Route::get('audit-log', [Admin\AuditLogController::class, 'index'])->name('audit.index');
+                Route::get('guru/checklog', [Admin\GuruController::class, 'checklog'])->name('guru.checklog');
+
+                // Sinkronisasi SiPintu Gateway
+                Route::post('sipintu/sync-siswa', [Admin\SipintuSyncController::class, 'syncSiswa'])->name('sipintu.sync-siswa');
+                Route::post('sipintu/sync-guru', [Admin\SipintuSyncController::class, 'syncGuru'])->name('sipintu.sync-guru');
+
+                // wa template
+                Route::resource('whatsapp-templates', Admin\WhatsappTemplateController::class)->except(['show', 'create', 'edit']);
+                Route::post('whatsapp-templates/preview', [Admin\WhatsappTemplateController::class, 'preview'])->name('whatsapp-templates.preview');
+
+                // test route untuk cek koneksi ke SiPintu Gateway
+                // Ubah dari Route::get menjadi Route::post
+                 Route::post('sipintu/test-sync', [Admin\SipintuSyncController::class, 'testSync'])
+                ->name('sipintu.test-sync');
+
+            });
 
 
     // ==========================================

@@ -1467,7 +1467,7 @@ use Illuminate\Support\Facades\Log;
                                     ?? null;
 
                                 $nip =
-                                    'HONOR-'
+                                    '0'
                                     . (
                                         $apiId
                                         ?? ($index + 1)

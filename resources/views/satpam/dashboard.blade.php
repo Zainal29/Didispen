@@ -64,7 +64,7 @@
                 class="filter-btn flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-semibold text-center border transition-all
                 {{ $currentFilter === $key
                     ? 'active bg-' . $f['color'] . '-600 text-white border-transparent'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border-gray-200' }}">
+                    : 'bg-gray-50 text-gray-600 hover:bg-black-100 border-gray-200' }}">
             <i class="fas {{ $f['icon'] }} mr-1"></i> {{ $f['label'] }}
             @if($f['count'] > 0)
                 <span class="inline-block ml-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold {{ $currentFilter === $key ? 'bg-white/20' : 'bg-' . $f['color'] . '-100 text-' . $f['color'] . '-700' }}">
