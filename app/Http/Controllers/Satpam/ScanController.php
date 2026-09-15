@@ -4,10 +4,16 @@ namespace App\Http\Controllers\Satpam;
 
 use App\Http\Controllers\Controller;
 use App\Services\QRScanService;
+use App\Services\NotifikasiService; // ✅ TAMBAHKAN INI
 use Illuminate\Http\Request;
 
 class ScanController extends Controller
 {
+
+    public function __construct(
+           private NotifikasiService $notifikasiService // ✅ INJEKSI SERVICE
+       ) {}
+
     /**
      * Tampilkan halaman scan QR.
      */
@@ -51,6 +57,13 @@ class ScanController extends Controller
                 $dispensasi,
                 auth()->id()
             );
+
+            // ✅ TAMBAHKAN INI: Kirim Notifikasi Selesai
+                       $this->notifikasiService->send(
+                           $dispensasi->siswa->user_id,
+                           "Dispensasi Anda ({$dispensasi->nomor_surat}) telah SELESAI. Anda telah kembali ke sekolah dengan selamat.",
+                           route('siswa.pengajuan.show', $dispensasi->id)
+                       );
 
             return response()->json(
                 $result,

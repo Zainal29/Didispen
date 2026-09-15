@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
+use App\Services\NotifikasiService; // ✅ TAMBAHKAN INI
 use App\Models\Siswa;
 use App\Models\Setting;
 use App\Helpers\TimeHelper;
@@ -17,6 +18,11 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PengajuanController extends Controller
 {
+
+    public function __construct(
+           private NotifikasiService $notifikasiService // ✅ INJEKSI SERVICE
+       ) {}
+
     /**
      * Daftar riwayat pengajuan yang dibuat guru
      */
@@ -211,6 +217,13 @@ class PengajuanController extends Controller
         ]);
 
         $this->generateQRCode($dispensasi);
+
+        // ✅ TAMBAHKAN INI: Kirim Notifikasi ke Siswa
+                $this->notifikasiService->send(
+                    $dispensasi->siswa->user_id,
+                    "Pengajuan dispensasi Anda ({$dispensasi->nomor_surat}) telah DISETUJUI oleh Guru Piket. Silakan tunjukkan QR Code ke Satpam.",
+                    route('siswa.pengajuan.show', $dispensasi->id)
+                );
 
         return redirect()->route('guru.pengajuan.index')
             ->with('success', 'Dispensasi berhasil disetujui. QR Code telah di-generate.');
