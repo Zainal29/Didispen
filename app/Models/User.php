@@ -10,9 +10,8 @@ class User extends Authenticatable
 {
     use Notifiable;
 
-<<<<<<< ours
+
     protected $fillable = ['name', 'email', 'password', 'role', 'nis_nip'];
-=======
     protected $fillable = [
         'name',
         'email',
@@ -22,17 +21,15 @@ class User extends Authenticatable
         'external_id',
         'sipintu_last_synced_at',
     ];
->>>>>>> theirs
+
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-<<<<<<< ours
-=======
+
             'sipintu_last_synced_at' => 'datetime',
->>>>>>> theirs
             'password' => 'hashed',
         ];
     }
