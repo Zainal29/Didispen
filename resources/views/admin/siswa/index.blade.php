@@ -350,7 +350,7 @@ function editItem(siswaId) {
         document.getElementById('siswaForm').reset();
         document.getElementById('siswaId').value = data.id; // Gunakan data.id
         document.getElementById('formMethod').value = 'PATCH';
-        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-edit"></i> Edit Data Siswa';
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-eye"></i> lihat Data Siswa';
 
         // Mengisi field form berdasarkan data JSON
         document.getElementById('nama_lengkap').value = data.nama_lengkap || '';
