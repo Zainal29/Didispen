@@ -24,9 +24,9 @@
                 </form>
 
                 {{-- Tombol Tambah --}}
-                <button onclick="openModal()" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
+                <!--<button onclick="openModal()" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
                     <i class="fas fa-plus"></i> Tambah Siswa
-                </button>
+                </button>-->
             </div>
         </div>
 

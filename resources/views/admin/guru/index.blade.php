@@ -23,10 +23,10 @@
                     </button>
                 </form>
 
-                {{-- Tombol Tambah --}}
+                <!--{{-- Tombol Tambah --}}
                 <button onclick="openModal()" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
                     <i class="fas fa-plus"></i> Tambah Guru
-                </button>
+                </button>-->
             </div>
         </div>
 
