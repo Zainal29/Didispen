@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Siswa;
 use App\Http\Controllers\Controller;
 use App\Helpers\PrintHelper;
 use App\Models\Dispensasi;
+use App\Models\Guru;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,7 +13,7 @@ class CetakController extends Controller
 {
     public function cetak(Dispensasi $dispensasi)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru.user']);
 
         // 1. Pastikan dispensasi ini milik siswa yang sedang login
         if (!$dispensasi->siswa || $dispensasi->siswa->user_id !== Auth::id()) {
@@ -36,7 +37,16 @@ class CetakController extends Controller
                 ->with('error', "Batas cetak Anda telah tercapai ({$maxPrint} kali). Hubungi guru untuk mencetak.");
         }
 
-        // 4. <i class="fas fa-check-circle"></i> Increment counter SISWA
+        // ✅ Self-healing: jika guru_id belum tersimpan (misal disetujui sebelum patch), kaitkan dengan guru aktif
+        if (empty($dispensasi->guru_id)) {
+            $fallbackGuru = Guru::where('status_aktif', true)->first();
+            if ($fallbackGuru) {
+                $dispensasi->update(['guru_id' => $fallbackGuru->id]);
+                $dispensasi->load('guru.user');
+            }
+        }
+
+        // 4. Increment counter SISWA
         $dispensasi->update([
             'student_print_count' => $currentCount + 1,
             'printed_at' => now(),

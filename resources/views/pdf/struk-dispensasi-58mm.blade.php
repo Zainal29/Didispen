@@ -108,6 +108,10 @@
             padding-top: 2px;
             min-width: 100px;
         }
+        .signature-section .nip {
+            font-size: 9px;
+            margin-top: 2px;
+        }
         .footer {
             text-align: center;
             font-size: 9px;
@@ -146,11 +150,6 @@
     {{-- JUDUL --}}
     <div class="title">BUKTI DISPENSASI</div>
 
-    {{-- STATUS --}}
-    <!--<div class="status-badge">
-        {{ strtoupper($dispensasi->status) }}
-    </div>-->
-
     {{-- DATA --}}
     <table class="info-table">
         <tr>
@@ -188,11 +187,6 @@
             <td class="separator">:</td>
             <td class="value">{{ $dispensasi->jam_kembali }}</td>
         </tr>
-        <!--<tr>
-            <td class="label">Guru Piket</td>
-            <td class="separator">:</td>
-            <td class="value">{{ $dispensasi->guru->nama_lengkap ?? '-' }}</td>
-        </tr>-->
     </table>
 
     <div class="divider"></div>
@@ -201,7 +195,10 @@
     <div class="signature-section">
         <p class="date">SMKN 1 Bangsri, {{ now()->format('d/m/Y') }}</p>
         <p class="role">Guru Piket,</p>
-        <p class="name">{{ $dispensasi->guru->nama_lengkap ?? '________________' }}</p>
+        <p class="name">{{ $dispensasi->guru?->nama_lengkap ?? $dispensasi->guru?->user?->name ?? 'Guru Piket' }}</p>
+        @if(!empty($dispensasi->guru?->nip ?? $dispensasi->guru?->user?->nis_nip))
+            <p class="nip">NIP. {{ $dispensasi->guru?->nip ?? $dispensasi->guru?->user?->nis_nip }}</p>
+        @endif
     </div>
 
     <div class="divider"></div>

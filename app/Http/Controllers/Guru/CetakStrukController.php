@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use App\Helpers\PrintHelper;
 use App\Models\Dispensasi;
+use App\Models\Guru;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -21,11 +22,11 @@ class CetakStrukController extends Controller
      */
     public function exportPdf(Dispensasi $dispensasi, Request $request)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru.user']);
 
         $user = auth()->user();
 
-        // <i class="fas fa-check-circle"></i> OTORISASI: Izinkan Admin atau Guru (tanpa perlu cocokkan guru_id)
+        // ✅ OTORISASI: Izinkan Admin atau Guru
         if (!in_array($user->role, ['admin', 'guru'])) {
             abort(403, 'Akses ditolak. Hanya Admin atau Guru yang dapat mencetak.');
         }
@@ -35,7 +36,21 @@ class CetakStrukController extends Controller
             abort(403, 'Dispensasi harus dalam status disetujui untuk dicetak.');
         }
 
-        // <i class="fas fa-check-circle"></i> Cek limit cetak GURU
+        // ✅ Self-healing: jika guru_id belum tersimpan (misal disetujui sebelum patch), kaitkan guru yang mencetak/piket
+        if (empty($dispensasi->guru_id)) {
+            if ($user->guru) {
+                $dispensasi->update(['guru_id' => $user->guru->id]);
+                $dispensasi->load('guru.user');
+            } else {
+                $fallbackGuru = Guru::where('status_aktif', true)->first();
+                if ($fallbackGuru) {
+                    $dispensasi->update(['guru_id' => $fallbackGuru->id]);
+                    $dispensasi->load('guru.user');
+                }
+            }
+        }
+
+        // ✅ Cek limit cetak GURU
         $maxPrint = PrintHelper::maxTeacherLimit();
         $currentTeacherCount = $dispensasi->teacher_print_count ?? 0;
 
@@ -45,7 +60,7 @@ class CetakStrukController extends Controller
 
         $format = $request->query('format', 'thermal');
 
-        // <i class="fas fa-check-circle"></i> Increment counter GURU (bukan print_count!)
+        // ✅ Increment counter GURU (bukan print_count!)
         $dispensasi->update([
             'teacher_print_count' => $currentTeacherCount + 1,
             'printed_at' => now(),
@@ -70,7 +85,7 @@ class CetakStrukController extends Controller
 
         if (!$qrBase64) {
             $qrContent = url('/verifikasi/' . $dispensasi->id);
-            if (class_exists('\SimpleSoftwareIO\QrCode\Facades\QrCode')) {
+            if (class_exists('\\SimpleSoftwareIO\\QrCode\\Facades\\QrCode')) {
                 $svg = QrCode::size(120)->margin(0)->generate($qrContent);
                 $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
             }

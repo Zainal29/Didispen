@@ -177,8 +177,6 @@ class PengajuanController extends Controller
             'jam_keluar'      => 'Jam Pelajaran ke-' . $validated['jam_keluar'],   // ✅ BENAR
             'jam_kembali'     => 'Jam Pelajaran ke-' . $validated['jam_kembali'],  // ✅ BENAR
             'status'          => 'disetujui',
-            'disetujui_oleh'  => auth()->id(),
-            'disetujui_pada'  => now(),
             'qr_token'        => Str::random(64),
             'jam_masuk'       => $jamMasukCarbon,
             'foto_verifikasi' => $fotoPath,
@@ -195,7 +193,7 @@ class PengajuanController extends Controller
      */
     public function show(Dispensasi $dispensasi)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru', 'approvedBy']);
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
 
         return view('guru.pengajuan.show', compact('dispensasi'));
     }
@@ -209,21 +207,22 @@ class PengajuanController extends Controller
             return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
         }
 
+        $guru = auth()->user()->guru;
+
         $dispensasi->update([
             'status'         => 'disetujui',
-            'disetujui_oleh' => auth()->id(),
-            'disetujui_pada' => now(),
+            'guru_id'        => $guru?->id,
             'catatan_admin'  => $request->catatan_admin ?? null,
         ]);
 
         $this->generateQRCode($dispensasi);
 
         // ✅ TAMBAHKAN INI: Kirim Notifikasi ke Siswa
-                $this->notifikasiService->send(
-                    $dispensasi->siswa->user_id,
-                    "Pengajuan dispensasi Anda ({$dispensasi->nomor_surat}) telah DISETUJUI oleh Guru Piket. Silakan tunjukkan QR Code ke Satpam.",
-                    route('siswa.pengajuan.show', $dispensasi->id)
-                );
+        $this->notifikasiService->send(
+            $dispensasi->siswa->user_id,
+            "Pengajuan dispensasi Anda ({$dispensasi->nomor_surat}) telah DISETUJUI oleh Guru Piket. Silakan tunjukkan QR Code ke Satpam.",
+            route('siswa.pengajuan.show', $dispensasi->id)
+        );
 
         return redirect()->route('guru.pengajuan.index')
             ->with('success', 'Dispensasi berhasil disetujui. QR Code telah di-generate.');
@@ -245,8 +244,11 @@ class PengajuanController extends Controller
             'catatan_admin.min' => 'Alasan penolakan minimal 5 karakter.',
         ]);
 
+        $guru = auth()->user()->guru;
+
         $dispensasi->update([
-            'status' => 'ditolak',
+            'status'        => 'ditolak',
+            'guru_id'       => $guru?->id,
             'catatan_admin' => $validated['catatan_admin'],
         ]);
 

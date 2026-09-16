@@ -248,8 +248,8 @@
                     Bangsri, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
                     Guru Piket,<br>
                     <div class="ttd-space"></div>
-                    <strong><u>{{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }}</u></strong><br>
-                    NIP. {{ $dispensasi->guru?->nip ?? '-' }}
+                    <strong><u>{{ $dispensasi->guru?->nama_lengkap ?? $dispensasi->guru?->user?->name ?? 'Guru Piket' }}</u></strong><br>
+                    NIP. {{ $dispensasi->guru?->nip ?? $dispensasi->guru?->user?->nis_nip ?? '-' }}
                 </td>
             </tr>
         </table>
