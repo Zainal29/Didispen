@@ -137,8 +137,8 @@
 
                         <td class="p-4 text-center align-middle whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                                <button onclick="editItem({{ $s->id }})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Data">
-                                    <i class="fas fa-edit"></i>
+                                <button onclick="editItem({{ $s->id }})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="lihat Data">
+                                    <i class="fas fa-eye"></i>
                                 </button>
                                 <button onclick="deleteItem({{ $s->id }}, '{{ addslashes($s->nama_lengkap) }}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Data">
                                     <i class="fas fa-trash-alt"></i>
@@ -270,9 +270,9 @@
                     <button type="button" onclick="closeModal()" class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" form="siswaForm" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm transition-all flex items-center gap-2">
+                    <!--<button type="submit" form="siswaForm" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm transition-all flex items-center gap-2">
                         <i class="fas fa-save"></i> Simpan Data
-                    </button>
+                    </button>-->
                 </div>
             </form>
         </div>
@@ -303,32 +303,76 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeModal();
 });
 
+// function editItem(siswaId) {
+//     fetch(`/admin/siswa/${siswaId}/edit`)
+//         .then(res => res.json())
+//         .then(data => {
+//             document.getElementById('siswaForm').reset();
+//             document.getElementById('siswaId').value = siswaId;
+//             document.getElementById('formMethod').value = 'PATCH';
+//             document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-edit"></i> Edit Data Siswa';
+
+//             // Mengisi field form berdasarkan data JSON
+//             document.getElementById('nama_lengkap').value = data.nama_lengkap || '';
+//             document.getElementById('nis_nip').value = data.user?.nis_nip || '';
+//             document.getElementById('email').value = data.user?.email || '';
+//             document.getElementById('tanggal_lahir').value = data.tanggal_lahir ? data.tanggal_lahir.substring(0, 10) : '';
+//             document.getElementById('no_telepon_display').value = data.no_telepon || '';
+//             document.getElementById('jurusan_id').value = data.jurusan_id || '';
+//             document.getElementById('kelas_id').value = data.kelas_id || '';
+
+//             document.getElementById('siswaForm').action = `/admin/siswa/${siswaId}`;
+//             clearErrors();
+//             document.getElementById('formModal').classList.remove('hidden');
+//         })
+//         .catch(err => {
+//             console.error('Error:', err);
+//             Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat data siswa.' });
+//         });
+// }
 function editItem(siswaId) {
-    fetch(`/admin/siswa/${siswaId}/edit`)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('siswaForm').reset();
-            document.getElementById('siswaId').value = siswaId;
-            document.getElementById('formMethod').value = 'PATCH';
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-edit"></i> Edit Data Siswa';
+    // Tambahkan loading state (opsional)
+    Swal.fire({ title: 'Memuat data...', didOpen: () => { Swal.showLoading() } });
 
-            // Mengisi field form berdasarkan data JSON
-            document.getElementById('nama_lengkap').value = data.nama_lengkap || '';
-            document.getElementById('nis_nip').value = data.user?.nis_nip || '';
-            document.getElementById('email').value = data.user?.email || '';
-            document.getElementById('tanggal_lahir').value = data.tanggal_lahir ? data.tanggal_lahir.substring(0, 10) : '';
-            document.getElementById('no_telepon_display').value = data.no_telepon || '';
-            document.getElementById('jurusan_id').value = data.jurusan_id || '';
-            document.getElementById('kelas_id').value = data.kelas_id || '';
-
-            document.getElementById('siswaForm').action = `/admin/siswa/${siswaId}`;
-            clearErrors();
-            document.getElementById('formModal').classList.remove('hidden');
+    fetch(`/admin/siswa/${siswaId}/edit`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest', // ✅ PENTING: Memberi tahu Laravel ini adalah AJAX
+            'Accept': 'application/json'          // ✅ PENTING: Memaksa Laravel mengirim JSON
+        }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
         })
-        .catch(err => {
-            console.error('Error:', err);
-            Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat data siswa.' });
-        });
+    .then(data => {
+        Swal.close(); // Tutup loading
+
+        document.getElementById('siswaForm').reset();
+        document.getElementById('siswaId').value = data.id; // Gunakan data.id
+        document.getElementById('formMethod').value = 'PATCH';
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-edit"></i> Edit Data Siswa';
+
+        // Mengisi field form berdasarkan data JSON
+        document.getElementById('nama_lengkap').value = data.nama_lengkap || '';
+        document.getElementById('nis_nip').value = data.user?.nis_nip || '';
+        document.getElementById('email').value = data.user?.email || '';
+        document.getElementById('tanggal_lahir').value = data.tanggal_lahir || ''; // Format sudah Y-m-d dari controller
+        document.getElementById('no_telepon_display').value = data.no_telepon || '';
+        document.getElementById('jurusan_id').value = data.jurusan_id || '';
+        document.getElementById('kelas_id').value = data.kelas_id || '';
+
+        document.getElementById('siswaForm').action = `/admin/siswa/${data.id}`;
+
+        // Panggil fungsi clearErrors Anda jika ada
+        if (typeof clearErrors === 'function') clearErrors();
+
+        document.getElementById('formModal').classList.remove('hidden');
+    })
+    .catch(err => {
+        Swal.close();
+        console.error('Error:', err);
+        Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat data siswa. Pastikan ID valid.' });
+    });
 }
 
 function deleteItem(id, name) {

@@ -38,14 +38,36 @@
             </span>
         </div>
 
+        {{-- ID DINAMIS (NIS / NIP / ID) --}}
+                    @php
+                        // Tentukan Label berdasarkan Role
+                        $idLabel = match($user->role) {
+                            'siswa'  => 'NIS',
+                            'guru'   => 'NIP',
+                            'satpam' => 'ID Petugas',
+                            'admin'  => 'ID Admin',
+                            default  => 'ID'
+                        };
+
+                        // Tentukan Nilai (Asumsi data ada di kolom nis_nip pada tabel users)
+                        // Jika data NIS/NIP ada di tabel terpisah (misal: $user->siswa->nis), sesuaikan di sini.
+                        $idValue = $user->nis_nip ?? '-';
+                    @endphp
+
         <dl class="text-sm space-y-3 divide-y divide-gray-100">
             {{-- NIS / NIP --}}
-            <div class="pt-3 flex justify-between items-center gap-3">
+            <!--<div class="pt-3 flex justify-between items-center gap-3">
                 <dt class="text-gray-500 font-medium">NIS / NIP</dt>
                 <dd class="font-mono font-semibold text-gray-800 text-right">
                     {{ $user->nis_nip ?? '-' }}
                 </dd>
-            </div>
+            </div>-->
+            <div class="pt-3 flex justify-between items-center gap-3">
+                           <dt class="text-gray-500 font-medium">{{ $idLabel }}</dt>
+                           <dd class="font-mono font-semibold text-gray-800 text-right break-all">
+                               {{ $idValue }}
+                           </dd>
+                       </div>
 
             {{-- EMAIL --}}
             <div class="pt-3 flex justify-between items-center gap-3">

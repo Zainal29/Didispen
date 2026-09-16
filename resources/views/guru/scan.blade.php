@@ -94,8 +94,13 @@ function onScanSuccess(decodedText) {
         resultDiv.className = 'mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-left';
         resultDiv.innerHTML = '<p class="text-red-700 font-semibold text-sm"><i class="fas fa-exclamation-triangle mr-1.5"></i>Terjadi kesalahan koneksi.</p>';
 
-        html5QrCode.resume();
-        isProcessing = false;
+        // html5QrCode.resume();
+        // isProcessing = false;
+        // ✅ PERBAIKAN: Pastikan state di-reset dan kamera nyala kembali
+             isProcessing = false;
+             setTimeout(() => {
+                 html5QrCode.resume();
+             }, 2000);
     });
 }
 </script>

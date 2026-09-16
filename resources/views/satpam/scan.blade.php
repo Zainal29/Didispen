@@ -175,7 +175,15 @@ function verify(code) {
         result.innerHTML = '<p class="text-red-800 font-semibold text-sm"><i class="fas fa-triangle-exclamation mr-1"></i>Terjadi kesalahan koneksi.</p>';
         setStatus('Kesalahan koneksi', false);
         isProcessing = false;
+
+        // ✅ PERBAIKAN: Reset state dan nyalakan kamera kembali meski error
+                isProcessing = false;
+                isScanning = true;
+                if (html5QrCode) {
+                    try { html5QrCode.resume(); } catch (e) {}
+                }
     });
+
 }
 
 function restartScanner() {

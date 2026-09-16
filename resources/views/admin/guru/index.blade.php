@@ -131,8 +131,8 @@
 
                         <td class="p-4 text-center align-middle whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                                <button onclick='openModal(@json($g))' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Data">
-                                    <i class="fas fa-edit"></i>
+                                <button onclick='openModal(@json($g))' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="lihat Data">
+                                    <i class="fas fa-eye"></i>
                                 </button>
                                 <button onclick="deleteItem({{ $g->id }}, '{{ addslashes($g->nama_lengkap) }}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Data">
                                     <i class="fas fa-trash-alt"></i>
@@ -227,9 +227,9 @@
                     <button type="button" onclick="closeModal()" class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-all flex items-center gap-2">
+                    <!--<button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-all flex items-center gap-2">
                         <i class="fas fa-save"></i> Simpan Data
-                    </button>
+                    </button>-->
                 </div>
             </form>
         </div>

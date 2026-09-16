@@ -94,10 +94,34 @@ class SiswaController extends Controller
             ->with('success', 'Siswa berhasil ditambahkan. Password akun dikelola oleh SiPintu/Sijuna.');
     }
 
-    public function edit(Siswa $siswa)
+    // public function edit(Siswa $siswa)
+    // {
+    //     $kelasList   = Kelas::with('jurusan')->orderBy('nama_kelas')->get();
+    //     $jurusanList = Jurusan::orderBy('nama_jurusan')->get();
+
+    //     return view('admin.siswa.edit', compact('siswa', 'kelasList', 'jurusanList'));
+    // }
+    public function edit(Siswa $siswa, \Illuminate\Http\Request $request)
     {
-        $kelasList   = Kelas::with('jurusan')->orderBy('nama_kelas')->get();
-        $jurusanList = Jurusan::orderBy('nama_jurusan')->get();
+        // 1. CEK: Jika ini permintaan dari JavaScript (AJAX/Fetch), kirim data JSON
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'id'            => $siswa->id,
+                'nama_lengkap'  => $siswa->nama_lengkap,
+                'tanggal_lahir' => $siswa->tanggal_lahir ? \Carbon\Carbon::parse($siswa->tanggal_lahir)->format('Y-m-d') : null,
+                'no_telepon'    => $siswa->no_telepon,
+                'kelas_id'      => $siswa->kelas_id,
+                'jurusan_id'    => $siswa->jurusan_id,
+                'user'          => [
+                    'nis_nip' => $siswa->user->nis_nip ?? '',
+                    'email'   => $siswa->user->email ?? '',
+                ]
+            ]);
+        }
+
+        // 2. FALLBACK: Jika dibuka biasa di browser, tetap kirim View (agar tidak merusak fitur lain)
+        $kelasList   = \App\Models\Kelas::with('jurusan')->orderBy('nama_kelas')->get();
+        $jurusanList = \App\Models\Jurusan::orderBy('nama_jurusan')->get();
 
         return view('admin.siswa.edit', compact('siswa', 'kelasList', 'jurusanList'));
     }
