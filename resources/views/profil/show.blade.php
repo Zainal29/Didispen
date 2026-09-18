@@ -74,7 +74,7 @@
                 </dd>
             </div>
 
-            <!--{{-- NOMOR TELEPON --}}
+            {{-- NOMOR TELEPON --}}
             @if($user->role === 'siswa' && $user->siswa)
                 <div class="pt-3">
                     <dt class="text-gray-500 font-medium mb-1.5">No. Telepon / WA</dt>
@@ -91,65 +91,7 @@
                     </dd>
                 </div>
             @endif
-        </dl>-->
-
-        {{-- NOMOR TELEPON --}}
-        <div class="md:col-span-2 min-w-0 w-full max-w-full overflow-hidden">
-            <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
-                <i class="fas fa-phone-alt mr-1 text-emerald-600"></i>
-                No. Telepon / WhatsApp
-            </label>
-
-            <div class="flex w-full max-w-full min-w-0">
-                {{-- PREFIX --}}
-                <span class="inline-flex items-center justify-center
-                             px-2.5 sm:px-3
-                             rounded-l-lg
-                             border border-r-0 border-gray-300
-                             bg-gray-50 text-gray-600
-                             font-semibold text-xs sm:text-sm
-                             flex-shrink-0 whitespace-nowrap">
-                    <i class="fas fa-globe text-gray-400 mr-1 text-[10px] sm:text-xs"></i>
-                    +62
-                </span>
-
-                {{-- INPUT --}}
-                <input
-                    type="tel"
-                    name="no_telepon"
-                    id="phone_input"
-                    value="{{ old('no_telepon', preg_replace('/^\+62/', '', $user->siswa->no_telepon ?? '')) }}"
-                    placeholder="81234567890"
-                    inputmode="numeric"
-                    autocomplete="tel"
-                    class="block w-0 min-w-0 flex-1
-                           px-3 sm:px-4 py-2.5
-                           border border-gray-300
-                           rounded-r-lg
-                           focus:border-purple-600
-                           focus:ring-2 focus:ring-purple-600/20
-                           outline-none transition-all
-                           text-sm font-medium
-                           @error('no_telepon')
-                               border-red-500 bg-red-50
-                           @enderror"
-                >
-            </div>
-
-            @error('no_telepon')
-                <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                    <i class="fas fa-exclamation-circle flex-shrink-0"></i>
-                    <span class="min-w-0 break-words">{{ $message }}</span>
-                </p>
-            @else
-                <p class="text-gray-400 text-xs mt-1.5 flex items-start gap-1">
-                    <i class="fas fa-info-circle flex-shrink-0 mt-0.5"></i>
-                    <span>Masukkan nomor tanpa angka 0 di depan.</span>
-                </p>
-            @enderror
-        </div>
-
-
+        </dl>
 
         <div class="mt-6 pt-4 border-t border-gray-100 text-[11px] text-gray-500 flex items-start gap-2">
             <i class="fas fa-info-circle mt-0.5 flex-shrink-0"></i>
@@ -186,14 +128,14 @@
                             <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
                                 <i class="fas fa-phone-alt mr-1 text-emerald-600"></i> No. Telepon / WhatsApp
                             </label>
-                            <div class="flex w-full min-w-0 max-w-full">
-                                <span class="inline-flex items-center px-2.5 sm:px-3.5 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-600 font-semibold text-xs sm:text-sm flex-shrink-0">
+                            <div class="flex w-full min-w-0 max-w-full overflow-hidden">
+                                <span class="inline-flex items-center px-2.5 sm:px-3.5 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-600 font-semibold text-xs sm:text-sm flex-shrink-0 whitespace-nowrap">
                                     <i class="fas fa-globe text-gray-400 mr-1 sm:mr-1.5 text-xs"></i> +62
                                 </span>
-                                <input type="tel" name="no_telepon" id="phone_input"
+                                <input type="tel" name="no_telepon" id="phone_input" inputmode="numeric"
                                        value="{{ old('no_telepon', preg_replace('/^\+62/', '', $user->siswa->no_telepon ?? '')) }}"
                                        placeholder="81234567890"
-                                       class="w-full min-w-0 flex-1 px-3 sm:px-4 py-2.5 border border-gray-300 rounded-r-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium @error('no_telepon') border-red-500 bg-red-50 @enderror">
+                                       class="w-full min-w-0 flex-1 px-3 sm:px-4 py-2.5 border border-gray-300 rounded-r-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium max-w-full @error('no_telepon') border-red-500 bg-red-50 @enderror">
                             </div>
                             @error('no_telepon')
                                 <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i> {{ $message }}</p>
@@ -450,33 +392,67 @@
             </div>
 
             @if(isset($loginActivities) && $loginActivities->count() > 0)
+                @php
+                    $latestLogin = $loginActivities->first();
+                @endphp
+
+                <div class="mb-4 rounded-xl border border-indigo-100 bg-indigo-50 p-3 sm:p-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] uppercase font-semibold tracking-wide text-indigo-600">Terakhir Login</p>
+                            <p class="mt-1 text-sm sm:text-base font-bold text-gray-900">
+                                {{ $latestLogin->created_at?->translatedFormat('d M Y, H:i') ?? '-' }} WIB
+                            </p>
+                            <p class="text-[11px] text-indigo-700">
+                                {{ $latestLogin->created_at?->diffForHumans() ?? 'Belum tercatat' }}
+                            </p>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            <p class="text-[10px] uppercase font-semibold tracking-wide text-gray-500">Perangkat</p>
+                            <p class="mt-1 text-xs font-semibold text-gray-800">
+                                {{ $latestLogin->device_type ?? 'Unknown' }} • {{ $latestLogin->os ?? 'Unknown' }}
+                            </p>
+                            <p class="text-[11px] text-gray-500">{{ $latestLogin->browser ?? 'Unknown Browser' }}</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="divide-y divide-gray-100">
                     @forelse($loginActivities as $login)
+                        @php
+                            $loginTime = $login->created_at;
+                            $deviceType = $login->device_type ?? 'Unknown';
+                            $deviceIcon = match ($deviceType) {
+                                'HP' => 'fa-mobile-alt',
+                                'Tablet' => 'fa-tablet-alt',
+                                default => 'fa-laptop',
+                            };
+                        @endphp
                         <div class="py-4 first:pt-0 last:pb-0">
                             <div class="flex items-start gap-4">
                                 <div class="w-10 h-10 rounded-lg {{ $loop->first ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500' }} flex items-center justify-center flex-shrink-0">
-                                    <i class="fas {{ $login->platform === 'Mobile' ? 'fa-mobile-alt' : 'fa-desktop' }}"></i>
+                                    <i class="fas {{ $deviceIcon }}"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between gap-2 mb-1">
-                                        <div class="flex items-center gap-2">
-                                            <i class="fas {{ $login->platform === 'Mobile' ? 'fa-mobile-screen' : 'fa-laptop' }} text-gray-400 text-xs"></i>
-                                            <span class="font-bold text-sm text-gray-900">{{ $login->device_name ?? 'Perangkat Tidak Dikenal' }}</span>
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <i class="fas {{ $deviceIcon }} text-gray-400 text-xs"></i>
+                                            <span class="font-bold text-sm text-gray-900 truncate">{{ $deviceType }} • {{ $login->os ?? 'Unknown OS' }}</span>
                                             @if($loop->first)
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">Sesi Ini</span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 whitespace-nowrap">Sesi Ini</span>
                                             @endif
                                         </div>
-                                        <span class="text-[11px] text-gray-400 whitespace-nowrap">{{ $login->login_at?->diffForHumans() }}</span>
+                                        <span class="text-[11px] text-gray-400 whitespace-nowrap">{{ $loginTime?->diffForHumans() }}</span>
                                     </div>
 
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 pt-2 border-t border-gray-100">
                                         <div>
                                             <p class="text-[10px] uppercase font-semibold text-gray-400 mb-1">Waktu</p>
-                                            <p class="text-xs font-medium text-gray-700"><i class="far fa-clock text-gray-400 mr-1.5"></i> {{ $login->login_at?->translatedFormat('H:i') }} WIB</p>
+                                            <p class="text-xs font-medium text-gray-700"><i class="far fa-clock text-gray-400 mr-1.5"></i> {{ $loginTime?->translatedFormat('H:i') ?? '-' }} WIB</p>
                                         </div>
                                         <div>
                                             <p class="text-[10px] uppercase font-semibold text-gray-400 mb-1">Tanggal</p>
-                                            <p class="text-xs font-medium text-gray-700"><i class="far fa-calendar text-gray-400 mr-1.5"></i> {{ $login->login_at?->translatedFormat('d M Y') }}</p>
+                                            <p class="text-xs font-medium text-gray-700"><i class="far fa-calendar text-gray-400 mr-1.5"></i> {{ $loginTime?->translatedFormat('d M Y') ?? '-' }}</p>
                                         </div>
                                         <div>
                                             <p class="text-[10px] uppercase font-semibold text-gray-400 mb-1">Browser</p>

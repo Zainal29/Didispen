@@ -88,6 +88,7 @@ class ProfileController extends Controller
         return view('profil.show', [
             'user'           => $user,
             'loginHistory'   => $loginHistory,
+            'loginActivities'=> $loginHistory,
             'latestLogin'    => $latestLogin,
             'previousLogin'  => $previousLogin,
             'deviceChanged'  => $deviceChanged,
