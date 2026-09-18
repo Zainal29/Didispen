@@ -199,9 +199,9 @@
 
 
             {{-- Catatan Admin --}}
-            @if($dispensasi->catatan_admin)
+            @if($dispensasi->catatan_admin )
                 <div class="bg-amber-50 border border-amber-200 rounded-lg p-3.5">
-                    <span class="text-amber-700 text-[10px] font-semibold uppercase tracking-wider block mb-1">Catatan Penolakan / Admin</span>
+                    <span class="text-amber-700 text-[10px] font-semibold uppercase tracking-wider block mb-1">Catatan Penolakan Guru Piket</span>
                     <p class="text-amber-800 text-sm font-medium">{{ $dispensasi->catatan_admin }}</p>
                 </div>
             @endif

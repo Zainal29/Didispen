@@ -104,16 +104,46 @@ class DispensasiTimeHelper
     /**
      * Hitung selisih menit keterlambatan
      */
-    public static function hitungMenitTerlambat($batasWaktu, $referenceTime = null): int
-    {
-        if (empty($batasWaktu)) return 0;
+    // public static function hitungMenitTerlambat($batasWaktu, $referenceTime = null): int
+    // {
+    //     if (empty($batasWaktu)) return 0;
 
-        $batas = $batasWaktu instanceof \Carbon\Carbon ? $batasWaktu : \Carbon\Carbon::parse($batasWaktu);
-        $referensi = $referenceTime ?? now();
+    //     $batas = $batasWaktu instanceof \Carbon\Carbon ? $batasWaktu : \Carbon\Carbon::parse($batasWaktu);
+    //     $referensi = $referenceTime ?? now();
 
-        if ($referensi->lessThanOrEqualTo($batas)) return 0;
+    //     if ($referensi->lessThanOrEqualTo($batas)) return 0;
 
-        return (int) ceil($batas->diffInSeconds($referensi) / 60);
+    //     return (int) ceil($batas->diffInSeconds($referensi) / 60);
+    // }
+    public static function hitungMenitTerlambat(
+        $batasWaktu,
+        $referenceTime = null
+    ): int {
+        if (!$batasWaktu) {
+            return 0;
+        }
+
+        $timezone = config('app.timezone', 'Asia/Jakarta');
+
+        $batas = $batasWaktu instanceof Carbon
+            ? $batasWaktu->copy()->setTimezone($timezone)
+            : Carbon::parse($batasWaktu, $timezone);
+
+        $referensi = $referenceTime
+            ? (
+                $referenceTime instanceof Carbon
+                    ? $referenceTime->copy()->setTimezone($timezone)
+                    : Carbon::parse($referenceTime, $timezone)
+            )
+            : now($timezone);
+
+        if ($referensi->lessThanOrEqualTo($batas)) {
+            return 0;
+        }
+
+        return (int) floor(
+            $batas->diffInSeconds($referensi) / 60
+        );
     }
 
     /**

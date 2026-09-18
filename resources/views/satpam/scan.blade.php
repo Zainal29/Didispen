@@ -24,16 +24,13 @@
         </div>
         <div class="p-3.5 flex items-center justify-between border-t border-gray-200">
             <span id="scanStatus" class="inline-flex items-center text-[11px] font-semibold text-emerald-600">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span> Kamera aktif
+                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Kamera aktif
             </span>
             <button onclick="restartScanner()" class="inline-flex items-center px-3 py-2 rounded-lg text-[11px] font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors">
                 <i class="fas fa-redo mr-1.5"></i> Scan Ulang
             </button>
         </div>
     </div>
-
-    {{-- Hasil Scan QR --}}
-    <div id="scanResult" class="hidden rounded-xl border p-4"></div>
 
     {{-- VERIFIKASI MANUAL --}}
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mt-4">
@@ -43,7 +40,7 @@
             <input type="text"
                    id="manualCode"
                    required
-                   placeholder="Masukkan No. Surat"
+                   placeholder="Masukkan No. Surat, NIS, atau Nama"
                    class="flex-1 h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-xs font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 transition-all">
             <button type="submit"
                     class="px-4 h-11 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
@@ -59,6 +56,46 @@
     <div id="manualSearchResult" class="hidden mt-4 space-y-3"></div>
 
 </div>
+
+{{-- ======================================================== --}}
+{{-- MODAL POPUP HASIL SCAN QR & KONFIRMASI --}}
+{{-- ======================================================== --}}
+<div id="scanModal"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/75 backdrop-blur-sm hidden overflow-y-auto"
+     onclick="handleBackdropClick(event)">
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-8 transition-all"
+         onclick="event.stopPropagation()">
+
+        {{-- Modal Header --}}
+        <div id="modalHeader" class="p-4 bg-gray-900 text-white flex items-center justify-between transition-colors">
+            <div class="flex items-center gap-2.5">
+                <div id="modalHeaderIcon" class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+                <div>
+                    <h3 id="modalTitle" class="text-sm font-bold text-white leading-tight">Hasil Scan QR Code</h3>
+                    <p id="modalSubtitle" class="text-[11px] text-white/80">Memeriksa data dispensasi...</p>
+                </div>
+            </div>
+            <button type="button"
+                    onclick="closeScanModal()"
+                    class="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                    title="Tutup (Esc)">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        {{-- Modal Body --}}
+        <div id="modalBody" class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+            {{-- Content akan di-render secara dinamis oleh JavaScript --}}
+        </div>
+
+        {{-- Modal Footer --}}
+        <div id="modalFooter" class="p-4 bg-gray-50 border-t border-gray-100 flex gap-2.5">
+            {{-- Tombol aksi akan di-render secara dinamis --}}
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -67,6 +104,8 @@
 let html5QrCode;
 let isScanning = true;
 let isProcessing = false;
+let currentScannedQr = null;
+let autoCloseTimer = null;
 
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -77,7 +116,7 @@ function escapeHtml(text) {
 function setStatus(text, ok = true) {
     const el = document.getElementById('scanStatus');
     if (!el) return;
-    el.innerHTML = `<span class="w-2 h-2 rounded-full ${ok ? 'bg-emerald-500' : 'bg-amber-500'} mr-1.5"></span> ${escapeHtml(text)}`;
+    el.innerHTML = `<span class="w-2 h-2 rounded-full ${ok ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'} mr-1.5"></span> ${escapeHtml(text)}`;
     el.className = `inline-flex items-center text-[11px] font-semibold ${ok ? 'text-emerald-600' : 'text-amber-600'}`;
 }
 
@@ -86,117 +125,411 @@ function onScanSuccess(decodedText) {
 
     isProcessing = true;
     isScanning = false;
+    currentScannedQr = decodedText;
 
     try { html5QrCode.pause(); } catch (e) {}
-    verify(decodedText);
+    if (navigator.vibrate) navigator.vibrate(80);
+
+    showModalLoading();
+    checkQrData(decodedText);
 }
 
-function verify(code) {
-    setStatus('Memverifikasi data...', false);
+// 1. Tampilkan loading di modal
+function showModalLoading() {
+    const modal = document.getElementById('scanModal');
+    const header = document.getElementById('modalHeader');
+    const headerIcon = document.getElementById('modalHeaderIcon');
+    const title = document.getElementById('modalTitle');
+    const subtitle = document.getElementById('modalSubtitle');
+    const body = document.getElementById('modalBody');
+    const footer = document.getElementById('modalFooter');
 
+    header.className = 'p-4 bg-gray-900 text-white flex items-center justify-between transition-colors';
+    headerIcon.innerHTML = '<i class="fas fa-qrcode"></i>';
+    title.textContent = 'Memeriksa QR Code';
+    subtitle.textContent = 'Menghubungkan ke server...';
+
+    body.innerHTML = `
+        <div class="py-12 text-center">
+            <i class="fas fa-circle-notch fa-spin text-red-600 text-4xl mb-3"></i>
+            <h4 class="font-bold text-gray-800 text-base">Memverifikasi Data Siswa...</h4>
+            <p class="text-xs text-gray-500 mt-1">Mohon tunggu sebentar, sedang mencocokkan kode QR.</p>
+        </div>
+    `;
+
+    footer.innerHTML = `
+        <button type="button" onclick="closeScanModal()" class="w-full py-2.5 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition-colors">
+            Batal
+        </button>
+    `;
+
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    setStatus('Memverifikasi QR Code...', false);
+}
+
+// 2. Cek data QR Code (Mode: Check/Preview)
+function checkQrData(code) {
     fetch('{{ route("satpam.scan.verify") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
         },
-        body: JSON.stringify({ qr_data: code })
+        body: JSON.stringify({ qr_data: code, action: 'check' })
     })
     .then(r => {
         if (r.status === 429) {
             return {
                 success: false,
-                message: 'QR Code baru saja di-scan! Mohon tunggu 5 detik sebelum scan berikutnya.'
+                message: 'Terlalu banyak permintaan scan. Mohon tunggu beberapa detik.'
             };
         }
         return r.json();
     })
     .then(data => {
-        const result = document.getElementById('scanResult');
-        result.classList.remove('hidden');
-
-        if (data.success) {
-            if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
-            const themeColor = data.action === 'keluar' ? 'emerald' : (data.is_terlambat ? 'red' : 'emerald');
-            const icon = data.action === 'keluar' ? 'fa-door-open' : 'fa-door-closed';
-
-            result.className = `rounded-xl border p-4 bg-${themeColor}-50 border-${themeColor}-200`;
-
-            let extraInfo = '';
-            if (data.action === 'keluar' && data.is_sampai_pulang) {
-                extraInfo = `<div class="mt-2 p-2 bg-amber-100 border border-amber-200 rounded-lg text-[11px] text-amber-800 font-semibold"><i class="fas fa-info-circle mr-1"></i> Dispensasi sampai pulang. Tidak wajib scan kembali.</div>`;
-            } else if (data.is_terlambat) {
-                extraInfo = `<div class="mt-2 p-2 bg-red-100 border border-red-200 rounded-lg text-[11px] text-red-800 font-semibold"><i class="fas fa-exclamation-triangle mr-1"></i> Siswa terlambat kembali!</div>`;
-            }
-
-            result.innerHTML = `
-                <div class="flex items-center space-x-3 mb-3">
-                    <div class="w-10 h-10 rounded-lg bg-${themeColor}-600 text-white flex items-center justify-center text-base"><i class="fas ${icon}"></i></div>
-                    <div>
-                        <p class="font-bold text-${themeColor}-800 text-base leading-tight">${escapeHtml(data.message)}</p>
-                        <p class="text-[11px] text-${themeColor}-600 font-semibold">QR Code valid & terverifikasi</p>
-                    </div>
-                </div>
-                <div class="bg-white rounded-lg border border-${themeColor}-200 p-3 text-xs space-y-1">
-                    <p><span class="text-gray-500">Nama:</span> <strong class="text-gray-800">${escapeHtml(data.data.siswa.nama_lengkap)}</strong></p>
-                    <p><span class="text-gray-500">Kelas:</span> <strong class="text-gray-800">${escapeHtml(data.data.siswa.kelas?.nama_kelas ?? '-')}</strong></p>
-                    <p><span class="text-gray-500">Jam Kembali:</span> <strong class="text-gray-800">${escapeHtml(data.data.jam_kembali)}</strong></p>
-                </div>
-                ${extraInfo}
-                <div class="mt-3 text-right">
-                    <button onclick="restartScanner()" class="px-3 py-1.5 bg-${themeColor}-600 hover:bg-${themeColor}-700 text-white rounded-lg text-xs font-semibold transition-colors">
-                        <i class="fas fa-redo mr-1"></i> Scan Berikutnya
-                    </button>
-                </div>`;
-            setStatus('Selesai — data ditampilkan', true);
-            setTimeout(() => { restartScanner(); }, 5000);
+        if (data.success && data.mode === 'preview') {
+            renderScanDetail(data.data);
         } else {
-            if (navigator.vibrate) navigator.vibrate(300);
-            result.className = 'rounded-xl border p-4 bg-amber-50 border-amber-200';
-            result.innerHTML = `
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center text-base"><i class="fas fa-clock"></i></div>
-                    <div>
-                        <p class="font-bold text-amber-800 text-base leading-tight">TUNGGU SEBENTAR</p>
-                        <p class="text-xs text-amber-700 font-semibold">${escapeHtml(data.message)}</p>
-                    </div>
-                </div>
-                <div class="mt-3 text-right">
-                    <button onclick="restartScanner()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold transition-colors"><i class="fas fa-redo mr-1"></i> Coba Lagi</button>
-                </div>`;
-            setStatus('Cooldown aktif', false);
-            setTimeout(() => { restartScanner(); }, 3000);
+            renderScanError(data.message || 'QR Code tidak valid atau dispensasi tidak ditemukan.');
         }
     })
-    .catch(() => {
-        const result = document.getElementById('scanResult');
-        result.classList.remove('hidden');
-        result.className = 'rounded-xl border p-4 bg-red-50 border-red-200';
-        result.innerHTML = '<p class="text-red-800 font-semibold text-sm"><i class="fas fa-triangle-exclamation mr-1"></i>Terjadi kesalahan koneksi.</p>';
-        setStatus('Kesalahan koneksi', false);
-        isProcessing = false;
-
-        // ✅ PERBAIKAN: Reset state dan nyalakan kamera kembali meski error
-                isProcessing = false;
-                isScanning = true;
-                if (html5QrCode) {
-                    try { html5QrCode.resume(); } catch (e) {}
-                }
+    .catch(err => {
+        console.error('Fetch error:', err);
+        renderScanError('Terjadi kesalahan jaringan saat memverifikasi QR Code.');
     });
-
 }
 
-function restartScanner() {
-    document.getElementById('scanResult').classList.add('hidden');
-    document.getElementById('manualSearchResult').classList.add('hidden');
+// 3. Render detail dispensasi & tombol persetujuan di Modal
+function renderScanDetail(data) {
+    const header = document.getElementById('modalHeader');
+    const headerIcon = document.getElementById('modalHeaderIcon');
+    const title = document.getElementById('modalTitle');
+    const subtitle = document.getElementById('modalSubtitle');
+    const body = document.getElementById('modalBody');
+    const footer = document.getElementById('modalFooter');
 
+    let isKeluar = data.action_type === 'keluar';
+    let isKembali = data.action_type === 'kembali';
+    let isSelesai = data.status === 'selesai';
+
+    // Header styling
+    if (isKeluar) {
+        header.className = 'p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between transition-colors';
+        headerIcon.innerHTML = '<i class="fas fa-door-open"></i>';
+        title.textContent = 'Konfirmasi Siswa KELUAR';
+        subtitle.textContent = 'Dispensasi telah disetujui & siap keluar';
+    } else if (isKembali) {
+        header.className = 'p-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between transition-colors';
+        headerIcon.innerHTML = '<i class="fas fa-door-closed"></i>';
+        title.textContent = 'Konfirmasi Siswa KEMBALI';
+        subtitle.textContent = 'Siswa telah kembali ke lingkungan sekolah';
+    } else {
+        header.className = 'p-4 bg-gray-800 text-white flex items-center justify-between transition-colors';
+        headerIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+        title.textContent = 'Informasi Dispensasi';
+        subtitle.textContent = `Status: ${data.status.toUpperCase()}`;
+    }
+
+    // Alerts
+    let alertHtml = '';
+    if (data.is_terlambat) {
+        alertHtml += `
+            <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-semibold flex items-center gap-2.5">
+                <i class="fas fa-exclamation-triangle text-red-600 text-base flex-shrink-0"></i>
+                <div>
+                    <p class="font-bold text-red-900">PERINGATAN: TERLAMBAT KEMBALI!</p>
+                    <p class="text-[11px] text-red-700 font-normal">Siswa telah melewati batas jam kembali (${escapeHtml(data.jam_kembali)}).</p>
+                </div>
+            </div>
+        `;
+    }
+    if (data.is_sampai_pulang && isKeluar) {
+        alertHtml += `
+            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-semibold flex items-center gap-2.5">
+                <i class="fas fa-info-circle text-amber-600 text-base flex-shrink-0"></i>
+                <div>
+                    <p class="font-bold text-amber-900">Dispensasi Sampai Pulang</p>
+                    <p class="text-[11px] text-amber-700 font-normal">Siswa diizinkan hingga jam pulang, tidak wajib scan kembali.</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Foto verifikasi atau avatar
+    let photoHtml = '';
+    if (data.foto_verifikasi) {
+        photoHtml = `
+            <div class="relative flex-shrink-0">
+                <img src="${data.foto_verifikasi}"
+                     alt="Foto ${escapeHtml(data.siswa.nama_lengkap)}"
+                     class="w-20 h-20 object-cover rounded-xl border-2 border-blue-500 shadow-sm bg-gray-100">
+                <span class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap shadow">
+                    Foto Wajah
+                </span>
+            </div>
+        `;
+    } else {
+        photoHtml = `
+            <div class="w-20 h-20 rounded-xl bg-blue-50 text-blue-600 flex flex-col items-center justify-center flex-shrink-0 border border-blue-100 shadow-sm">
+                <i class="fas fa-user-graduate text-2xl mb-1"></i>
+                <span class="text-[9px] text-gray-500 font-medium">Siswa</span>
+            </div>
+        `;
+    }
+
+    body.innerHTML = `
+        ${alertHtml}
+
+        {{-- Profil Siswa --}}
+        <div class="flex items-start gap-3.5 p-3.5 bg-gray-50/80 rounded-xl border border-gray-200">
+            ${photoHtml}
+            <div class="min-w-0 flex-1">
+                <h4 class="font-bold text-gray-900 text-base leading-snug">${escapeHtml(data.siswa.nama_lengkap)}</h4>
+                <p class="text-xs text-gray-500 font-mono mt-0.5"><i class="fas fa-id-card text-gray-400 mr-1"></i>NIS: ${escapeHtml(data.siswa.nis)}</p>
+                <p class="text-xs font-semibold text-gray-700 mt-1"><i class="fas fa-graduation-cap text-gray-400 mr-1"></i>${escapeHtml(data.siswa.kelas)} • ${escapeHtml(data.siswa.jurusan)}</p>
+                <p class="text-[11px] text-gray-500 mt-1"><i class="fas fa-user-check text-gray-400 mr-1"></i>Piket: <span class="font-medium text-gray-700">${escapeHtml(data.guru)}</span></p>
+            </div>
+        </div>
+
+        {{-- Ringkasan Surat & Jam --}}
+        <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                <span class="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">No. Surat</span>
+                <span class="font-mono font-bold text-gray-800 truncate block">${escapeHtml(data.nomor_surat)}</span>
+            </div>
+            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                <span class="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">Waktu Dispensasi</span>
+                <span class="font-bold text-gray-800 block">${escapeHtml(data.jam_keluar)} &rarr; ${escapeHtml(data.jam_kembali)}</span>
+            </div>
+        </div>
+
+        {{-- Keperluan & Alasan --}}
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs">
+            <span class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Keperluan / Alasan</span>
+            <p class="text-gray-800 font-medium leading-relaxed">${escapeHtml(data.alasan || '-')}</p>
+            ${data.tujuan ? `<p class="text-[11px] text-gray-500 mt-1.5"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i>Tujuan: <strong>${escapeHtml(data.tujuan)}</strong></p>` : ''}
+        </div>
+
+        {{-- Pertanyaan Konfirmasi --}}
+        <div class="text-center pt-2">
+            ${isKeluar ? `
+                <p class="text-sm font-bold text-gray-900">
+                    Setujui siswa ini untuk <span class="text-blue-600 underline decoration-blue-300 font-extrabold">KELUAR</span> dari sekolah?
+                </p>
+                <p class="text-[11px] text-gray-500 mt-0.5">Cocokkan wajah siswa dengan foto sebelum menyetujui.</p>
+            ` : isKembali ? `
+                <p class="text-sm font-bold text-gray-900">
+                    Konfirmasi siswa ini telah <span class="text-emerald-600 underline decoration-emerald-300 font-extrabold">KEMBALI</span> ke sekolah?
+                </p>
+                <p class="text-[11px] text-gray-500 mt-0.5">Status dispensasi akan otomatis ditandai SELESAI.</p>
+            ` : isSelesai ? `
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold">
+                    <i class="fas fa-check-circle mr-1 text-emerald-600"></i> Dispensasi ini sudah selesai diproses.
+                </div>
+            ` : `
+                <p class="text-xs text-gray-600">Dispensasi dalam status <strong>${escapeHtml(data.status)}</strong>. Tidak memerlukan aksi scan.</p>
+            `}
+        </div>
+    `;
+
+    // Footer actions
+    if (isKeluar) {
+        footer.innerHTML = `
+            <button type="button"
+                    onclick="closeScanModal()"
+                    class="py-3 px-4 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 font-semibold text-xs transition-colors">
+                <i class="fas fa-times mr-1"></i> Batal
+            </button>
+            <button type="button"
+                    id="btnConfirmAction"
+                    onclick="submitConfirmation('keluar')"
+                    class="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-1.5">
+                <i class="fas fa-door-open"></i> Ya, Setujui KELUAR
+            </button>
+        `;
+    } else if (isKembali) {
+        footer.innerHTML = `
+            <button type="button"
+                    onclick="closeScanModal()"
+                    class="py-3 px-4 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 font-semibold text-xs transition-colors">
+                <i class="fas fa-times mr-1"></i> Batal
+            </button>
+            <button type="button"
+                    id="btnConfirmAction"
+                    onclick="submitConfirmation('kembali')"
+                    class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5">
+                <i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI
+            </button>
+        `;
+    } else {
+        footer.innerHTML = `
+            <button type="button"
+                    onclick="closeScanModal()"
+                    class="w-full py-3 px-4 rounded-xl bg-gray-800 hover:bg-gray-900 text-white font-semibold text-xs transition-colors">
+                <i class="fas fa-check mr-1.5"></i> Tutup & Scan Ulang
+            </button>
+        `;
+    }
+
+    setStatus('Menunggu konfirmasi...', true);
+}
+
+// 4. Render Error Modal
+function renderScanError(message) {
+    const header = document.getElementById('modalHeader');
+    const headerIcon = document.getElementById('modalHeaderIcon');
+    const title = document.getElementById('modalTitle');
+    const subtitle = document.getElementById('modalSubtitle');
+    const body = document.getElementById('modalBody');
+    const footer = document.getElementById('modalFooter');
+
+    header.className = 'p-4 bg-red-600 text-white flex items-center justify-between transition-colors';
+    headerIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+    title.textContent = 'QR Code Tidak Valid';
+    subtitle.textContent = 'Gagal memverifikasi dispensasi';
+
+    body.innerHTML = `
+        <div class="py-8 text-center">
+            <div class="w-14 h-14 mx-auto rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl mb-3">
+                <i class="fas fa-times"></i>
+            </div>
+            <h4 class="font-bold text-gray-800 text-base">Tidak Dapat Memproses</h4>
+            <p class="text-xs text-gray-600 mt-1 max-w-sm mx-auto">${escapeHtml(message)}</p>
+        </div>
+    `;
+
+    footer.innerHTML = `
+        <button type="button"
+                onclick="closeScanModal()"
+                class="w-full py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition-colors">
+            <i class="fas fa-redo mr-1.5"></i> Scan Ulang
+        </button>
+    `;
+
+    setStatus('Scan gagal — kode tidak valid', false);
+}
+
+// 5. Submit Konfirmasi (Keluar / Kembali)
+function submitConfirmation(action) {
+    const btn = document.getElementById('btnConfirmAction');
+    if (!btn || !currentScannedQr) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1.5"></i> Memproses...';
+    btn.classList.add('opacity-75', 'cursor-not-allowed');
+
+    fetch('{{ route("satpam.scan.verify") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ qr_data: currentScannedQr, action: action })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+            renderSuccessState(data);
+        } else {
+            Swal.fire('Gagal', data.message || 'Terjadi kesalahan saat konfirmasi.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = action === 'keluar' ? '<i class="fas fa-door-open"></i> Ya, Setujui KELUAR' : '<i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI';
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+    })
+    .catch(err => {
+        console.error('Submit error:', err);
+        Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = action === 'keluar' ? '<i class="fas fa-door-open"></i> Ya, Setujui KELUAR' : '<i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI';
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+    });
+}
+
+// 6. Render State Sukses di Modal
+function renderSuccessState(data) {
+    const header = document.getElementById('modalHeader');
+    const headerIcon = document.getElementById('modalHeaderIcon');
+    const title = document.getElementById('modalTitle');
+    const subtitle = document.getElementById('modalSubtitle');
+    const body = document.getElementById('modalBody');
+    const footer = document.getElementById('modalFooter');
+
+    header.className = 'p-4 bg-emerald-600 text-white flex items-center justify-between transition-colors';
+    headerIcon.innerHTML = '<i class="fas fa-check"></i>';
+    title.textContent = 'Berhasil Dikonfirmasi!';
+    subtitle.textContent = 'Data telah dicatat ke sistem';
+
+    body.innerHTML = `
+        <div class="py-8 text-center">
+            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mb-3 shadow-inner">
+                <i class="fas fa-check"></i>
+            </div>
+            <h4 class="font-bold text-gray-900 text-lg leading-snug">${escapeHtml(data.message)}</h4>
+            <p class="text-xs text-gray-500 mt-2">Modal akan tertutup otomatis dalam 3 detik untuk scan berikutnya.</p>
+        </div>
+    `;
+
+    footer.innerHTML = `
+        <button type="button"
+                onclick="closeScanModal()"
+                class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-md shadow-emerald-600/20">
+            <i class="fas fa-redo mr-1.5"></i> Scan Siswa Berikutnya
+        </button>
+    `;
+
+    setStatus('Berhasil — siap scan berikutnya', true);
+
+    if (autoCloseTimer) clearTimeout(autoCloseTimer);
+    autoCloseTimer = setTimeout(() => {
+        closeScanModal();
+    }, 3000);
+}
+
+// 7. Tutup Modal & Nyalakan Kembali Scanner
+function closeScanModal() {
+    if (autoCloseTimer) {
+        clearTimeout(autoCloseTimer);
+        autoCloseTimer = null;
+    }
+
+    const modal = document.getElementById('scanModal');
+    modal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+
+    currentScannedQr = null;
     isProcessing = false;
     isScanning = true;
 
     if (html5QrCode) {
         try { html5QrCode.resume(); } catch (e) {}
-        setStatus('Kamera aktif — menunggu scan');
     }
+
+    setStatus('Kamera aktif — siap scan');
+}
+
+function handleBackdropClick(e) {
+    if (e.target.id === 'scanModal') {
+        closeScanModal();
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('scanModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeScanModal();
+        }
+    }
+});
+
+function restartScanner() {
+    closeScanModal();
+    document.getElementById('manualSearchResult').classList.add('hidden');
 }
 
 // VERIFIKASI MANUAL - AJAX
@@ -250,15 +583,15 @@ function manualVerify(e) {
                     <div class="border border-gray-200 rounded-lg p-3 bg-white shadow-sm">
                         <div class="flex justify-between items-start mb-2">
                             <div>
-                                <p class="font-mono font-semibold text-sm text-gray-800">${d.nomor_surat}</p>
-                                <p class="font-bold text-gray-900">${d.siswa_nama}</p>
-                                <p class="text-xs text-gray-500">${d.siswa_nis} • ${d.siswa_kelas}</p>
+                                <p class="font-mono font-semibold text-sm text-gray-800">${escapeHtml(d.nomor_surat)}</p>
+                                <p class="font-bold text-gray-900">${escapeHtml(d.siswa_nama)}</p>
+                                <p class="text-xs text-gray-500">${escapeHtml(d.siswa_nis)} • ${escapeHtml(d.siswa_kelas)}</p>
                             </div>
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold ${statusClass}">${d.status.toUpperCase()}</span>
+                            <span class="px-2 py-1 rounded-md text-[10px] font-bold ${statusClass}">${escapeHtml(d.status.toUpperCase())}</span>
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs mb-2">
-                            <div><span class="text-gray-500">Keluar:</span> <strong>${d.jam_keluar}</strong></div>
-                            <div><span class="text-gray-500">Kembali:</span> <strong>${d.jam_kembali}</strong></div>
+                            <div><span class="text-gray-500">Keluar:</span> <strong>${escapeHtml(d.jam_keluar)}</strong></div>
+                            <div><span class="text-gray-500">Kembali:</span> <strong>${escapeHtml(d.jam_kembali)}</strong></div>
                         </div>
                         ${actionBtn}
                     </div>
@@ -271,11 +604,11 @@ function manualVerify(e) {
     })
     .catch(error => {
         console.error('Error:', error);
-        resultDiv.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center"><p class="text-red-700 font-semibold text-sm">Terjadi kesalahan</p><p class="text-xs text-red-600 mt-1">${error.message}</p></div>`;
+        resultDiv.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center"><p class="text-red-700 font-semibold text-sm">Terjadi kesalahan</p><p class="text-xs text-red-600 mt-1">${escapeHtml(error.message)}</p></div>`;
     });
 }
 
-// QUICK ACTION - KONFIRMASI CEPAT
+// QUICK ACTION - KONFIRMASI CEPAT MANUAL
 function quickAction(action, dispensasiId) {
     const confirmMsg = action === 'keluar' ? 'Konfirmasi siswa KELUAR dari sekolah?' : 'Konfirmasi siswa KEMBALI ke sekolah?';
 
@@ -327,7 +660,7 @@ function initScanner() {
     html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
     .then(() => {
         isScanning = true;
-        setStatus('Kamera aktif — menunggu scan');
+        setStatus('Kamera aktif — siap scan');
     })
     .catch(err => {
         html5QrCode.start({ facingMode: "user" }, config, onScanSuccess)

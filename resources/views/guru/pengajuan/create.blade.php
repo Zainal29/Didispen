@@ -54,8 +54,26 @@
                     </p>
                 </div>
 
-                <form method="POST" action="{{ route('guru.pengajuan.store') }}" enctype="multipart/form-data" id="formDispensasi" class="space-y-5">
-                    @csrf
+                <!--<form method="POST"
+                action="{{ route('guru.pengajuan.store') }}" enctype="multipart/form-data" id="formDispensasi" class="space-y-5">
+                    @csrf-->
+                    <!--<form x-data="{ loading: false }"
+                          @submit="loading = true"
+                          method="POST"
+                          action="{{ route('guru.pengajuan.store') }}"
+                          enctype="multipart/form-data"
+                          id="formDispensasi"
+                          class="space-y-5">
+                        @csrf-->
+                        <form
+                            x-data="{ loading: false }"
+                            @submit="loading = true"
+                            method="POST"
+                            action="{{ route('guru.pengajuan.store') }}"
+                            enctype="multipart/form-data"
+                            id="formDispensasi"
+                            class="space-y-5">
+                            @csrf
 
                     {{-- Info Guru Piket --}}
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-3.5 flex items-center gap-3">
@@ -208,12 +226,96 @@
                         </div>
                     </div>
 
-                    {{-- Aksi --}}
+                    <!--{{-- Aksi --}}
                     <div class="pt-4 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
                         <button type="submit" id="submitBtn" class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
                             <i class="fas fa-paper-plane mr-2"></i>Buat Dispensasi
+
+                            <button type="submit"
+                                        :disabled="loading"
+                                        class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2 shadow-sm">
+                                    <i x-show="loading" class="fas fa-spinner fa-spin mr-1.5"></i>
+                                    <span x-text="loading ? 'Sedang Memproses...' : 'Buat Dispensasi'"></span>
+                                </button>
                         </button>
+
+
+
                         <a href="{{ route('guru.pengajuan.index') }}" class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+                            Batal
+                        </a>
+                    </div>-->
+                    <!--{{-- Aksi --}}
+                    <div class="pt-4 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
+
+                        <button
+                            type="submit"
+                            id="submitBtn"
+                            :disabled="loading"
+                            class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2 shadow-sm">
+
+                            {{-- Spinner saat proses --}}
+                            <i
+                                x-show="loading"
+                                class="fas fa-spinner fa-spin mr-1.5">
+                            </i>
+
+                            {{-- Icon pesawat saat normal --}}
+                            <i
+                                x-show="!loading"
+                                class="fas fa-paper-plane mr-1.5">
+                            </i>
+
+                            {{-- Teks tombol --}}
+                            <span x-text="loading ? 'Sedang Memproses...' : 'Buat Dispensasi'">
+                                Buat Dispensasi
+                            </span>
+                        </button>
+
+                        <a
+                            href="{{ route('guru.pengajuan.index') }}"
+                            :class="{ 'pointer-events-none opacity-50': loading }"
+                            class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+                            Batal
+                        </a>
+
+                    </div>-->
+
+                    {{-- Aksi --}}
+                    <div class="pt-4 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
+                        <button
+                            type="submit"
+                            id="submitBtn"
+                            :disabled="loading"
+                            class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2">
+
+                            {{-- Spinner saat loading --}}
+                            <i
+                                x-show="loading"
+                                class="fas fa-spinner fa-spin text-base"
+                                aria-hidden="true">
+                            </i>
+
+                            {{-- Ikon pesawat saat normal --}}
+                            <i
+                                x-show="!loading"
+                                class="fas fa-paper-plane text-base"
+                                aria-hidden="true">
+                            </i>
+
+                            {{-- Teks tombol --}}
+                            <span
+                                x-text="loading
+                                    ? 'Sedang Mengirim Pengajuan...'
+                                    : 'Kirim Pengajuan'">
+                                Kirim Pengajuan
+                            </span>
+                        </button>
+
+                        <a
+                            href="{{ route('guru.pengajuan.index') }}"
+                            :class="{ 'pointer-events-none opacity-50': loading }"
+                            class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
                             Batal
                         </a>
                     </div>
@@ -426,7 +528,7 @@
         // 3. SELECT2: Pencarian Siswa (NIS/Nama)
         // ==========================================
         $('#siswa_select').select2({
-            placeholder: 'Ketik NIS atau nama siswa...',
+            placeholder: 'Ketik NIS atau nama siswa contoh : 4717',
             allowClear: true,
             ajax: {
                 url: '{{ route("guru.pengajuan.search-siswa") }}',
@@ -681,10 +783,26 @@
                     updateJamKembaliOptions();
                 }
                 if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Buat Dispensasi';
-                    submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                    submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    const alpineData = Alpine.$data(form);
+
+                    if (!alpineData.loading) {
+                        submitBtn.disabled = false;
+
+                        submitBtn.innerHTML = `
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Kirim Pengajuan
+                        `;
+                    }
+
+                    submitBtn.classList.remove(
+                        'bg-gray-400',
+                        'cursor-not-allowed'
+                    );
+
+                    submitBtn.classList.add(
+                        'bg-blue-600',
+                        'hover:bg-blue-700'
+                    );
                 }
             }
         }

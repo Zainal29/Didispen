@@ -73,14 +73,20 @@ class Dispensasi extends Model
     /**
      * <i class="fas fa-check-circle"></i> HELPER: Cek apakah dispensasi ini sudah overdue (terlambat)
      */
+    // public function isOverdue(): bool
+    // {
+    //     if (! $this->batas_waktu_kembali) {
+    //         return false;
+    //     }
+
+    //     return $this->status === 'keluar' &&
+    //         now()->greaterThan($this->batas_waktu_kembali);
+    // }
     public function isOverdue(): bool
     {
-        if (! $this->batas_waktu_kembali) {
-            return false;
-        }
-
-        return $this->status === 'keluar' &&
-            now()->greaterThan($this->batas_waktu_kembali);
+        return $this->status === 'keluar'
+            && $this->batas_waktu_kembali !== null
+            && now()->greaterThan($this->batas_waktu_kembali);
     }
 
     /**

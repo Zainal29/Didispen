@@ -51,8 +51,25 @@
                 </p>
             </div>
 
-            <form method="POST" action="{{ route('siswa.pengajuan.store') }}" enctype="multipart/form-data" id="formDispensasi" class="space-y-5">
-                @csrf
+            <!--<form method="POST" action="{{ route('siswa.pengajuan.store') }}" enctype="multipart/form-data" id="formDispensasi" class="space-y-5">
+                @csrf-->
+                <!--<form x-data="{ loading: false }"
+                      @submit="loading = true"
+                      method="POST"
+                      action="{{ route('siswa.pengajuan.store') }}"
+                      enctype="multipart/form-data"
+                     id="formDispensasi"
+                      class="space-y-5">
+                    @csrf-->
+                    <form
+                        x-data="{ loading: false }"
+                        @submit="loading = true"
+                        method="POST"
+                        action="{{ route('siswa.pengajuan.store') }}"
+                        enctype="multipart/form-data"
+                        id="formDispensasi"
+                        class="space-y-5">
+                        @csrf
 
                 {{-- Data Siswa --}}
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -102,7 +119,7 @@
                     @error('kategori') <p class="text-red-500 text-xs mt-1"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Alasan --}}
+
                 {{-- Alasan --}}
                                   <div>
                                       <div class="flex justify-between items-center mb-1.5">
@@ -127,7 +144,7 @@
                 <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-4 sm:p-5">
                     <div class="flex items-center justify-between mb-1.5">
                         <label class="block text-sm font-bold text-blue-900 flex items-center gap-2">
-                            <i class="fas fa-camera text-blue-600"></i>Foto Verifikasi Selfie <span class="text-red-500">*</span>
+                            <i class="fas fa-camera text-blue-600"></i>Foto Verifikasi Selfie  (Wajib)<span class="text-red-500">*</span>
                         </label>
                         <span class="text-[10px] font-bold bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> Kamera Langsung
@@ -237,7 +254,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1.5">Tujuan <span class="text-red-500">*</span></label>
-                        <input type="text" name="tujuan" value="{{ old('tujuan') }}" required placeholder="Contoh: Rumah Sakit" class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all @error('tujuan') border-red-500 @enderror">
+                        <input type="text" name="tujuan" value="{{ old('tujuan') }}" required placeholder="Contoh: Ke Rumah/Ke Pasar/Ke Parkiran" class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all @error('tujuan') border-red-500 @enderror">
                         @error('tujuan') <p class="text-red-500 text-xs mt-1"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p> @enderror
                     </div>
                     <div>
@@ -293,12 +310,84 @@
                     </div>
                 </div>
 
-                {{-- Aksi --}}
+                <!--{{-- Aksi --}}
                 <div class="pt-4 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
                     <button type="submit" id="submitBtn" class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors">
                         <i class="fas fa-paper-plane mr-2"></i>Kirim Pengajuan
                     </button>
                     <a href="{{ route('siswa.pengajuan.index') }}" class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+                        Batal
+                    </a>
+                </div>-->
+                <!--{{-- Aksi --}}
+                <div class="pt-4 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        :disabled="loading"
+                        class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2">
+
+                        {{-- Spinner saat loading --}}
+                        <i
+                            x-show="loading"
+                            class="fas fa-spinner fa-spin mr-1.5">
+                        </i>
+
+                        {{-- Pesawat saat normal --}}
+                        <i
+                            x-show="!loading"
+                            class="fas fa-paper-plane mr-1.5">
+                        </i>
+
+                        {{-- Teks tombol --}}
+                        <span x-text="loading ? 'Sedang Memproses...' : 'Kirim Pengajuan'">
+                            Kirim Pengajuan
+                        </span>
+                    </button>
+
+                    <a
+                        href="{{ route('siswa.pengajuan.index') }}"
+                        :class="{ 'pointer-events-none opacity-50': loading }"
+                        class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+                        Batal
+                    </a>
+                </div>-->
+
+                {{-- Aksi --}}
+                <div class="pt-4 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        :disabled="loading"
+                        class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2">
+
+                        {{-- Spinner saat loading --}}
+                        <i
+                            x-show="loading"
+                            class="fas fa-spinner fa-spin text-base"
+                            aria-hidden="true">
+                        </i>
+
+                        {{-- Ikon pesawat saat normal --}}
+                        <i
+                            x-show="!loading"
+                            class="fas fa-paper-plane text-base"
+                            aria-hidden="true">
+                        </i>
+
+                        {{-- Teks tombol --}}
+                        <span
+                            x-text="loading
+                                ? 'Sedang Mengirim Pengajuan...'
+                                : 'Kirim Pengajuan'">
+                            Kirim Pengajuan
+                        </span>
+                    </button>
+
+                    <a
+                        href="{{ route('siswa.pengajuan.index') }}"
+                        :class="{ 'pointer-events-none opacity-50': loading }"
+                        class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
                         Batal
                     </a>
                 </div>
@@ -687,11 +776,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     el.classList.add('opacity-50', 'cursor-not-allowed');
                 });
             }
+            // if (submitBtn) {
+            //     submitBtn.disabled = true;
+            //     submitBtn.innerHTML = '<i class="fas fa-lock mr-2"></i>Pengajuan Ditutup';
+            //     submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            //     submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            // }
+
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-lock mr-2"></i>Pengajuan Ditutup';
-                submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                // Tampilkan ikon lock saat pengajuan ditutup
+                       submitBtn.innerHTML =
+                           '<i class="fas fa-lock mr-2"></i>Pengajuan Ditutup';
+
+                submitBtn.classList.remove(
+                    'bg-blue-600',
+                    'hover:bg-blue-700'
+                );
+                submitBtn.classList.add(
+                    'bg-gray-400',
+                    'cursor-not-allowed'
+                );
             }
         } else {
             if (banner) banner.classList.add('hidden');
@@ -704,14 +809,121 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 updateJamKembaliOptions();
             }
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Kirim Pengajuan';
-                submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-            }
+                // if (submitBtn) {
+                //     submitBtn.disabled = false;
+                //     submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Kirim Pengajuan';
+                //     submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                //     submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                // }
+                if (submitBtn) {
+                        // Jangan reset tombol jika sedang mengirim
+                        const alpineData = Alpine.$data(form);
+
+                        if (!alpineData.loading) {
+                            submitBtn.disabled = false;
+
+                            submitBtn.innerHTML = `
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Kirim Pengajuan
+                            `;
+                        }
+
+                        submitBtn.classList.remove(
+                            'bg-gray-400',
+                            'cursor-not-allowed'
+                        );
+
+                        submitBtn.classList.add(
+                            'bg-blue-600',
+                            'hover:bg-blue-700'
+                        );
+                }
         }
+
     }
+
+    // // ==========================================
+    //    // 3. CEK WAKTU OPERASIONAL (Anti-Crash)
+    //    // ==========================================
+    //    function checkDispensasiTime() {
+    //        const now = new Date();
+    //        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    //        const wib = new Date(utc + (3600000 * 7));
+    //        const currentDay = wib.getDay();
+    //        const currentMinutes = wib.getHours() * 60 + wib.getMinutes();
+    //        const currentTime = `${String(wib.getHours()).padStart(2, '0')}:${String(wib.getMinutes()).padStart(2, '0')}`;
+
+    //        const banner = document.getElementById('timeWarningBanner');
+    //        const message = document.getElementById('timeWarningMessage');
+    //        const timeDisplay = document.getElementById('currentTimeDisplay');
+    //        const form = document.getElementById('formDispensasi');
+    //        const submitBtn = document.getElementById('submitBtn');
+
+    //        if (timeDisplay) {
+    //            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    //            timeDisplay.textContent = `${days[currentDay]}, ${currentTime} WIB`;
+    //        }
+
+    //        const settings = @json($settings);
+    //        let isAllowed = true;
+    //        let restrictionMsg = '';
+
+    //        function timeToMinutes(timeStr) {
+    //            if (!timeStr) return 0;
+    //            const parts = timeStr.split(':');
+    //            return parts.length === 2 ? (parseInt(parts[0]) * 60 + parseInt(parts[1])) : 0;
+    //        }
+
+    //        if (!settings.allowed_days || !settings.allowed_days.includes(currentDay)) {
+    //            isAllowed = false;
+    //            restrictionMsg = 'Pengajuan dispensasi tidak diizinkan pada hari ini berdasarkan pengaturan sekolah.';
+    //        } else {
+    //            const startMinutes = timeToMinutes(settings.start_time);
+    //            const endMinutes = timeToMinutes((currentDay === 5) ? settings.end_time_friday : settings.end_time);
+
+    //            if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
+    //                isAllowed = false;
+    //                restrictionMsg = `Pengajuan dispensasi hanya dapat dilakukan pada pukul <strong>${settings.start_time} - ${(currentDay === 5) ? settings.end_time_friday : settings.end_time} WIB</strong>.`;
+    //            }
+    //        }
+
+    //        if (!isAllowed) {
+    //            banner?.classList.remove('hidden');
+    //            if (message) message.innerHTML = restrictionMsg;
+
+    //            if (form) {
+    //                form.querySelectorAll('input, select, textarea').forEach(el => {
+    //                    el.disabled = true;
+    //                    el.classList.add('opacity-50', 'cursor-not-allowed');
+    //                });
+    //            }
+    //            if (submitBtn) {
+    //                submitBtn.disabled = true;
+    //                submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+    //                submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed',);
+    //                submitBtn.setAttribute('data-original-text', submitBtn.innerText);
+    //                submitBtn.innerText = 'Pengajuan Ditutup';
+    //            }
+    //        } else {
+    //            banner?.classList.add('hidden');
+    //            if (form) {
+    //                form.querySelectorAll('input, select, textarea').forEach(el => {
+    //                    if (el.id !== 'jamKembali') {
+    //                        el.disabled = false;
+    //                        el.classList.remove('opacity-50', 'cursor-not-allowed');
+    //                    }
+    //                });
+    //                updateJamKembaliOptions();
+    //            }
+    //            if (submitBtn) {
+    //                submitBtn.disabled = false;
+    //                submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+    //                submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    //                const originalText = submitBtn.getAttribute('data-original-text');
+    //                if (originalText) submitBtn.innerText = originalText;
+    //            }
+    //        }
+    //    }
     checkDispensasiTime();
     setInterval(checkDispensasiTime, 60000);
 });

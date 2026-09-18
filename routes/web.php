@@ -151,10 +151,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('warning/{dispensasi}/send', [Guru\WarningController::class, 'sendWarning'])
             ->name('warning.send');
 
-            // Scan QR Backup - ✅ TAMBAHKAN RATE LIMITING
+            // Scan QR Backup - Rate Limiting diperbarui agar tidak terkendala saat check & confirm
                     Route::get('scan', [\App\Http\Controllers\Guru\ScanController::class, 'index'])->name('scan');
                     Route::post('scan/verify', [\App\Http\Controllers\Guru\ScanController::class, 'verify'])
-              ->middleware('throttle:10,1') // ✅ TAMBAHKAN INI
+              ->middleware('throttle:60,1')
                 ->name('scan.verify');
 
           // ✅ TAMBAHKAN INI: Route untuk tandai sudah dihubungi via WA
@@ -191,7 +191,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:satpam'])->prefix('satpam')->name('satpam.')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('scan', [ScanController::class, 'index'])->name('scan');
-        Route::post('scan/verify', [ScanController::class, 'verify'])->middleware('throttle:10,1')->name('scan.verify');
+        Route::post('scan/verify', [ScanController::class, 'verify'])->middleware('throttle:60,1')->name('scan.verify');
 
         // Konfirmasi Manual
         Route::post('konfirmasi/{dispensasi}/keluar', [DashboardController::class, 'konfirmasiKeluar'])->name('konfirmasi.keluar');

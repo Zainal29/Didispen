@@ -22,7 +22,7 @@
     {{-- ========================================================= --}}
     {{-- KARTU IDENTITAS --}}
     {{-- ========================================================= --}}
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 h-fit lg:sticky lg:top-6">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 h-fit lg:sticky lg:top-6 overflow-hidden min-w-0">
 
         <div class="flex flex-col items-center text-center mb-6">
             <div class="w-20 h-20 rounded-xl bg-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-sm mb-3">
@@ -39,35 +39,24 @@
         </div>
 
         {{-- ID DINAMIS (NIS / NIP / ID) --}}
-                    @php
-                        // Tentukan Label berdasarkan Role
-                        $idLabel = match($user->role) {
-                            'siswa'  => 'NIS',
-                            'guru'   => 'NIP',
-                            'satpam' => 'ID Petugas',
-                            'admin'  => 'ID Admin',
-                            default  => 'ID'
-                        };
-
-                        // Tentukan Nilai (Asumsi data ada di kolom nis_nip pada tabel users)
-                        // Jika data NIS/NIP ada di tabel terpisah (misal: $user->siswa->nis), sesuaikan di sini.
-                        $idValue = $user->nis_nip ?? '-';
-                    @endphp
+        @php
+            $idLabel = match($user->role) {
+                'siswa'  => 'NIS',
+                'guru'   => 'NIP',
+                'satpam' => 'ID Petugas',
+                'admin'  => 'ID Admin',
+                default  => 'ID'
+            };
+            $idValue = $user->nis_nip ?? '-';
+        @endphp
 
         <dl class="text-sm space-y-3 divide-y divide-gray-100">
-            {{-- NIS / NIP --}}
-            <!--<div class="pt-3 flex justify-between items-center gap-3">
-                <dt class="text-gray-500 font-medium">NIS / NIP</dt>
-                <dd class="font-mono font-semibold text-gray-800 text-right">
-                    {{ $user->nis_nip ?? '-' }}
-                </dd>
-            </div>-->
             <div class="pt-3 flex justify-between items-center gap-3">
-                           <dt class="text-gray-500 font-medium">{{ $idLabel }}</dt>
-                           <dd class="font-mono font-semibold text-gray-800 text-right break-all">
-                               {{ $idValue }}
-                           </dd>
-                       </div>
+                <dt class="text-gray-500 font-medium">{{ $idLabel }}</dt>
+                <dd class="font-mono font-semibold text-gray-800 text-right break-all">
+                    {{ $idValue }}
+                </dd>
+            </div>
 
             {{-- EMAIL --}}
             <div class="pt-3 flex justify-between items-center gap-3">
@@ -85,16 +74,16 @@
                 </dd>
             </div>
 
-            {{-- NOMOR TELEPON --}}
+            <!--{{-- NOMOR TELEPON --}}
             @if($user->role === 'siswa' && $user->siswa)
                 <div class="pt-3">
                     <dt class="text-gray-500 font-medium mb-1.5">No. Telepon / WA</dt>
                     <dd class="flex items-center justify-end">
                         @if($user->siswa->no_telepon)
                             <a href="tel:{{ $user->siswa->no_telepon }}"
-                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-md hover:bg-emerald-100 transition-colors border border-emerald-100 text-xs font-semibold">
-                                <i class="fas fa-phone-alt"></i>
-                                {{ str_replace('+62', '0', $user->siswa->no_telepon) }}
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-md hover:bg-emerald-100 transition-colors border border-emerald-100 text-xs font-semibold break-all">
+                                <i class="fas fa-phone-alt flex-shrink-0"></i>
+                                <span>{{ str_replace('+62', '0', $user->siswa->no_telepon) }}</span>
                             </a>
                         @else
                             <span class="text-gray-400 italic text-xs">Belum tersedia</span>
@@ -102,7 +91,65 @@
                     </dd>
                 </div>
             @endif
-        </dl>
+        </dl>-->
+
+        {{-- NOMOR TELEPON --}}
+        <div class="md:col-span-2 min-w-0 w-full max-w-full overflow-hidden">
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
+                <i class="fas fa-phone-alt mr-1 text-emerald-600"></i>
+                No. Telepon / WhatsApp
+            </label>
+
+            <div class="flex w-full max-w-full min-w-0">
+                {{-- PREFIX --}}
+                <span class="inline-flex items-center justify-center
+                             px-2.5 sm:px-3
+                             rounded-l-lg
+                             border border-r-0 border-gray-300
+                             bg-gray-50 text-gray-600
+                             font-semibold text-xs sm:text-sm
+                             flex-shrink-0 whitespace-nowrap">
+                    <i class="fas fa-globe text-gray-400 mr-1 text-[10px] sm:text-xs"></i>
+                    +62
+                </span>
+
+                {{-- INPUT --}}
+                <input
+                    type="tel"
+                    name="no_telepon"
+                    id="phone_input"
+                    value="{{ old('no_telepon', preg_replace('/^\+62/', '', $user->siswa->no_telepon ?? '')) }}"
+                    placeholder="81234567890"
+                    inputmode="numeric"
+                    autocomplete="tel"
+                    class="block w-0 min-w-0 flex-1
+                           px-3 sm:px-4 py-2.5
+                           border border-gray-300
+                           rounded-r-lg
+                           focus:border-purple-600
+                           focus:ring-2 focus:ring-purple-600/20
+                           outline-none transition-all
+                           text-sm font-medium
+                           @error('no_telepon')
+                               border-red-500 bg-red-50
+                           @enderror"
+                >
+            </div>
+
+            @error('no_telepon')
+                <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                    <i class="fas fa-exclamation-circle flex-shrink-0"></i>
+                    <span class="min-w-0 break-words">{{ $message }}</span>
+                </p>
+            @else
+                <p class="text-gray-400 text-xs mt-1.5 flex items-start gap-1">
+                    <i class="fas fa-info-circle flex-shrink-0 mt-0.5"></i>
+                    <span>Masukkan nomor tanpa angka 0 di depan.</span>
+                </p>
+            @enderror
+        </div>
+
+
 
         <div class="mt-6 pt-4 border-t border-gray-100 text-[11px] text-gray-500 flex items-start gap-2">
             <i class="fas fa-info-circle mt-0.5 flex-shrink-0"></i>
@@ -114,15 +161,15 @@
     {{-- ========================================================= --}}
     {{-- KONTEN KANAN --}}
     {{-- ========================================================= --}}
-    <div class="lg:col-span-2 space-y-6">
+    <div class="lg:col-span-2 space-y-6 min-w-0">
 
         {{-- ========================================================= --}}
         {{-- DATA KONTAK & TAMBAHAN SISWA --}}
         {{-- ========================================================= --}}
         @if($user->role === 'siswa' && $user->siswa)
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 overflow-hidden">
                 <div class="flex items-center gap-3 mb-5">
-                    <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
                         <i class="fas fa-user-edit"></i>
                     </div>
                     <div>
@@ -133,20 +180,20 @@
 
                 <form method="POST" action="{{ route('profil.update-additional') }}">
                     @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 min-w-0">
                         {{-- NOMOR TELEPON --}}
-                        <div class="md:col-span-2">
+                        <div class="md:col-span-2 min-w-0">
                             <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
                                 <i class="fas fa-phone-alt mr-1 text-emerald-600"></i> No. Telepon / WhatsApp
                             </label>
-                            <div class="flex">
-                                <span class="inline-flex items-center px-3.5 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-600 font-semibold text-sm">
-                                    <i class="fas fa-globe text-gray-400 mr-1.5"></i> +62
+                            <div class="flex w-full min-w-0 max-w-full">
+                                <span class="inline-flex items-center px-2.5 sm:px-3.5 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-600 font-semibold text-xs sm:text-sm flex-shrink-0">
+                                    <i class="fas fa-globe text-gray-400 mr-1 sm:mr-1.5 text-xs"></i> +62
                                 </span>
                                 <input type="tel" name="no_telepon" id="phone_input"
                                        value="{{ old('no_telepon', preg_replace('/^\+62/', '', $user->siswa->no_telepon ?? '')) }}"
                                        placeholder="81234567890"
-                                       class="flex-1 px-4 py-2.5 border border-gray-300 rounded-r-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium @error('no_telepon') border-red-500 bg-red-50 @enderror">
+                                       class="w-full min-w-0 flex-1 px-3 sm:px-4 py-2.5 border border-gray-300 rounded-r-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium @error('no_telepon') border-red-500 bg-red-50 @enderror">
                             </div>
                             @error('no_telepon')
                                 <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i> {{ $message }}</p>
@@ -156,14 +203,14 @@
                         </div>
 
                         {{-- TANGGAL LAHIR --}}
-                        <div>
+                        <div class="min-w-0">
                             <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
                                 <i class="fas fa-calendar-alt mr-1 text-pink-500"></i> Tanggal Lahir
                             </label>
                             <input type="date" name="tanggal_lahir"
                                    value="{{ old('tanggal_lahir', $user->siswa->tanggal_lahir ? \Carbon\Carbon::parse($user->siswa->tanggal_lahir)->format('Y-m-d') : '') }}"
                                    max="{{ now()->subYears(7)->format('Y-m-d') }}"
-                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium @error('tanggal_lahir') border-red-500 bg-red-50 @enderror">
+                                   class="w-full min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium @error('tanggal_lahir') border-red-500 bg-red-50 @enderror">
                             @error('tanggal_lahir')
                                 <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p>
                             @else
@@ -172,12 +219,12 @@
                         </div>
 
                         {{-- ALAMAT --}}
-                        <div>
+                        <div class="min-w-0">
                             <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
                                 <i class="fas fa-map-marker-alt mr-1 text-red-500"></i> Alamat Lengkap
                             </label>
                             <textarea name="alamat" rows="3" placeholder="RT/RW, Desa, Kecamatan..."
-                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium resize-none @error('alamat') border-red-500 bg-red-50 @enderror">{{ old('alamat', $user->siswa->alamat) }}</textarea>
+                                      class="w-full min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium resize-none @error('alamat') border-red-500 bg-red-50 @enderror">{{ old('alamat', $user->siswa->alamat) }}</textarea>
                             @error('alamat')
                                 <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p>
                             @enderror
@@ -186,7 +233,7 @@
 
                     <div class="mt-6 flex justify-end">
                         <button type="submit"
-                                class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                                class="w-full sm:w-auto px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-save"></i> Simpan Data Profil
                         </button>
                     </div>
@@ -198,9 +245,9 @@
         {{-- ========================================================= --}}
         {{-- KEAMANAN AKUN                                             --}}
         {{-- ========================================================= --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 overflow-hidden">
             <div class="flex items-center gap-3 mb-5">
-                <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-shield-alt"></i>
                 </div>
                 <div>
@@ -256,7 +303,7 @@
 
                     <div class="mt-6 flex justify-end">
                         <button type="submit"
-                                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                                class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-key"></i> Perbarui Password
                         </button>
                     </div>
@@ -313,7 +360,7 @@
                     </div>
                     <div class="mt-4">
                         <button type="submit"
-                                class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                                class="w-full sm:w-auto px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-sign-out-alt"></i> Keluarkan Semua Perangkat Lain
                         </button>
                     </div>
@@ -329,9 +376,9 @@
         {{-- INFORMASI PRIBADI --}}
         {{-- ========================================================= --}}
         @if($user->role === 'siswa' && $user->siswa)
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 overflow-hidden">
                 <div class="flex items-center gap-3 mb-5">
-                    <div class="w-10 h-10 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center flex-shrink-0">
                         <i class="fas fa-calendar-alt"></i>
                     </div>
                     <div>
@@ -342,14 +389,14 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {{-- TANGGAL LAHIR --}}
-                    <div class="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                    <div class="p-4 rounded-lg bg-gray-50 border border-gray-200 min-w-0">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-md bg-pink-100 text-pink-600 flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-calendar-alt"></i>
                             </div>
-                            <div>
+                            <div class="min-w-0">
                                 <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Tanggal Lahir</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-0.5">
+                                <p class="text-sm font-semibold text-gray-900 mt-0.5 truncate">
                                     @if($user->siswa->tanggal_lahir)
                                         {{ \Carbon\Carbon::parse($user->siswa->tanggal_lahir)->translatedFormat('d F Y') }}
                                     @else
@@ -361,14 +408,14 @@
                     </div>
 
                     {{-- USIA --}}
-                    <div class="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                    <div class="p-4 rounded-lg bg-gray-50 border border-gray-200 min-w-0">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-user-clock"></i>
                             </div>
-                            <div>
+                            <div class="min-w-0">
                                 <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Usia</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-0.5">
+                                <p class="text-sm font-semibold text-gray-900 mt-0.5 truncate">
                                     @if($user->siswa->tanggal_lahir)
                                         {{ \Carbon\Carbon::parse($user->siswa->tanggal_lahir)->age }} tahun
                                     @else
@@ -386,10 +433,10 @@
         {{-- ========================================================= --}}
         {{-- LOG AKTIVITAS --}}
         {{-- ========================================================= --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 overflow-hidden">
             <div class="flex items-center justify-between gap-4 mb-5">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
                         <i class="fas fa-history"></i>
                     </div>
                     <div>
@@ -398,103 +445,38 @@
                     </div>
                 </div>
                 <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-50 border border-gray-200 text-[11px] font-semibold text-gray-600">
-                    <i class="fas fa-clock"></i> 10 login terakhir
+                    <i class="fas fa-shield-alt text-indigo-600"></i> Terpantau Aman
                 </span>
             </div>
 
-            {{-- PERINGATAN DEVICE BERUBAH --}}
-            @if($deviceChanged)
-                <div class="mb-5 p-4 rounded-lg bg-amber-50 border border-amber-200">
-                    <div class="flex gap-3">
-                        <div class="w-9 h-9 shrink-0 rounded-md bg-amber-100 text-amber-600 flex items-center justify-center">
-                            <i class="fas fa-triangle-exclamation"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-amber-800">Login dari perangkat berbeda</p>
-                            <p class="text-xs text-amber-700 mt-1">Login terakhir terdeteksi menggunakan perangkat, sistem operasi, atau browser yang berbeda dari login sebelumnya.</p>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            {{-- LOGIN TERAKHIR --}}
-            @if($latestLogin)
-                <div class="mb-5 p-4 rounded-lg bg-indigo-50 border border-indigo-100">
-                    <div class="flex items-center justify-between gap-3 mb-4">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            <span class="text-xs font-semibold text-indigo-900 uppercase tracking-wide">Login Terakhir</span>
-                        </div>
-                        <!--<span class="text-[11px] text-indigo-600 font-medium">
-                            {{ $latestLogin->created_at?->format('d M Y, H:i:s') ?? '-' }}
-                        </span>-->
-                        <!--<span class="text-[11px] text-indigo-600 font-medium">
-                            {{ $latestLogin->created_at?->diffForHumans() ?? '-' }}
-                        </span>-->
-                        <span class="text-[11px] text-gray-400" title="{{ $latestLogin->created_at?->format('d M Y, H:i:s') ?? '-' }}">
-                                                   @php
-                                                       $diff = $latestLogin->created_at?->diffForHumans();
-                                                       $isOld = $latestLogin->created_at?->diffInDays() > 0;
-                                                   @endphp
-                                                   @if($isOld)
-                                                       {{ $latestLogin->created_at?->format('d M Y') }}
-                                                   @else
-                                                       {{ $diff }}
-                                                   @endif
-                                               </span>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        <div class="bg-white rounded-md border border-indigo-100 p-3">
-                            <p class="text-[10px] font-semibold uppercase text-gray-400 mb-1">Perangkat</p>
-                            <p class="text-sm font-semibold text-gray-800"><i class="fas fa-desktop text-indigo-500 mr-1.5"></i> {{ $latestLogin->device_type ?? 'Unknown' }}</p>
-                        </div>
-                        <div class="bg-white rounded-md border border-indigo-100 p-3">
-                            <p class="text-[10px] font-semibold uppercase text-gray-400 mb-1">Sistem Operasi</p>
-                            <p class="text-sm font-semibold text-gray-800"><i class="fas fa-microchip text-indigo-500 mr-1.5"></i> {{ $latestLogin->os ?? 'Unknown' }}</p>
-                        </div>
-                        <div class="bg-white rounded-md border border-indigo-100 p-3">
-                            <p class="text-[10px] font-semibold uppercase text-gray-400 mb-1">Browser</p>
-                            <p class="text-sm font-semibold text-gray-800"><i class="fas fa-globe text-indigo-500 mr-1.5"></i> {{ $latestLogin->browser ?? 'Unknown' }}</p>
-                        </div>
-                        <div class="bg-white rounded-md border border-indigo-100 p-3">
-                            <p class="text-[10px] font-semibold uppercase text-gray-400 mb-1">IP Address</p>
-                            <p class="text-sm font-semibold text-gray-800 font-mono">{{ $latestLogin->ip_address ?? '-' }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- RIWAYAT --}}
-                <div class="space-y-3">
-                    @forelse($loginHistory as $index => $login)
-                        <div class="p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
+            @if(isset($loginActivities) && $loginActivities->count() > 0)
+                <div class="divide-y divide-gray-100">
+                    @forelse($loginActivities as $login)
+                        <div class="py-4 first:pt-0 last:pb-0">
                             <div class="flex items-start gap-4">
-                                <div class="w-9 h-9 shrink-0 rounded-md bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold">
-                                    {{ $index + 1 }}
+                                <div class="w-10 h-10 rounded-lg {{ $loop->first ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500' }} flex items-center justify-center flex-shrink-0">
+                                    <i class="fas {{ $login->platform === 'Mobile' ? 'fa-mobile-alt' : 'fa-desktop' }}"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-3">
+                                    <div class="flex items-center justify-between gap-2 mb-1">
                                         <div class="flex items-center gap-2">
-                                            <i class="fas fa-right-to-bracket text-emerald-500 text-sm"></i>
-                                            <span class="text-sm font-semibold text-gray-800">Berhasil Login</span>
-                                            @if($index === 0)
-                                                <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-bold uppercase">Terakhir</span>
+                                            <i class="fas {{ $login->platform === 'Mobile' ? 'fa-mobile-screen' : 'fa-laptop' }} text-gray-400 text-xs"></i>
+                                            <span class="font-bold text-sm text-gray-900">{{ $login->device_name ?? 'Perangkat Tidak Dikenal' }}</span>
+                                            @if($loop->first)
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">Sesi Ini</span>
                                             @endif
                                         </div>
-                                        <!--<span class="text-[11px] text-gray-400">{{ $login->created_at?->format('d M Y, H:i:s') ?? '-' }}</span>-->
-                                        <span class="text-[11px] text-gray-400" title="{{ $login->created_at?->format('d M Y, H:i:s') ?? '-' }}">
-                                            {{ $login->created_at?->diffForHumans() ?? '-' }}
-                                        </span>
+                                        <span class="text-[11px] text-gray-400 whitespace-nowrap">{{ $login->login_at?->diffForHumans() }}</span>
                                     </div>
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 pt-2 border-t border-gray-100">
                                         <div>
-                                            <p class="text-[10px] uppercase font-semibold text-gray-400 mb-1">Perangkat</p>
-                                            <p class="text-xs font-medium text-gray-700"><i class="fas fa-desktop text-gray-400 mr-1.5"></i> {{ $login->device_type ?? 'Unknown' }}</p>
+                                            <p class="text-[10px] uppercase font-semibold text-gray-400 mb-1">Waktu</p>
+                                            <p class="text-xs font-medium text-gray-700"><i class="far fa-clock text-gray-400 mr-1.5"></i> {{ $login->login_at?->translatedFormat('H:i') }} WIB</p>
                                         </div>
                                         <div>
-                                            <p class="text-[10px] uppercase font-semibold text-gray-400 mb-1">OS</p>
-                                            <p class="text-xs font-medium text-gray-700"><i class="fas fa-microchip text-gray-400 mr-1.5"></i> {{ $login->os ?? 'Unknown' }}</p>
+                                            <p class="text-[10px] uppercase font-semibold text-gray-400 mb-1">Tanggal</p>
+                                            <p class="text-xs font-medium text-gray-700"><i class="far fa-calendar text-gray-400 mr-1.5"></i> {{ $login->login_at?->translatedFormat('d M Y') }}</p>
                                         </div>
                                         <div>
                                             <p class="text-[10px] uppercase font-semibold text-gray-400 mb-1">Browser</p>

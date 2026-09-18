@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Siswa') - DIDISPEN</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <!-- ✅ TAMBAHKAN INI DI SINI (di dalam <head>) -->
           <link rel="icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
@@ -13,6 +14,11 @@
           <link rel="apple-touch-icon" href="{{ asset('images/logo-didispen.png') }}">
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
 
