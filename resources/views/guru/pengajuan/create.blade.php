@@ -715,6 +715,9 @@
             const form = document.getElementById('formDispensasi');
             const submitBtn = document.getElementById('submitBtn');
 
+            // ✅ AMBIL REFERENSI TOMBOL KAMERA GURU
+            const btnBukaKameraGuru = document.getElementById('btnBukaKameraGuru');
+
             if (timeDisplay) {
                 const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
                 timeDisplay.textContent = `${days[dayOfWeek]}, ${currentTime} WIB`;
@@ -768,6 +771,14 @@
                 if (document.getElementById('btnBatal')) {
                     document.getElementById('btnBatal').classList.add('pointer-events-none', 'opacity-50');
                 }
+
+                // ✅ DISABLE TOMBOL KAMERA GURU SAAT WAKTU DITUTUP
+                if (btnBukaKameraGuru) {
+                    btnBukaKameraGuru.disabled = true;
+                    btnBukaKameraGuru.classList.add('opacity-50', 'cursor-not-allowed');
+                    btnBukaKameraGuru.classList.remove('hover:bg-blue-700');
+                }
+
             } else {
                 if (banner) banner.classList.add('hidden');
 
@@ -788,6 +799,13 @@
 
                 if (document.getElementById('btnBatal')) {
                     document.getElementById('btnBatal').classList.remove('pointer-events-none', 'opacity-50');
+                }
+
+                // ✅ ENABLE KEMBALI TOMBOL KAMERA GURU SAAT WAKTU DIBUKA
+                if (btnBukaKameraGuru) {
+                    btnBukaKameraGuru.disabled = false;
+                    btnBukaKameraGuru.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btnBukaKameraGuru.classList.add('hover:bg-blue-700');
                 }
             }
         }
