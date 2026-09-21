@@ -286,35 +286,26 @@
                         <button
                             type="submit"
                             id="submitBtn"
+                            x-data="{ loading: false }"
+                            @click="loading = true"
                             :disabled="loading"
                             class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2">
 
-                            {{-- Spinner saat loading --}}
-                            <i
-                                x-show="loading"
-                                class="fas fa-spinner fa-spin text-base"
-                                aria-hidden="true">
-                            </i>
+                            {{-- Spinner (muncul saat loading) --}}
+                            <i x-show="loading" class="fas fa-spinner fa-spin text-base" aria-hidden="true"></i>
 
-                            {{-- Ikon pesawat saat normal --}}
-                            <i
-                                x-show="!loading"
-                                class="fas fa-paper-plane text-base"
-                                aria-hidden="true">
-                            </i>
+                            {{-- Ikon pesawat (muncul saat tidak loading) --}}
+                            <i x-show="!loading" class="fas fa-paper-plane text-base" aria-hidden="true"></i>
 
                             {{-- Teks tombol --}}
-                            <span
-                                x-text="loading
-                                    ? 'Sedang Mengirim Pengajuan...'
-                                    : 'Kirim Pengajuan'">
+                            <span x-text="loading ? 'Sedang Mengirim Pengajuan...' : 'Kirim Pengajuan'">
                                 Kirim Pengajuan
                             </span>
                         </button>
 
                         <a
                             href="{{ route('guru.pengajuan.index') }}"
-                            :class="{ 'pointer-events-none opacity-50': loading }"
+                            id="btnBatal"
                             class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
                             Batal
                         </a>
@@ -759,50 +750,44 @@
             if (!isAllowed) {
                 if (banner) banner.classList.remove('hidden');
                 if (message) message.innerHTML = restrictionMsg;
+
                 if (form) {
-                    form.querySelectorAll('input, select, textarea, button').forEach(el => {
+                    form.querySelectorAll('input, select, textarea').forEach(el => {
                         el.disabled = true;
                         el.classList.add('opacity-50', 'cursor-not-allowed');
                     });
                 }
+
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-lock mr-2"></i>Pengajuan Ditutup';
-                    submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    // ✅ JANGAN gunakan innerHTML di sini, biarkan Alpine.js mengaturnya
                     submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                    submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                }
+
+                if (document.getElementById('btnBatal')) {
+                    document.getElementById('btnBatal').classList.add('pointer-events-none', 'opacity-50');
                 }
             } else {
                 if (banner) banner.classList.add('hidden');
+
                 if (form) {
-                    form.querySelectorAll('input, select, textarea, button').forEach(el => {
-                        if (el.id !== 'submitBtn' && el.id !== 'jam_kembali') {
-                            el.disabled = false;
-                            el.classList.remove('opacity-50', 'cursor-not-allowed');
-                        }
+                    form.querySelectorAll('input, select, textarea').forEach(el => {
+                        el.disabled = false;
+                        el.classList.remove('opacity-50', 'cursor-not-allowed');
                     });
                     updateJamKembaliOptions();
                 }
+
                 if (submitBtn) {
-                    const alpineData = Alpine.$data(form);
+                    submitBtn.disabled = false;
+                    // ✅ JANGAN gunakan innerHTML di sini, biarkan Alpine.js mengaturnya
+                    submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                    submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                }
 
-                    if (!alpineData.loading) {
-                        submitBtn.disabled = false;
-
-                        submitBtn.innerHTML = `
-                            <i class="fas fa-paper-plane mr-2"></i>
-                            Kirim Pengajuan
-                        `;
-                    }
-
-                    submitBtn.classList.remove(
-                        'bg-gray-400',
-                        'cursor-not-allowed'
-                    );
-
-                    submitBtn.classList.add(
-                        'bg-blue-600',
-                        'hover:bg-blue-700'
-                    );
+                if (document.getElementById('btnBatal')) {
+                    document.getElementById('btnBatal').classList.remove('pointer-events-none', 'opacity-50');
                 }
             }
         }

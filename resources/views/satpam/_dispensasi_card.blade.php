@@ -124,31 +124,36 @@
         @if(in_array($status, ['keluar', 'terlambat']))
             @if(!empty($dispensasi->siswa->no_telepon))
                 @php
-                    $hp = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
-                    $hp = str_starts_with($hp, '0') ? '62' . substr($hp, 1) : $hp;
-                    $lateText = $isOverdue ? ' telah melewati batas waktu kembali' : '';
-                    $pesan = "Halo {$dispensasi->siswa->nama_lengkap}, ini dari Pos Satpam. Mohon segera kembali ke sekolah sesuai batas waktu dispensasi ({$dispensasi->jam_kembali}).{$lateText} Terima kasih.";
-                    $waLink = "https://wa.me/{$hp}?text=" . urlencode($pesan);
+                    // ✅ Panggil Service (logika terpusat, tidak ada hardcode)
+                    /** @var \App\Services\WhatsappMessageService $waService */
+                    $waService = app(\App\Services\WhatsappMessageService::class);
+                    $context = $waService->resolveContext($dispensasi);
+                    $waLink = $waService->generateWaLink($dispensasi, $context);
                 @endphp
-                <div id="wa-section-{{ $dispensasi->id }}" class="flex items-center gap-2">
-                    <div class="flex-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                        <p class="text-[10px] font-bold text-green-700 uppercase">Kontak Darurat</p>
-                        <p class="text-xs font-semibold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
-                    </div>
-                    <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}'); event.stopPropagation();"
-                            class="inline-flex items-center justify-center w-10 h-10 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex-shrink-0"
-                            title="Hubungi via WhatsApp & Tandai">
-                        <i class="fab fa-whatsapp text-lg"></i>
-                    </button>
-                </div>
-            @endif
 
-            <form method="POST" action="{{ route('satpam.konfirmasi.kembali', $dispensasi) }}" class="mt-2" onsubmit="event.stopPropagation();">
-                @csrf
-                <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
-                    <i class="fas fa-door-closed mr-1.5"></i>Konfirmasi Kembali (Manual)
-                </button>
-            </form>
+                @if($waLink)
+                    <div id="wa-section-{{ $dispensasi->id }}" class="flex items-center gap-2">
+                        <div class="flex-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                            <p class="text-[10px] font-bold text-green-700 uppercase">Kontak Darurat</p>
+                            <p class="text-xs font-semibold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
+                            <p class="text-[9px] text-green-600 mt-0.5">
+                                <i class="fas fa-{{ $context === 'terlambat' ? 'exclamation-triangle' : 'sign-out-alt' }} mr-1"></i>
+                                Template: <strong>{{ ucfirst($context) }}</strong>
+                            </p>
+                        </div>
+                        <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}'); event.stopPropagation();"
+                                class="inline-flex items-center justify-center w-10 h-10 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex-shrink-0"
+                                title="Hubungi via WhatsApp (Template: {{ $context }})">
+                            <i class="fab fa-whatsapp text-lg"></i>
+                        </button>
+                    </div>
+                @else
+                    <div class="p-2 bg-amber-50 border border-amber-200 rounded-lg text-[10px] text-amber-700">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Template WhatsApp untuk context "{{ $context }}" belum tersedia. Hubungi Admin.
+                    </div>
+                @endif
+            @endif
         @endif
 
         <div class="text-center text-[10px] text-gray-400 mt-2">

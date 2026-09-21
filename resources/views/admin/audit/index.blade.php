@@ -1,118 +1,113 @@
 @extends('admin.layouts.app')
 @section('title', 'Audit Log')
 @section('page-title', 'Audit Log Aktivitas')
-@include('components.alert')
+
 @section('content')
+{{-- ✅ PERBAIKAN: Pindahkan include alert ke DALAM section content (paling atas) --}}
+@include('components.alert')
+
 <div class="space-y-6">
-{{-- HEADER DENGAN FILTER LENGKAP --}}
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div>
-            <h3 class="text-xl font-bold text-gray-800">Log Aktivitas Sistem</h3>
-            <p class="text-sm text-gray-500 mt-1">Catatan semua aktivitas pengguna dan sinkronisasi.</p>
-        </div>
-
-        {{-- ✅ TAMBAHKAN BLOK INI UNTUK MENAMPILKAN HASIL TEST KONEKSI --}}
-        @if(session('success'))
-            <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl flex items-center gap-3 mb-4 shadow-sm">
-                <i class="fas fa-check-circle text-lg"></i>
-                <p class="text-sm font-medium">{{ session('success') }}</p>
-            </div>
-        @endif
-        {{-- ✅ TAMBAHKAN TOMBOL INI --}}
-        <form method="POST" action="{{ route('admin.sipintu.test-sync') }}" class="inline">
-            @csrf
-            <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2">
-                <i class="fas fa-plug"></i> Test Koneksi SiPintu
-            </button>
-        </form>
-        {{-- ------------------- --}}
-
-        <form method="GET" class="flex flex-wrap gap-2 w-full xl:w-auto">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari User / IP..."
-                   class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full xl:w-40">
-
-            <input type="date" name="date_from" value="{{ request('date_from') }}"
-                   class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-            <input type="date" name="date_to" value="{{ request('date_to') }}"
-                   class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-
-            <select name="filter_type" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                <option value="">Semua Role</option>
-                <option value="admin" {{ request('filter_type') == 'admin' ? 'selected' : '' }}>Admin Only</option>
-                <option value="satpam" {{ request('filter_type') == 'satpam' ? 'selected' : '' }}>Satpam Only</option>
-                <option value="sync" {{ request('filter_type') == 'sync' ? 'selected' : '' }}>Sinkronisasi</option>
-            </select>
-
-            <select name="action" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                <option value="">Semua Aksi</option>
-                @foreach(['test_connection_sipintu','sync_sipintu_siswa', 'sync_sipintu_guru', 'approve', 'reject', 'konfirmasi_keluar', 'konfirmasi_kembali', 'create_siswa', 'create_guru', 'update_siswa', 'update_guru'] as $a)
-                    <option value="{{ $a }}" {{ request('action') == $a ? 'selected' : '' }}>{{ str_replace('_', ' ', $a) }}</option>
-                @endforeach
-            </select>
-
-            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700">
-                <i class="fas fa-filter mr-1"></i> Filter
-            </button>
-            @if(request()->anyFilled(['search', 'date_from', 'date_to', 'filter_type', 'action']))
-                <a href="{{ route('admin.audit.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300">
-                    Reset
-                </a>
-            @endif
-        </form>
-    </div>
-</div>
-
-{{-- STATS CARDS (DIPERBAIKI: Menggunakan $stats dari Controller) --}}
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div class="flex items-center justify-between">
+    {{-- HEADER DENGAN FILTER LENGKAP --}}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
             <div>
-                <p class="text-xs text-gray-500 uppercase font-semibold">Total Aktivitas</p>
-                <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['total']) }}</p>
+                <h3 class="text-xl font-bold text-gray-800">Log Aktivitas Sistem</h3>
+                <p class="text-sm text-gray-500 mt-1">Catatan semua aktivitas pengguna dan sinkronisasi.</p>
             </div>
-            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                <i class="fas fa-clipboard-list"></i>
-            </div>
+
+            {{-- Tombol Test Koneksi --}}
+            <form method="POST" action="{{ route('admin.sipintu.test-sync') }}" class="inline">
+                @csrf
+                <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-plug"></i> Test Koneksi SiPintu
+                </button>
+            </form>
+
+            <form method="GET" class="flex flex-wrap gap-2 w-full xl:w-auto">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari User / IP..."
+                       class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full xl:w-40">
+
+                <input type="date" name="date_from" value="{{ request('date_from') }}"
+                       class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="date" name="date_to" value="{{ request('date_to') }}"
+                       class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+
+                <select name="filter_type" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <option value="">Semua Role</option>
+                    <option value="admin" {{ request('filter_type') == 'admin' ? 'selected' : '' }}>Admin Only</option>
+                    <option value="satpam" {{ request('filter_type') == 'satpam' ? 'selected' : '' }}>Satpam Only</option>
+                    <option value="sync" {{ request('filter_type') == 'sync' ? 'selected' : '' }}>Sinkronisasi</option>
+                </select>
+
+                <select name="action" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <option value="">Semua Aksi</option>
+                    @foreach(['test_connection_sipintu','sync_sipintu_siswa', 'sync_sipintu_guru', 'approve', 'reject', 'konfirmasi_keluar', 'konfirmasi_kembali', 'create_siswa', 'create_guru', 'update_siswa', 'update_guru'] as $a)
+                        <option value="{{ $a }}" {{ request('action') == $a ? 'selected' : '' }}>{{ str_replace('_', ' ', $a) }}</option>
+                    @endforeach
+                </select>
+
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700">
+                    <i class="fas fa-filter mr-1"></i> Filter
+                </button>
+                @if(request()->anyFilled(['search', 'date_from', 'date_to', 'filter_type', 'action']))
+                    <a href="{{ route('admin.audit.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300">
+                        Reset
+                    </a>
+                @endif
+            </form>
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs text-gray-500 uppercase font-semibold">Sinkronisasi</p>
-                <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['sync']) }}</p>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                <i class="fas fa-sync-alt"></i>
+    {{-- STATS CARDS --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold">Total Aktivitas</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['total']) }}</p>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs text-gray-500 uppercase font-semibold">Aktivitas Admin</p>
-                <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['admin']) }}</p>
-            </div>
-            <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <i class="fas fa-user-shield"></i>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold">Sinkronisasi</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['sync']) }}</p>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <i class="fas fa-sync-alt"></i>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs text-gray-500 uppercase font-semibold">Aktivitas Satpam</p>
-                <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['satpam']) }}</p>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold">Aktivitas Admin</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['admin']) }}</p>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <i class="fas fa-user-shield"></i>
+                </div>
             </div>
-            <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <i class="fas fa-user-secret"></i>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold">Aktivitas Satpam</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ number_format($stats['satpam']) }}</p>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <i class="fas fa-user-secret"></i>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     {{-- TABLE --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

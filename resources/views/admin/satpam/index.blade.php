@@ -4,6 +4,7 @@
 @section('page-title', 'Kelola Akun Satpam')
 
 @section('content')
+{{-- ✅ PERBAIKAN: Pastikan include alert berada di paling atas section content --}}
 @include('components.alert')
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -56,7 +57,6 @@
                         <td class="p-3 text-gray-600">{{ $s->email }}</td>
                         <td class="p-3 text-gray-600">{{ $s->nis_nip ?? '-' }}</td>
                         <td class="p-3 text-center space-x-2">
-                            {{-- Tombol Edit Modal Sederhana atau Trigger --}}
                             <button onclick="openEditModal('{{ $s->id }}', '{{ $s->name }}', '{{ $s->email }}', '{{ $s->nis_nip }}')" class="text-yellow-600 hover:text-yellow-800" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -82,8 +82,8 @@
 </div>
 
 {{-- Modal Edit Satpam --}}
-<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-md w-full p-6">
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Edit Data Satpam</h3>
         <form id="editForm" method="POST">
             @csrf
@@ -117,11 +117,11 @@
 function openEditModal(id, name, email, nis_nip) {
     const modal = document.getElementById('editModal');
     const form = document.getElementById('editForm');
-    
+
     document.getElementById('edit_name').value = name;
     document.getElementById('edit_email').value = email;
     document.getElementById('edit_nis_nip').value = nis_nip !== 'null' ? nis_nip : '';
-    
+
     form.action = `{{ url('admin/satpam') }}/${id}`;
     modal.classList.remove('hidden');
     modal.classList.add('flex');

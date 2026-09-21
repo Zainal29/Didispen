@@ -17,33 +17,65 @@ class WhatsappTemplateController extends Controller
 
     public function store(Request $request)
     {
+        // $validated = $request->validate([
+        //     'name' => 'required|string|max:100',
+        //     'content' => 'required|string',
+        //     'is_active' => 'boolean',
+        // ]);
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'content' => 'required|string',
-            'is_active' => 'boolean',
-        ]);
+                   // ✅ Tambahkan validasi unique agar tidak bisa membuat nama yang sama
+                   'name' => 'required|string|max:100|unique:whatsapp_templates,name',
+                   'content' => 'required|string',
+                   'is_active' => 'nullable|boolean', // nullable agar tidak error saat checkbox tidak dicentang
+               ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
-        WhatsappTemplate::create($validated);
+                   $validated['slug'] = Str::slug($validated['name']);
+                   // ✅ Konversi checkbox ke boolean yang benar
+                   $validated['is_active'] = $request->has('is_active') ? true : false;
 
-        return redirect()->route('admin.whatsapp-templates.index')
-            ->with('success', 'Template WhatsApp berhasil ditambahkan!');
-    }
+                   WhatsappTemplate::create($validated);
+
+                   return redirect()->route('admin.whatsapp-templates.index')
+                       ->with('success', 'Template WhatsApp berhasil ditambahkan!');
+               }
+    //     $validated['slug'] = Str::slug($validated['name']);
+    //     WhatsappTemplate::create($validated);
+
+    //     return redirect()->route('admin.whatsapp-templates.index')
+    //         ->with('success', 'Template WhatsApp berhasil ditambahkan!');
+    // }
 
     public function update(Request $request, WhatsappTemplate $whatsappTemplate)
     {
+        // $validated = $request->validate([
+        //     'name' => 'required|string|max:100',
+        //     'content' => 'required|string',
+        //     'is_active' => 'boolean',
+        // ]);
+
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'content' => 'required|string',
-            'is_active' => 'boolean',
-        ]);
+                'name' => 'required|string|max:100|unique:whatsapp_templates,name,' . $whatsappTemplate->id,
+                'content' => 'required|string',
+                // ✅ HAPUS validasi boolean
+                'is_active' => 'nullable',
+            ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
-        $whatsappTemplate->update($validated);
+            $validated['slug'] = Str::slug($validated['name']);
+            // ✅ Konversi checkbox ke boolean yang benar
+            $validated['is_active'] = $request->has('is_active') ? true : false;
 
-        return redirect()->route('admin.whatsapp-templates.index')
-            ->with('success', 'Template WhatsApp berhasil diperbarui!');
-    }
+            $whatsappTemplate->update($validated);
+
+            return redirect()->route('admin.whatsapp-templates.index')
+                ->with('success', 'Template WhatsApp berhasil diperbarui!');
+        }
+
+    //     $validated['slug'] = Str::slug($validated['name']);
+    //     $whatsappTemplate->update($validated);
+
+    //     return redirect()->route('admin.whatsapp-templates.index')
+    //         ->with('success', 'Template WhatsApp berhasil diperbarui!');
+    // }
 
     public function destroy(WhatsappTemplate $whatsappTemplate)
     {

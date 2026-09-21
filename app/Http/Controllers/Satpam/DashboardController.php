@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Satpam;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
+use App\Models\WhatsappTemplate;
 use App\Services\QRScanService;
 use App\Services\NotifikasiService;
+use App\Services\WhatsappMessageService; // ✅ TAMBAHKAN
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -183,11 +185,21 @@ class DashboardController extends Controller
             : redirect()->back()->with('success', $message);
     }
 
-    public function showDetail(Dispensasi $dispensasi)
-    {
-        $dispensasi->load(['siswa.kelas.jurusan', 'guru']);
-        return view('satpam.dispensasi-detail', compact('dispensasi'));
-    }
+    // public function showDetail(Dispensasi $dispensasi)
+    // {
+    //     $dispensasi->load(['siswa.kelas.jurusan', 'guru']);
+    //     return view('satpam.dispensasi-detail', compact('dispensasi'));
+    // }
+    public function showDetail(Dispensasi $dispensasi, WhatsappMessageService $waService)
+       {
+           $dispensasi->load(['siswa.kelas.jurusan', 'siswa.user', 'guru']);
+
+           // ✅ HANYA 1 BARIS untuk generate link WA
+           $context = $waService->resolveContext($dispensasi);
+           $waLink = $waService->generateWaLink($dispensasi, $context);
+
+           return view('satpam.dispensasi-detail', compact('dispensasi', 'waLink'));
+       }
 
     public function markWaContacted(Dispensasi $dispensasi)
     {

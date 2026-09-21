@@ -220,25 +220,9 @@
             @endif
         </div>
 
-        {{-- KONTAK DARURAT & WHATSAPP --}}
-        @if(!empty($dispensasi->siswa->no_telepon))
-            @php
-                $hp = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
-                if (str_starts_with($hp, '0')) $hp = '62' . substr($hp, 1);
-                $namaKelas = $dispensasi->siswa->kelas?->nama_kelas ?? 'Siswa';
-                $pesan = "Halo *{$dispensasi->siswa->nama_lengkap}* ({$namaKelas}),\n\n";
-                $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
-                if ($isOverdue) {
-                   $lateMinutes = \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($dispensasi->batas_waktu_kembali);
-                    $lateText = \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat($lateMinutes, short: true);
-                    $pesan .= "*PERINGATAN KETERLAMBATAN DISPENSASI*\nBatas waktu kembali Anda telah LEWAT sejak *{$lateText}* yang lalu.\n\n";
-                } else {
-                    $pesan .= "Anda tercatat sedang dispensasi keluar sekolah.\n\n";
-                }
-                $pesan .= " No. Surat: {$dispensasi->nomor_surat}\n Tujuan: {$dispensasi->tujuan}\n Batas Kembali: {$dispensasi->jam_kembali}\n\nMohon segera kembali ke sekolah atau lapor ke Pos Satpam. Terima kasih.";
-                $waLink = "https://wa.me/{$hp}?text=" . urlencode($pesan);
-            @endphp
 
+        {{-- KONTAK DARURAT & WHATSAPP (100% dari Database) --}}
+        @if($waLink)
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
                 <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center uppercase tracking-wider">
                     <i class="fas fa-phone-alt text-green-600 mr-2"></i>Kontak Darurat
@@ -251,28 +235,55 @@
                         </div>
                         <div class="flex-1">
                             <p class="text-purple-800 font-bold text-sm mb-1">Sudah Dihubungi</p>
-                            <p class="text-purple-600 text-xs font-medium"><i class="far fa-clock mr-1"></i> {{ $dispensasi->warned_at ? $dispensasi->warned_at->isoFormat('D MMMM Y, HH:mm') : '-' }} WIB</p>
-                            <p class="text-purple-500 text-[10px] mt-1"><i class="fas fa-info-circle mr-1"></i> No. Telepon: <span class="font-mono font-semibold">{{ $dispensasi->siswa->no_telepon }}</span></p>
+                            <p class="text-purple-600 text-xs font-medium">
+                                <i class="far fa-clock mr-1"></i>
+                                {{ $dispensasi->warned_at ? $dispensasi->warned_at->isoFormat('D MMMM Y, HH:mm') : '-' }} WIB
+                            </p>
+                            <p class="text-purple-500 text-[10px] mt-1">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                No. Telepon: <span class="font-mono font-semibold">{{ $dispensasi->siswa->no_telepon }}</span>
+                            </p>
                         </div>
                     </div>
                 @else
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-3">
                             <div>
-                                <p class="text-green-700 text-[10px] font-semibold uppercase mb-1 tracking-wider">No. Telepon / WhatsApp</p>
+                                <p class="text-green-700 text-[10px] font-semibold uppercase mb-1 tracking-wider">
+                                    No. Telepon / WhatsApp
+                                </p>
                                 <p class="text-lg font-bold text-gray-900 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
                                 <p class="text-green-600 text-xs mt-1 font-medium">{{ $dispensasi->siswa->nama_lengkap }}</p>
                             </div>
-                            <a href="{{ $waLink }}" target="_blank" rel="noopener" onclick="handleDetailWaContacted(event, {{ $dispensasi->id }}, '{{ $waLink }}')" class="inline-flex flex-col items-center justify-center w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex-shrink-0" title="Hubungi via WhatsApp">
+                            <a href="{{ $waLink }}" target="_blank" rel="noopener"
+                               onclick="handleDetailWaContacted(event, {{ $dispensasi->id }}, '{{ $waLink }}')"
+                               class="inline-flex flex-col items-center justify-center w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex-shrink-0"
+                               title="Hubungi via WhatsApp">
                                 <i class="fab fa-whatsapp text-2xl"></i>
                                 <span class="text-[9px] font-bold mt-0.5 tracking-wider">CHAT</span>
                             </a>
                         </div>
                         <p class="text-green-700 text-xs font-medium bg-green-100/50 p-2 rounded-md">
-                            <i class="fas fa-info-circle mr-1"></i> Klik ikon WhatsApp untuk menghubungi. Status siswa akan otomatis ditandai "Sudah Dihubungi".
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Pesan diambil dari <strong>Template Database</strong>. Klik ikon WhatsApp untuk menghubungi.
                         </p>
                     </div>
                 @endif
+            </div>
+        @elseif(!empty($dispensasi->siswa->no_telepon))
+            {{-- Fallback: Nomor ada tapi template/link gagal --}}
+            <div class="bg-white rounded-xl border border-amber-200 shadow-sm p-5">
+                <h3 class="text-sm font-bold text-amber-800 mb-3 flex items-center uppercase tracking-wider">
+                    <i class="fas fa-exclamation-triangle text-amber-600 mr-2"></i>Template Belum Tersedia
+                </h3>
+                <p class="text-xs text-amber-700 mb-3">
+                    Nomor telepon siswa tersedia (<strong>{{ $dispensasi->siswa->no_telepon }}</strong>),
+                    namun template WhatsApp untuk context ini belum diaktifkan di database.
+                </p>
+                <a href="{{ route('admin.whatsapp-templates.index') }}"
+                   class="inline-flex items-center px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold">
+                    <i class="fas fa-cog mr-1.5"></i>Ke Menu Template WhatsApp
+                </a>
             </div>
         @endif
 
