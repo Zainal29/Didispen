@@ -311,9 +311,6 @@
         </div>
 
 
-
-
-
         {{-- ========================================================= --}}
         {{-- INFORMASI PRIBADI --}}
         {{-- ========================================================= --}}
@@ -373,7 +370,7 @@
 
 
         {{-- ========================================================= --}}
-        {{-- LOG AKTIVITAS --}}
+        {{-- LOG AKTIVITAS (DIPERBAIKI: Dengan Badge Metode Login) --}}
         {{-- ========================================================= --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 overflow-hidden">
             <div class="flex items-center justify-between gap-4 mb-5">
@@ -394,8 +391,28 @@
             @if(isset($loginActivities) && $loginActivities->count() > 0)
                 @php
                     $latestLogin = $loginActivities->first();
+
+                    // ✅ DETEKSI PERUBAHAN PERANGKAT
+                    $deviceChanged = $deviceChanged ?? false;
                 @endphp
 
+                {{-- ✅ PERINGATAN PERUBAHAN PERANGKAT --}}
+                @if($deviceChanged && $latestLogin)
+                    <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 sm:p-4">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-exclamation-triangle text-amber-600 mt-0.5 flex-shrink-0"></i>
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-amber-900">Perangkat Login Berbeda</p>
+                                <p class="text-xs text-amber-700 mt-1">
+                                    Perangkat yang Anda gunakan untuk login saat ini berbeda dengan login sebelumnya.
+                                    Jika ini bukan Anda, segera ubah password dan hubungi administrator.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- KARTU LOGIN TERAKHIR --}}
                 <div class="mb-4 rounded-xl border border-indigo-100 bg-indigo-50 p-3 sm:p-4">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
@@ -406,6 +423,21 @@
                             <p class="text-[11px] text-indigo-700">
                                 {{ $latestLogin->created_at?->diffForHumans() ?? 'Belum tercatat' }}
                             </p>
+
+                            {{-- ✅ BADGE METODE LOGIN TERAKHIR --}}
+                            @php
+                                $isSSOLastLogin = str_contains($latestLogin->action ?? '', 'sso')
+                                               || str_contains($latestLogin->action ?? '', 'sipintu');
+                            @endphp
+                            @if($isSSOLastLogin)
+                                <span class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                    <i class="fas fa-shield-alt"></i> Login via SSO SiPintu
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
+                                    <i class="fas fa-key"></i> Login Manual
+                                </span>
+                            @endif
                         </div>
                         <div class="text-left sm:text-right">
                             <p class="text-[10px] uppercase font-semibold tracking-wide text-gray-500">Perangkat</p>
@@ -417,6 +449,7 @@
                     </div>
                 </div>
 
+                {{-- DAFTAR RIWAYAT LOGIN --}}
                 <div class="divide-y divide-gray-100">
                     @forelse($loginActivities as $login)
                         @php
@@ -427,6 +460,10 @@
                                 'Tablet' => 'fa-tablet-alt',
                                 default => 'fa-laptop',
                             };
+
+                            // ✅ DETEKSI METODE LOGIN
+                            $isSSO = str_contains($login->action ?? '', 'sso')
+                                  || str_contains($login->action ?? '', 'sipintu');
                         @endphp
                         <div class="py-4 first:pt-0 last:pb-0">
                             <div class="flex items-start gap-4">
@@ -434,12 +471,24 @@
                                     <i class="fas {{ $deviceIcon }}"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between gap-2 mb-1">
-                                        <div class="flex items-center gap-2 min-w-0">
+                                    <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                        <div class="flex items-center gap-2 min-w-0 flex-wrap">
                                             <i class="fas {{ $deviceIcon }} text-gray-400 text-xs"></i>
                                             <span class="font-bold text-sm text-gray-900 truncate">{{ $deviceType }} • {{ $login->os ?? 'Unknown OS' }}</span>
+
                                             @if($loop->first)
                                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 whitespace-nowrap">Sesi Ini</span>
+                                            @endif
+
+                                            {{-- ✅ BADGE METODE LOGIN --}}
+                                            @if($isSSO)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
+                                                    <i class="fas fa-shield-alt"></i> SSO SiPintu
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap">
+                                                    <i class="fas fa-key"></i> Manual
+                                                </span>
                                             @endif
                                         </div>
                                         <span class="text-[11px] text-gray-400 whitespace-nowrap">{{ $loginTime?->diffForHumans() }}</span>

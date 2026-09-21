@@ -39,12 +39,19 @@ class ProfileController extends Controller
         | RIWAYAT LOGIN
         |--------------------------------------------------------------------------
         */
+        // $loginHistory = AuditLog::query()
+        //     ->where('user_id', $user->id)
+        //     ->where('action', 'login')
+        //     ->latest('created_at')
+        //     ->take(10)
+        //     ->get();
         $loginHistory = AuditLog::query()
-            ->where('user_id', $user->id)
-            ->where('action', 'login')
-            ->latest('created_at')
-            ->take(10)
-            ->get();
+                   ->where('user_id', $user->id)
+                   // ✅ PERBAIKAN: Gunakan whereIn untuk menangkap semua jenis aksi login
+                   ->whereIn('action', ['login', 'login_sso_sipintu', 'sso_login'])
+                   ->latest('created_at')
+                   ->take(10)
+                   ->get();
 
         $latestLogin = $loginHistory->first();
 
