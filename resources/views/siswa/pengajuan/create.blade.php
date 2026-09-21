@@ -734,6 +734,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('formDispensasi');
         const submitBtn = document.getElementById('submitBtn');
 
+        // ✅ AMBIL REFERENSI TOMBOL KAMERA
+            const btnStartSelfie = document.getElementById('btnStartSelfie');
+            const btnRetrySelfie = document.getElementById('btnRetrySelfie');
+
         if (timeDisplay) {
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             timeDisplay.textContent = `${days[dayOfWeek]}, ${currentTime} WIB`;
@@ -782,6 +786,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
                 submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
             }
+
+            // ✅ DISABLE TOMBOL KAMERA SAAT WAKTU DITUTUP
+                    if (btnStartSelfie) {
+                        btnStartSelfie.disabled = true;
+                        btnStartSelfie.classList.add('opacity-50', 'cursor-not-allowed');
+                        btnStartSelfie.classList.remove('hover:bg-blue-700', 'active:scale-95');
+                    }
+                    if (btnRetrySelfie) {
+                        btnRetrySelfie.disabled = true;
+                        btnRetrySelfie.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+
         } else {
             if (banner) banner.classList.add('hidden');
 
@@ -799,6 +815,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
                 submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
             }
+            // ✅ ENABLE KEMBALI TOMBOL KAMERA SAAT WAKTU DIBUKA
+                  if (btnStartSelfie) {
+                      btnStartSelfie.disabled = false;
+                      btnStartSelfie.classList.remove('opacity-50', 'cursor-not-allowed');
+                      btnStartSelfie.classList.add('hover:bg-blue-700', 'active:scale-95');
+                  }
+                  if (btnRetrySelfie) {
+                      btnRetrySelfie.disabled = false;
+                      btnRetrySelfie.classList.remove('opacity-50', 'cursor-not-allowed');
+                  }
         }
     }
 
