@@ -19,6 +19,7 @@ class Dispensasi extends Model
         'qr_code', 'qr_token', 'print_count', 'max_print_limit', 'printed_at',
         'student_print_count', 'teacher_print_count', 'waktu_keluar_aktual', 'waktu_kembali_aktual',
         'satpam_keluar_id', 'satpam_kembali_id', 'is_warned', 'warned_at',
+        'dibuat_manual_oleh_guru',
         'foto_verifikasi', 'foto_bukti', 'foto_bukti_uploaded_at', // ✅ Hapus 'bukti_file'
     ];
 
@@ -26,6 +27,7 @@ class Dispensasi extends Model
     protected $casts = [
         'batas_waktu_kembali' => 'datetime',
         'is_warned' => 'boolean',
+        'dibuat_manual_oleh_guru' => 'boolean',
         'warned_at' => 'datetime',
         'foto_bukti_uploaded_at' => 'datetime', // <i class="fas fa-check-circle"></i> TAMBAHKAN INI
     ];

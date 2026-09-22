@@ -130,6 +130,15 @@
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->is('profil*') ? 'active' : '' }}">
                     <i class="fas fa-user-circle w-5 mr-3"></i> Profil
                 </a>
+                <a href="{{ url('/panduan') }}"
+                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->is('panduan*') ? 'active' : '' }}">
+                    <i class="fas fa-book-open w-5 mr-3"></i> Panduan
+                </a>
+                <a href="{{ route('admin.tutorial-videos.index') }}"
+                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.tutorial-videos.*') ? 'active' : '' }}">
+                    <i class="fas fa-video w-5 mr-3"></i> Video Tutorial
+                </a>
+
             </nav>
 
             <div class="p-3 border-t">

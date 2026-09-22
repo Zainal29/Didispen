@@ -199,18 +199,19 @@ use Illuminate\Support\Facades\Log;
          * CEK SISWA AKTIF
          * ==========================================================
          *
-         * Berdasarkan struktur API SiPintu yang sudah diperiksa:
+         * Aturan:
          *
-         * Siswa aktif ditandai dengan:
-         * - memiliki NIS
-         * - memiliki nama
-         * - memiliki classroom
-         * - classroom.status = 1
+         * 1. NIS wajib ada.
+         * 2. Nama wajib ada.
+         * 3. Data yang secara eksplisit graduated = true ditolak.
+         * 4. Status eksplisit nonaktif/lulus/alumni ditolak.
+         * 5. Classroom "graduate" ditolak.
+         * 6. PKL tetap diterima walaupun classroom.status = 0.
+         * 7. Siswa reguler harus memiliki classroom aktif.
+         * 8. Tingkat kelas harus X, XI, atau XII.
          *
-         * Data tanpa classroom TIDAK dimasukkan.
-         *
-         * Ini penting agar data lama/alumni yang berjumlah sekitar
-         * 1.146 record tidak ikut masuk ke DIDISPEN.
+         * Catatan:
+         * classroom.status TIDAK menjadi syarat untuk siswa PKL.
          */
         private function isStudentActive(
             array $item,
@@ -238,17 +239,35 @@ use Illuminate\Support\Facades\Log;
 
             /*
              * ======================================================
-             * 2. CLASSROOM WAJIB ADA
+             * 2. STATUS SISWA
              * ======================================================
-             *
-             * Dari hasil pemeriksaan API:
-             *
-             * - 1.146 data tidak memiliki classroom
-             * - 1.160 data memiliki classroom
-             *
-             * Data tanpa classroom tidak boleh masuk DIDISPEN.
              */
-            $classroom = $item['classroom'] ?? null;
+            foreach ([
+                'status',
+                'status_siswa',
+                'status_aktif',
+                'student_status',
+                'aktif',
+                'is_active',
+            ] as $field) {
+                if (! array_key_exists($field, $item)) {
+                    continue;
+                }
+
+                $status = $this->toBoolean($item[$field]);
+
+                if ($status === false) {
+                    $reason = "Status siswa nonaktif: {$item[$field]}";
+                    return false;
+                }
+            }
+
+            /*
+             * ======================================================
+             * 3. CLASSROOM WAJIB ADA
+             * ======================================================
+             */
+            $classroom = data_get($item, 'classroom');
 
             if (! is_array($classroom) || empty($classroom)) {
                 $reason = 'Tidak memiliki classroom';
@@ -257,61 +276,128 @@ use Illuminate\Support\Facades\Log;
 
             /*
              * ======================================================
-             * 3. STATUS CLASSROOM HARUS 1
-             * ======================================================
-             *
-             * Hasil pemeriksaan API:
-             *
-             * classroom.status = 1
-             * untuk seluruh 1.160 data yang memiliki classroom.
-             */
-            $classroomStatus = $classroom['status'] ?? null;
-
-            if ((int) $classroomStatus !== 1) {
-                $reason = 'Classroom tidak aktif';
-                return false;
-            }
-
-            /*
-             * ======================================================
-             * 4. NAMA KELAS WAJIB ADA
+             * 4. NAMA CLASSROOM
              * ======================================================
              */
             $namaKelas = trim((string) (
                 $classroom['name']
                 ?? $classroom['nama']
+                ?? $classroom['nama_kelas']
+                ?? $classroom['rombel']
                 ?? ''
             ));
 
             if ($namaKelas === '') {
-                $reason = 'Nama kelas kosong';
+                $reason = 'Nama classroom kosong';
                 return false;
             }
 
             /*
              * ======================================================
-             * 5. TINGKAT KELAS HARUS X / XI / XII
+             * 5. GRADUATE / ALUMNI CLASSROOM
              * ======================================================
              *
-             * Contoh:
-             * X PPLG 1
-             * XI MPLB 2
-             * XII TO 1
+             * Di SiPintu, alumni sekarang memiliki kelas 'graduation' / 'graduated'
+             * atau kelas terakhir mereka.
+             * Jika nama kelas eksplisit graduation / alumni / lulus, tolak.
              */
-            if (! preg_match(
+            $namaKelasNormalized = strtolower(trim($namaKelas));
+
+            if (preg_match(
+                '/^(graduate|graduated|graduation|alumni|lulus)(\s|_|-|$)/i',
+                $namaKelasNormalized
+            )) {
+                $reason = "Classroom alumni/graduate: {$namaKelas}";
+                return false;
+            }
+
+            /*
+             * ======================================================
+             * 6. DETEKSI PKL
+             * ======================================================
+             *
+             * PKL BOLEH MASUK walaupun classroom.status = 0.
+             */
+            $isPkl = $this->toBoolean(
+                $classroom['is_pkl'] ?? null
+            );
+
+            /*
+             * ======================================================
+             * 7. TINGKAT KELAS
+             * ======================================================
+             *
+             * Harus berasal dari kelas X / XI / XII.
+             */
+            $isValidGrade = preg_match(
                 '/^(XII|XI|X)(?:\s+|-|_|\.|\/|$)/i',
                 $namaKelas
-            )) {
+            ) === 1;
+
+            if (! $isValidGrade) {
                 $reason = "Tingkat kelas tidak valid: {$namaKelas}";
                 return false;
             }
 
             /*
              * ======================================================
-             * LOLOS
+             * 8. DETEKSI ALUMNI DENGAN KELAS LAMA / GRADUATED
+             * ======================================================
+             *
+             * Di SiPintu, alumni bisa memiliki kelas lama (misal XII TO 1).
+             * Namun kelas lama alumni memiliki classroom.status = 0 / nonaktif,
+             * atau NIS berasal dari angkatan alumni (< 4583).
+             */
+            $classroomStatus = $this->toBoolean(
+                $classroom['status'] ?? null
+            );
+
+            $isGraduated = false;
+            if (array_key_exists('graduated', $item)) {
+                $isGraduated = $this->toBoolean($item['graduated']) === true;
+            } elseif (array_key_exists('is_graduated', $item)) {
+                $isGraduated = $this->toBoolean($item['is_graduated']) === true;
+            } elseif (array_key_exists('is_alumni', $item)) {
+                $isGraduated = $this->toBoolean($item['is_alumni']) === true;
+            }
+
+            $nisNum = is_numeric($nis) ? (int) $nis : null;
+
+            if ($isGraduated && (($nisNum !== null && $nisNum < 4583) || $classroomStatus === false)) {
+                $reason = "Siswa alumni/graduated: {$namaKelas}";
+                return false;
+            }
+
+            /*
+             * ======================================================
+             * 9. SISWA PKL
+             * ======================================================
+             *
+             * PKL langsung diterima (classroom.status = 0 tetap boleh).
+             */
+            if ($isPkl === true) {
+                $reason = "Aktif - PKL: {$namaKelas}";
+                return true;
+            }
+
+            /*
+             * ======================================================
+             * 10. SISWA REGULER
+             * ======================================================
+             *
+             * Untuk siswa reguler, classroom harus aktif.
+             */
+            if ($classroomStatus !== true) {
+                $reason = "Classroom tidak aktif: {$namaKelas}";
+                return false;
+            }
+
+            /*
+             * ======================================================
+             * LOLOS (SISWA AKTIF)
              * ======================================================
              */
-            $reason = 'Aktif berdasarkan classroom.status = 1';
+            $reason = "Aktif: {$namaKelas}";
 
             return true;
         }
@@ -460,45 +546,41 @@ use Illuminate\Support\Facades\Log;
         * NONAKTIFKAN / BERSIHKAN SISWA YANG SUDAH TIDAK AKTIF
         * ==========================================================
         *
-        * Jika siswa lama tidak lagi muncul sebagai aktif:
-        *
-        * - Jika belum memiliki dispensasi -> hapus siswa + user.
-        * - Jika sudah memiliki dispensasi -> jangan hapus histori,
-        *   cukup status_aktif = false.
+        * Siswa lokal yang tidak ada dalam daftar siswa aktif API ditandai
+        * nonaktif. Record dan user tidak dihapus agar histori dispensasi
+        * tetap aman.
         */
-        private function cleanupInactiveStudents(array $nisList): void
+        private function reconcileInactiveStudents(array $activeNis): int
         {
-            if (empty($nisList)) {
-                return;
+            $activeNis = array_values(array_unique(array_filter(
+                array_map(
+                    fn (mixed $nis): string => trim((string) $nis),
+                    $activeNis
+                ),
+                fn (string $nis): bool => $nis !== ''
+            )));
+
+            if (empty($activeNis)) {
+                return 0;
             }
 
-            $existingStudents = Siswa::withCount('dispensasi')
-                ->with('user')
-                ->whereIn('nis_nip', $nisList)
-                ->get();
+            $inactiveCount = 0;
 
-            foreach ($existingStudents as $siswa) {
-                try {
-                    if ((int) $siswa->dispensasi_count === 0) {
-                        $user = $siswa->user;
+            Siswa::query()
+                ->where('status_aktif', true)
+                ->whereNotIn('nis_nip', $activeNis)
+                ->chunkById(100, function ($students) use (&$inactiveCount): void {
+                    foreach ($students as $siswa) {
+                        $siswa->update(['status_aktif' => false]);
+                        $inactiveCount++;
 
-                        $siswa->delete();
-
-                        if ($user) {
-                            $user->delete();
-                        }
-                    } else {
-                        $siswa->update([
-                            'status_aktif' => false,
-                        ]);
+                        Log::info(
+                            "SISWA DINONAKTIFKAN: NIS {$siswa->nis_nip}"
+                        );
                     }
-                } catch (\Throwable $e) {
-                    Log::warning(
-                        "Gagal cleanup siswa NIS {$siswa->nis_nip}: "
-                        . $e->getMessage()
-                    );
-                }
-            }
+                });
+
+            return $inactiveCount;
         }
 
         /**
@@ -518,17 +600,18 @@ use Illuminate\Support\Facades\Log;
 
                 $apiResult = $this->apiService->getSiswaData();
 
-                if (($apiResult['status'] ?? null) === 'error') {
+                if (($apiResult['status'] ?? null) !== 'success') {
                     return [
                         'success' => false,
                         'message' => $apiResult['message']
-                            ?? 'Gagal terhubung ke API SiPintu Gateway.',
+                            ?? 'Data dari API SiPintu tidak dapat dikonfirmasi.',
                         'stats' => [
                             'total' => 0,
                             'inserted' => 0,
                             'updated' => 0,
                             'failed' => 0,
                             'skipped' => 0,
+                            'inactive' => 0,
                             'errors' => [],
                         ],
                     ];
@@ -536,10 +619,23 @@ use Illuminate\Support\Facades\Log;
 
                 $studentsData = $apiResult['data'] ?? [];
 
-                if (
-                    ! is_array($studentsData)
-                    || empty($studentsData)
-                ) {
+                if (! is_array($studentsData)) {
+                    return [
+                        'success' => false,
+                        'message' => 'Format data siswa dari API SiPintu tidak valid.',
+                        'stats' => [
+                            'total' => 0,
+                            'inserted' => 0,
+                            'updated' => 0,
+                            'failed' => 0,
+                            'skipped' => 0,
+                            'inactive' => 0,
+                            'errors' => [],
+                        ],
+                    ];
+                }
+
+                if (empty($studentsData)) {
                     return [
                         'success' => true,
                         'message' =>
@@ -550,6 +646,7 @@ use Illuminate\Support\Facades\Log;
                             'updated' => 0,
                             'failed' => 0,
                             'skipped' => 0,
+                            'inactive' => 0,
                             'errors' => [],
                         ],
                     ];
@@ -563,8 +660,8 @@ use Illuminate\Support\Facades\Log;
                 $jumlahDariApi = count($studentsData);
 
                 $activeStudents = [];
-                $skippedNis = [];
                 $jumlahDilewati = 0;
+                $jumlahPklAktif = 0;
 
                 foreach ($studentsData as $item) {
                     if (! is_array($item)) {
@@ -579,34 +676,34 @@ use Illuminate\Support\Facades\Log;
 
                     if ($this->isStudentActive($item, $reason)) {
                         $activeStudents[] = $item;
+
+                        $classroom = data_get($item, 'classroom');
+
+                        if (
+                            is_array($classroom)
+                            && $this->toBoolean($classroom['is_pkl'] ?? null) === true
+                        ) {
+                            $jumlahPklAktif++;
+                        }
+
                         continue;
                     }
 
                     $jumlahDilewati++;
 
-                    if ($nis !== '') {
-                        $skippedNis[] = $nis;
-                    }
-
-                    /*
-                    * Jangan masukkan data alumni/nonaktif.
-                    */
                     Log::info(
                         "SKIP SISWA: NIS {$nis} ({$nama}) - {$reason}"
                     );
                 }
 
-                /*
-                * Hapus / nonaktifkan data lokal yang sekarang sudah
-                * terdeteksi bukan siswa aktif.
-                */
-                $skippedNis = array_values(
-                    array_unique(
-                        array_filter($skippedNis)
-                    )
-                );
-
                 $totalStudents = count($activeStudents);
+                $activeNis = array_values(array_unique(array_filter(
+                    array_map(
+                        fn (array $item): string => $this->extractNis($item),
+                        $activeStudents
+                    ),
+                    fn (string $nis): bool => $nis !== ''
+                )));
 
                 Log::info(
                     "Total data dari API: {$jumlahDariApi}"
@@ -617,7 +714,15 @@ use Illuminate\Support\Facades\Log;
                 );
 
                 Log::info(
+                    "Total SISWA PKL AKTIF: {$jumlahPklAktif}"
+                );
+
+                Log::info(
                     "Total dilewati: {$jumlahDilewati}"
+                );
+
+                Log::info(
+                    "Total activeNis: " . count($activeNis)
                 );
 
                 /*
@@ -643,6 +748,43 @@ use Illuminate\Support\Facades\Log;
                             'updated' => 0,
                             'failed' => 0,
                             'skipped' => $jumlahDilewati,
+                            'inactive' => 0,
+                            'errors' => [],
+                        ],
+                    ];
+                }
+
+                $localActiveCount = Siswa::query()
+                    ->where('status_aktif', true)
+                    ->count();
+                $minimumActiveRatio = (float) config(
+                    'services.sipintu.student_sync_min_active_ratio',
+                    0.5
+                );
+
+                if (
+                    $localActiveCount > 0
+                    && $minimumActiveRatio > 0
+                    && $totalStudents < ($localActiveCount * $minimumActiveRatio)
+                ) {
+                    Log::warning(
+                        'Sinkronisasi siswa dihentikan: jumlah siswa aktif API '
+                        . "({$totalStudents}) terlalu kecil dibandingkan data lokal "
+                        . "({$localActiveCount})."
+                    );
+
+                    return [
+                        'success' => false,
+                        'message' =>
+                            'Jumlah siswa aktif dari API tidak wajar dibandingkan '
+                            . 'data lokal. Tidak dilakukan perubahan database.',
+                        'stats' => [
+                            'total' => $totalStudents,
+                            'inserted' => 0,
+                            'updated' => 0,
+                            'failed' => 0,
+                            'skipped' => $jumlahDilewati,
+                            'inactive' => 0,
                             'errors' => [],
                         ],
                     ];
@@ -654,6 +796,7 @@ use Illuminate\Support\Facades\Log;
                     'updated' => 0,
                     'failed' => 0,
                     'skipped' => $jumlahDilewati,
+                    'inactive' => 0,
                     'errors' => [],
                 ];
 
@@ -1269,6 +1412,35 @@ use Illuminate\Support\Facades\Log;
                 }
 
                 /*
+                * Rekonsiliasi hanya boleh dilakukan setelah seluruh batch
+                * selesai tanpa error item. Jika ada kegagalan pemrosesan,
+                * status lokal dipertahankan untuk mencegah cleanup parsial.
+                */
+                if ($stats['failed'] === 0) {
+                    $localCountBeforeReconciliation = Siswa::query()->count();
+
+                    Log::info(
+                        'Total siswa lokal sebelum rekonsiliasi: '
+                        . $localCountBeforeReconciliation
+                    );
+
+                    $stats['inactive'] = $this->reconcileInactiveStudents(
+                        $activeNis
+                    );
+
+                    Log::info(
+                        'Total siswa ditandai nonaktif: '
+                        . $stats['inactive']
+                    );
+                } else {
+                    Log::warning(
+                        'Rekonsiliasi siswa dilewati karena terdapat '
+                        . $stats['failed']
+                        . ' kegagalan pemrosesan batch.'
+                    );
+                }
+
+                /*
                 * ==========================================================
                 * AUDIT LOG
                 * ==========================================================
@@ -1299,6 +1471,7 @@ use Illuminate\Support\Facades\Log;
                     . "Total {$stats['total']} siswa aktif "
                     . "({$stats['inserted']} baru, "
                     . "{$stats['updated']} diperbarui, "
+                    . "{$stats['inactive']} dinonaktifkan, "
                     . "{$stats['failed']} gagal, "
                     . "{$stats['skipped']} dilewati).";
 
@@ -1334,6 +1507,7 @@ use Illuminate\Support\Facades\Log;
                         'updated' => 0,
                         'failed' => 0,
                         'skipped' => 0,
+                        'inactive' => 0,
                         'errors' => [
                             $e->getMessage(),
                         ],
@@ -1456,6 +1630,20 @@ use Illuminate\Support\Facades\Log;
                                 ?? $item['nama']
                                 ?? ''
                             ));
+                            /*
+* EMAIL GURU ASLI DARI SIPINTU
+*/
+$emailGuru = trim((string) (
+    $item['email']
+    ?? data_get($item, 'user.email')
+    ?? data_get($item, 'guru.email')
+    ?? data_get($item, 'pegawai.email')
+    ?? ''
+));
+
+$emailGuru = $emailGuru !== ''
+    ? strtolower($emailGuru)
+    : null;
 
                             /*
                             * Guru tanpa NIP tetap diproses.
@@ -1654,7 +1842,7 @@ use Illuminate\Support\Facades\Log;
                                             $nip,
 
                                         'role' =>
-                                            'guru',
+                                            $user->role === 'admin' ? 'admin' : 'guru',
                                     ]);
 
                                     $stats['updated']++;
@@ -1710,6 +1898,8 @@ use Illuminate\Support\Facades\Log;
                                     'nama_lengkap' =>
                                         $nama,
 
+                                        'email' =>
+                                        $emailGuru,
                                     'tanggal_lahir' =>
                                         $tanggalLahir,
 

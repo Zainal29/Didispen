@@ -10,7 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class OAuthController extends Controller
 {
@@ -21,21 +23,90 @@ class OAuthController extends Controller
     }
 
     /**
-     * =========================================================================
-     * JALUR 1: CALLBACK SSO SIPINTU GATEWAY
-     * =========================================================================
-     * Menerima redirect dari Portal SiPintu Gateway setelah pengguna memilih
-     * aplikasi DIDISPEN, menukarkan authorization code dengan access token,
-     * mengambil data profil pengguna, menyinkronkan user ke database lokal,
-     * dan langsung mengarahkan ke dashboard.
+     * Mapping role SiPintu ke role lokal DIDISPEN.
+     */
+    private function mapRole(string $rawRole): ?string
+    {
+        return match (strtolower(trim($rawRole))) {
+            'student', 'siswa' => 'siswa',
+            'teacher', 'guru' => 'guru',
+            'satpam', 'security' => 'satpam',
+            default => null,
+        };
+    }
+
+    /**
+     * Verifikasi signature webhook HMAC SHA-256.
+     */
+    private function verifyWebhookSignature(Request $request): bool
+    {
+        $secret = config('services.sipintu.client_secret')
+            ?: env('SIPINTU_CLIENT_SECRET');
+
+        // Webhook wajib memiliki secret.
+        if (! is_string($secret) || trim($secret) === '') {
+            Log::critical('SiPintu Webhook: Secret belum dikonfigurasi.');
+            return false;
+        }
+
+        $signature = trim(
+            (string) $request->header('X-SiPintu-Signature', '')
+        );
+
+        // Mendukung format: sha256=signature atau signature biasa.
+        if (str_starts_with($signature, 'sha256=')) {
+            $signature = substr($signature, 7);
+        }
+
+        if ($signature === '') {
+            return false;
+        }
+
+        $computedSignature = hash_hmac(
+            'sha256',
+            $request->getContent(),
+            $secret
+        );
+
+        return hash_equals($computedSignature, $signature);
+    }
+
+    /**
+     * Pastikan relasi Siswa/Guru tersedia.
+     */
+    private function ensureUserProfile(User $user): void
+    {
+        if ($user->role === 'siswa') {
+            Siswa::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nis_nip' => $user->nis_nip,
+                    'nama_lengkap' => $user->name,
+                    'status_aktif' => true,
+                ]
+            );
+        } elseif ($user->role === 'guru') {
+            Guru::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nip' => $user->nis_nip,
+                    'nama_lengkap' => $user->name,
+                    'status_aktif' => true,
+                ]
+            );
+        }
+    }
+
+    /**
+     * CALLBACK SSO SIPINTU
      */
     public function callback(Request $request)
     {
         $code = $request->input('code');
 
-        if (! $code) {
+        if (! is_string($code) || trim($code) === '') {
             return redirect()->route('login')->withErrors([
-                'email' => 'Otorisasi SSO SiPintu gagal: Kode otorisasi tidak ditemukan.'
+                'email' => 'Kode otorisasi SSO tidak ditemukan.',
             ]);
         }
 
@@ -55,130 +126,225 @@ class OAuthController extends Controller
         $redirectUri = config('services.sipintu.redirect_uri')
             ?: env('SIPINTU_REDIRECT_URI', route('oauth.callback'));
 
-        // Step 1: Tukarkan Authorization Code dengan Access Token (Server-to-Server)
+        if (! $clientId || ! $clientSecret) {
+            Log::critical('SiPintu SSO: Konfigurasi client belum lengkap.');
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Konfigurasi SSO belum lengkap.',
+            ]);
+        }
+
+        /*
+         * STEP 1: Tukarkan authorization code dengan access token.
+         */
         try {
             $tokenResponse = Http::asForm()
                 ->acceptJson()
                 ->timeout(15)
                 ->post("{$baseUrl}/oauth/token", [
-                    'grant_type'    => 'authorization_code',
-                    'client_id'     => $clientId,
+                    'grant_type' => 'authorization_code',
+                    'client_id' => $clientId,
                     'client_secret' => $clientSecret,
-                    'redirect_uri'  => $redirectUri,
-                    'code'          => $code,
+                    'redirect_uri' => $redirectUri,
+                    'code' => $code,
                 ]);
         } catch (\Throwable $e) {
-            Log::error('SiPintu SSO Token Exchange Exception: ' . $e->getMessage());
+            Log::error('SiPintu SSO Token Exchange Exception', [
+                'message' => $e->getMessage(),
+            ]);
+
             return redirect()->route('login')->withErrors([
-                'email' => 'Gagal menghubungi server SiPintu Gateway saat menukarkan token.'
+                'email' => 'Gagal menghubungi server SiPintu.',
             ]);
         }
 
         if ($tokenResponse->failed()) {
-            $errorDesc = $tokenResponse->json('error_description')
-                ?? $tokenResponse->json('message')
-                ?? 'Gagal memverifikasi token ke SiPintu Gateway.';
-
             Log::warning('SiPintu SSO Token Exchange Failed', [
                 'status' => $tokenResponse->status(),
-                'response' => $tokenResponse->body(),
             ]);
 
             return redirect()->route('login')->withErrors([
-                'email' => $errorDesc
+                'email' => 'Gagal memverifikasi token SiPintu.',
             ]);
         }
 
         $accessToken = $tokenResponse->json('access_token');
 
-        if (! $accessToken) {
+        if (! is_string($accessToken) || $accessToken === '') {
             return redirect()->route('login')->withErrors([
-                'email' => 'Access token tidak ditemukan dalam respons SiPintu Gateway.'
+                'email' => 'Access token tidak ditemukan.',
             ]);
         }
 
-        // Step 2: Ambil Data Profil Pengguna & Password Hash dari SiPintu Gateway
+        /*
+         * STEP 2: Ambil profil pengguna dari SiPintu.
+         */
         try {
             $userResponse = Http::withToken($accessToken)
                 ->acceptJson()
                 ->timeout(15)
                 ->get("{$baseUrl}/api/v1/user");
         } catch (\Throwable $e) {
-            Log::error('SiPintu SSO User Profile Exception: ' . $e->getMessage());
+            Log::error('SiPintu SSO Profile Exception', [
+                'message' => $e->getMessage(),
+            ]);
+
             return redirect()->route('login')->withErrors([
-                'email' => 'Gagal mengambil profil akun dari SiPintu Gateway.'
+                'email' => 'Gagal mengambil profil akun SiPintu.',
             ]);
         }
 
         if ($userResponse->failed()) {
-            Log::warning('SiPintu SSO User Profile Failed', [
+            Log::warning('SiPintu SSO Profile Failed', [
                 'status' => $userResponse->status(),
-                'response' => $userResponse->body(),
             ]);
 
             return redirect()->route('login')->withErrors([
-                'email' => 'Gagal mengambil data akun pengguna dari SiPintu Gateway.'
+                'email' => 'Gagal mengambil data akun SiPintu.',
             ]);
         }
 
-        $sipintuUser = $userResponse->json('data') ?? $userResponse->json();
+        $sipintuUser = $userResponse->json('data')
+            ?? $userResponse->json();
 
-        // Normalisasi data pengguna
-        $email = strtolower(trim((string) ($sipintuUser['email'] ?? '')));
-        $externalId = trim((string) ($sipintuUser['external_id'] ?? $sipintuUser['id'] ?? ''));
+        if (! is_array($sipintuUser)) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Format profil SiPintu tidak valid.',
+            ]);
+        }
+
+        /*
+         * STEP 3: Normalisasi dan validasi profil.
+         */
+        $email = strtolower(trim(
+            (string) ($sipintuUser['email'] ?? '')
+        ));
+
+        $externalId = trim((string) (
+            $sipintuUser['external_id']
+            ?? $sipintuUser['id']
+            ?? ''
+        ));
+
         $nisNip = trim((string) (
             $sipintuUser['nis']
             ?? $sipintuUser['nip']
-            ?? $sipintuUser['external_id']
             ?? $sipintuUser['nis_nip']
             ?? ''
         ));
-        $name = trim((string) ($sipintuUser['name'] ?? 'User SiPintu'));
 
-        // Pemetaan Peran (Role Mapping)
-        $rawRole = strtolower(trim((string) ($sipintuUser['role'] ?? 'user')));
-        $role = match ($rawRole) {
-            'student', 'siswa' => 'siswa',
-            'teacher', 'guru' => 'guru',
-            'admin' => 'admin',
-            'satpam', 'security' => 'satpam',
-            default => 'siswa',
-        };
+        $name = trim((string) (
+            $sipintuUser['name'] ?? ''
+        ));
 
-        // Password hash dari SiPintu Gateway
-        $incomingPassword = $sipintuUser['password']
-            ?? $sipintuUser['password_hash']
-            ?? null;
+        $rawRole = strtolower(trim((string) (
+            $sipintuUser['role'] ?? ''
+        )));
 
-        // Step 3: Pencocokan dengan data lokal atau Auto-Provisioning
-        $user = User::where(function ($query) use ($email, $externalId, $nisNip) {
-            if ($externalId !== '') {
-                $query->where('external_id', $externalId);
-            }
-            if ($nisNip !== '') {
-                $query->orWhere('nis_nip', $nisNip);
-            }
-            if ($email !== '') {
-                $query->orWhere('email', $email);
-            }
-        })->first();
+        $role = $this->mapRole($rawRole);
+
+        if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Email dari SiPintu tidak valid.',
+            ]);
+        }
+
+        // Jangan menerima role yang tidak dikenal.
+        if ($role === null) {
+            Log::warning('SiPintu SSO: Role tidak dikenal.', [
+                'email' => $email,
+                'role' => $rawRole,
+            ]);
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Role akun tidak diizinkan untuk login SSO.',
+            ]);
+        }
+
+        /*
+         * STEP 4: Pencocokan akun lokal.
+         *
+         * Prioritas:
+         * 1. external_id
+         * 2. email jika belum ditemukan
+         *
+         * Jangan mencari berdasarkan external_id kosong.
+         */
+        $user = null;
+
+        if ($externalId !== '') {
+            $user = User::where('external_id', $externalId)->first();
+        }
+
+        if (! $user) {
+            $user = User::where('email', $email)->first();
+        }
+
+        /*
+         * STEP 5: Tolak akun admin lokal.
+         *
+         * Pemeriksaan dilakukan terhadap role lokal.
+         * Jadi role SSO siswa tidak bisa masuk ke akun admin lokal.
+         */
+        if ($user && $user->role === 'admin') {
+            Log::warning('SiPintu SSO: Login admin lokal ditolak.', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+            ]);
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Admin wajib login melalui form lokal DIDISPEN.',
+            ]);
+        }
+
+        /*
+         * Jangan mengizinkan role SSO berbeda dari role lokal.
+         */
+        if ($user && $user->role !== $role) {
+            Log::warning('SiPintu SSO: Role mismatch.', [
+                'user_id' => $user->id,
+                'local_role' => $user->role,
+                'sipintu_role' => $role,
+            ]);
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Role akun SiPintu tidak sesuai dengan akun DIDISPEN.',
+            ]);
+        }
 
         $syncTime = now();
 
+        /*
+         * STEP 6: Auto-provision akun non-admin.
+         */
         if (! $user) {
-            // Auto-provision user baru jika belum terdaftar
             $user = User::create([
-                'name'                   => $name,
-                'email'                  => $email ?: ($externalId . '@smkn1bangsri.sch.id'),
-                'role'                   => $role,
-                'external_id'            => $externalId ?: null,
-                'nis_nip'                => $nisNip ?: null,
-                'password'               => $incomingPassword ?: bcrypt(Str::random(32)),
-                'email_verified_at'      => $syncTime,
+                'name' => $name !== '' ? $name : 'User SiPintu',
+                'email' => $email,
+                'role' => $role,
+                'external_id' => $externalId !== ''
+                    ? $externalId
+                    : null,
+                'nis_nip' => $nisNip !== ''
+                    ? $nisNip
+                    : null,
+
+                // Password acak, tidak mengambil password SiPintu.
+                'password' => Hash::make(Str::random(64)),
+
+                'email_verified_at' => $syncTime,
                 'sipintu_last_synced_at' => $syncTime,
             ]);
         } else {
-            // User sudah ada: sinkronkan external_id, password hash, dan role jika perlu
+            /*
+             * STEP 7: Sinkronisasi data dasar.
+             *
+             * Tidak mengubah:
+             * - password
+             * - role
+             * - failed_login_attempts
+             * - locked_until
+             */
             $updates = [
                 'sipintu_last_synced_at' => $syncTime,
             ];
@@ -191,45 +357,28 @@ class OAuthController extends Controller
                 $updates['nis_nip'] = $nisNip;
             }
 
-            if ($incomingPassword && $user->password !== $incomingPassword) {
-                $updates['password'] = $incomingPassword;
-            }
-
-            // Jika user pernah dinonaktifkan / locked, pulihkan jika login SSO berhasil
-            if ($user->locked_until || $user->failed_login_attempts > 0) {
-                $updates['failed_login_attempts'] = 0;
-                $updates['locked_until'] = null;
+            if ($name !== '' && empty($user->name)) {
+                $updates['name'] = $name;
             }
 
             $user->update($updates);
         }
 
-        // Step 4: Pastikan relasi model Siswa atau Guru tersedia
-        if ($user->role === 'siswa') {
-            Siswa::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'nis_nip'      => $user->nis_nip,
-                    'nama_lengkap' => $user->name,
-                    'status_aktif' => true,
-                ]
-            );
-        } elseif ($user->role === 'guru') {
-            Guru::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'nip'          => $user->nis_nip,
-                    'nama_lengkap' => $user->name,
-                    'status_aktif' => true,
-                ]
-            );
-        }
+        /*
+         * STEP 8: Pastikan relasi profil tersedia.
+         */
+        $this->ensureUserProfile($user);
 
-        // Step 5: Autentikasikan sesi lokal
+        /*
+         * STEP 9: Login lokal.
+         */
         Auth::login($user, true);
+
         $request->session()->regenerate();
 
-        // Audit Log
+        /*
+         * STEP 10: Audit log.
+         */
         try {
             $this->auditLog?->log(
                 $user->id,
@@ -239,71 +388,88 @@ class OAuthController extends Controller
                 null,
                 [
                     'provider' => 'sipintu_gateway',
-                    'role'     => $user->role,
+                    'role' => $user->role,
+                    'ip' => $request->ip(),
                 ]
             );
         } catch (\Throwable $e) {
-            // Abaikan kesalahan audit log
+            Log::warning('Audit log SSO gagal.', [
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+            ]);
         }
 
-        // Arahkan ke dashboard sesuai role pengguna
         $dashboardUrl = match ($user->role) {
-            'admin'  => route('admin.dashboard'),
-            'guru'   => route('guru.dashboard'),
+            'guru' => route('guru.dashboard'),
             'satpam' => route('satpam.dashboard'),
-            default  => route('siswa.dashboard'),
+            default => route('siswa.dashboard'),
         };
 
-        return redirect()->intended($dashboardUrl)->with(
-            'success',
-            "Selamat datang kembali, {$user->name}!"
-        );
+        return redirect()
+            ->intended($dashboardUrl)
+            ->with('success', "Selamat datang, {$user->name}!");
     }
 
     /**
-     * =========================================================================
-     * STEP 4: WEBHOOK SINKRONISASI REAL-TIME & SMART CONFLICT RESOLUTION
-     * =========================================================================
-     * Menerima pembaruan pengguna dari SiPintu Gateway via POST /api/sipintu/sync-user.
-     * Menggunakan verifikasi HMAC SHA-256 dan deteksi editan lokal
-     * agar perubahan profil lokal tidak terhapus.
+     * WEBHOOK SINKRONISASI REAL-TIME
      */
     public function syncUser(Request $request)
     {
-        // 1. Verifikasi Signature HMAC SHA-256
-        $secret = config('services.sipintu.client_secret')
-            ?: env('SIPINTU_CLIENT_SECRET');
+        /*
+         * STEP 1: Wajib verifikasi signature.
+         */
+        if (! $this->verifyWebhookSignature($request)) {
+            Log::warning('SiPintu Webhook: Invalid signature.', [
+                'ip' => $request->ip(),
+            ]);
 
-        if (! empty($secret)) {
-            $signature = $request->header('X-SiPintu-Signature');
-            $computedSignature = hash_hmac('sha256', $request->getContent(), $secret);
-
-            if (! $signature || ! hash_equals($computedSignature, $signature)) {
-                Log::warning('SiPintu Webhook: Invalid signature', [
-                    'ip' => $request->ip(),
-                ]);
-
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => 'Invalid signature.',
-                ], 401);
-            }
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid signature.',
+            ], 401);
         }
 
+        /*
+         * STEP 2: Validasi payload.
+         */
         $userData = $request->input('user') ?? $request->all();
         $previous = $request->input('previous', []);
 
-        // Validasi kelengkapan data
-        $email = strtolower(trim((string) ($userData['email'] ?? '')));
-        if ($email === '') {
+        if (! is_array($userData) || ! is_array($previous)) {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Invalid payload: Email is required.',
+                'status' => 'error',
+                'message' => 'Invalid payload.',
             ], 400);
         }
 
-        $externalId = trim((string) ($userData['external_id'] ?? $userData['id'] ?? ''));
-        $previousEmail = strtolower(trim((string) ($previous['email'] ?? '')));
+        $validator = Validator::make($userData, [
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'role' => ['required', 'string', 'max:50'],
+            'external_id' => ['nullable', 'string', 'max:255'],
+            'id' => ['nullable', 'string', 'max:255'],
+            'nis' => ['nullable', 'string', 'max:50'],
+            'nip' => ['nullable', 'string', 'max:50'],
+            'nis_nip' => ['nullable', 'string', 'max:50'],
+            'phone' => ['nullable', 'string', 'max:30'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid payload.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $email = strtolower(trim($userData['email']));
+
+        $externalId = trim((string) (
+            $userData['external_id']
+            ?? $userData['id']
+            ?? ''
+        ));
+
         $nisNip = trim((string) (
             $userData['nis']
             ?? $userData['nip']
@@ -311,150 +477,186 @@ class OAuthController extends Controller
             ?? ''
         ));
 
-        // 2. Cari User di Database Lokal
-        $user = User::where(function ($q) use ($email, $previousEmail, $externalId, $nisNip) {
-            $q->where('email', $email);
-            if ($previousEmail !== '') {
-                $q->orWhere('email', $previousEmail);
-            }
-            if ($externalId !== '') {
-                $q->orWhere('external_id', $externalId);
-            }
-            if ($nisNip !== '') {
-                $q->orWhere('nis_nip', $nisNip);
-            }
-        })->first();
+        $rawRole = strtolower(trim($userData['role']));
+        $role = $this->mapRole($rawRole);
 
-        // Pemetaan Peran
-        $rawRole = strtolower(trim((string) ($userData['role'] ?? 'user')));
-        $role = match ($rawRole) {
-            'student', 'siswa' => 'siswa',
-            'teacher', 'guru' => 'guru',
-            'admin' => 'admin',
-            'satpam', 'security' => 'satpam',
-            default => 'siswa',
-        };
+        /*
+         * STEP 3: Tolak role tidak dikenal/admin.
+         */
+        if ($role === null) {
+            Log::warning('SiPintu Webhook: Role tidak diizinkan.', [
+                'email' => $email,
+                'role' => $rawRole,
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Role not allowed.',
+            ], 403);
+        }
+
+        /*
+         * STEP 4: Cari akun lokal.
+         */
+        $user = null;
+
+        if ($externalId !== '') {
+            $user = User::where('external_id', $externalId)->first();
+        }
+
+        if (! $user) {
+            $user = User::where('email', $email)->first();
+        }
+
+        /*
+         * Jangan membuat atau mengubah akun admin.
+         */
+        if ($user && $user->role === 'admin') {
+            Log::warning('SiPintu Webhook: Admin sync ditolak.', [
+                'user_id' => $user->id,
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Admin sync not allowed.',
+            ], 403);
+        }
+
+        /*
+         * STEP 5: Cegah role lokal berubah melalui webhook.
+         */
+        if ($user && $user->role !== $role) {
+            Log::warning('SiPintu Webhook: Role mismatch.', [
+                'user_id' => $user->id,
+                'local_role' => $user->role,
+                'incoming_role' => $role,
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Role mismatch.',
+            ], 409);
+        }
 
         $syncTime = now();
 
-        // 3. Jika belum ada: Auto-provision akun baru
+        /*
+         * STEP 6: Auto-provision akun baru.
+         */
         if (! $user) {
-            $password = $userData['password']
-                ?? $userData['password_hash']
-                ?? bcrypt(Str::random(32));
+            $name = trim((string) ($userData['name'] ?? ''));
 
             $user = User::create([
-                'name'                   => $userData['name'] ?? 'User',
-                'email'                  => $email,
-                'role'                   => $role,
-                'external_id'            => $externalId ?: null,
-                'nis_nip'                => $nisNip ?: null,
-                'password'               => $password,
-                'email_verified_at'      => $syncTime,
+                'name' => $name !== '' ? $name : 'User SiPintu',
+                'email' => $email,
+                'role' => $role,
+                'external_id' => $externalId !== ''
+                    ? $externalId
+                    : null,
+                'nis_nip' => $nisNip !== ''
+                    ? $nisNip
+                    : null,
+
+                // Tidak menerima password dari webhook.
+                'password' => Hash::make(Str::random(64)),
+
+                'email_verified_at' => $syncTime,
                 'sipintu_last_synced_at' => $syncTime,
             ]);
 
-            // Buat relasi Siswa atau Guru
-            if ($user->role === 'siswa') {
-                Siswa::firstOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'nis_nip'      => $user->nis_nip,
-                        'nama_lengkap' => $user->name,
-                        'no_telepon'   => $userData['phone'] ?? null,
-                        'status_aktif' => true,
-                    ]
-                );
-            } elseif ($user->role === 'guru') {
-                Guru::firstOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'nip'          => $user->nis_nip,
-                        'nama_lengkap' => $user->name,
-                        'no_telepon'   => $userData['phone'] ?? null,
-                        'status_aktif' => true,
-                    ]
-                );
-            }
-
-            Log::info("SiPintu Webhook: User Created [ID: {$user->id}, Email: {$user->email}]");
+            $this->ensureUserProfile($user);
 
             return response()->json([
-                'status'    => 'success',
-                'action'    => 'created',
-                'user_id'   => $user->id,
+                'status' => 'success',
+                'action' => 'created',
+                'user_id' => $user->id,
                 'timestamp' => $syncTime->toIso8601String(),
             ], 201);
         }
 
-        // 4. Deteksi Perubahan Lokal Pengguna (Smart Conflict Resolution)
+        /*
+         * STEP 7: Deteksi perubahan lokal.
+         */
         $hasLocalEdits = false;
         $skippedFields = [];
 
-        if ($user->sipintu_last_synced_at !== null && $user->updated_at->gt($user->sipintu_last_synced_at)) {
+        if (
+            $user->sipintu_last_synced_at !== null
+            && $user->updated_at !== null
+            && $user->updated_at->gt($user->sipintu_last_synced_at)
+        ) {
             $hasLocalEdits = true;
         }
 
-        // Field Selalu Mengikuti SiPintu (Source of Truth)
+        /*
+         * Email dan external_id disinkronkan dari SiPintu.
+         * Role dan password tidak pernah ditimpa.
+         */
         $updateFields = [
             'email' => $email,
-            'role'  => $role,
+            'sipintu_last_synced_at' => $syncTime,
         ];
 
         if ($externalId !== '') {
             $updateFields['external_id'] = $externalId;
         }
 
-        if (! empty($userData['password']) || ! empty($userData['password_hash'])) {
-            $updateFields['password'] = $userData['password'] ?? $userData['password_hash'];
-        }
-
-        // Field Lokal: Hanya ditimpa jika TIDAK ADA perubahan lokal
         if ($hasLocalEdits) {
-            $skippedFields = ['name'];
-            if (isset($userData['phone'])) {
-                $skippedFields[] = 'phone';
-            }
-            Log::info("SiPintu Webhook: Local edits detected for User [ID: {$user->id}], preserving local profile.");
+            $skippedFields[] = 'name';
+            $skippedFields[] = 'nis_nip';
+            $skippedFields[] = 'phone';
+
+            Log::info('SiPintu Webhook: Perubahan lokal dipertahankan.', [
+                'user_id' => $user->id,
+            ]);
         } else {
-            if (! empty($userData['name'])) {
-                $updateFields['name'] = $userData['name'];
+            $name = trim((string) ($userData['name'] ?? ''));
+
+            if ($name !== '') {
+                $updateFields['name'] = $name;
             }
+
             if ($nisNip !== '') {
                 $updateFields['nis_nip'] = $nisNip;
             }
 
-            // Selaraskan nomor telepon ke Siswa/Guru jika dikirimkan
-            if (! empty($userData['phone'])) {
+            $phone = trim((string) ($userData['phone'] ?? ''));
+
+            if ($phone !== '') {
                 if ($user->role === 'siswa' && $user->siswa) {
-                    $user->siswa->update(['no_telepon' => $userData['phone']]);
+                    $user->siswa->update([
+                        'no_telepon' => $phone,
+                    ]);
                 } elseif ($user->role === 'guru' && $user->guru) {
-                    $user->guru->update(['no_telepon' => $userData['phone']]);
+                    $user->guru->update([
+                        'no_telepon' => $phone,
+                    ]);
                 }
             }
         }
 
-        // 5. Update & Selaraskan Timestamp (mencegah false positive di sync berikutnya)
-        $updateFields['sipintu_last_synced_at'] = $syncTime;
-
+        /*
+         * STEP 8: Simpan perubahan.
+         *
+         * Tidak menyentuh password, role, atau lockout.
+         */
         $user->fill($updateFields);
-        $user->sipintu_last_synced_at = $syncTime;
-        $user->updated_at = $syncTime;
         $user->save();
 
-        Log::info("SiPintu Webhook: User Updated [ID: {$user->id}]", [
+        Log::info('SiPintu Webhook: User updated.', [
+            'user_id' => $user->id,
             'has_local_edits' => $hasLocalEdits,
-            'skipped_fields'  => $skippedFields,
-            'updated_fields'  => array_keys($updateFields),
+            'skipped_fields' => $skippedFields,
+            'updated_fields' => array_keys($updateFields),
         ]);
 
         return response()->json([
-            'status'          => 'success',
-            'action'          => 'updated',
-            'user_id'         => $user->id,
+            'status' => 'success',
+            'action' => 'updated',
+            'user_id' => $user->id,
             'has_local_edits' => $hasLocalEdits,
-            'skipped_fields'  => $skippedFields,
-            'timestamp'       => $syncTime->toIso8601String(),
+            'skipped_fields' => $skippedFields,
+            'timestamp' => $syncTime->toIso8601String(),
         ], 200);
     }
 }

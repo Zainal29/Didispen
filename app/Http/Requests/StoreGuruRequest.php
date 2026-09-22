@@ -17,6 +17,7 @@ class StoreGuruRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('users')->ignore($userId)],
+            'email_guru' => ['nullable', 'email', 'max:255'],
             'nip' => ['required', 'string', Rule::unique('guru')->ignore($this->route('guru')?->id)],
             'nama_lengkap' => ['required', 'string', 'max:255'],
             'mata_pelajaran' => ['nullable', 'string', 'max:255'],

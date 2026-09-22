@@ -94,29 +94,22 @@
         @endif
 
         {{-- MODAL PREVIEW FOTO --}}
-        <div id="photoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onclick="closePhotoModal(event)">
-            <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center" onclick="event.stopPropagation()">
+        <div id="photoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm" onclick="closePhotoModal(event)">
+            <div class="relative flex h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:h-[calc(100dvh-3rem)]" onclick="event.stopPropagation()">
                 {{-- Header Modal --}}
                 <div class="w-full bg-white rounded-t-xl px-4 py-3 flex items-center justify-between border-b border-gray-200">
-                    <h3 id="photoModalTitle" class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <h3 id="photoModalTitle" class="min-w-0 text-sm font-bold text-gray-900 flex items-center gap-2">
                         <i class="fas fa-image text-blue-600"></i>
-                        <span>Preview Foto</span>
+                        <span class="truncate">Preview Foto</span>
                     </h3>
-                    <button onclick="closePhotoModal()" class="w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
+                    <button onclick="closePhotoModal()" class="ml-3 w-9 h-9 flex-shrink-0 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors" aria-label="Tutup preview foto">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
 
                 {{-- Body Modal --}}
-                <div class="w-full bg-white rounded-b-xl p-4 flex items-center justify-center overflow-auto">
-                    <img id="photoModalImage" src="" alt="Preview" class="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg">
-                </div>
-
-                {{-- Footer Actions --}}
-                <div class="absolute top-1/2 -translate-y-1/2 left-4">
-                    <button onclick="closePhotoModal()" class="w-10 h-10 rounded-full bg-white/90 hover:bg-white text-gray-700 shadow-lg flex items-center justify-center transition-all hover:scale-110">
-                        <i class="fas fa-times text-lg"></i>
-                    </button>
+                <div class="min-h-0 flex-1 w-full bg-gray-950 p-3 sm:p-5 flex items-center justify-center overflow-hidden">
+                    <img id="photoModalImage" src="" alt="Preview" class="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-lg">
                 </div>
             </div>
         </div>
@@ -198,8 +191,15 @@
             </div>
 
 
-            {{-- Catatan Admin --}}
-            @if($dispensasi->catatan_admin )
+            @if($dispensasi->dibuat_manual_oleh_guru)
+                <div class="bg-violet-50 border border-violet-200 rounded-lg p-3.5">
+                    <span class="text-violet-700 text-[10px] font-semibold uppercase tracking-wider block mb-1"><i class="fas fa-user-tie mr-1"></i>Dibuat Manual oleh Guru Piket</span>
+                    <p class="text-violet-900 text-sm font-medium">Pengajuan ini dibuat langsung oleh {{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }} untuk siswa.</p>
+                </div>
+            @endif
+
+            {{-- Catatan penolakan hanya untuk pengajuan yang benar-benar ditolak. --}}
+            @if($dispensasi->catatan_admin && !$dispensasi->dibuat_manual_oleh_guru)
                 <div class="bg-amber-50 border border-amber-200 rounded-lg p-3.5">
                     <span class="text-amber-700 text-[10px] font-semibold uppercase tracking-wider block mb-1">Catatan Penolakan Guru Piket</span>
                     <p class="text-amber-800 text-sm font-medium">{{ $dispensasi->catatan_admin }}</p>
@@ -494,7 +494,7 @@ function openPhotoModal(imageUrl, title) {
     const titleEl = document.getElementById('photoModalTitle');
 
     image.src = imageUrl;
-    titleEl.innerHTML = `<i class="fas fa-image text-blue-600"></i><span>${title}</span>`;
+    titleEl.querySelector('span').textContent = title;
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden'; // Prevent background scroll
 }
@@ -503,6 +503,7 @@ function closePhotoModal(event) {
     if (event && event.target !== event.currentTarget && !event.target.closest('button')) return;
 
     const modal = document.getElementById('photoModal');
+    document.getElementById('photoModalImage').removeAttribute('src');
     modal.classList.add('hidden');
     document.body.style.overflow = ''; // Restore scroll
 }

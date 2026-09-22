@@ -6,16 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+
 class Guru extends Model
 {
     
 
     protected $table = 'guru';
 
-    protected $fillable = [
+     protected $fillable = [
         'user_id',
         'nip',
         'nama_lengkap',
+        'email',
         'tanggal_lahir',
         'mata_pelajaran',
         'no_telepon',

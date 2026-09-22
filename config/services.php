@@ -42,6 +42,8 @@ return [
         'client_id' => env('SIPINTU_CLIENT_ID'),
         'client_secret' => env('SIPINTU_CLIENT_SECRET'),
         'redirect_uri' => env('SIPINTU_REDIRECT_URI', env('APP_URL', 'http://localhost:8000') . '/oauth/callback'),
+        // Prevent mass deactivation when a valid API response is anomalously small.
+        'student_sync_min_active_ratio' => (float) env('SIPINTU_STUDENT_SYNC_MIN_ACTIVE_RATIO', 0.5),
     ],
 
 ];

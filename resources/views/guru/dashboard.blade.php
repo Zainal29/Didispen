@@ -11,6 +11,18 @@
 #content-area { transition: opacity 0.2s ease; }
 .fade-out { opacity: 0; }
 .fade-in { opacity: 1; }
+/* Dialog dispensasi: ringkas di desktop, nyaman dipakai di mobile. */
+.swal2-popup.dispensasi-alert { border-radius: 1rem; padding: 1.5rem; }
+.swal2-popup.dispensasi-alert .swal2-actions { width: 100%; gap: .625rem; margin-top: 1.5rem; }
+.swal2-popup.dispensasi-alert .swal2-styled { min-height: 2.75rem; padding: .7rem 1rem; border-radius: .75rem; font-size: .875rem; font-weight: 700; box-shadow: none; }
+.swal2-popup.dispensasi-alert .swal2-html-container { margin-top: .5rem; }
+.swal2-popup.dispensasi-alert .swal2-textarea { box-sizing: border-box; min-height: 6.5rem; margin: 1rem 0 0; border-radius: .75rem; border-color: #d1d5db; font-size: .875rem; }
+.swal2-popup.dispensasi-alert .swal2-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .15); }
+@media (max-width: 639px) {
+    .swal2-popup.dispensasi-alert { width: calc(100% - 2rem) !important; padding: 1.25rem; }
+    .swal2-popup.dispensasi-alert .swal2-actions { flex-direction: column-reverse; }
+    .swal2-popup.dispensasi-alert .swal2-styled { width: 100%; margin: 0; }
+}
 </style>
 
 {{-- HERO SECTION - Clean, solid color --}}
@@ -222,18 +234,19 @@ $cards = [
                            title="Lihat Detail">
                             <i class="fas fa-eye mr-1.5"></i>Detail
                         </a>
-                        @if($item->status === 'menunggu')
-                            <form method="POST" action="{{ route('guru.pengajuan.approve', $item) }}" class="inline">
-                                @csrf
-                                <button type="submit"
-                                        onclick="return confirm('Setujui dispensasi {{ $item->siswa->nama_lengkap }}?')"
-                                        class="inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                                        title="Setujui">
-                                    <i class="fas fa-check mr-1.5"></i>Setuju
-                                </button>
-                            </form>
+
+                            @if($item->status === 'menunggu')
+                                <form method="POST" action="{{ route('guru.pengajuan.approve', $item) }}" id="form-approve-{{ $item->id }}" class="inline">
+                                    @csrf
+                                    <button type="button"
+                                            onclick="showApproveModal({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}', '{{ $item->nomor_surat }}')"
+                                            class="inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                                            title="Setujui">
+                                        <i class="fas fa-check mr-1.5"></i>Setuju
+                                    </button>
+                                </form>
                             <button type="button"
-                                    onclick="rejectDispensasi({{ $item->id }}, '{{ $item->siswa->nama_lengkap }}')"
+                                    onclick="rejectDispensasi({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}')"
                                     class="inline-flex items-center justify-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
                                     title="Tolak">
                                 <i class="fas fa-times mr-1.5"></i>Tolak
@@ -274,7 +287,6 @@ $cards = [
         @endforelse
     </div>
 </div>
-
 {{-- FLOATING ACTION BUTTON (MOBILE) --}}
 <a href="{{ route('guru.pengajuan.create') }}"
    class="sm:hidden fixed bottom-20 right-4 bg-blue-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center z-40 active:scale-95 transition-transform">
@@ -289,8 +301,33 @@ $cards = [
     </div>
 </div>
 
+
 @push('scripts')
 <script>
+function showApproveModal(id, studentName, nomorSurat) {
+    const approveForm = document.getElementById('form-approve-' + id);
+    if (!approveForm) {
+        console.error('Form tidak ditemukan untuk ID:', id);
+        Swal.fire({ icon: 'error', title: 'Form tidak ditemukan', text: 'Silakan muat ulang halaman lalu coba kembali.' });
+        return;
+    }
+
+    Swal.fire({
+        icon: 'question', title: 'Setujui dispensasi?',
+        html: `<div class="text-left rounded-xl border border-blue-100 bg-blue-50 p-3 text-sm text-gray-700"><p class="font-semibold text-gray-900">${escapeAlertHtml(studentName)}</p><p class="mt-0.5 font-mono text-xs text-gray-500">${escapeAlertHtml(nomorSurat)}</p><p class="mt-2 text-xs">Siswa akan dapat melanjutkan proses dispensasi.</p></div>`,
+        showCancelButton: true, confirmButtonText: '<i class="fas fa-check mr-1"></i> Setujui', cancelButtonText: 'Kembali',
+        focusCancel: true, reverseButtons: true,
+        customClass: { popup: 'dispensasi-alert', confirmButton: 'bg-emerald-600 hover:bg-emerald-700', cancelButton: 'bg-gray-100 hover:bg-gray-200 text-gray-700' },
+        confirmButtonColor: '#059669', cancelButtonColor: '#f3f4f6'
+    }).then((result) => { if (result.isConfirmed) approveForm.submit(); });
+}
+
+function escapeAlertHtml(value) {
+    const element = document.createElement('div');
+    element.textContent = value ?? '';
+    return element.innerHTML;
+}
+
 let currentFilter = '{{ $filter }}';
 
 // function switchFilter(filterKey, color, event) {
@@ -440,19 +477,18 @@ window.addEventListener('popstate', function(event) {
 
 function rejectDispensasi(id, namaSiswa) {
     Swal.fire({
-        title: 'Tolak Dispensasi',
-        text: `Masukkan alasan penolakan untuk ${namaSiswa}:`,
+        icon: 'warning', title: 'Tolak dispensasi?',
+        html: `<p class="text-sm text-gray-600">Tulis alasan penolakan untuk <strong class="text-gray-900">${escapeAlertHtml(namaSiswa)}</strong>.</p>`,
         input: 'textarea',
-        inputPlaceholder: 'Contoh: Alasan tidak jelas...',
-        inputAttributes: { rows: 3 },
+        inputPlaceholder: 'Contoh: data atau alasan pengajuan belum lengkap',
+        inputAttributes: { rows: 4, 'aria-label': 'Alasan penolakan' },
         showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Ya, Tolak',
-        cancelButtonText: 'Batal',
-        reverseButtons: true,
+        confirmButtonText: '<i class="fas fa-times mr-1"></i> Tolak dispensasi', cancelButtonText: 'Kembali',
+        reverseButtons: true, focusCancel: true,
+        customClass: { popup: 'dispensasi-alert', confirmButton: 'bg-red-600 hover:bg-red-700', cancelButton: 'bg-gray-100 hover:bg-gray-200 text-gray-700' },
+        confirmButtonColor: '#dc2626', cancelButtonColor: '#f3f4f6',
         inputValidator: (value) => {
-            if (!value || value.trim() === '') return 'Alasan penolakan wajib diisi!';
+            if (!value || value.trim() === '') return 'Alasan penolakan wajib diisi.';
         }
     }).then(result => {
         if (result.isConfirmed) {
@@ -518,6 +554,8 @@ function handleGuruWaContacted(dispensasiId, waLink, button) {
         window.open(waLink, '_blank');
     });
 }
+
 </script>
+
 @endpush
 @endsection

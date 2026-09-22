@@ -106,6 +106,8 @@ Route::middleware(['auth'])->group(function () {
                  Route::post('sipintu/test-sync', [Admin\SipintuSyncController::class, 'testSync'])
                 ->name('sipintu.test-sync');
 
+                Route::resource('tutorial-videos', Admin\TutorialVideoController::class);
+
             });
 
 

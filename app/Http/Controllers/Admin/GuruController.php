@@ -38,6 +38,7 @@ class GuruController extends Controller
             $query->where(function ($q) use ($s) {
                 $q->where('nama_lengkap', 'like', "%{$s}%")
                   ->orWhere('nip', 'like', "%{$s}%")
+                  ->orWhere('email', 'like', "%{$s}%")
                   ->orWhere('mata_pelajaran', 'like', "%{$s}%")
                   ->orWhereHas('user', fn ($u) => $u->where('email', 'like', "%{$s}%"));
             });
@@ -63,6 +64,7 @@ class GuruController extends Controller
                 'user_id'        => $user->id,
                 'nip'            => $request->nip,
                 'nama_lengkap'   => $request->nama_lengkap,
+                'email'          => $request->email_guru,
                 'mata_pelajaran' => $request->mata_pelajaran,
             ]);
 
@@ -82,7 +84,12 @@ class GuruController extends Controller
                 'nis_nip' => $request->nip,
             ]);
 
-            $guru->update($request->only(['nip', 'nama_lengkap', 'mata_pelajaran']));
+            $guruData = $request->only(['nip', 'nama_lengkap', 'mata_pelajaran']);
+            if ($request->has('email_guru')) {
+                $guruData['email'] = $request->email_guru;
+            }
+
+            $guru->update($guruData);
         });
 
         return redirect()->route('admin.guru.index')

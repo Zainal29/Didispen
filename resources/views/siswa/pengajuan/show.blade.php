@@ -146,6 +146,12 @@
                         @endif
                     </div>
                 </div>
+                @if($dispensasi->dibuat_manual_oleh_guru)
+                    <div class="mt-4 bg-violet-50 border border-violet-200 rounded-lg p-3">
+                        <p class="text-violet-700 text-[10px] font-bold uppercase mb-1"><i class="fas fa-user-tie mr-1"></i>Dibuat Manual oleh Guru Piket</p>
+                        <p class="text-violet-900 text-sm font-medium">Pengajuan dispensasi ini dibuat langsung oleh {{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }} untuk Anda.</p>
+                    </div>
+                @endif
             </div>
 
             {{-- Status QR Code & Cetak --}}

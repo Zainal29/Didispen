@@ -177,6 +177,7 @@ class PengajuanController extends Controller
             'jam_keluar'      => 'Jam Pelajaran ke-' . $validated['jam_keluar'],   // ✅ BENAR
             'jam_kembali'     => 'Jam Pelajaran ke-' . $validated['jam_kembali'],  // ✅ BENAR
             'status'          => 'disetujui',
+            'dibuat_manual_oleh_guru' => true,
             'qr_token'        => Str::random(64),
             'jam_masuk'       => $jamMasukCarbon,
             'foto_verifikasi' => $fotoPath,

@@ -82,7 +82,8 @@
                         <th class="p-4 border-b border-gray-100 min-w-[120px]">Mapel</th>
                         <th class="p-4 border-b border-gray-100 min-w-[130px]">Kontak</th>
                         <th class="p-4 border-b border-gray-100 min-w-[200px]">Alamat Lengkap</th>
-                        <th class="p-4 border-b border-gray-100 min-w-[160px]">Email</th>
+                        <th class="p-4 border-b border-gray-100 min-w-[220px]">Email Guru</th>
+<th class="p-4 border-b border-gray-100 min-w-[220px]">Email Sekolah</th>
                         <th class="p-4 border-b border-gray-100 text-center min-w-[80px]">Aksi</th>
                     </tr>
                 </thead>
@@ -127,8 +128,38 @@
                             @endif
                         </td>
 
-                        <td class="p-4 align-top text-xs text-gray-500 font-mono break-all">{{ $g->user->email }}</td>
+                        <!-- <td class="p-4 align-top text-xs text-gray-500 font-mono break-all">{{ $g->user->email }}</td> -->
+                        {{-- EMAIL GURU ASLI DARI SIPINTU (GOOGLE / PRIBADI) --}}
+                        <td class="p-4 align-top">
+                            @if($g->email)
+                                <div class="flex items-center gap-1.5">
+                                    @if(str_contains(strtolower($g->email), '@gmail.com'))
+                                        <i class="fab fa-google text-xs text-red-500"></i>
+                                    @else
+                                        <i class="fas fa-envelope text-xs text-amber-500"></i>
+                                    @endif
+                                    <a href="mailto:{{ $g->email }}" class="text-blue-600 hover:text-blue-800 hover:underline text-xs break-all font-medium">
+                                        {{ $g->email }}
+                                    </a>
+                                </div>
+                            @else
+                                <span class="text-gray-400 italic text-xs">Belum tersedia</span>
+                            @endif
+                        </td>
 
+                        {{-- EMAIL SEKOLAH UNTUK LOGIN --}}
+                        <td class="p-4 align-top">
+                            @if($g->user?->email)
+                                <div class="flex items-center gap-1.5">
+                                    <i class="fas fa-graduation-cap text-xs text-indigo-500"></i>
+                                    <a href="mailto:{{ $g->user->email }}" class="text-gray-700 hover:text-gray-900 hover:underline text-xs font-mono break-all">
+                                        {{ $g->user->email }}
+                                    </a>
+                                </div>
+                            @else
+                                <span class="text-gray-400 italic text-xs">Belum tersedia</span>
+                            @endif
+                        </td>
                         <td class="p-4 text-center align-middle whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                                 <button onclick='openModal(@json($g))' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="lihat Data">
@@ -142,7 +173,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="p-10 text-center">
+                        <td colspan="8" class="p-10 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-400">
                                 <i class="fas fa-users-slash text-4xl mb-3 opacity-50"></i>
                                 <p class="text-sm font-medium">Belum ada data guru.</p>
@@ -208,9 +239,20 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Sekolah <span class="text-red-500">*</span></label>
-                            <input type="email" name="email" id="email" required
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                <i class="fab fa-google text-red-500 mr-1"></i> Email Pribadi / Google
+                            </label>
+                            <input type="email" name="email_guru" id="email_guru"
                                    class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                   placeholder="guru@gmail.com">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                <i class="fas fa-graduation-cap text-indigo-500 mr-1"></i> Email Sekolah <span class="text-red-500">*</span>
+                            </label>
+                            <input type="email" name="email" id="email" required
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono"
                                    placeholder="nip@smkn1bangsri.sch.id">
                         </div>
 
@@ -227,9 +269,9 @@
                     <button type="button" onclick="closeModal()" class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
                         Batal
                     </button>
-                    <!--<button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-all flex items-center gap-2">
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-all flex items-center gap-2">
                         <i class="fas fa-save"></i> Simpan Data
-                    </button>-->
+                    </button>
                 </div>
             </form>
         </div>
@@ -267,9 +309,10 @@ function openModal(data = null) {
         form.action = `/admin/guru/${data.id}`;
         document.getElementById('method').value = 'PUT';
 
-        document.getElementById('nama_lengkap').value = data.nama_lengkap;
-        document.getElementById('nip').value = data.nip;
-        document.getElementById('email').value = data.user.email;
+        document.getElementById('nama_lengkap').value = data.nama_lengkap || '';
+        document.getElementById('nip').value = data.nip || '';
+        document.getElementById('email').value = (data.user && data.user.email) ? data.user.email : (data.nip ? (data.nip + '@smkn1bangsri.sch.id').toLowerCase() : '');
+        document.getElementById('email_guru').value = data.email || '';
         document.getElementById('mata_pelajaran').value = data.mata_pelajaran || '';
     } else {
         title.innerHTML = '<i class="fas fa-user-plus"></i> Tambah Guru Baru';
@@ -278,6 +321,22 @@ function openModal(data = null) {
         form.reset();
     }
 }
+
+// Auto-fill email sekolah saat NIP diketik pada form tambah baru
+document.addEventListener('DOMContentLoaded', function() {
+    const nipInput = document.getElementById('nip');
+    const emailInput = document.getElementById('email');
+    if (nipInput && emailInput) {
+        nipInput.addEventListener('input', function() {
+            if (document.getElementById('method').value === 'POST') {
+                const nipVal = this.value.trim();
+                if (nipVal) {
+                    emailInput.value = nipVal.toLowerCase() + '@smkn1bangsri.sch.id';
+                }
+            }
+        });
+    }
+});
 
 function closeModal() {
     document.getElementById('modal').classList.add('hidden');
