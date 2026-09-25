@@ -44,9 +44,9 @@
         // Normalisasi kemungkinan typo domain seperti @smkn!bangsri.sch.id -> @smkn1bangsri.sch.id
         $loginInput = str_replace('@smkn!bangsri.sch.id', '@smkn1bangsri.sch.id', $loginInput);
 
-        // Ekstraksi NIP jika login menggunakan format email sekolah
+        // Ekstraksi NIP / NIS jika login menggunakan format email sekolah atau sijuna
         $nipFromSchoolEmail = null;
-        if (str_ends_with($loginInput, '@smkn1bangsri.sch.id')) {
+        if (str_ends_with($loginInput, '@smkn1bangsri.sch.id') || str_ends_with($loginInput, '@sijuna.com')) {
             $nipFromSchoolEmail = strstr($loginInput, '@', true) ?: null;
         }
 

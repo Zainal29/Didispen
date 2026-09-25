@@ -62,11 +62,11 @@ class SipintuApiService
      * Tidak menggunakan force.
      * Data API disimpan di cache sesuai cache_ttl.
      */
-    public function getSiswaData(): array
+    public function getSiswaData(bool $forceRefresh = false): array
     {
         $cacheKey = 'sipintu_siswa_data';
 
-        if (Cache::has($cacheKey)) {
+        if (! $forceRefresh && Cache::has($cacheKey)) {
             Log::info(
                 'SipintuApiService: Mengambil data siswa dari cache.'
             );

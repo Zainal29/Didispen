@@ -33,7 +33,14 @@ class SiswaController extends Controller
         if (! array_key_exists($sort, $sortable)) $sort = 'created_at';
         if (! in_array($dir, ['asc', 'desc'])) $dir = 'desc';
 
-        $query = Siswa::with(['user', 'kelas', 'jurusan'])->where('status_aktif', true);
+        $query = Siswa::with(['user', 'kelas', 'jurusan'])
+            ->where('status_aktif', true)
+            ->whereHas('kelas', function ($kelasQuery) {
+                $kelasQuery->whereRaw(
+                    'UPPER(TRIM(nama_kelas)) != ?',
+                    ['BELUM_DIKELOMPOKKAN']
+                );
+            });
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -56,7 +63,10 @@ class SiswaController extends Controller
 
         $siswas = $query->orderBy($sort, $dir)->paginate(15)->withQueryString();
 
-        $kelasList   = Kelas::with('jurusan')->orderBy('nama_kelas')->get();
+        $kelasList   = Kelas::with('jurusan')
+            ->whereRaw('UPPER(TRIM(nama_kelas)) != ?', ['BELUM_DIKELOMPOKKAN'])
+            ->orderBy('nama_kelas')
+            ->get();
         $jurusanList = Jurusan::orderBy('nama_jurusan')->get();
         $kelas       = $kelasList;
         $jurusan     = $jurusanList;
@@ -120,7 +130,10 @@ class SiswaController extends Controller
         }
 
         // 2. FALLBACK: Jika dibuka biasa di browser, tetap kirim View (agar tidak merusak fitur lain)
-        $kelasList   = \App\Models\Kelas::with('jurusan')->orderBy('nama_kelas')->get();
+        $kelasList   = \App\Models\Kelas::with('jurusan')
+            ->whereRaw('UPPER(TRIM(nama_kelas)) != ?', ['BELUM_DIKELOMPOKKAN'])
+            ->orderBy('nama_kelas')
+            ->get();
         $jurusanList = \App\Models\Jurusan::orderBy('nama_jurusan')->get();
 
         return view('admin.siswa.edit', compact('siswa', 'kelasList', 'jurusanList'));

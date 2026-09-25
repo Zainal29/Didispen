@@ -153,12 +153,55 @@ use Illuminate\Support\Facades\Log;
         }
 
         /**
-        * ==========================================================
-        * EXTRACT NAMA KELAS
-        * ==========================================================
-        */
+         * ==========================================================
+         * DAFTAR NIS 34 SISWA AKTIF KELAS XII MPLB 3
+         * ==========================================================
+         *
+         * Di SiPintu API, ke-34 siswa angkatan 2024-2026 ini terdata
+         * dengan status=2 / graduated=true atau classroom_id=56.
+         * Khusus 34 siswa ini diakomodasi sebagai siswa aktif XII MPLB 3.
+         */
+        private const MPLB_3_NIS = [
+            '4797', '4798', '4800', '4801', '4802', '4804', '4805', '4806', '4807', '4808',
+            '4809', '4810', '4811', '4812', '4813', '4814', '4815', '4816', '4817', '4818',
+            '4819', '4820', '4821', '4822', '4823', '4824', '4825', '4826', '4827', '4828',
+            '4829', '4830', '4831', '4832',
+        ];
+
+        /**
+         * Cek apakah siswa merupakan salah satu dari 34 siswa aktif XII MPLB 3.
+         */
+        private function isMplb3SpecialCase(array $item): bool
+        {
+            $nis = $this->extractNis($item);
+            if ($nis !== '' && in_array($nis, self::MPLB_3_NIS, true)) {
+                return true;
+            }
+
+            $classroomId = (int) (
+                data_get($item, 'classroom_id')
+                ?? data_get($item, 'classroom.id')
+                ?? 0
+            );
+
+            if ($classroomId === 56 && (int) ($item['tahun_masuk'] ?? 0) === 2024) {
+                return true;
+            }
+
+            return false;
+        }
+
+        /**
+         * ==========================================================
+         * EXTRACT NAMA KELAS
+         * ==========================================================
+         */
         private function extractNamaKelas(array $item): string
         {
+            if ($this->isMplb3SpecialCase($item)) {
+                return 'XII MPLB 3';
+            }
+
             $kelasData = data_get($item, 'kelas')
                 ?? data_get($item, 'classroom')
                 ?? data_get($item, 'nama_kelas')
@@ -185,6 +228,37 @@ use Illuminate\Support\Facades\Log;
         }
 
         /**
+         * ==========================================================
+         * EKSTRAK EMAIL SISWA
+         * ==========================================================
+         *
+         * - Kelas 10 (X): wajib menggunakan domain nis@sijuna.com
+         * - Kelas 11 (XI) & 12 (XII): menggunakan domain nis@smkn1bangsri.sch.id
+         *   (atau email dari API jika valid)
+         */
+        private function extractSiswaEmail(array $item, string $namaKelas, string $nis): string
+        {
+            $apiEmail = strtolower(trim((string) (
+                data_get($item, 'user.email')
+                ?? data_get($item, 'email')
+                ?? ''
+            )));
+
+            $isKelasX = preg_match('/^X(?:\s+|-|_|\.|\/|$)/i', $namaKelas) === 1
+                || str_ends_with($apiEmail, '@sijuna.com');
+
+            if ($isKelasX) {
+                return strtolower($nis . '@sijuna.com');
+            }
+
+            if ($apiEmail !== '' && filter_var($apiEmail, FILTER_VALIDATE_EMAIL)) {
+                return $apiEmail;
+            }
+
+            return strtolower($nis . '@smkn1bangsri.sch.id');
+        }
+
+        /**
         * ==========================================================
         * NORMALIZE KEY
         * ==========================================================
@@ -203,12 +277,13 @@ use Illuminate\Support\Facades\Log;
          *
          * 1. NIS wajib ada.
          * 2. Nama wajib ada.
-         * 3. Data yang secara eksplisit graduated = true ditolak.
-         * 4. Status eksplisit nonaktif/lulus/alumni ditolak.
-         * 5. Classroom "graduate" ditolak.
-         * 6. PKL tetap diterima walaupun classroom.status = 0.
-         * 7. Siswa reguler harus memiliki classroom aktif.
-         * 8. Tingkat kelas harus X, XI, atau XII.
+         * 3. Khusus 34 siswa aktif XII MPLB 3 (terdata status 2 / graduated) diakomodir.
+         * 4. Data yang secara eksplisit graduated = true ditolak.
+         * 5. Status eksplisit nonaktif/lulus/alumni ditolak.
+         * 6. Classroom "graduate" ditolak.
+         * 7. PKL tetap diterima walaupun classroom.status = 0.
+         * 8. Siswa reguler harus memiliki classroom aktif.
+         * 9. Tingkat kelas harus X, XI, atau XII.
          *
          * Catatan:
          * classroom.status TIDAK menjadi syarat untuk siswa PKL.
@@ -235,6 +310,16 @@ use Illuminate\Support\Facades\Log;
             if ($nama === '') {
                 $reason = 'Nama kosong';
                 return false;
+            }
+
+            /*
+             * Khusus 34 siswa aktif XII MPLB 3 angkatan 2024-2026:
+             * Di SiPintu mereka terdata status=2 / graduated=true atau classroom_id=56.
+             * Siswa ini harus diakomodasi sebagai siswa aktif kelas XII MPLB 3.
+             */
+            if ($this->isMplb3SpecialCase($item)) {
+                $reason = 'Aktif: XII MPLB 3';
+                return true;
             }
 
             /*
@@ -885,10 +970,13 @@ use Illuminate\Support\Facades\Log;
                                     continue;
                                 }
 
+                                $namaKelasItem = $this->extractNamaKelas($item);
+                                $emailItem = $this->extractSiswaEmail($item, $namaKelasItem, $nis);
+
                                 $nisList[] = $nis;
-                                $emailList[] = strtolower(
-                                    $nis . '@smkn1bangsri.sch.id'
-                                );
+                                $emailList[] = $emailItem;
+                                $emailList[] = strtolower($nis . '@sijuna.com');
+                                $emailList[] = strtolower($nis . '@smkn1bangsri.sch.id');
                             }
 
                             $nisList = array_values(
@@ -997,13 +1085,15 @@ use Illuminate\Support\Facades\Log;
                                     * DATA DASAR
                                     * ==================================================
                                     */
-                                    $email = strtolower(
-                                        $nis
-                                        . '@smkn1bangsri.sch.id'
-                                    );
-
                                     $namaKelas =
                                         $this->extractNamaKelas($item);
+
+                                    $email =
+                                        $this->extractSiswaEmail(
+                                            $item,
+                                            $namaKelas,
+                                            $nis
+                                        );
 
                                     $jurusanData =
                                         $this->extractJurusan(
@@ -1239,9 +1329,19 @@ use Illuminate\Support\Facades\Log;
                                             'email:'
                                             . $this->normalizeKey($email)
                                         ]
+                                        ?? $userMap[
+                                            'email:'
+                                            . $this->normalizeKey($nis . '@sijuna.com')
+                                        ]
+                                        ?? $userMap[
+                                            'email:'
+                                            . $this->normalizeKey($nis . '@smkn1bangsri.sch.id')
+                                        ]
                                         ?? null;
 
                                     $isNewUser = false;
+                                    $externalId = data_get($item, 'user.id')
+                                        ?? data_get($item, 'user_id');
 
                                     if ($user) {
 
@@ -1256,7 +1356,7 @@ use Illuminate\Support\Facades\Log;
                                         * Ini menghindari:
                                         * Hash::make() x 1.300 setiap sync.
                                         */
-                                        $user->update([
+                                        $updateUserData = [
                                             'name' =>
                                                 $nama,
 
@@ -1268,7 +1368,13 @@ use Illuminate\Support\Facades\Log;
 
                                             'role' =>
                                                 'siswa',
-                                        ]);
+                                        ];
+
+                                        if ($externalId && empty($user->external_id)) {
+                                            $updateUserData['external_id'] = (string) $externalId;
+                                        }
+
+                                        $user->update($updateUserData);
 
                                         $stats['updated']++;
 
@@ -1301,6 +1407,9 @@ use Illuminate\Support\Facades\Log;
 
                                                 'nis_nip' =>
                                                     $nis,
+
+                                                'external_id' =>
+                                                    $externalId ? (string) $externalId : null,
                                             ]);
 
                                         $isNewUser = true;
@@ -1319,6 +1428,16 @@ use Illuminate\Support\Facades\Log;
                                     $userMap[
                                         'email:'
                                         . $this->normalizeKey($email)
+                                    ] = $user;
+
+                                    $userMap[
+                                        'email:'
+                                        . $this->normalizeKey($nis . '@sijuna.com')
+                                    ] = $user;
+
+                                    $userMap[
+                                        'email:'
+                                        . $this->normalizeKey($nis . '@smkn1bangsri.sch.id')
                                     ] = $user;
 
                                     /*

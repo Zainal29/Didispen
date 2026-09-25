@@ -77,23 +77,41 @@ class OAuthController extends Controller
     private function ensureUserProfile(User $user): void
     {
         if ($user->role === 'siswa') {
-            Siswa::firstOrCreate(
-                ['user_id' => $user->id],
-                [
+            $siswa = Siswa::where('user_id', $user->id)->first();
+
+            if (! $siswa && filled($user->nis_nip)) {
+                $siswa = Siswa::where('nis_nip', $user->nis_nip)->first();
+                if ($siswa) {
+                    $siswa->update(['user_id' => $user->id]);
+                }
+            }
+
+            if (! $siswa) {
+                Siswa::create([
+                    'user_id' => $user->id,
                     'nis_nip' => $user->nis_nip,
                     'nama_lengkap' => $user->name,
                     'status_aktif' => true,
-                ]
-            );
+                ]);
+            }
         } elseif ($user->role === 'guru') {
-            Guru::firstOrCreate(
-                ['user_id' => $user->id],
-                [
+            $guru = Guru::where('user_id', $user->id)->first();
+
+            if (! $guru && filled($user->nis_nip)) {
+                $guru = Guru::where('nip', $user->nis_nip)->first();
+                if ($guru) {
+                    $guru->update(['user_id' => $user->id]);
+                }
+            }
+
+            if (! $guru) {
+                Guru::create([
+                    'user_id' => $user->id,
                     'nip' => $user->nis_nip,
                     'nama_lengkap' => $user->name,
                     'status_aktif' => true,
-                ]
-            );
+                ]);
+            }
         }
     }
 
@@ -230,6 +248,9 @@ class OAuthController extends Controller
             $sipintuUser['nis']
             ?? $sipintuUser['nip']
             ?? $sipintuUser['nis_nip']
+            ?? data_get($sipintuUser, 'student.nis')
+            ?? data_get($sipintuUser, 'siswa.nis')
+            ?? data_get($sipintuUser, 'guru.nip')
             ?? ''
         ));
 
@@ -237,11 +258,36 @@ class OAuthController extends Controller
             $sipintuUser['name'] ?? ''
         ));
 
+        // Jika nisNip belum didapat, coba ekstrak dari email atau name (jika numeric)
+        if ($nisNip === '' && $email !== '') {
+            $prefix = strstr($email, '@', true);
+            if ($prefix !== false && ctype_digit($prefix)) {
+                $nisNip = $prefix;
+            }
+        }
+
+        if ($nisNip === '' && ctype_digit($name)) {
+            $nisNip = $name;
+        }
+
         $rawRole = strtolower(trim((string) (
             $sipintuUser['role'] ?? ''
         )));
 
         $role = $this->mapRole($rawRole);
+
+        // Fallback role detection (khususnya siswa kelas X @sijuna.com)
+        if ($role === null) {
+            if (str_ends_with($email, '@sijuna.com')) {
+                $role = 'siswa';
+            } elseif ($nisNip !== '') {
+                if (Siswa::where('nis_nip', $nisNip)->exists()) {
+                    $role = 'siswa';
+                } elseif (Guru::where('nip', $nisNip)->exists()) {
+                    $role = 'guru';
+                }
+            }
+        }
 
         if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return redirect()->route('login')->withErrors([
@@ -266,9 +312,9 @@ class OAuthController extends Controller
          *
          * Prioritas:
          * 1. external_id
-         * 2. email jika belum ditemukan
-         *
-         * Jangan mencari berdasarkan external_id kosong.
+         * 2. email persis
+         * 3. email domain alternatif (@sijuna.com <-> @smkn1bangsri.sch.id)
+         * 4. nis_nip lokal
          */
         $user = null;
 
@@ -276,8 +322,26 @@ class OAuthController extends Controller
             $user = User::where('external_id', $externalId)->first();
         }
 
-        if (! $user) {
+        if (! $user && $email !== '') {
             $user = User::where('email', $email)->first();
+        }
+
+        if (! $user && $nisNip !== '') {
+            $altEmails = [
+                strtolower($nisNip . '@sijuna.com'),
+                strtolower($nisNip . '@smkn1bangsri.sch.id'),
+            ];
+            $user = User::whereIn('email', $altEmails)->first();
+        }
+
+        if (! $user && $nisNip !== '') {
+            $user = User::where('nis_nip', $nisNip)
+                ->where(function ($q) use ($role) {
+                    if ($role) {
+                        $q->where('role', $role);
+                    }
+                })
+                ->first();
         }
 
         /*
@@ -318,8 +382,15 @@ class OAuthController extends Controller
          * STEP 6: Auto-provision akun non-admin.
          */
         if (! $user) {
+            $existingSiswa = ($role === 'siswa' && $nisNip !== '')
+                ? Siswa::where('nis_nip', $nisNip)->first()
+                : null;
+            $displayName = ($name !== '' && ! ctype_digit($name))
+                ? $name
+                : ($existingSiswa?->nama_lengkap ?? $name ?: 'User SiPintu');
+
             $user = User::create([
-                'name' => $name !== '' ? $name : 'User SiPintu',
+                'name' => $displayName,
                 'email' => $email,
                 'role' => $role,
                 'external_id' => $externalId !== ''
@@ -335,6 +406,10 @@ class OAuthController extends Controller
                 'email_verified_at' => $syncTime,
                 'sipintu_last_synced_at' => $syncTime,
             ]);
+
+            if ($existingSiswa && empty($existingSiswa->user_id)) {
+                $existingSiswa->update(['user_id' => $user->id]);
+            }
         } else {
             /*
              * STEP 7: Sinkronisasi data dasar.
@@ -357,7 +432,15 @@ class OAuthController extends Controller
                 $updates['nis_nip'] = $nisNip;
             }
 
-            if ($name !== '' && empty($user->name)) {
+            // Sinkronkan email terbaru jika berbeda (misal kelas 10 diupdate dari domain lama ke @sijuna.com)
+            if ($email !== '' && $user->email !== $email) {
+                $emailTaken = User::where('email', $email)->where('id', '!=', $user->id)->exists();
+                if (! $emailTaken) {
+                    $updates['email'] = $email;
+                }
+            }
+
+            if ($name !== '' && (empty($user->name) || ctype_digit($user->name))) {
                 $updates['name'] = $name;
             }
 
@@ -474,11 +557,34 @@ class OAuthController extends Controller
             $userData['nis']
             ?? $userData['nip']
             ?? $userData['nis_nip']
+            ?? data_get($userData, 'student.nis')
+            ?? data_get($userData, 'siswa.nis')
+            ?? data_get($userData, 'guru.nip')
             ?? ''
         ));
 
-        $rawRole = strtolower(trim($userData['role']));
+        if ($nisNip === '' && $email !== '') {
+            $prefix = strstr($email, '@', true);
+            if ($prefix !== false && ctype_digit($prefix)) {
+                $nisNip = $prefix;
+            }
+        }
+
+        $rawRole = strtolower(trim((string) ($userData['role'] ?? '')));
         $role = $this->mapRole($rawRole);
+
+        // Fallback role detection (khususnya siswa kelas X @sijuna.com)
+        if ($role === null) {
+            if (str_ends_with($email, '@sijuna.com')) {
+                $role = 'siswa';
+            } elseif ($nisNip !== '') {
+                if (Siswa::where('nis_nip', $nisNip)->exists()) {
+                    $role = 'siswa';
+                } elseif (Guru::where('nip', $nisNip)->exists()) {
+                    $role = 'guru';
+                }
+            }
+        }
 
         /*
          * STEP 3: Tolak role tidak dikenal/admin.
@@ -504,8 +610,26 @@ class OAuthController extends Controller
             $user = User::where('external_id', $externalId)->first();
         }
 
-        if (! $user) {
+        if (! $user && $email !== '') {
             $user = User::where('email', $email)->first();
+        }
+
+        if (! $user && $nisNip !== '') {
+            $altEmails = [
+                strtolower($nisNip . '@sijuna.com'),
+                strtolower($nisNip . '@smkn1bangsri.sch.id'),
+            ];
+            $user = User::whereIn('email', $altEmails)->first();
+        }
+
+        if (! $user && $nisNip !== '') {
+            $user = User::where('nis_nip', $nisNip)
+                ->where(function ($q) use ($role) {
+                    if ($role) {
+                        $q->where('role', $role);
+                    }
+                })
+                ->first();
         }
 
         /*

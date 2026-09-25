@@ -2,7 +2,7 @@
 
 use App\Http\Middleware\CheckDispensasiTime;
 use App\Http\Middleware\GuruPiketMiddleware;
-use App\Http\Middleware\MustChangePassword;
+// use App\Http\Middleware\MustChangePassword;
 use App\Http\Middleware\PrintLimitMiddleware;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
