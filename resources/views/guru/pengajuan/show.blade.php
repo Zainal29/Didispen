@@ -22,12 +22,12 @@
     <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
 
         {{-- Header --}}
-        <div class="bg-blue-600 p-5 text-white">
-            <div class="flex justify-between items-start gap-3">
+        <div class="bg-blue-600 p-4 sm:p-5 text-white">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div class="min-w-0">
                     <p class="text-blue-100 text-[10px] font-semibold uppercase tracking-wider">Surat Dispensasi</p>
-                    <h2 class="text-lg sm:text-xl font-bold font-mono tracking-tight truncate mt-0.5">{{ $dispensasi->nomor_surat }}</h2>
-                    <p class="text-blue-100 text-xs mt-1.5">
+                    <h2 class="text-lg sm:text-xl font-bold font-mono tracking-tight break-all mt-0.5">{{ $dispensasi->nomor_surat }}</h2>
+                    <p class="text-blue-100 text-xs mt-1.5 flex items-center flex-wrap">
                         <i class="far fa-calendar-plus mr-1"></i>Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB
                     </p>
                 </div>
@@ -102,8 +102,8 @@
                         <i class="fas fa-image text-blue-600"></i>
                         <span class="truncate">Preview Foto</span>
                     </h3>
-                    <button onclick="closePhotoModal()" class="ml-3 w-9 h-9 flex-shrink-0 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors" aria-label="Tutup preview foto">
-                        <i class="fas fa-times"></i>
+                    <button onclick="closePhotoModal()" class="ml-3 w-11 h-11 flex-shrink-0 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors" aria-label="Tutup preview foto">
+                        <i class="fas fa-times text-base"></i>
                     </button>
                 </div>
 
@@ -257,21 +257,14 @@
                 <div class="flex justify-center">
                     @if($canPrintStruk)
                         <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" target="_blank"
-                           class="px-5 py-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors inline-flex items-center">
+                           class="px-5 py-3 min-h-[44px] bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors inline-flex items-center justify-center">
                             <i id="iconCetak" class="fas fa-file-pdf mr-1.5 text-sm"></i> <span id="textCetak">Cetak PDF Thermal (58mm)</span>
                         </a>
                     @else
-                        <!--<button disabled
-                                title="{{ $sisaCetak <= 0 ? 'Batas cetak tercapai (' . $maxPrint . ' kali)' : 'Pencetakan hanya diperbolehkan pukul ' . $startTime . ' - ' . $endTime . ' WIB' }}"
-                                class="px-5 py-2.5 bg-gray-200 text-gray-500 text-xs font-semibold rounded-lg cursor-not-allowed inline-flex items-center">
-                            <i class="fas fa-lock mr-1.5 text-sm"></i>
-                            @if($sisaCetak <= 0) Batas Cetak Tercapai @else Di Luar Jam Cetak @endif
-                        </button>-->
-
-                        <button disabled class="w-full inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-400 bg-gray-100 cursor-not-allowed border border-gray-200">
-                         <i class="fas fa-lock mr-2"></i>Tidak Dapat Dicetak
-                         </button>
-                          <p class="text-center text-xs text-gray-500 mt-2"><i class="fas fa-shield-alt mr-1"></i>Dispensasi selesai tidak dapat dicetak ulang.</p>
+                        <button disabled class="w-full inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-gray-400 bg-gray-100 cursor-not-allowed border border-gray-200">
+                            <i class="fas fa-lock mr-2"></i>Tidak Dapat Dicetak
+                        </button>
+                        <p class="text-center text-xs text-gray-500 mt-2"><i class="fas fa-shield-alt mr-1"></i>Dispensasi selesai tidak dapat dicetak ulang.</p>
                     @endif
                 </div>
 
@@ -336,7 +329,7 @@
 
                         <div class="flex flex-wrap gap-2">
                             <a href="{{ route('guru.scan') }}"
-                               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm">
+                               class="inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm">
                                 <i class="fas fa-qrcode mr-1.5"></i> Scan QR Kembali
                             </a>
                         </div>
@@ -367,23 +360,23 @@
                     <form method="POST" action="{{ route('guru.pengajuan.approve', $dispensasi) }}" class="flex-1">
                         @csrf
                         <button type="submit" data-confirm="Setujui dispensasi {{ $dispensasi->siswa->nama_lengkap }} dan generate QR Code?"
-                                class="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+                                class="w-full inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
                             <i class="fas fa-check mr-2"></i>Setujui & Generate QR
                         </button>
                     </form>
                     <button onclick="rejectDispensasi()"
-                            class="flex-1 inline-flex justify-center items-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+                            class="flex-1 inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
                         <i class="fas fa-times mr-2"></i>Tolak
                     </button>
                 @else
-                    <div class="flex-1 px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 flex items-center">
+                    <div class="flex-1 px-4 py-3 min-h-[44px] rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 flex items-center">
                         <i class="fas fa-info-circle mr-2 text-blue-500 text-sm flex-shrink-0"></i>
                         <span>Status: <strong class="capitalize">{{ $displayStatus }}</strong>. <span class="text-gray-500 block sm:inline mt-1 sm:mt-0">(Konfirmasi keluar/kembali dilakukan oleh Satpam via Scan QR)</span></span>
                     </div>
                 @endif
 
                 <a href="{{ route('guru.pengajuan.index') }}"
-                class="inline-flex justify-center items-center px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors sm:w-auto">
+                class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors sm:w-auto">
                     <i class="fas fa-arrow-left mr-2"></i>Kembali
                 </a>
             </div>

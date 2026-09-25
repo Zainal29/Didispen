@@ -141,8 +141,8 @@
                             <i class="fas fa-image text-blue-600"></i>
                             <span class="truncate">Preview Foto</span>
                         </h3>
-                        <button onclick="closePhotoModal()" class="ml-3 w-9 h-9 flex-shrink-0 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors" aria-label="Tutup preview foto">
-                            <i class="fas fa-times"></i>
+                        <button onclick="closePhotoModal()" class="ml-3 w-11 h-11 flex-shrink-0 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors" aria-label="Tutup preview foto">
+                            <i class="fas fa-times text-base"></i>
                         </button>
                     </div>
 
@@ -294,12 +294,12 @@
             </h3>
             <div class="space-y-3">
                 @if($dispensasi->status === 'disetujui')
-                    <a href="{{ route('satpam.scan', ['dispensasi' => $dispensasi->id]) }}" class="w-full inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+                    <a href="{{ route('satpam.scan', ['dispensasi' => $dispensasi->id]) }}" class="w-full inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
                         <i class="fas fa-camera mr-2 text-base"></i>Scan QR Code untuk Keluar
                     </a>
                     <p class="text-xs text-gray-500 text-center font-medium"><i class="fas fa-info-circle mr-1"></i>Arahkan kamera ke QR Code siswa</p>
                 @elseif($dispensasi->status === 'keluar')
-                    <a href="{{ route('satpam.scan') }}" class="w-full inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+                    <a href="{{ route('satpam.scan') }}" class="w-full inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
                         <i class="fas fa-camera mr-2 text-base"></i>Scan QR Code untuk Kembali
                     </a>
                     <p class="text-xs text-gray-500 text-center font-medium"><i class="fas fa-info-circle mr-1"></i>Scan QR Code yang sama saat siswa kembali</p>
@@ -411,7 +411,7 @@
         </div>
 
         {{-- Tombol Kembali --}}
-        <a href="{{ route('satpam.dashboard') }}" class="w-full inline-flex items-center justify-center px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+        <a href="{{ route('satpam.dashboard') }}" class="w-full inline-flex items-center justify-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
             <i class="fas fa-arrow-left mr-2"></i>Kembali ke Dashboard
         </a>
     </div>

@@ -43,37 +43,60 @@
     </div>
 </div>
 
-{{-- ============ FILTER TABS ============ --}}
-<div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-4">
-    <div class="p-2 flex flex-wrap gap-2">
+{{-- STATISTIK SEBAGAI FILTER UTAMA --}}
+@php
+$cards = [
+    'menunggu'  => ['Menunggu', $menungguKeluar->count(), 'fa-clock', 'amber'],
+    'keluar'    => ['Sedang Keluar', $siswaKeluar->count(), 'fa-person-walking', 'sky'],
+    'terlambat' => ['Terlambat', $terlambatCount, 'fa-exclamation-triangle', 'red'],
+    'selesai'   => ['Selesai', $stats['selesai'] ?? 0, 'fa-check-double', 'emerald'],
+];
+@endphp
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-3">
+    @foreach($cards as $key => $card)
         @php
-        $filters = [
-            'semua' => ['label' => 'Semua', 'icon' => 'fa-layer-group', 'count' => $stats['total'] ?? 0, 'color' => 'gray'],
-            'menunggu' => ['label' => 'Menunggu', 'icon' => 'fa-clock', 'count' => $menungguKeluar->count(), 'color' => 'amber'],
-            'keluar' => ['label' => 'Keluar', 'icon' => 'fa-walking', 'count' => $siswaKeluar->count(), 'color' => 'sky'],
-            'terlambat' => ['label' => 'Terlambat', 'icon' => 'fa-exclamation-triangle', 'count' => $terlambatCount, 'color' => 'red'],
-            'selesai' => ['label' => 'Selesai', 'icon' => 'fa-check-double', 'count' => $stats['selesai'] ?? 0, 'color' => 'emerald'],
-            'dihubungi' => ['label' => 'Dihubungi', 'icon' => 'fa-phone-alt', 'count' => $dihubungi->count(), 'color' => 'purple'],
-        ];
+            $isActive = $currentFilter === $key;
+            $color = $card[3];
         @endphp
-
-        @foreach($filters as $key => $f)
         <button type="button"
-                onclick="switchFilter('{{ $key }}', '{{ $f['color'] }}', event)"
+                onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
                 data-filter="{{ $key }}"
-                class="filter-btn flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-semibold text-center border transition-all
-                {{ $currentFilter === $key
-                    ? 'active bg-' . $f['color'] . '-600 text-white border-transparent'
-                    : 'bg-gray-50 text-gray-600 hover:bg-black-100 border-gray-200' }}">
-            <i class="fas {{ $f['icon'] }} mr-1"></i> {{ $f['label'] }}
-            @if($f['count'] > 0)
-                <span class="inline-block ml-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold {{ $currentFilter === $key ? 'bg-white/20' : 'bg-' . $f['color'] . '-100 text-' . $f['color'] . '-700' }}">
-                    {{ $f['count'] }}
-                </span>
-            @endif
+                class="stat-card-btn text-left rounded-xl border p-3 sm:p-4 min-h-[44px] transition-all w-full
+                {{ $isActive
+                    ? 'active bg-white border-' . $color . '-500 ring-2 ring-' . $color . '-500/20 shadow-sm'
+                    : 'bg-white border-gray-200 hover:border-gray-300' }}">
+            <div class="flex items-center justify-between mb-2">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors
+                    {{ $isActive ? 'bg-' . $color . '-500 text-white' : 'bg-' . $color . '-100 text-' . $color . '-600' }}">
+                    <i class="fas {{ $card[2] }} text-sm"></i>
+                </div>
+                <span class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $card[1] }}</span>
+            </div>
+            <p class="text-[11px] sm:text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ $card[0] }}</p>
         </button>
-        @endforeach
-    </div>
+    @endforeach
+</div>
+
+{{-- SECONDARY FILTER BUTTONS --}}
+<div class="grid grid-cols-2 gap-2 mb-4">
+    <button type="button"
+            onclick="switchFilter('semua', 'red', event)"
+            data-filter="semua"
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center
+            {{ $currentFilter === 'semua'
+                ? 'active bg-red-600 text-white shadow-sm border-transparent hover:bg-red-700'
+                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
+        <i class="fas fa-layer-group mr-1.5"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
+    </button>
+    <button type="button"
+            onclick="switchFilter('dihubungi', 'purple', event)"
+            data-filter="dihubungi"
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center
+            {{ $currentFilter === 'dihubungi'
+                ? 'active bg-purple-600 text-white shadow-sm border-transparent hover:bg-purple-700'
+                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
+        <i class="fas fa-phone-alt mr-1.5"></i>Dihubungi ({{ $dihubungi->count() }})
+    </button>
 </div>
 
 {{-- ============ CONTENT SECTIONS ============ --}}
@@ -270,15 +293,34 @@ function switchFilter(filterKey, color, event) {
     if (event) event.preventDefault();
     if (filterKey === currentFilter) return;
 
+    // Reset secondary filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active', 'bg-red-600', 'bg-amber-600', 'bg-sky-600', 'bg-emerald-600', 'bg-purple-600', 'bg-gray-600', 'text-white', 'border-transparent');
-        btn.classList.add('bg-gray-50', 'text-gray-600', 'border-gray-200');
+        btn.classList.remove('active', 'bg-red-600', 'bg-purple-600', 'text-white', 'shadow-sm', 'border-transparent');
+        btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
     });
 
-    const activeBtn = document.querySelector(`button[data-filter="${filterKey}"]`);
+    // Reset stat cards
+    document.querySelectorAll('.stat-card-btn').forEach(card => {
+        card.classList.remove('active', 'ring-2', 'shadow-sm');
+        card.classList.add('border-gray-200');
+        card.className = card.className.replace(/border-\w+-500/g, '');
+        card.className = card.className.replace(/ring-\w+-500\/20/g, '');
+        const iconContainer = card.querySelector('div > div');
+        if (iconContainer) iconContainer.className = iconContainer.className.replace(/bg-\w+-500 text-white/g, '');
+    });
+
+    // Set active button
+    const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
     if (activeBtn) {
-        activeBtn.classList.remove('bg-gray-50', 'text-gray-600', 'border-gray-200');
-        activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'border-transparent');
+        activeBtn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
+        activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-sm', 'border-transparent');
+    }
+
+    const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
+    if (activeStatCard) {
+        activeStatCard.classList.add('active', `border-${color}-500`, `ring-2`, `ring-${color}-500/20`, 'shadow-sm');
+        const iconContainer = activeStatCard.querySelector('div > div');
+        if (iconContainer) iconContainer.classList.add(`bg-${color}-500`, 'text-white');
     }
 
     const contentArea = document.getElementById('content-area');

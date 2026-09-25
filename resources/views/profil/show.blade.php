@@ -135,7 +135,7 @@
                                 <input type="tel" name="no_telepon" id="phone_input" inputmode="numeric"
                                        value="{{ old('no_telepon', preg_replace('/^\+62/', '', $user->siswa->no_telepon ?? '')) }}"
                                        placeholder="81234567890"
-                                       class="w-full min-w-0 flex-1 px-3 sm:px-4 py-2.5 border border-gray-300 rounded-r-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium max-w-full @error('no_telepon') border-red-500 bg-red-50 @enderror">
+                                       class="w-full min-w-0 flex-1 px-3 sm:px-4 py-2.5 border border-gray-300 rounded-r-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-base sm:text-sm font-medium max-w-full @error('no_telepon') border-red-500 bg-red-50 @enderror">
                             </div>
                             @error('no_telepon')
                                 <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i> {{ $message }}</p>
@@ -152,7 +152,7 @@
                             <input type="date" name="tanggal_lahir"
                                    value="{{ old('tanggal_lahir', $user->siswa->tanggal_lahir ? \Carbon\Carbon::parse($user->siswa->tanggal_lahir)->format('Y-m-d') : '') }}"
                                    max="{{ now()->subYears(7)->format('Y-m-d') }}"
-                                   class="w-full min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium @error('tanggal_lahir') border-red-500 bg-red-50 @enderror">
+                                   class="w-full min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-base sm:text-sm font-medium @error('tanggal_lahir') border-red-500 bg-red-50 @enderror">
                             @error('tanggal_lahir')
                                 <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p>
                             @else
@@ -166,7 +166,7 @@
                                 <i class="fas fa-map-marker-alt mr-1 text-red-500"></i> Alamat Lengkap
                             </label>
                             <textarea name="alamat" rows="3" placeholder="RT/RW, Desa, Kecamatan..."
-                                      class="w-full min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-sm font-medium resize-none @error('alamat') border-red-500 bg-red-50 @enderror">{{ old('alamat', $user->siswa->alamat) }}</textarea>
+                                      class="w-full min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 outline-none transition-all text-base sm:text-sm font-medium resize-none @error('alamat') border-red-500 bg-red-50 @enderror">{{ old('alamat', $user->siswa->alamat) }}</textarea>
                             @error('alamat')
                                 <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p>
                             @enderror
@@ -175,7 +175,7 @@
 
                     <div class="mt-6 flex justify-end">
                         <button type="submit"
-                                class="w-full sm:w-auto px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                                class="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-save"></i> Simpan Data Profil
                         </button>
                     </div>
@@ -210,7 +210,7 @@
                                 Password Saat Ini <span class="text-red-500">*</span>
                             </label>
                             <input type="password" name="current_password" required
-                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-sm @error('current_password') border-red-500 bg-red-50 @enderror"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-base sm:text-sm @error('current_password') border-red-500 bg-red-50 @enderror"
                                    placeholder="Masukkan password lama Anda">
                             @error('current_password')
                                 <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
@@ -224,7 +224,7 @@
                                 Password Baru <span class="text-red-500">*</span>
                             </label>
                             <input type="password" name="new_password" required minlength="8"
-                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-sm @error('new_password') border-red-500 bg-red-50 @enderror"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-base sm:text-sm @error('new_password') border-red-500 bg-red-50 @enderror"
                                    placeholder="Minimal 8 karakter">
                             @error('new_password')
                                 <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
@@ -238,14 +238,14 @@
                                 Konfirmasi Password Baru <span class="text-red-500">*</span>
                             </label>
                             <input type="password" name="new_password_confirmation" required minlength="8"
-                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-sm"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-base sm:text-sm"
                                    placeholder="Ulangi password baru">
                         </div>
                     </div>
 
                     <div class="mt-6 flex justify-end">
                         <button type="submit"
-                                class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                                class="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-key"></i> Perbarui Password
                         </button>
                     </div>
@@ -288,7 +288,7 @@
                             Konfirmasi Password Saat Ini <span class="text-red-500">*</span>
                         </label>
                         <input type="password" name="current_password" required
-                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none text-sm @error('current_password') border-red-500 bg-red-50 @enderror"
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none text-base sm:text-sm @error('current_password') border-red-500 bg-red-50 @enderror"
                                placeholder="Masukkan password Anda untuk mengonfirmasi">
                         @error('current_password')
                             <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
@@ -302,7 +302,7 @@
                     </div>
                     <div class="mt-4">
                         <button type="submit"
-                                class="w-full sm:w-auto px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                                class="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-sign-out-alt"></i> Keluarkan Semua Perangkat Lain
                         </button>
                     </div>

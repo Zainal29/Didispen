@@ -106,9 +106,9 @@
                     <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-3 text-center lg:text-left">Pilih Peran Masuk</p>
                     <div class="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-lg border border-slate-200">
                         <template x-for="role in roles" :key="role.id">
-                            <button type="button" @click="switchRole(role.id)" class="py-2.5 rounded-md text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all" :class="activeRole === role.id ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'">
+                            <button type="button" @click="switchRole(role.id)" class="min-h-[44px] py-2 px-1 rounded-md text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 sm:gap-2 transition-all" :class="activeRole === role.id ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'">
                                 <i :class="role.icon"></i>
-                                <span x-text="role.label"></span>
+                                <span x-text="role.label" class="truncate"></span>
                             </button>
                         </template>
                     </div>
@@ -146,7 +146,7 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email / NIS Siswa</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-envelope"></i></span>
-                                    <input name="email" type="text" x-model="loginId" required placeholder="Masukkan NIS atau email siswa" class="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                                    <input name="email" type="text" x-model="loginId" required placeholder="Masukkan NIS atau email siswa" class="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 bg-white text-base sm:text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
                                 </div>
                             </div>
 
@@ -154,14 +154,14 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
-                                    <input name="password" :type="showPw ? 'text' : 'password'" required autocomplete="current-password" placeholder="Masukkan password" class="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
-                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors">
+                                    <input name="password" :type="showPw ? 'text' : 'password'" required autocomplete="current-password" placeholder="Masukkan password" class="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-300 bg-white text-base sm:text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 w-10 h-11 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
                                         <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <button type="submit" :disabled="loading" class="w-full h-11 mt-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                            <button type="submit" :disabled="loading" class="w-full h-11 min-h-[44px] mt-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
                                 <i x-show="loading" class="fas fa-spinner fa-spin"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
                             </button>
@@ -178,7 +178,7 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email / NIP Guru</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-envelope"></i></span>
-                                    <input name="email" type="text" x-model="loginId" required autocomplete="username" placeholder="Masukkan NIP atau email guru" class="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                                    <input name="email" type="text" x-model="loginId" required autocomplete="username" placeholder="Masukkan NIP atau email guru" class="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 bg-white text-base sm:text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
                                 </div>
                             </div>
 
@@ -186,14 +186,14 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
-                                    <input name="password" :type="showPw ? 'text' : 'password'" required autocomplete="current-password" placeholder="Masukkan password" class="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
-                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors">
+                                    <input name="password" :type="showPw ? 'text' : 'password'" required autocomplete="current-password" placeholder="Masukkan password" class="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-300 bg-white text-base sm:text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 w-10 h-11 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
                                         <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <button type="submit" :disabled="loading" class="w-full h-11 mt-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                            <button type="submit" :disabled="loading" class="w-full h-11 min-h-[44px] mt-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
                                 <i x-show="loading" class="fas fa-spinner fa-spin"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
                             </button>
@@ -210,7 +210,7 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email / ID Satpam</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-envelope"></i></span>
-                                    <input name="email" type="text" value="{{ old('email') }}" required placeholder="Masukkan ID atau email satpam" class="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                                    <input name="email" type="text" value="{{ old('email') }}" required placeholder="Masukkan ID atau email satpam" class="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 bg-white text-base sm:text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
                                 </div>
                             </div>
 
@@ -218,14 +218,14 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
-                                    <input name="password" :type="showPw ? 'text' : 'password'" required placeholder="Masukkan password" class="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
-                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors">
+                                    <input name="password" :type="showPw ? 'text' : 'password'" required placeholder="Masukkan password" class="w-full h-11 pl-10 pr-10 rounded-lg border border-slate-300 bg-white text-base sm:text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                                    <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 w-10 h-11 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
                                         <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <button type="submit" :disabled="loading" class="w-full h-11 mt-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                            <button type="submit" :disabled="loading" class="w-full h-11 min-h-[44px] mt-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
                                 <i x-show="loading" class="fas fa-spinner fa-spin"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
                             </button>

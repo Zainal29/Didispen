@@ -54,7 +54,7 @@
                 </p>
             </div>
             <div class="flex-shrink-0">
-                <a href="#tanya-jawab" class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-semibold text-white transition-colors">
+                <a href="#tanya-jawab" class="inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-semibold text-white transition-colors">
                     <i class="fas fa-question-circle mr-2"></i>Pertanyaan Umum
                 </a>
             </div>
@@ -77,8 +77,8 @@
                 </p>
                 {{-- Ganti bagian link YouTube yang lama dengan ini --}}
                 @if($videoSiswa)
-                <button onclick="openVideoModal('{{ $videoSiswa->youtube_url }}', '{{ $videoSiswa->title }}')"
-                   class="inline-flex items-center px-3 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
+                <button type="button" onclick="openVideoModal('{{ $videoSiswa->youtube_url }}', '{{ $videoSiswa->title }}')"
+                   class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
                     <i class="fab fa-youtube mr-1.5 text-sm"></i> {{ $videoSiswa->title }}
                 </button>
                 @endif
@@ -95,7 +95,7 @@
                     <h4 class="font-bold text-gray-900 text-sm">Buat Pengajuan</h4>
                     <p class="text-xs text-gray-600 leading-relaxed">Klik tombol <strong>"Buat Pengajuan"</strong>. Isi alasan, tujuan, dan <strong>wajib upload Foto Verifikasi</strong>.</p>
                 </div>
-                <a href="{{ route('siswa.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors">
+                <a href="{{ route('siswa.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors">
                     Buat Pengajuan Sekarang <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                 </a>
             </div>
@@ -109,7 +109,7 @@
                     <h4 class="font-bold text-gray-900 text-sm">Dapatkan QR Code</h4>
                     <p class="text-xs text-gray-600 leading-relaxed">Setelah disetujui, buka menu <strong>"Riwayat"</strong> untuk menampilkan <strong>Kode QR Aktif</strong>.</p>
                 </div>
-                <a href="{{ route('siswa.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors">
+                <a href="{{ route('siswa.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors">
                     Lihat Riwayat & QR <i class="fas fa-qrcode ml-1.5 text-[10px]"></i>
                 </a>
             </div>
@@ -147,8 +147,8 @@
                 </p>
                 {{-- Ganti bagian link YouTube yang lama dengan ini --}}
                 @if($videoGuru)
-                <button onclick="openVideoModal('{{ $videoGuru->youtube_url }}', '{{ $videoGuru->title }}')"
-                   class="inline-flex items-center px-3 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
+                <button type="button" onclick="openVideoModal('{{ $videoGuru->youtube_url }}', '{{ $videoGuru->title }}')"
+                   class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
                     <i class="fab fa-youtube mr-1.5 text-sm"></i> {{ $videoGuru->title }}
                 </button>
                 @endif
@@ -168,7 +168,7 @@
                         <li>Klik <strong>"Setujui"</strong> atau <strong>"Tolak"</strong> dengan alasan yang jelas.</li>
                     </ol>
                 </div>
-                <a href="{{ route('guru.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">
+                <a href="{{ route('guru.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">
                     Buka Menu Verifikasi <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                 </a>
             </div>
@@ -185,7 +185,7 @@
                         <li>Sistem akan <strong>langsung menyetujui</strong> dan menerbitkan QR.</li>
                     </ol>
                 </div>
-                <a href="{{ route('guru.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition-colors">
+                <a href="{{ route('guru.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition-colors">
                     Buat Pengajuan Manual <i class="fas fa-plus ml-1.5 text-[10px]"></i>
                 </a>
             </div>
@@ -201,7 +201,7 @@
                         <li>Gunakan <strong>Filter Dashboard</strong> untuk memantau siswa.</li>
                     </ol>
                 </div>
-                <a href="{{ route('guru.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
+                <a href="{{ route('guru.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
                     Buka Scanner QR <i class="fas fa-camera ml-1.5 text-[10px]"></i>
                 </a>
             </div>
@@ -225,8 +225,8 @@
                 </p>
                 {{-- Ganti bagian link YouTube yang lama dengan ini --}}
                 @if($videoSatpam)
-                <button onclick="openVideoModal('{{ $videoSatpam->youtube_url }}', '{{ $videoSatpam->title }}')"
-                   class="inline-flex items-center px-3 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
+                <button type="button" onclick="openVideoModal('{{ $videoSatpam->youtube_url }}', '{{ $videoSatpam->title }}')"
+                   class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
                     <i class="fab fa-youtube mr-1.5 text-sm"></i> {{ $videoSatpam->title }}
                 </button>
                 @endif
@@ -247,7 +247,7 @@
                         <li>Scan pertama = <strong>Keluar</strong>. Scan kedua = <strong>Kembali</strong>.</li>
                     </ol>
                 </div>
-                <a href="{{ route('satpam.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition-colors">
+                <a href="{{ route('satpam.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition-colors">
                     Buka Scanner QR <i class="fas fa-camera ml-1.5 text-[10px]"></i>
                 </a>
             </div>
@@ -264,7 +264,7 @@
                         <li>Klik tombol <strong>"Konfirmasi Keluar"</strong> atau <strong>"Kembali"</strong>.</li>
                     </ol>
                 </div>
-                <a href="{{ route('satpam.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors">
+                <a href="{{ route('satpam.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors">
                     Coba Verifikasi Manual <i class="fas fa-search ml-1.5 text-[10px]"></i>
                 </a>
             </div>
@@ -280,7 +280,7 @@
                         <li>Sistem akan <strong>otomatis menyelesaikan</strong> dispensasi "Sampai Pulang" setelah jam pulang.</li>
                     </ol>
                 </div>
-                <a href="{{ route('satpam.dashboard') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-gray-800 text-white text-xs font-semibold hover:bg-gray-900 transition-colors">
+                <a href="{{ route('satpam.dashboard') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-gray-800 text-white text-xs font-semibold hover:bg-gray-900 transition-colors">
                     Dashboard Satpam <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                 </a>
             </div>
@@ -304,8 +304,8 @@
                 </p>
                 {{-- Ganti bagian link YouTube yang lama dengan ini --}}
                 @if($videoAdmin)
-                <button onclick="openVideoModal('{{ $videoAdmin->youtube_url }}', '{{ $videoAdmin->title }}')"
-                   class="inline-flex items-center px-3 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
+                <button type="button" onclick="openVideoModal('{{ $videoAdmin->youtube_url }}', '{{ $videoAdmin->title }}')"
+                   class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
                     <i class="fab fa-youtube mr-1.5 text-sm"></i> {{ $videoAdmin->title }}
                 </button>
                 @endif
@@ -325,9 +325,9 @@
                         <li>Gunakan fitur <strong>Sinkronisasi SiPintu</strong> untuk memperbarui data secara otomatis dari sistem pusat.</li>
                     </ol>
                 </div>
-                <div class="flex gap-2">
-                    <a href="{{ route('admin.siswa.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-colors">Data Siswa</a>
-                    <a href="{{ route('admin.guru.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-colors">Data Guru</a>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <a href="{{ route('admin.siswa.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-colors">Data Siswa</a>
+                    <a href="{{ route('admin.guru.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-colors">Data Guru</a>
                 </div>
             </div>
 
@@ -343,9 +343,9 @@
                         <li>Ubah kata-kata notifikasi <strong>Template WhatsApp</strong> sesuai kebutuhan sekolah tanpa coding.</li>
                     </ol>
                 </div>
-                <div class="flex gap-2">
-                    <a href="{{ route('admin.settings.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-colors">Pengaturan</a>
-                    <a href="{{ route('admin.whatsapp-templates.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-colors">Template WA</a>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <a href="{{ route('admin.settings.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-colors">Pengaturan</a>
+                    <a href="{{ route('admin.whatsapp-templates.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-colors">Template WA</a>
                 </div>
             </div>
 
@@ -362,9 +362,9 @@
                         <li>Unduh <strong>Laporan</strong> dalam format PDF atau Excel.</li>
                     </ol>
                 </div>
-                <div class="flex gap-2">
-                    <a href="{{ route('admin.semua.pengajuan') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold transition-colors">Semua Pengajuan</a>
-                    <a href="{{ route('admin.audit.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold transition-colors">Audit Log</a>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <a href="{{ route('admin.semua.pengajuan') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold transition-colors">Semua Pengajuan</a>
+                    <a href="{{ route('admin.audit.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold transition-colors">Audit Log</a>
                 </div>
             </div>
         </div>
@@ -381,7 +381,7 @@
 
         <div class="space-y-3 text-xs" x-data="{ openFaq: null }">
             <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <button @click="openFaq = openFaq === 1 ? null : 1" class="w-full p-4 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                <button type="button" @click="openFaq = openFaq === 1 ? null : 1" class="w-full p-4 min-h-[44px] text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
                     <span>Apakah Kode QR bisa digunakan dua kali?</span>
                     <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 1 ? 'rotate-180' : ''"></i>
                 </button>
@@ -391,7 +391,7 @@
             </div>
 
             <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <button @click="openFaq = openFaq === 2 ? null : 2" class="w-full p-4 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                <button type="button" @click="openFaq = openFaq === 2 ? null : 2" class="w-full p-4 min-h-[44px] text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
                     <span>Bagaimana jika HP siswa mati/kehabisan baterai saat di pintu gerbang?</span>
                     <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 2 ? 'rotate-180' : ''"></i>
                 </button>
@@ -401,7 +401,7 @@
             </div>
 
             <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <button @click="openFaq = openFaq === 3 ? null : 3" class="w-full p-4 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                <button type="button" @click="openFaq = openFaq === 3 ? null : 3" class="w-full p-4 min-h-[44px] text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
                     <span>Mengapa siswa wajib upload Foto Verifikasi saat mengajukan?</span>
                     <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 3 ? 'rotate-180' : ''"></i>
                 </button>
@@ -411,7 +411,7 @@
             </div>
 
             <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <button @click="openFaq = openFaq === 4 ? null : 4" class="w-full p-4 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                <button type="button" @click="openFaq = openFaq === 4 ? null : 4" class="w-full p-4 min-h-[44px] text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
                     <span>Apa yang terjadi jika siswa tidak kembali sebelum jam pulang sekolah?</span>
                     <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 4 ? 'rotate-180' : ''"></i>
                 </button>
@@ -426,7 +426,7 @@
 
 {{-- Tambahkan Modal Video di bagian bawah file (sebelum @endsection) --}}
 <div id="videoModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="video-modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="flex items-center justify-center min-h-screen p-4 text-center sm:block sm:p-0">
         {{-- Overlay --}}
         <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeVideoModal()"></div>
 
@@ -437,7 +437,7 @@
             {{-- Header --}}
             <div class="bg-gray-50 px-4 py-3 flex items-center justify-between border-b border-gray-200">
                 <h3 class="text-base font-bold text-gray-900" id="videoModalTitle">Video Tutorial</h3>
-                <button type="button" onclick="closeVideoModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors">
+                <button type="button" onclick="closeVideoModal()" class="w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Tutup Modal">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>

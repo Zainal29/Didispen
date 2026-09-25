@@ -17,11 +17,11 @@
     </div>
     <div class="flex gap-2 w-full sm:w-auto">
         <a href="{{ route('guru.laporan.pdf', request()->query()) }}" target="_blank"
-           class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+           class="flex-1 sm:flex-none inline-flex justify-center items-center min-h-[44px] px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
             <i class="fas fa-file-pdf mr-1.5"></i>Export PDF
         </a>
         <a href="{{ route('guru.laporan.excel', request()->query()) }}"
-           class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+           class="flex-1 sm:flex-none inline-flex justify-center items-center min-h-[44px] px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
             <i class="fas fa-file-excel mr-1.5"></i>Export Excel
         </a>
     </div>
@@ -33,17 +33,17 @@
         <div>
             <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Dari</label>
             <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}"
-                   class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                   class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-base sm:text-sm text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
         </div>
         <div>
             <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Sampai</label>
             <input type="date" name="tanggal_sampai" value="{{ request('tanggal_sampai') }}"
-                   class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                   class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-base sm:text-sm text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
         </div>
         <div>
             <label class="block text-xs font-bold text-gray-700 mb-1.5">Status</label>
             <select name="status"
-                    class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                    class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-base sm:text-sm text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
                 <option value="">Semua Status</option>
                 <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                 <option value="ditolak"   {{ request('status') == 'ditolak'   ? 'selected' : '' }}>Ditolak</option>
@@ -52,7 +52,7 @@
         </div>
         <div class="flex items-end">
             <button type="submit"
-                    class="w-full inline-flex justify-center items-center px-4 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                    class="w-full inline-flex justify-center items-center min-h-[44px] px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                 <i class="fas fa-filter mr-2"></i>Terapkan Filter
             </button>
         </div>
@@ -115,7 +115,7 @@
     </div>
 
     {{-- DESKTOP: Tabel --}}
-    <div class="hidden md:block overflow-x-auto">
+    <div class="hidden md:block overflow-x-auto min-w-0 w-full">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
                 <tr>

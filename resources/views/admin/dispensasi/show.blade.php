@@ -6,21 +6,21 @@
 @section('content')
 <div class="max-w-4xl mx-auto">
     <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-start mb-6">
-            <div>
-                <h3 class="text-2xl font-bold text-gray-800">{{ $dispensasi->nomor_surat }}</h3>
-                <p class="text-sm text-gray-500">Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB</p>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+            <div class="min-w-0">
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ $dispensasi->nomor_surat }}</h3>
+                <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB</p>
             </div>
             @php
                 $statusColors = [
-                    'menunggu' => 'bg-yellow-100 text-yellow    -800',
+                    'menunggu' => 'bg-yellow-100 text-yellow-800',
                     'disetujui' => 'bg-green-100 text-green-800',
                     'ditolak' => 'bg-red-100 text-red-800',
                     'keluar' => 'bg-blue-100 text-blue-800',
                     'selesai' => 'bg-gray-100 text-gray-800',
                 ];
             @endphp
-            <span class="px-3 py-1 rounded-full text-sm font-bold {{ $statusColors[$dispensasi->status] ?? 'bg-gray-100' }}">
+            <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold flex-shrink-0 {{ $statusColors[$dispensasi->status] ?? 'bg-gray-100' }}">
                 {{ ucfirst($dispensasi->status) }}
             </span>
         </div>
@@ -87,8 +87,8 @@
                         <i class="fas fa-image text-blue-600"></i>
                         <span class="truncate">Preview Foto</span>
                     </h3>
-                    <button onclick="closePhotoModal()" class="ml-3 w-9 h-9 flex-shrink-0 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors" aria-label="Tutup preview foto">
-                        <i class="fas fa-times"></i>
+                    <button onclick="closePhotoModal()" class="ml-3 w-11 h-11 flex-shrink-0 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors" aria-label="Tutup preview foto">
+                        <i class="fas fa-times text-base"></i>
                     </button>
                 </div>
 
@@ -305,8 +305,8 @@
             </div>
         </div>
 
-        <div class="border-t pt-4 flex space-x-3">
-            <a href="{{ route('admin.semua.pengajuan') }}" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition">
+        <div class="border-t border-gray-100 pt-4 flex space-x-3">
+            <a href="{{ route('admin.semua.pengajuan') }}" class="min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
                 <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
             </a>
         </div>

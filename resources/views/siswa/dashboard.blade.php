@@ -191,26 +191,36 @@
     @endif
 @endif
 
-{{-- ============ STATISTIK ============ --}}
-<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
-    @php
-    $cards = [
-        ['Total',     $stats['total'] ?? 0,     'fa-file-alt',       'text-gray-600'],
-        ['Menunggu',  $stats['menunggu'] ?? 0,  'fa-clock',          'text-amber-600'],
-        ['Disetujui', $stats['disetujui'] ?? 0, 'fa-check-circle',   'text-emerald-600'],
-        ['Ditolak',   $stats['ditolak'] ?? 0,   'fa-times-circle',   'text-red-600'],
-        ['Selesai',   $stats['selesai'] ?? 0,   'fa-flag-checkered', 'text-blue-600'],
-    ];
-    @endphp
-    @foreach($cards as [$label, $value, $icon, $color])
-    <div class="bg-white border border-gray-200 rounded-xl p-3 sm:p-4">
+{{-- ============ STATISTIK UTAMA ============ --}}
+@php
+$cards = [
+    'menunggu'  => ['Menunggu',  $stats['menunggu'] ?? 0,  'fa-clock',          'amber'],
+    'disetujui' => ['Disetujui', $stats['disetujui'] ?? 0, 'fa-check-circle',   'emerald'],
+    'ditolak'   => ['Ditolak',   $stats['ditolak'] ?? 0,   'fa-times-circle',   'red'],
+    'selesai'   => ['Selesai',   $stats['selesai'] ?? 0,   'fa-check-double',   'blue'],
+];
+@endphp
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-3">
+    @foreach($cards as $key => [$label, $value, $icon, $color])
+    <a href="{{ route('siswa.pengajuan.index', ['status' => $key]) }}"
+       class="stat-card-btn text-left rounded-xl border border-gray-200 bg-white p-3 sm:p-4 min-h-[44px] hover:border-gray-300 hover:shadow-sm transition-all w-full block">
         <div class="flex items-center justify-between mb-2">
-            <p class="text-xs font-medium text-gray-500">{{ $label }}</p>
-            <i class="fas {{ $icon }} {{ $color }} text-sm"></i>
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-{{ $color }}-100 text-{{ $color }}-600">
+                <i class="fas {{ $icon }} text-sm"></i>
+            </div>
+            <span class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $value }}</span>
         </div>
-        <h3 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $value }}</h3>
-    </div>
+        <p class="text-[11px] sm:text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ $label }}</p>
+    </a>
     @endforeach
+</div>
+
+{{-- SECONDARY BUTTON: SEMUA PENGAJUAN --}}
+<div class="mb-4">
+    <a href="{{ route('siswa.pengajuan.index') }}"
+       class="filter-btn w-full px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all text-center">
+        <i class="fas fa-layer-group mr-1.5 text-blue-600"></i>Tampilkan Semua Pengajuan ({{ $stats['total'] ?? 0 }})
+    </a>
 </div>
 
 {{-- ============ PENGAJUAN TERBARU ============ --}}

@@ -3,24 +3,24 @@
 @section('page-title', 'Scan QR Code')
 @section('content')
 
-<div class="max-w-xl mx-auto space-y-4">
+<div class="max-w-xl mx-auto space-y-4 w-full min-w-0">
     {{-- Card Scanner --}}
-    <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
+    <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 text-center shadow-sm">
         <div class="w-12 h-12 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-3">
             <i class="fas fa-qrcode text-xl"></i>
         </div>
         <h2 class="text-base font-bold text-gray-900 mb-1">Scanner QR Code Dispensasi</h2>
         <p class="text-xs text-gray-500 mb-4">Arahkan kamera ke QR Code pada layar HP siswa.</p>
 
-        <div class="relative bg-gray-900 rounded-xl overflow-hidden shadow-inner">
+        <div class="relative bg-gray-900 rounded-xl overflow-hidden shadow-inner w-full max-w-sm mx-auto">
             <div id="reader" class="w-full"></div>
         </div>
 
-        <div class="mt-3.5 flex items-center justify-between border-t border-gray-100 pt-3">
-            <span id="scanStatus" class="inline-flex items-center text-xs font-semibold text-emerald-600">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Kamera aktif
+        <div class="mt-3.5 flex items-center justify-between border-t border-gray-100 pt-3 gap-2">
+            <span id="scanStatus" class="inline-flex items-center text-xs font-semibold text-emerald-600 truncate min-w-0">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse flex-shrink-0"></span> Kamera aktif
             </span>
-            <button onclick="restartScanner()" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors">
+            <button onclick="restartScanner()" class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors flex-shrink-0">
                 <i class="fas fa-redo mr-1.5"></i>Reset Scanner
             </button>
         </div>
@@ -31,37 +31,37 @@
 {{-- MODAL POPUP HASIL SCAN QR & KONFIRMASI GURU --}}
 {{-- ======================================================== --}}
 <div id="scanModal"
-     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/75 backdrop-blur-sm hidden overflow-y-auto"
+     class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-900/75 backdrop-blur-sm hidden overflow-y-auto"
      onclick="handleBackdropClick(event)">
-    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-8 transition-all"
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-auto transition-all max-h-[90dvh] flex flex-col"
          onclick="event.stopPropagation()">
 
         {{-- Modal Header --}}
-        <div id="modalHeader" class="p-4 bg-gray-900 text-white flex items-center justify-between transition-colors">
-            <div class="flex items-center gap-2.5">
-                <div id="modalHeaderIcon" class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm">
+        <div id="modalHeader" class="p-4 bg-gray-900 text-white flex items-center justify-between transition-colors flex-shrink-0">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div id="modalHeaderIcon" class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm flex-shrink-0">
                     <i class="fas fa-qrcode"></i>
                 </div>
-                <div>
-                    <h3 id="modalTitle" class="text-sm font-bold text-white leading-tight">Hasil Scan QR Code</h3>
-                    <p id="modalSubtitle" class="text-[11px] text-white/80">Memeriksa data dispensasi...</p>
+                <div class="min-w-0">
+                    <h3 id="modalTitle" class="text-sm font-bold text-white leading-tight truncate">Hasil Scan QR Code</h3>
+                    <p id="modalSubtitle" class="text-[11px] text-white/80 truncate">Memeriksa data dispensasi...</p>
                 </div>
             </div>
             <button type="button"
                     onclick="closeScanModal()"
-                    class="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                    class="text-white/70 hover:text-white w-11 h-11 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
                     title="Tutup (Esc)">
                 <i class="fas fa-times text-base"></i>
             </button>
         </div>
 
         {{-- Modal Body --}}
-        <div id="modalBody" class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+        <div id="modalBody" class="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1 min-h-0">
             {{-- Konten dinamis --}}
         </div>
 
         {{-- Modal Footer --}}
-        <div id="modalFooter" class="p-4 bg-gray-50 border-t border-gray-100 flex gap-2.5">
+        <div id="modalFooter" class="p-4 bg-gray-50 border-t border-gray-100 flex gap-2.5 flex-shrink-0">
             {{-- Tombol dinamis --}}
         </div>
     </div>

@@ -16,41 +16,41 @@
             </div>
 
             {{-- Tombol Test Koneksi --}}
-            <form method="POST" action="{{ route('admin.sipintu.test-sync') }}" class="inline">
+            <form method="POST" action="{{ route('admin.sipintu.test-sync') }}" class="w-full xl:w-auto">
                 @csrf
-                <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                <button type="submit" class="w-full xl:w-auto min-h-[44px] bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
                     <i class="fas fa-plug"></i> Test Koneksi SiPintu
                 </button>
             </form>
 
             <form method="GET" class="flex flex-wrap gap-2 w-full xl:w-auto">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari User / IP..."
-                       class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full xl:w-40">
+                       class="border border-gray-300 rounded-lg px-3.5 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-auto xl:w-40 h-11">
 
                 <input type="date" name="date_from" value="{{ request('date_from') }}"
-                       class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                       class="border border-gray-300 rounded-lg px-3.5 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-auto h-11">
                 <input type="date" name="date_to" value="{{ request('date_to') }}"
-                       class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                       class="border border-gray-300 rounded-lg px-3.5 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-auto h-11">
 
-                <select name="filter_type" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                <select name="filter_type" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-3.5 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-auto h-11">
                     <option value="">Semua Role</option>
                     <option value="admin" {{ request('filter_type') == 'admin' ? 'selected' : '' }}>Admin Only</option>
                     <option value="satpam" {{ request('filter_type') == 'satpam' ? 'selected' : '' }}>Satpam Only</option>
                     <option value="sync" {{ request('filter_type') == 'sync' ? 'selected' : '' }}>Sinkronisasi</option>
                 </select>
 
-                <select name="action" onchange="this.form.submit()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                <select name="action" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-3.5 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-auto h-11">
                     <option value="">Semua Aksi</option>
                     @foreach(['test_connection_sipintu','sync_sipintu_siswa', 'sync_sipintu_guru', 'approve', 'reject', 'konfirmasi_keluar', 'konfirmasi_kembali', 'create_siswa', 'create_guru', 'update_siswa', 'update_guru'] as $a)
                         <option value="{{ $a }}" {{ request('action') == $a ? 'selected' : '' }}>{{ str_replace('_', ' ', $a) }}</option>
                     @endforeach
                 </select>
 
-                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700">
-                    <i class="fas fa-filter mr-1"></i> Filter
+                <button type="submit" class="flex-1 sm:flex-none min-h-[44px] bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 flex items-center justify-center shadow-sm">
+                    <i class="fas fa-filter mr-1.5"></i> Filter
                 </button>
                 @if(request()->anyFilled(['search', 'date_from', 'date_to', 'filter_type', 'action']))
-                    <a href="{{ route('admin.audit.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300">
+                    <a href="{{ route('admin.audit.index') }}" class="min-h-[44px] bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-300 flex items-center justify-center">
                         Reset
                     </a>
                 @endif
@@ -59,7 +59,7 @@
     </div>
 
     {{-- STATS CARDS --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center justify-between">
                 <div>
@@ -111,7 +111,7 @@
 
     {{-- TABLE --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto min-w-0 w-full">
             <table class="w-full">
                 <thead class="bg-gray-50 text-xs uppercase text-gray-600 font-semibold">
                     <tr>

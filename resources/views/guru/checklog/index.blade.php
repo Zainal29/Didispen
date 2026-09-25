@@ -4,9 +4,9 @@
 @section('content')
 @include('components.alert')
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full min-w-0">
     {{-- KOLOM KIRI: FORM / STOPWATCH --}}
-    <div class="lg:col-span-1 space-y-4">
+    <div class="lg:col-span-1 space-y-4 min-w-0">
         @if(!$sedangKeluar)
             {{-- FORM CATAT KELUAR --}}
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -14,8 +14,8 @@
                     <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
                         <i class="fas fa-plus-circle"></i>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-gray-900">Catat Keluar</h3>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-gray-900 truncate">Catat Keluar</h3>
                         <p class="text-[11px] text-gray-500">Isi data sebelum meninggalkan sekolah.</p>
                     </div>
                 </div>
@@ -24,20 +24,20 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1.5">Alasan Keluar <span class="text-red-500">*</span></label>
                         <textarea name="alasan" required rows="3" placeholder="Contoh: Urusan keluarga mendadak"
-                                  class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all"></textarea>
+                                  class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 bg-white text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all"></textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1.5">Tujuan <span class="text-red-500">*</span></label>
                         <input type="text" name="tujuan" required placeholder="Contoh: Bank BRI Cabang Pusat"
-                               class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                               class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1.5">Lokasi <span class="text-gray-400 font-normal">(Opsional)</span></label>
                         <input type="text" name="lokasi" placeholder="Contoh: Jl. Sudirman No. 10"
-                               class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                               class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
                     </div>
                     <button type="submit"
-                            class="w-full inline-flex justify-center items-center px-4 py-3 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+                            class="w-full inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
                         <i class="fas fa-sign-out-alt mr-2"></i>Catat Saya Keluar
                     </button>
                 </form>
@@ -87,7 +87,7 @@
                     <form method="POST" action="{{ route('guru.checklog.checkin', $sedangKeluar) }}">
                         @csrf
                         <button type="submit"
-                                class="w-full inline-flex justify-center items-center px-4 py-3 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+                                class="w-full inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
                             <i class="fas fa-sign-in-alt mr-2"></i>Catat Saya Kembali
                         </button>
                     </form>
@@ -114,7 +114,7 @@
     </div>
 
     {{-- KOLOM KANAN: RIWAYAT --}}
-    <div class="lg:col-span-2">
+    <div class="lg:col-span-2 min-w-0">
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center gap-2">
                 <h3 class="text-sm font-bold text-gray-900">
@@ -188,7 +188,7 @@
             </div>
 
             {{-- DESKTOP: Tabel --}}
-            <div class="hidden md:block overflow-x-auto">
+            <div class="hidden md:block overflow-x-auto min-w-0 w-full">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
                         <tr>

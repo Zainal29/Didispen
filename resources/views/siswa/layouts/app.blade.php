@@ -237,7 +237,7 @@
                 {{-- 3. FAB: Buat Pengajuan (tombol utama) --}}
                 <div class="relative flex flex-col items-center justify-end pb-1">
                     <a href="{{ route('siswa.pengajuan.create') }}"
-                       class="absolute -top-5 w-12 h-12 rounded-full bg-blue-600 text-white text-lg flex items-center justify-center shadow-md border-4 border-gray-50 active:scale-95 transition-transform">
+                       class="absolute -top-6 w-12 h-12 rounded-full bg-blue-600 text-white text-lg flex items-center justify-center shadow-md border-4 border-white active:scale-95 transition-transform">
                         <i class="fas fa-plus"></i>
                     </a>
                     <span class="text-[9px] font-semibold leading-tight text-gray-700">Buat</span>
@@ -267,7 +267,7 @@
     {{-- ================================================== --}}
     {{-- BOTTOM SHEET AKUN (muncul saat tombol Akun ditekan) --}}
     {{-- ================================================== --}}
-    <div id="accountSheet" class="lg:hidden fixed inset-0 z-50 flex items-end translate-y-full transition-transform duration-300">
+    <div id="accountSheet" class="lg:hidden fixed inset-0 z-[60] flex items-end translate-y-full transition-transform duration-300">
         <div class="absolute inset-0 bg-black/50" onclick="this.parentElement.classList.add('translate-y-full')"></div>
         <div class="relative bg-white rounded-t-2xl w-full max-h-[80vh] overflow-y-auto">
             <div class="p-6">
@@ -282,20 +282,20 @@
                 </div>
 
                 <div class="space-y-2">
-                    <a href="{{ route('panduan') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('panduan') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-book w-5 mr-3 text-gray-400"></i> Panduan Penggunaan
                     </a>
-                    <a href="{{ route('profil.show') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('profil.show') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-user w-5 mr-3 text-gray-400"></i> Profil Saya
                     </a>
                     <form method="POST" action="{{ route('logout') }}" class="mt-4 pt-4 border-t border-gray-200">
                         @csrf
-                        <button type="submit" class="flex items-center w-full px-4 py-3 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50">
+                        <button type="submit" class="flex items-center min-h-[44px] w-full px-4 py-3 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50">
                             <i class="fas fa-sign-out-alt w-5 mr-3"></i> Keluar dari Akun
                         </button>
                     </form>
-                    <button onclick="document.getElementById('accountSheet').classList.add('translate-y-full')"
-                            class="w-full mt-2 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200">
+                    <button type="button" onclick="document.getElementById('accountSheet').classList.add('translate-y-full')"
+                            class="w-full mt-2 min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200">
                         Tutup
                     </button>
                 </div>

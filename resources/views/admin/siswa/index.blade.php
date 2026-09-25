@@ -18,7 +18,7 @@
                 <form action="{{ route('admin.sipintu.sync-siswa') }}" method="POST" class="flex items-center gap-2 w-full sm:w-auto"
                       onsubmit="this.querySelectorAll('button').forEach(b => { b.disabled=true; b.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Memproses...'; });">
                     @csrf
-                    <button type="submit" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
+                    <button type="submit" class="flex-1 sm:flex-none min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
                         <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Sinkronisasi</span><span class="sm:hidden">Sync</span>
                     </button>
                 </form>
@@ -40,13 +40,13 @@
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-search text-sm"></i></span>
                         <input type="text" name="search" id="searchInput" value="{{ request('search') }}" placeholder="Nama, NIS, atau email..."
-                               class="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow">
+                               class="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow">
                     </div>
                 </div>
 
                 <div class="md:col-span-3">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Filter Kelas</label>
-                    <select name="kelas_id" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
+                    <select name="kelas_id" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
                         <option value="">-- Semua Kelas --</option>
                         {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Menggunakan $kelasList sesuai Controller --}}
                         @foreach($kelasList as $k)
@@ -57,7 +57,7 @@
 
                 <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Urutkan</label>
-                    <select name="sort" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
+                    <select name="sort" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
                         @foreach($sortable as $key => $label)
                             <option value="{{ $key }}" {{ $sort == $key ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
@@ -66,17 +66,17 @@
 
                 <div class="md:col-span-1.5">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Arah</label>
-                    <select name="dir" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
+                    <select name="dir" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
                         <option value="asc" {{ $dir == 'asc' ? 'selected' : '' }}>Naik</option>
                         <option value="desc" {{ $dir == 'desc' ? 'selected' : '' }}>Turun</option>
                     </select>
                 </div>
 
                 <div class="md:col-span-1.5 flex gap-2">
-                    <button type="submit" class="flex-1 px-3 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors flex items-center justify-center gap-1.5">
+                    <button type="submit" class="flex-1 min-h-[44px] px-3 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors flex items-center justify-center gap-1.5">
                         <i class="fas fa-filter"></i> Cari
                     </button>
-                    <a href="{{ route('admin.siswa.index') }}" class="px-3 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors flex items-center justify-center gap-1.5" title="Reset Filter">
+                    <a href="{{ route('admin.siswa.index') }}" class="min-h-[44px] min-w-[44px] px-3 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors flex items-center justify-center gap-1.5" title="Reset Filter">
                         <i class="fas fa-undo"></i>
                     </a>
                 </div>
@@ -84,7 +84,7 @@
         </div>
 
         {{-- TABLE AREA --}}
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto min-w-0 w-full">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold tracking-wider">
                     <tr>
@@ -137,10 +137,10 @@
 
                         <td class="p-4 text-center align-middle whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                                <button onclick="editItem({{ $s->id }})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="lihat Data">
+                                <button onclick="editItem({{ $s->id }})" class="w-9 h-9 inline-flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat Data">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button onclick="deleteItem({{ $s->id }}, '{{ addslashes($s->nama_lengkap) }}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Data">
+                                <button onclick="deleteItem({{ $s->id }}, '{{ addslashes($s->nama_lengkap) }}')" class="w-9 h-9 inline-flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Data">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -175,22 +175,22 @@
         <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeModal()"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full">
-            <form id="siswaForm" method="POST" action="{{ route('admin.siswa.store') }}">
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full max-h-[90dvh] flex flex-col">
+            <form id="siswaForm" method="POST" action="{{ route('admin.siswa.store') }}" class="flex flex-col min-h-0 flex-1">
                 @csrf
                 <input type="hidden" id="siswaId" name="siswa_id">
                 <input type="hidden" id="formMethod" name="_method" value="POST">
 
-                <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 flex justify-between items-center">
+                <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 flex justify-between items-center flex-shrink-0">
                     <h3 id="modalTitle" class="text-lg font-bold text-white flex items-center gap-2">
                         <i class="fas fa-user-plus"></i> Tambah Siswa Baru
                     </h3>
-                    <button type="button" onclick="closeModal()" class="text-indigo-100 hover:text-white transition-colors">
+                    <button type="button" onclick="closeModal()" class="w-10 h-10 flex items-center justify-center text-indigo-100 hover:text-white transition-colors">
                         <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
 
-                <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                <div class="p-6 space-y-5 overflow-y-auto flex-1">
                     {{-- Info Box SiPintu --}}
                     <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg text-xs text-blue-800 leading-relaxed flex gap-3">
                         <i class="fas fa-info-circle mt-0.5 text-blue-500 text-sm"></i>
@@ -204,7 +204,7 @@
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
                             <input type="text" id="nama_lengkap" name="nama_lengkap" required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                    placeholder="Contoh: Ahmad Fauzi">
                             <span class="text-red-600 text-xs mt-1 block" id="error_nama_lengkap"></span>
                         </div>
@@ -212,7 +212,7 @@
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">NIS / NISN <span class="text-red-500">*</span></label>
                             <input type="text" id="nis_nip" name="nis_nip" required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono"
                                    placeholder="1234567890">
                             <span class="text-red-600 text-xs mt-1 block" id="error_nis_nip"></span>
                         </div>
@@ -220,14 +220,14 @@
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Sekolah <span class="text-red-500">*</span></label>
                             <input type="email" id="email" name="email" required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                    placeholder="nis@smkn1bangsri.sch.id">
                             <span class="text-red-600 text-xs mt-1 block" id="error_email"></span>
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jurusan</label>
-                            <select id="jurusan_id" name="jurusan_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer bg-white">
+                            <select id="jurusan_id" name="jurusan_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer bg-white">
                                 <option value="">-- Pilih Jurusan --</option>
                                 {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Menggunakan $jurusanList sesuai Controller --}}
                                 @foreach($jurusanList as $j)
@@ -239,7 +239,7 @@
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kelas</label>
-                            <select id="kelas_id" name="kelas_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer bg-white">
+                            <select id="kelas_id" name="kelas_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer bg-white">
                                 <option value="">-- Pilih Kelas --</option>
                                 {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Menggunakan $kelasList (bukan $kelass) sesuai Controller --}}
                                 @foreach($kelasList as $k)
@@ -252,22 +252,22 @@
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Lahir</label>
                             <input type="date" id="tanggal_lahir" name="tanggal_lahir"
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
                             <span class="text-red-600 text-xs mt-1 block" id="error_tanggal_lahir"></span>
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">No. Telepon / WA</label>
                             <input type="text" id="no_telepon_display" readonly
-                                   class="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-sm text-gray-700 font-mono outline-none cursor-not-allowed"
+                                   class="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-base sm:text-sm text-gray-700 font-mono outline-none cursor-not-allowed"
                                    placeholder="Belum diisi siswa">
                             <p class="text-gray-400 text-[11px] mt-1">Diisi siswa melalui halaman Profil (read-only).</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-100">
-                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
+                <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-100 flex-shrink-0">
+                    <button type="button" onclick="closeModal()" class="min-h-[44px] px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
                         Batal
                     </button>
                     <!--<button type="submit" form="siswaForm" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm transition-all flex items-center gap-2">

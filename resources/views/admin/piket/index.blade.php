@@ -3,45 +3,45 @@
 @section('page-title', 'Riwayat Aktivitas Guru Piket')
 
 @section('content')
-<div class="bg-white rounded-lg shadow mb-6">
-    <div class="p-5 border-b">
-        <h3 class="text-lg font-bold">Statistik Guru Piket</h3>
-        <p class="text-sm text-gray-500 mt-1">Daftar guru dan jumlah dispensasi yang telah diproses.</p>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <div class="p-4 sm:p-5 border-b border-gray-100">
+        <h3 class="text-base sm:text-lg font-bold text-gray-800">Statistik Guru Piket</h3>
+        <p class="text-xs sm:text-sm text-gray-500 mt-1">Daftar guru dan jumlah dispensasi yang telah diproses.</p>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-50 text-xs uppercase text-gray-600">
+    <div class="overflow-x-auto min-w-0 w-full">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold tracking-wider">
                 <tr>
-                    <th class="p-3 text-left">Nama Guru</th>
-                    <th class="p-3 text-left">NIP</th>
-                    <th class="p-3 text-center">Total Dispensasi Diproses</th>
+                    <th class="p-3.5 text-left">Nama Guru</th>
+                    <th class="p-3.5 text-left">NIP</th>
+                    <th class="p-3.5 text-center">Total Dispensasi Diproses</th>
                 </tr>
             </thead>
-            <tbody class="divide-y">
+            <tbody class="divide-y divide-gray-100 text-sm">
                 @forelse($gurus as $g)
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3 font-semibold">{{ $g->nama_lengkap }}</td>
-                    <td class="p-3 text-sm font-mono">{{ $g->nip }}</td>
-                    <td class="p-3 text-center">
+                <tr class="hover:bg-gray-50/60 transition-colors">
+                    <td class="p-3.5 font-semibold text-gray-900">{{ $g->nama_lengkap }}</td>
+                    <td class="p-3.5 text-sm font-mono text-gray-600">{{ $g->nip }}</td>
+                    <td class="p-3.5 text-center">
                         <span class="px-3 py-1 bg-blue-100 text-blue-800 font-bold text-xs rounded-full">
                             {{ $g->dispensasi_count }} Surat
                         </span>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="3" class="p-5 text-center text-gray-500">Belum ada data guru.</td></tr>
+                <tr><td colspan="3" class="p-8 text-center text-gray-500">Belum ada data guru.</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 </div>
 
-<div class="bg-white rounded-lg shadow">
-    <div class="p-5 border-b">
-        <h3 class="text-lg font-bold">100 Riwayat Persetujuan Terakhir</h3>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-4 sm:p-5 border-b border-gray-100">
+        <h3 class="text-base sm:text-lg font-bold text-gray-800">100 Riwayat Persetujuan Terakhir</h3>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+    <div class="overflow-x-auto min-w-0 w-full">
+        <table class="w-full text-sm text-left border-collapse">
             <thead class="bg-gray-50 text-xs uppercase text-gray-600">
                 <tr>
                     <th class="p-3 text-left">Tanggal</th>

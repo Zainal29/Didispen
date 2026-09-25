@@ -11,7 +11,7 @@
         </div>
         <h2 class="text-lg font-bold text-red-800 mb-2">Verifikasi Gagal</h2>
         <p class="text-red-600 text-sm mb-6">{{ $message }}</p>
-        <a href="{{ route('satpam.scan') }}" class="inline-block px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors">
+        <a href="{{ route('satpam.scan') }}" class="inline-flex items-center justify-center min-h-[44px] px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors">
             <i class="fas fa-redo mr-2"></i>Scan Ulang
         </a>
     </div>

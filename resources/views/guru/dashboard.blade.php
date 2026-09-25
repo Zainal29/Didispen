@@ -27,14 +27,14 @@
 
 {{-- HERO SECTION - Clean, solid color --}}
 <div class="bg-blue-600 rounded-xl p-4 sm:p-6 mb-4 text-white">
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between gap-3">
         <div class="min-w-0">
             <p class="text-blue-100 text-[10px] sm:text-xs font-semibold uppercase tracking-wider">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Halo, {{ auth()->user()->name }}!</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5 truncate">Halo, {{ auth()->user()->name }}!</h2>
             <p class="text-blue-100 text-xs sm:text-sm mt-1">Pantau dan kelola dispensasi siswa hari ini.</p>
         </div>
-        <a href="{{ route('guru.pengajuan.create') }}" class="hidden sm:inline-flex items-center px-4 py-2 rounded-lg bg-white text-blue-700 text-xs font-semibold hover:bg-blue-50 transition-colors flex-shrink-0">
-            <i class="fas fa-plus mr-1.5"></i>Buat Dispensasi
+        <a href="{{ route('guru.pengajuan.create') }}" class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-white text-blue-700 text-xs font-semibold hover:bg-blue-50 transition-colors flex-shrink-0 shadow-sm">
+            <i class="fas fa-plus mr-1.5"></i><span>Buat Dispensasi</span>
         </a>
     </div>
 </div>
@@ -43,13 +43,13 @@
 <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4">
     <form method="GET" action="{{ route('guru.dashboard') }}" class="flex gap-2">
         <input type="hidden" name="filter" value="{{ $filter ?? 'semua' }}">
-        <div class="flex-1 relative">
+        <div class="flex-1 relative min-w-0">
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                 <i class="fas fa-search text-sm"></i>
             </span>
             <input type="text" name="search" value="{{ $search ?? '' }}"
                    placeholder="Cari nama siswa, NIS, atau nomor surat..."
-                   class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all"
+                   class="w-full pl-10 pr-10 py-2.5 h-11 border border-gray-300 rounded-lg text-base sm:text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all"
                    autofocus>
             @if($search)
                 <a href="{{ route('guru.dashboard', ['filter' => $filter]) }}"
@@ -58,12 +58,12 @@
                 </a>
             @endif
         </div>
-        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors">
+        <button type="submit" class="px-5 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center flex-shrink-0">
             <i class="fas fa-search mr-1.5 hidden sm:inline"></i>Cari
         </button>
     </form>
     @if($search)
-        <div class="mt-2 text-xs text-gray-500 flex items-center">
+        <div class="mt-2 text-xs text-gray-500 flex items-center flex-wrap">
             <i class="fas fa-info-circle mr-1"></i>
             Menampilkan hasil pencarian untuk: <strong class="text-gray-800 mx-1">"{{ $search }}"</strong>
             <span class="mx-1">•</span>
@@ -90,7 +90,7 @@ $cards = [
         <button type="button"
                 onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
                 data-filter="{{ $key }}"
-                class="stat-card-btn text-left rounded-xl border p-3 sm:p-4 transition-all w-full
+                class="stat-card-btn text-left rounded-xl border p-3 sm:p-4 min-h-[44px] transition-all w-full
                 {{ $isActive
                     ? 'active bg-white border-' . $color . '-500 ring-2 ring-' . $color . '-500/20 shadow-sm'
                     : 'bg-white border-gray-200 hover:border-gray-300' }}">
@@ -106,29 +106,12 @@ $cards = [
     @endforeach
 </div>
 
-<!--{{-- SECONDARY FILTER BUTTONS --}}
-<div class="grid grid-cols-2 gap-2 mb-4">
-    <button type="button"
-            onclick="switchFilter('semua', 'blue', event)"
-            data-filter="semua"
-            class="filter-btn px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center
-            {{ $filter === 'semua' ? 'active bg-blue-600 text-white shadow-sm border-transparent' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200' }}">
-        <i class="fas fa-layer-group mr-1.5"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
-    </button>
-    <button type="button"
-            onclick="switchFilter('terlambat', 'red', event)"
-            data-filter="terlambat"
-            class="filter-btn px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center
-            {{ $filter === 'terlambat' ? 'active bg-red-600 text-white shadow-sm border-transparent' : 'bg-white text-red-600 hover:bg-red-50 border-gray-200' }}">
-        <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat ({{ count($terlambat ?? []) }})
-    </button>
-</div>-->
 {{-- SECONDARY FILTER BUTTONS --}}
 <div class="grid grid-cols-2 gap-2 mb-4">
     <button type="button"
             onclick="switchFilter('semua', 'blue', event)"
             data-filter="semua"
-            class="filter-btn px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center
             {{ $filter === 'semua'
                 ? 'active bg-blue-600 text-white shadow-sm border-transparent hover:bg-blue-700'
                 : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
@@ -137,10 +120,10 @@ $cards = [
     <button type="button"
             onclick="switchFilter('terlambat', 'red', event)"
             data-filter="terlambat"
-            class="filter-btn px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center
             {{ $filter === 'terlambat'
                 ? 'active bg-red-600 text-white shadow-sm border-transparent hover:bg-red-700'
-                : 'bg-white text-red-600 hover:bg-red-50 hover:text-white-700 border-gray-200' }}">
+                : 'bg-white text-red-600 hover:bg-red-50 hover:text-red-700 border-gray-200' }}">
         <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat ({{ count($terlambat ?? []) }})
     </button>
 </div>
@@ -223,14 +206,14 @@ $cards = [
                     <div class="flex flex-wrap items-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 sm:border-gray-100">
                         @if($isLate && $waLink)
                             <button onclick="handleGuruWaContacted({{ $item->id }}, '{{ $waLink }}', this)"
-                                    class="inline-flex items-center justify-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors {{ $item->is_warned ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                    class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors {{ $item->is_warned ? 'opacity-50 cursor-not-allowed' : '' }}"
                                     {{ $item->is_warned ? 'disabled' : '' }}>
                                 <i class="fab fa-whatsapp mr-1.5"></i>
                                 <span class="wa-text">{{ $item->is_warned ? 'Sudah Dihubungi' : 'Hubungi' }}</span>
                             </button>
                         @endif
                         <a href="{{ route('guru.pengajuan.show', $item) }}"
-                           class="inline-flex items-center justify-center px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition-colors border border-blue-200"
+                           class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition-colors border border-blue-200"
                            title="Lihat Detail">
                             <i class="fas fa-eye mr-1.5"></i>Detail
                         </a>
@@ -240,14 +223,14 @@ $cards = [
                                     @csrf
                                     <button type="button"
                                             onclick="showApproveModal({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}', '{{ $item->nomor_surat }}')"
-                                            class="inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                                            class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
                                             title="Setujui">
                                         <i class="fas fa-check mr-1.5"></i>Setuju
                                     </button>
                                 </form>
                             <button type="button"
                                     onclick="rejectDispensasi({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}')"
-                                    class="inline-flex items-center justify-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                                    class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
                                     title="Tolak">
                                 <i class="fas fa-times mr-1.5"></i>Tolak
                             </button>
@@ -255,7 +238,7 @@ $cards = [
                             @if(in_array($item->status, ['disetujui']))
                                 <a href="{{ route('guru.cetak-pdf', [$item, 'format' => 'thermal']) }}"
                                    target="_blank"
-                                   class="inline-flex items-center justify-center px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-lg transition-colors border border-emerald-300"
+                                   class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-lg transition-colors border border-emerald-300"
                                    title="Cetak Struk">
                                     <i class="fas fa-print mr-1.5"></i>Struk
                                 </a>
@@ -287,11 +270,6 @@ $cards = [
         @endforelse
     </div>
 </div>
-{{-- FLOATING ACTION BUTTON (MOBILE) --}}
-<a href="{{ route('guru.pengajuan.create') }}"
-   class="sm:hidden fixed bottom-20 right-4 bg-blue-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center z-40 active:scale-95 transition-transform">
-    <i class="fas fa-plus text-lg"></i>
-</a>
 
 {{-- Loading Overlay --}}
 <div id="loading-overlay" class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">

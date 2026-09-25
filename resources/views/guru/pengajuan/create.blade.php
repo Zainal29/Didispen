@@ -54,26 +54,15 @@
                     </p>
                 </div>
 
-                <!--<form method="POST"
-                action="{{ route('guru.pengajuan.store') }}" enctype="multipart/form-data" id="formDispensasi" class="space-y-5">
-                    @csrf-->
-                    <!--<form x-data="{ loading: false }"
-                          @submit="loading = true"
-                          method="POST"
-                          action="{{ route('guru.pengajuan.store') }}"
-                          enctype="multipart/form-data"
-                          id="formDispensasi"
-                          class="space-y-5">
-                        @csrf-->
-                        <form
-                            x-data="{ loading: false }"
-                            @submit="loading = true"
-                            method="POST"
-                            action="{{ route('guru.pengajuan.store') }}"
-                            enctype="multipart/form-data"
-                            id="formDispensasi"
-                            class="space-y-5">
-                            @csrf
+                <form
+                    x-data="{ loading: false }"
+                    @submit="loading = true"
+                    method="POST"
+                    action="{{ route('guru.pengajuan.store') }}"
+                    enctype="multipart/form-data"
+                    id="formDispensasi"
+                    class="space-y-5">
+                    @csrf
 
                     {{-- Info Guru Piket --}}
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-3.5 flex items-center gap-3">
@@ -226,61 +215,6 @@
                         </div>
                     </div>
 
-                    <!--{{-- Aksi --}}
-                    <div class="pt-4 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
-                        <button type="submit" id="submitBtn" class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
-                            <i class="fas fa-paper-plane mr-2"></i>Buat Dispensasi
-
-                            <button type="submit"
-                                        :disabled="loading"
-                                        class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2 shadow-sm">
-                                    <i x-show="loading" class="fas fa-spinner fa-spin mr-1.5"></i>
-                                    <span x-text="loading ? 'Sedang Memproses...' : 'Buat Dispensasi'"></span>
-                                </button>
-                        </button>
-
-
-
-                        <a href="{{ route('guru.pengajuan.index') }}" class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
-                            Batal
-                        </a>
-                    </div>-->
-                    <!--{{-- Aksi --}}
-                    <div class="pt-4 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
-
-                        <button
-                            type="submit"
-                            id="submitBtn"
-                            :disabled="loading"
-                            class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2 shadow-sm">
-
-                            {{-- Spinner saat proses --}}
-                            <i
-                                x-show="loading"
-                                class="fas fa-spinner fa-spin mr-1.5">
-                            </i>
-
-                            {{-- Icon pesawat saat normal --}}
-                            <i
-                                x-show="!loading"
-                                class="fas fa-paper-plane mr-1.5">
-                            </i>
-
-                            {{-- Teks tombol --}}
-                            <span x-text="loading ? 'Sedang Memproses...' : 'Buat Dispensasi'">
-                                Buat Dispensasi
-                            </span>
-                        </button>
-
-                        <a
-                            href="{{ route('guru.pengajuan.index') }}"
-                            :class="{ 'pointer-events-none opacity-50': loading }"
-                            class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
-                            Batal
-                        </a>
-
-                    </div>-->
-
                     {{-- Aksi --}}
                     <div class="pt-4 flex flex-col sm:flex-row gap-3 border-t border-gray-100">
                         <button
@@ -289,7 +223,7 @@
                             x-data="{ loading: false }"
                             @click="loading = true"
                             :disabled="loading"
-                            class="flex-1 inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2">
+                            class="flex-1 inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2">
 
                             {{-- Spinner (muncul saat loading) --}}
                             <i x-show="loading" class="fas fa-spinner fa-spin text-base" aria-hidden="true"></i>
@@ -306,7 +240,7 @@
                         <a
                             href="{{ route('guru.pengajuan.index') }}"
                             id="btnBatal"
-                            class="inline-flex justify-center items-center px-5 py-3 rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+                            class="inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
                             Batal
                         </a>
                     </div>
@@ -316,18 +250,18 @@
     </div>
 
     {{-- MODAL KAMERA LANGSUNG GURU --}}
-    <div id="guruCamModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
-            <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+    <div id="guruCamModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[90dvh]">
+            <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50 flex-shrink-0">
                 <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <i class="fas fa-camera text-blue-600"></i> Ambil Foto Siswa
                 </h3>
-                <button type="button" onclick="closeGuruCamModal()" class="text-gray-400 hover:text-gray-600 p-1">
-                    <i class="fas fa-times"></i>
+                <button type="button" onclick="closeGuruCamModal()" class="w-11 h-11 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0" aria-label="Tutup kamera">
+                    <i class="fas fa-times text-base"></i>
                 </button>
             </div>
-            <div class="p-5 flex flex-col gap-3">
-                <div class="relative w-full rounded-xl overflow-hidden bg-black aspect-[4/3] flex items-center justify-center border border-gray-300">
+            <div class="p-4 sm:p-5 flex flex-col gap-3 overflow-y-auto flex-1 min-h-0">
+                <div class="relative w-full rounded-xl overflow-hidden bg-black aspect-[4/3] max-h-72 flex items-center justify-center border border-gray-300 mx-auto">
                     <video id="guruCamVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
                     <img id="guruCamPreview" class="w-full h-full object-cover hidden">
                     <canvas id="guruCamCanvas" class="hidden"></canvas>
@@ -335,19 +269,19 @@
                     <div id="guruCamBadge" class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow">
                         <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> LIVE
                     </div>
-                    <button type="button" id="guruCamFlip" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center text-xs" title="Putar Kamera">
+                    <button type="button" id="guruCamFlip" class="absolute top-3 right-3 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center text-sm" title="Putar Kamera">
                         <i class="fas fa-camera-rotate"></i>
                     </button>
                 </div>
-                <div id="guruCamControls" class="flex gap-2">
-                    <button type="button" onclick="closeGuruCamModal()" class="w-1/3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold">Batal</button>
-                    <button type="button" id="guruCamSnap" class="w-2/3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow flex items-center justify-center gap-1.5">
+                <div id="guruCamControls" class="flex gap-2 pt-1 flex-shrink-0">
+                    <button type="button" onclick="closeGuruCamModal()" class="w-1/3 py-2.5 min-h-[44px] bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold flex items-center justify-center">Batal</button>
+                    <button type="button" id="guruCamSnap" class="w-2/3 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow flex items-center justify-center gap-1.5">
                         <i class="fas fa-camera"></i> Ambil Foto
                     </button>
                 </div>
-                <div id="guruCamPreviewControls" class="hidden flex gap-2">
-                    <button type="button" id="guruCamRetake" class="w-1/2 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold">Foto Ulang</button>
-                    <button type="button" id="guruCamUse" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow">Gunakan Foto</button>
+                <div id="guruCamPreviewControls" class="hidden flex gap-2 pt-1 flex-shrink-0">
+                    <button type="button" id="guruCamRetake" class="w-1/2 py-2.5 min-h-[44px] bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold flex items-center justify-center">Foto Ulang</button>
+                    <button type="button" id="guruCamUse" class="w-1/2 py-2.5 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow flex items-center justify-center">Gunakan Foto</button>
                 </div>
             </div>
         </div>

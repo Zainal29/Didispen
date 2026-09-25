@@ -265,8 +265,8 @@
         </div>
     </nav>
 
-    {-- BOTTOM SHEET AKUN --}}
-    <div id="accountSheet" class="lg:hidden fixed inset-0 z-50 flex items-end translate-y-full transition-transform duration-300">
+    {{-- BOTTOM SHEET AKUN --}}
+    <div id="accountSheet" class="lg:hidden fixed inset-0 z-[60] flex items-end translate-y-full transition-transform duration-300">
         <div class="absolute inset-0 bg-black/50" onclick="this.parentElement.classList.add('translate-y-full')"></div>
         <div class="relative bg-white rounded-t-2xl w-full max-h-[80vh] overflow-y-auto">
             <div class="p-6">
@@ -282,29 +282,29 @@
                 </div>
 
                 <div class="space-y-2">
-                    <a href="{{ route('guru.pengajuan.index') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('guru.pengajuan.index') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-file-alt w-5 mr-3 text-gray-400"></i> Verifikasi Dispensasi
                     </a>
-                    <a href="{{ route('guru.laporan.index') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('guru.laporan.index') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-chart-bar w-5 mr-3 text-gray-400"></i> Laporan
                     </a>
-                    <!--<a href="{{ route('guru.scan') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <!--<a href="{{ route('guru.scan') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-qrcode w-5 mr-3 text-gray-400"></i> Scan QR
                     </a>-->
-                    <a href="{{ route('panduan') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('panduan') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-book w-5 mr-3 text-gray-400"></i> Panduan
                     </a>
-                    <a href="{{ route('profil.show') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('profil.show') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
                         <i class="fas fa-user w-5 mr-3 text-gray-400"></i> Profil Saya
                     </a>
                     <form method="POST" action="{{ route('logout') }}" class="mt-4 pt-4 border-t border-gray-200">
                         @csrf
-                        <button type="submit" class="flex items-center w-full px-4 py-3 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50">
+                        <button type="submit" class="flex items-center min-h-[44px] w-full px-4 py-3 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50">
                             <i class="fas fa-sign-out-alt w-5 mr-3"></i> Keluar dari Akun
                         </button>
                     </form>
-                    <button onclick="document.getElementById('accountSheet').classList.add('translate-y-full')"
-                            class="w-full mt-2 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200">
+                    <button type="button" onclick="document.getElementById('accountSheet').classList.add('translate-y-full')"
+                            class="w-full mt-2 min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200">
                         Tutup
                     </button>
                 </div>

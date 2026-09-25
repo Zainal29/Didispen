@@ -25,12 +25,6 @@
             word-break: break-word;
             overflow-wrap: break-word;
         }
-
-        /* Ensure bottom nav stays on top */
-        nav.fixed.bottom-0 {
-            position: fixed !important;
-            bottom: 0 !important;
-        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -149,7 +143,15 @@
     {{-- ================================================== --}}
     {{-- BOTTOM NAV — MOBILE                                 --}}
     {{-- ================================================== --}}
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-lg" style="padding-bottom: max(env(safe-area-inset-bottom), 8px);">
+    <nav x-show="!sheet"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="translate-y-full opacity-0"
+         x-transition:enter-end="translate-y-0 opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="translate-y-0 opacity-100"
+         x-transition:leave-end="translate-y-full opacity-0"
+         class="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-lg"
+         style="padding-bottom: max(env(safe-area-inset-bottom), 8px);">
         <div class="grid grid-cols-5 h-16 w-full">
             <a href="{{ route('satpam.dashboard') }}" class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('satpam.dashboard') ? $mobOn : $mobOff }}">
                 <i class="fas fa-house text-lg"></i>
@@ -181,7 +183,7 @@
     {{-- ================================================== --}}
     {{-- BOTTOM SHEET AKUN                                   --}}
     {{-- ================================================== --}}
-    <div x-show="sheet" x-cloak class="fixed inset-0 z-40 lg:hidden">
+    <div x-show="sheet" x-cloak class="fixed inset-0 z-[60] lg:hidden">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="sheet = false"
              x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
              x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
@@ -203,21 +205,21 @@
             </div>
 
             <div class="space-y-2">
-                <a href="{{ route('panduan') }}" @click="sheet = false" class="w-full flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
+                <a href="{{ route('panduan') }}" @click="sheet = false" class="w-full min-h-[44px] flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
                     <i class="fas fa-book-open text-red-600 mr-3 text-base"></i> Panduan Penggunaan
                 </a>
-                <a href="{{ route('profil.show') }}" class="flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profil.show') ? 'bg-red-600 text-white' : 'text-gray-700 hover:bg-red-50 hover:text-red-600' }}">
+                <a href="{{ route('profil.show') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profil.show') ? 'bg-red-600 text-white' : 'text-gray-700 hover:bg-red-50 hover:text-red-600' }}">
                     <i class="fas fa-user-circle w-5 mr-3 text-center"></i> Profil Saya
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="w-full flex items-center justify-center px-4 py-3 rounded-lg text-sm font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors mt-2">
+                    <button type="submit" class="w-full min-h-[44px] flex items-center justify-center px-4 py-3 rounded-lg text-sm font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors mt-2">
                         <i class="fas fa-sign-out-alt mr-3 text-base"></i> Keluar dari Akun
                     </button>
                 </form>
             </div>
 
-            <button @click="sheet = false" class="w-full mt-4 px-4 py-3 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
+            <button type="button" @click="sheet = false" class="w-full min-h-[44px] mt-4 px-4 py-3 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
                 Tutup
             </button>
         </div>

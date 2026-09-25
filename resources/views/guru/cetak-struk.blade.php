@@ -66,15 +66,19 @@
             margin-top: 15px;
         }
         .btn {
-            display: inline-block;
-            padding: 8px 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 10px 16px;
             margin: 4px;
             background-color: #2563eb;
             color: white;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 6px;
             font-family: sans-serif;
-            font-size: 12px;
+            font-size: 13px;
+            box-sizing: border-box;
         }
         .btn-close {
             background-color: #6b7280;

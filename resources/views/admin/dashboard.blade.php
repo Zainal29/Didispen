@@ -10,55 +10,55 @@
 </div>
 
 {{-- Statistik Cards --}}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
     {{-- Menunggu --}}
-    <div class="bg-white rounded-xl shadow-sm border-l-4 border-amber-500 p-5 hover:shadow-md transition-shadow duration-300">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Menunggu</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ $stats['menunggu'] }}</h3>
+    <div class="bg-white rounded-xl shadow-sm border-l-4 border-amber-500 p-4 sm:p-5 hover:shadow-md transition-shadow duration-300">
+        <div class="flex justify-between items-start gap-2">
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm font-medium uppercase tracking-wide truncate">Menunggu</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2">{{ $stats['menunggu'] }}</h3>
             </div>
-            <div class="p-3 bg-amber-100 rounded-lg text-amber-600">
-                <i class="fas fa-clock text-xl"></i>
+            <div class="p-2.5 sm:p-3 bg-amber-100 rounded-lg text-amber-600 flex-shrink-0">
+                <i class="fas fa-clock text-lg sm:text-xl"></i>
             </div>
         </div>
     </div>
 
     {{-- Disetujui --}}
-    <div class="bg-white rounded-xl shadow-sm border-l-4 border-emerald-500 p-5 hover:shadow-md transition-shadow duration-300">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Disetujui</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ $stats['disetujui'] }}</h3>
+    <div class="bg-white rounded-xl shadow-sm border-l-4 border-emerald-500 p-4 sm:p-5 hover:shadow-md transition-shadow duration-300">
+        <div class="flex justify-between items-start gap-2">
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm font-medium uppercase tracking-wide truncate">Disetujui</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2">{{ $stats['disetujui'] }}</h3>
             </div>
-            <div class="p-3 bg-emerald-100 rounded-lg text-emerald-600">
-                <i class="fas fa-check-circle text-xl"></i>
+            <div class="p-2.5 sm:p-3 bg-emerald-100 rounded-lg text-emerald-600 flex-shrink-0">
+                <i class="fas fa-check-circle text-lg sm:text-xl"></i>
             </div>
         </div>
     </div>
 
     {{-- Selesai --}}
-    <div class="bg-white rounded-xl shadow-sm border-l-4 border-blue-500 p-5 hover:shadow-md transition-shadow duration-300">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Selesai</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ $stats['selesai'] }}</h3>
+    <div class="bg-white rounded-xl shadow-sm border-l-4 border-blue-500 p-4 sm:p-5 hover:shadow-md transition-shadow duration-300">
+        <div class="flex justify-between items-start gap-2">
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm font-medium uppercase tracking-wide truncate">Selesai</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2">{{ $stats['selesai'] }}</h3>
             </div>
-            <div class="p-3 bg-blue-100 rounded-lg text-blue-600">
-                <i class="fas fa-flag-checkered text-xl"></i>
+            <div class="p-2.5 sm:p-3 bg-blue-100 rounded-lg text-blue-600 flex-shrink-0">
+                <i class="fas fa-flag-checkered text-lg sm:text-xl"></i>
             </div>
         </div>
     </div>
 
     {{-- Ditolak --}}
-    <div class="bg-white rounded-xl shadow-sm border-l-4 border-rose-500 p-5 hover:shadow-md transition-shadow duration-300">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Ditolak</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ $stats['ditolak'] }}</h3>
+    <div class="bg-white rounded-xl shadow-sm border-l-4 border-rose-500 p-4 sm:p-5 hover:shadow-md transition-shadow duration-300">
+        <div class="flex justify-between items-start gap-2">
+            <div class="min-w-0">
+                <p class="text-gray-500 text-xs sm:text-sm font-medium uppercase tracking-wide truncate">Ditolak</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2">{{ $stats['ditolak'] }}</h3>
             </div>
-            <div class="p-3 bg-rose-100 rounded-lg text-rose-600">
-                <i class="fas fa-times-circle text-xl"></i>
+            <div class="p-2.5 sm:p-3 bg-rose-100 rounded-lg text-rose-600 flex-shrink-0">
+                <i class="fas fa-times-circle text-lg sm:text-xl"></i>
             </div>
         </div>
     </div>
@@ -114,8 +114,8 @@
         </div>
 
         {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Mengganti panah teks (→) dengan icon Font Awesome agar konsisten --}}
-        <a href="{{ route('admin.semua.pengajuan') }}" class="block text-center text-sm text-indigo-600 hover:text-indigo-800 font-medium mt-4 transition-colors">
-            Lihat Semua Pengajuan <i class="fas fa-arrow-right ml-1"></i>
+        <a href="{{ route('admin.semua.pengajuan') }}" class="min-h-[44px] flex items-center justify-center text-sm text-indigo-600 hover:text-indigo-800 font-medium mt-4 transition-colors">
+            Lihat Semua Pengajuan <i class="fas fa-arrow-right ml-1.5"></i>
         </a>
     </div>
 </div>

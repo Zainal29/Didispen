@@ -3,48 +3,48 @@
 @section('page-title', 'Laporan Dispensasi')
 
 @section('content')
-<div class="bg-white rounded-lg shadow mb-6">
-    <div class="p-5 border-b">
-        <h3 class="text-lg font-bold mb-4">Filter Laporan</h3>
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-3">
-            <select name="status" class="border rounded px-3 py-2 text-sm">
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <div class="p-4 sm:p-5 border-b border-gray-100">
+        <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-4">Filter Laporan</h3>
+        <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <select name="status" class="w-full h-11 border border-gray-300 rounded-lg px-3.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="">Semua Status</option>
                 @foreach(['menunggu','disetujui','ditolak','keluar','selesai'] as $s)
                     <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
                 @endforeach
             </select>
-            <select name="jurusan_id" class="border rounded px-3 py-2 text-sm">
+            <select name="jurusan_id" class="w-full h-11 border border-gray-300 rounded-lg px-3.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="">Semua Jurusan</option>
                 @foreach(\App\Models\Jurusan::all() as $j)
                     <option value="{{ $j->id }}" {{ request('jurusan_id') == $j->id ? 'selected' : '' }}>{{ $j->nama_jurusan }}</option>
                 @endforeach
             </select>
-            <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" class="border rounded px-3 py-2 text-sm">
-            <input type="date" name="tanggal_sampai" value="{{ request('tanggal_sampai') }}" class="border rounded px-3 py-2 text-sm">
-            <button type="submit" class="bg-gray-800 text-white rounded px-4 py-2 text-sm hover:bg-gray-900">
-                <i class="fas fa-filter mr-1"></i> Filter
+            <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" class="w-full h-11 border border-gray-300 rounded-lg px-3.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="date" name="tanggal_sampai" value="{{ request('tanggal_sampai') }}" class="w-full h-11 border border-gray-300 rounded-lg px-3.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <button type="submit" class="w-full h-11 min-h-[44px] bg-gray-800 text-white rounded-lg px-4 text-sm font-semibold hover:bg-gray-900 transition-colors flex items-center justify-center shadow-sm">
+                <i class="fas fa-filter mr-1.5"></i> Filter
             </button>
         </form>
     </div>
 
-    <div class="p-5 border-b bg-gray-50 flex flex-wrap gap-2">
+    <div class="p-4 sm:p-5 border-b border-gray-100 bg-gray-50/70 flex flex-wrap items-center gap-2">
         {{-- Tombol Export PDF - HAPUS target="_blank" --}}
         <a href="{{ route('admin.laporan.pdf', request()->all()) }}"
-           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">
-            <i class="fas fa-file-pdf mr-1"></i> Export PDF
+           class="min-h-[44px] bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center transition-colors shadow-sm">
+            <i class="fas fa-file-pdf mr-1.5"></i> Export PDF
         </a>
 
         <a href="{{ route('admin.laporan.excel', request()->all()) }}"
-           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
-            <i class="fas fa-file-csv mr-1"></i> Export CSV (Excel)
+           class="min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center transition-colors shadow-sm">
+            <i class="fas fa-file-csv mr-1.5"></i> Export CSV (Excel)
         </a>
 
-        <span class="ml-auto text-sm text-gray-600 self-center">
+        <span class="w-full sm:w-auto sm:ml-auto text-sm text-gray-600 mt-2 sm:mt-0">
             Total: <strong>{{ $dispensasi->count() }}</strong> data
         </span>
     </div>
 
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto min-w-0 w-full">
         <table class="w-full">
             <thead class="bg-gray-50 text-xs uppercase text-gray-600">
                 <tr>

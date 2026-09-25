@@ -18,7 +18,7 @@
                 <form action="{{ route('admin.sipintu.sync-guru') }}" method="POST" class="flex items-center gap-2 w-full sm:w-auto"
                       onsubmit="this.querySelectorAll('button').forEach(b => { b.disabled=true; b.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Memproses...'; });">
                     @csrf
-                    <button type="submit" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
+                    <button type="submit" class="flex-1 sm:flex-none min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
                         <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Sinkronisasi</span><span class="sm:hidden">Sync</span>
                     </button>
                 </form>
@@ -40,13 +40,13 @@
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-search text-sm"></i></span>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama, NIP, Mapel, atau Alamat..."
-                               class="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow">
+                               class="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow">
                     </div>
                 </div>
 
                 <div class="md:col-span-3">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Urutkan Berdasarkan</label>
-                    <select name="sort" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
+                    <select name="sort" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
                         @foreach($sortable as $key => $label)
                             <option value="{{ $key }}" {{ $sort == $key ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
@@ -55,17 +55,17 @@
 
                 <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Arah</label>
-                    <select name="dir" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
+                    <select name="dir" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
                         <option value="asc" {{ $dir == 'asc' ? 'selected' : '' }}>Naik (A-Z)</option>
                         <option value="desc" {{ $dir == 'desc' ? 'selected' : '' }}>Turun (Z-A)</option>
                     </select>
                 </div>
 
                 <div class="md:col-span-3 flex gap-2">
-                    <button type="submit" class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <button type="submit" class="flex-1 min-h-[44px] px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex items-center justify-center gap-2">
                         <i class="fas fa-filter"></i> Filter
                     </button>
-                    <a href="{{ route('admin.guru.index') }}" class="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <a href="{{ route('admin.guru.index') }}" class="min-h-[44px] min-w-[44px] px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors flex items-center justify-center gap-2">
                         <i class="fas fa-undo"></i> Reset
                     </a>
                 </div>
@@ -73,7 +73,7 @@
         </div>
 
         {{-- TABLE AREA --}}
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto min-w-0 w-full">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold tracking-wider">
                     <tr>
@@ -162,10 +162,10 @@
                         </td>
                         <td class="p-4 text-center align-middle whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                                <button onclick='openModal(@json($g))' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="lihat Data">
+                                <button onclick='openModal(@json($g))' class="w-9 h-9 inline-flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat Data">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button onclick="deleteItem({{ $g->id }}, '{{ addslashes($g->nama_lengkap) }}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Data">
+                                <button onclick="deleteItem({{ $g->id }}, '{{ addslashes($g->nama_lengkap) }}')" class="w-9 h-9 inline-flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Data">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -200,21 +200,21 @@
         <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeModal()"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
-            <form id="form" method="POST">
+        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full max-h-[90dvh] flex flex-col">
+            <form id="form" method="POST" class="flex flex-col min-h-0 flex-1">
                 @csrf
                 <input type="hidden" id="method" name="_method" value="POST">
 
-                <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex justify-between items-center">
+                <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex justify-between items-center flex-shrink-0">
                     <h3 id="modalTitle" class="text-lg font-bold text-white flex items-center gap-2">
                         <i class="fas fa-user-plus"></i> Tambah Guru Baru
                     </h3>
-                    <button type="button" onclick="closeModal()" class="text-blue-100 hover:text-white transition-colors">
+                    <button type="button" onclick="closeModal()" class="w-10 h-10 flex items-center justify-center text-blue-100 hover:text-white transition-colors">
                         <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
 
-                <div class="p-6 space-y-5">
+                <div class="p-6 space-y-5 overflow-y-auto flex-1">
                     <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg text-xs text-blue-800 leading-relaxed flex gap-3">
                         <i class="fas fa-info-circle mt-0.5 text-blue-500 text-sm"></i>
                         <div>
@@ -227,14 +227,14 @@
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
                             <input type="text" name="nama_lengkap" id="nama_lengkap" required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                    placeholder="Contoh: Budi Santoso, S.Pd.">
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">NIP / ID Guru <span class="text-red-500">*</span></label>
                             <input type="text" name="nip" id="nip" required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono"
                                    placeholder="19800101...">
                         </div>
 
@@ -243,7 +243,7 @@
                                 <i class="fab fa-google text-red-500 mr-1"></i> Email Pribadi / Google
                             </label>
                             <input type="email" name="email_guru" id="email_guru"
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                    placeholder="guru@gmail.com">
                         </div>
 
@@ -252,24 +252,24 @@
                                 <i class="fas fa-graduation-cap text-indigo-500 mr-1"></i> Email Sekolah <span class="text-red-500">*</span>
                             </label>
                             <input type="email" name="email" id="email" required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-mono"
                                    placeholder="nip@smkn1bangsri.sch.id">
                         </div>
 
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Mata Pelajaran</label>
                             <input type="text" name="mata_pelajaran" id="mata_pelajaran"
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                    placeholder="Contoh: Matematika, Bahasa Inggris">
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-100">
-                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
+                <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-100 flex-shrink-0">
+                    <button type="button" onclick="closeModal()" class="min-h-[44px] px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-all flex items-center gap-2">
+                    <button type="submit" class="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-all flex items-center gap-2">
                         <i class="fas fa-save"></i> Simpan Data
                     </button>
                 </div>
