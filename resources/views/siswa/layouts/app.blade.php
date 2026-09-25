@@ -18,6 +18,14 @@
         [x-cloak] {
             display: none !important;
         }
+        html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -36,12 +44,12 @@
         $mobOff = 'text-gray-400';
     @endphp
 
-    <div class="flex h-screen overflow-hidden">
+    <div class="min-h-screen">
 
         {{-- ================================================== --}}
         {{-- SIDEBAR — HANYA MUNCUL DI DESKTOP (lg ke atas)      --}}
         {{-- ================================================== --}}
-        <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200">
+        <aside class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 flex-col z-30">
 
             {{-- Brand --}}
             <div class="p-5 border-b border-gray-200">
@@ -109,10 +117,10 @@
         {{-- ================================================== --}}
         {{-- MAIN AREA                                           --}}
         {{-- ================================================== --}}
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex flex-col min-h-screen lg:pl-64">
 
             {{-- TOPBAR --}}
-            <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3">
+            <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 sm:px-6 py-3">
 
                 {{-- Topbar MOBILE: ringkas, muat di layar kecil --}}
                 <div class="lg:hidden flex items-center justify-between">
@@ -159,61 +167,12 @@
             </header>
 
             {{-- KONTEN (pb-28 agar tidak tertutup bottom nav di HP) --}}
-            <main class="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 lg:pb-6">
+            <main class="flex-1 p-4 sm:p-6 pb-28 lg:pb-6">
+                @include('components.alert')
                 @yield('content')
             </main>
         </div>
     </div>
-
-    <!--{{-- ================================================== --}}
-    {{-- BOTTOM NAVIGATION BAR — KHUSUS MOBILE               --}}
-    {{-- ================================================== --}}
-    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-50">
-        <div class="flex items-center justify-around">
-
-            {{-- 1. Beranda --}}
-            <a href="{{ route('siswa.dashboard') }}"
-               class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg {{ request()->routeIs('siswa.dashboard') ? $mobOn : $mobOff }}">
-                <i class="fas fa-home text-lg"></i>
-                <span class="text-xs font-medium">Beranda</span>
-            </a>
-
-            {{-- 2. Riwayat --}}
-            <a href="{{ route('siswa.pengajuan.index') }}"
-               class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg {{ request()->routeIs('siswa.pengajuan.index') ? $mobOn : $mobOff }}">
-                <i class="fas fa-history text-lg"></i>
-                <span class="text-xs font-medium">Riwayat</span>
-            </a>
-
-            {{-- 3. FAB: Buat Pengajuan (tombol utama, menonjol ke atas) --}}
-            <a href="{{ route('siswa.pengajuan.create') }}"
-               class="flex flex-col items-center -mt-6">
-                <div class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 active:scale-95 transition-transform">
-                    <i class="fas fa-plus text-xl"></i>
-                </div>
-                <span class="text-xs font-medium text-gray-700 mt-1">Buat</span>
-            </a>
-
-            {{-- 4. Notifikasi (+badge) --}}
-            <a href="{{ route('siswa.notifikasi.index') }}"
-               class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg relative {{ request()->routeIs('siswa.notifikasi.*') ? $mobOn : $mobOff }}">
-                <i class="fas fa-bell text-lg"></i>
-                @if($notif > 0)
-                    <span class="absolute top-1 right-2 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">{{ $notif }}</span>
-                @endif
-                <span class="text-xs font-medium">Notifikasi</span>
-            </a>
-
-            {{-- 5. Akun (membuka bottom sheet) --}}
-            <button onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
-                    class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg {{ request()->routeIs('profil.*') ? $mobOn : $mobOff }}">
-                <div class="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span class="text-xs font-bold text-gray-700">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
-                </div>
-                <span class="text-xs font-medium">Akun</span>
-            </button>
-        </div>
-    </nav>-->
 
     {{-- ================================================== --}}
         {{-- BOTTOM NAVIGATION BAR — KHUSUS MOBILE               --}}

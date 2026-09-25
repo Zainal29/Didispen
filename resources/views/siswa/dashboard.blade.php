@@ -20,7 +20,7 @@
 
 {{-- ✅ TAMBAHKAN INI: Banner Terlambat (Hanya muncul jika terlambat) --}}
 @if($isTerlambat) {{-- ✅ BENAR: Sesuai dengan variabel di DashboardController --}}
-<div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 sm:p-5 mb-4 animate-pulse">
+<div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 sm:p-5 mb-4">
     <div class="flex items-start gap-3">
         <div class="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
             <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
@@ -124,7 +124,7 @@
                 <div class="flex items-center justify-between bg-white rounded-lg p-3 border border-emerald-200">
                     <div class="flex items-center gap-3">
                         <img src="{{ asset('storage/' . $dispensasiAktif->foto_bukti) }}"
-                             class="w-12 h-12 object-cover rounded-lg border border-gray-200 cursor-pointer hover:scale-105 transition-transform"
+                             class="w-12 h-12 object-cover rounded-lg border border-gray-200 cursor-pointer"
                              onclick="showPreview('{{ asset('storage/' . $dispensasiAktif->foto_bukti) }}', '{{ $dispensasiAktif->nomor_surat }}')">
                         <div>
                             <p class="text-xs font-bold text-emerald-700 flex items-center gap-1">
@@ -155,7 +155,7 @@
                             </p>
                         </div>
                         <button onclick="openUploadModal({{ $dispensasiAktif->id }})"
-                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 {{ $isTerlambat ? 'animate-pulse' : '' }}">
+                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5">
                             <i class="fas fa-camera"></i> Ambil Foto
                         </button>
                     </div>
