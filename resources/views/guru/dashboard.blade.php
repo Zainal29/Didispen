@@ -115,7 +115,7 @@ $cards = [
             {{ $filter === 'semua'
                 ? 'active bg-blue-600 text-white shadow-sm border-transparent hover:bg-blue-700'
                 : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
-        <i class="fas fa-layer-group mr-1.5"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
+        <i class="fas fa-layer-group mr-1.5 {{ $filter === 'semua' ? 'text-white' : 'text-blue-500' }}"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
     </button>
     <button type="button"
             onclick="switchFilter('terlambat', 'red', event)"
@@ -123,8 +123,8 @@ $cards = [
             class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center
             {{ $filter === 'terlambat'
                 ? 'active bg-red-600 text-white shadow-sm border-transparent hover:bg-red-700'
-                : 'bg-white text-red-600 hover:bg-red-50 hover:text-red-700 border-gray-200' }}">
-        <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat ({{ $stats['terlambat'] ?? count($terlambat ?? []) }})
+                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
+        <i class="fas fa-exclamation-triangle mr-1.5 {{ $filter === 'terlambat' ? 'text-white' : 'text-red-500' }}"></i>Terlambat ({{ $stats['terlambat'] ?? count($terlambat ?? []) }})
     </button>
     <button type="button"
             onclick="switchFilter('dihubungi', 'purple', event)"
@@ -132,8 +132,8 @@ $cards = [
             class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center col-span-2 sm:col-span-1
             {{ $filter === 'dihubungi'
                 ? 'active bg-purple-600 text-white shadow-sm border-transparent hover:bg-purple-700'
-                : 'bg-white text-purple-600 hover:bg-purple-50 hover:text-purple-700 border-gray-200' }}">
-        <i class="fas fa-phone-alt mr-1.5"></i>Dihubungi ({{ count($dihubungi ?? []) }})
+                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
+        <i class="fas fa-phone-alt mr-1.5 {{ $filter === 'dihubungi' ? 'text-white' : 'text-purple-500' }}"></i>Dihubungi ({{ count($dihubungi ?? []) }})
     </button>
 </div>
 
@@ -392,13 +392,27 @@ function switchFilter(filterKey, color, event) {
     if (event) event.preventDefault();
     if (filterKey === currentFilter) return;
 
-    // ✅ RESET SEMUA TOMBOL FILTER - tambahkan warna teks yang jelas
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        // Hapus semua class aktif dan warna
-        btn.classList.remove('active', 'bg-blue-600', 'bg-red-600', 'bg-amber-600', 'bg-emerald-600', 'bg-sky-600', 'bg-gray-600', 'text-white', 'shadow-sm', 'border-transparent');
+    // ✅ RESET SEMUA TOMBOL FILTER - bersihkan semua class background, hover, dan teks
+    const filterColorClasses = [
+        'active', 'text-white', 'shadow-sm', 'border-transparent',
+        'bg-blue-600', 'bg-red-600', 'bg-purple-600', 'bg-amber-600', 'bg-emerald-600', 'bg-sky-600', 'bg-gray-600',
+        'hover:bg-blue-700', 'hover:bg-red-700', 'hover:bg-purple-700', 'hover:bg-amber-700', 'hover:bg-emerald-700', 'hover:bg-sky-700', 'hover:bg-gray-700',
+        'text-red-600', 'text-purple-600', 'hover:bg-red-50', 'hover:bg-purple-50', 'hover:text-red-700', 'hover:text-purple-700'
+    ];
 
-        // ✅ TAMBAHKAN class warna teks yang jelas
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove(...filterColorClasses);
         btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
+
+        // Reset warna ikon saat tidak aktif
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.classList.remove('text-white');
+            const btnFilter = btn.getAttribute('data-filter');
+            if (btnFilter === 'semua') icon.classList.add('text-blue-500');
+            else if (btnFilter === 'terlambat') icon.classList.add('text-red-500');
+            else if (btnFilter === 'dihubungi') icon.classList.add('text-purple-500');
+        }
     });
 
     // Reset stat cards
@@ -411,14 +425,16 @@ function switchFilter(filterKey, color, event) {
         if (iconContainer) iconContainer.className = iconContainer.className.replace(/bg-\w+-500 text-white/g, '');
     });
 
-    // ✅ SET TOMBOL AKTIF - tambahkan hover state yang konsisten
+    // ✅ SET TOMBOL AKTIF - tambahkan background dan teks putih
     const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
     if (activeBtn) {
-        // Hapus class default
         activeBtn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
-
-        // Tambahkan class aktif dengan hover yang jelas
         activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-sm', 'border-transparent', `hover:bg-${color}-700`);
+        const activeIcon = activeBtn.querySelector('i');
+        if (activeIcon) {
+            activeIcon.classList.remove('text-blue-500', 'text-red-500', 'text-purple-500');
+            activeIcon.classList.add('text-white');
+        }
     }
 
     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);

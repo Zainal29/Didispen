@@ -2,8 +2,12 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DIDISPEN Siswa">
     <title>@yield('title', 'Siswa') - DIDISPEN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -20,7 +24,6 @@
         }
         html {
             scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
         }
         body {
             -webkit-font-smoothing: antialiased;
@@ -177,7 +180,8 @@
     {{-- ================================================== --}}
         {{-- BOTTOM NAVIGATION BAR — KHUSUS MOBILE               --}}
         {{-- ================================================== --}}
-        <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style="padding-bottom: env(safe-area-inset-bottom);">
+        <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-50 shadow-lg"
+             style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 50 !important; padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px); transform: translateZ(0); -webkit-transform: translateZ(0);">
             <div class="grid grid-cols-5 h-16 w-full">
                 {{-- 1. Beranda --}}
                 <a href="{{ route('siswa.dashboard') }}"
