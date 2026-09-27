@@ -11,9 +11,8 @@ Artisan::command('inspire', function () {
 // Membersihkan model yang menggunakan trait Prunable (jika ada)
 Schedule::command('model:prune')->hourly();
 
-// Auto-complete dispensasi yang terlambat (15:00 - 17:00, setiap 15 menit)
+// Auto-complete dispensasi setelah jam KBM terakhir (dievaluasi dinamis via TimeHelper)
 Schedule::command('dispensasi:auto-complete')
-    ->between('15:00', '17:00')
     ->everyFifteenMinutes()
     ->withoutOverlapping();
 

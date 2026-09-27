@@ -80,11 +80,26 @@ class DispensasiService
 
     public function reject(Dispensasi $dispensasi, Guru $guru, string $catatan): void
     {
+        $fotoPath = $dispensasi->foto_verifikasi;
+
         $dispensasi->update([
-            'status' => 'ditolak',
-            'guru_id' => $guru->id,
-            'catatan_admin' => $catatan,
+            'status'          => 'ditolak',
+            'guru_id'         => $guru->id,
+            'catatan_admin'   => $catatan,
+            'rejected_at'     => now(),
+            'approved_at'     => null,
+            'foto_verifikasi' => null,
         ]);
+
+        if (! empty($fotoPath)) {
+            try {
+                if (Storage::disk('public')->exists($fotoPath)) {
+                    Storage::disk('public')->delete($fotoPath);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Gagal menghapus file foto_verifikasi {$fotoPath} saat reject di DispensasiService: " . $e->getMessage());
+            }
+        }
 
         $template = WhatsappTemplate::where('slug', 'ditolak')->where('is_active', true)->first();
         if ($template) {

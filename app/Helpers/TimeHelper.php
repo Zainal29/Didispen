@@ -270,4 +270,63 @@ class TimeHelper
 
         return null;
     }
+
+    /**
+     * Mendapatkan waktu selesai jam KBM terakhir pada tanggal/hari tertentu (Single Source of Truth)
+     */
+    public static function getWaktuSelesaiKbmTerakhir(?int $dayOfWeek = null, ?Carbon $date = null): ?Carbon
+    {
+        $targetDate = $date ? $date->copy()->setTimezone('Asia/Jakarta') : now('Asia/Jakarta');
+
+        if ($dayOfWeek === null) {
+            $dayOfWeek = $targetDate->dayOfWeek;
+        }
+
+        $jadwalHari = self::getJadwalHari($dayOfWeek);
+        $maxJam = self::getMaxJamPelajaran($dayOfWeek);
+
+        if ($maxJam > 0 && isset($jadwalHari[$maxJam]['end']) && ! empty($jadwalHari[$maxJam]['end'])) {
+            return $targetDate->copy()->setTimeFromTimeString($jadwalHari[$maxJam]['end']);
+        }
+
+        // Fallback berdasarkan hari jika setting kosong
+        $fallbackEnd = match ($dayOfWeek) {
+            5       => '14:00',
+            3, 4    => '15:10',
+            default => '15:15',
+        };
+
+        return $targetDate->copy()->setTimeFromTimeString($fallbackEnd);
+    }
+
+    /**
+     * Memeriksa apakah waktu sekarang sudah melewati jam KBM terakhir pada tanggal dispensasi
+     *
+     * @param Carbon|null $now Waktu sekarang (default: now('Asia/Jakarta'))
+     * @param Carbon|null $dispensasiDate Tanggal pengajuan dispensasi dibuat (default: now('Asia/Jakarta'))
+     * @return bool
+     */
+    public static function isKbmHariSelesai(?Carbon $now = null, ?Carbon $dispensasiDate = null): bool
+    {
+        $now = $now ? $now->copy()->setTimezone('Asia/Jakarta') : now('Asia/Jakarta');
+        $targetDate = $dispensasiDate ? $dispensasiDate->copy()->setTimezone('Asia/Jakarta') : $now;
+
+        // Jika tanggal dispensasi adalah hari sebelum hari ini (kemarin, dst), KBM-nya sudah pasti selesai
+        if ($targetDate->toDateString() < $now->toDateString()) {
+            return true;
+        }
+
+        // Jika tanggal dispensasi di masa depan (tidak valid untuk auto-complete)
+        if ($targetDate->toDateString() > $now->toDateString()) {
+            return false;
+        }
+
+        // Dispensasi pada hari ini: bandingkan dengan waktu selesai KBM terakhir hari ini
+        $waktuSelesai = self::getWaktuSelesaiKbmTerakhir($targetDate->dayOfWeek, $targetDate);
+        if (! $waktuSelesai) {
+            return false;
+        }
+
+        return $now->greaterThanOrEqualTo($waktuSelesai);
+    }
 }

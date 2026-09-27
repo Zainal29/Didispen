@@ -305,13 +305,29 @@ class PengajuanController extends Controller
                 return false;
             }
 
+            // 1. Ambil path foto_verifikasi sebelum field dikosongkan
+            $fotoPath = $locked->foto_verifikasi;
+
+            // 2. Update status ke ditolak, isi rejected_at, kosongkan foto_verifikasi
             $locked->update([
-                'status'        => 'ditolak',
-                'guru_id'       => $guru->id,
-                'rejected_at'   => now(),
-                'approved_at'   => null,
-                'catatan_admin' => $validated['catatan_admin'],
+                'status'          => 'ditolak',
+                'guru_id'         => $guru->id,
+                'rejected_at'     => now(),
+                'approved_at'     => null,
+                'catatan_admin'   => $validated['catatan_admin'],
+                'foto_verifikasi' => null,
             ]);
+
+            // 3. Hapus file fisik dari storage public secara aman (tidak membuat transaksi gagal)
+            if (! empty($fotoPath)) {
+                try {
+                    if (Storage::disk('public')->exists($fotoPath)) {
+                        Storage::disk('public')->delete($fotoPath);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("Gagal menghapus file foto_verifikasi {$fotoPath} saat reject: " . $e->getMessage());
+                }
+            }
 
             return $locked;
         });
