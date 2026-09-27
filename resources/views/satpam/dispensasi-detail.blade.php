@@ -237,7 +237,7 @@
 
 
         {{-- KONTAK DARURAT & WHATSAPP (100% dari Database) --}}
-        @if($waLink)
+        @if($waLink || $dispensasi->is_warned)
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
                 <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center uppercase tracking-wider">
                     <i class="fas fa-phone-alt text-green-600 mr-2"></i>Kontak Darurat
@@ -254,10 +254,12 @@
                                 <i class="far fa-clock mr-1"></i>
                                 {{ $dispensasi->warned_at ? $dispensasi->warned_at->isoFormat('D MMMM Y, HH:mm') : '-' }} WIB
                             </p>
+                            @if($dispensasi->siswa->no_telepon)
                             <p class="text-purple-500 text-[10px] mt-1">
                                 <i class="fas fa-info-circle mr-1"></i>
                                 No. Telepon: <span class="font-mono font-semibold">{{ $dispensasi->siswa->no_telepon }}</span>
                             </p>
+                            @endif
                         </div>
                     </div>
                 @else

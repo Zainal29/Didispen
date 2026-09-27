@@ -367,6 +367,28 @@
                 @endif
             @endif
 
+            {{-- Status Sudah Dihubungi --}}
+            @if($dispensasi->is_warned)
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded-lg flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-check-circle text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-purple-800 font-bold text-sm mb-1">Sudah Dihubungi</p>
+                    <p class="text-purple-600 text-xs font-medium">
+                        <i class="far fa-clock mr-1"></i>
+                        Dihubungi pada: {{ $dispensasi->warned_at ? \Carbon\Carbon::parse($dispensasi->warned_at)->isoFormat('D MMMM Y, HH:mm') . ' WIB' : '-' }}
+                    </p>
+                    @if($dispensasi->siswa?->no_telepon)
+                    <p class="text-purple-500 text-[10px] mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        No. Telepon: <span class="font-mono font-semibold">{{ $dispensasi->siswa->no_telepon }}</span>
+                    </p>
+                    @endif
+                </div>
+            </div>
+            @endif
+
             {{-- Action Buttons --}}
             <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
                 @if($dispensasi->status === 'menunggu')
@@ -478,6 +500,15 @@
                     <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-sm"></div>
                     <p class="text-xs font-bold text-gray-800">Konfirmasi Kembali (Selesai)</p>
                     <p class="text-[10px] text-gray-500 mt-0.5">{{ \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                </div>
+                @endif
+                @if($dispensasi->is_warned)
+                <div class="relative pl-6">
+                    <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-purple-500 border-2 border-white shadow-sm"></div>
+                    <p class="text-xs font-bold text-purple-800">Sudah Dihubungi</p>
+                    <p class="text-[10px] text-gray-500 mt-0.5">
+                        {{ $dispensasi->warned_at ? \Carbon\Carbon::parse($dispensasi->warned_at)->isoFormat('D MMM Y, HH:mm') . ' WIB' : '-' }}
+                    </p>
                 </div>
                 @endif
             </div>

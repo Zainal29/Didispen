@@ -107,7 +107,7 @@ $cards = [
 </div>
 
 {{-- SECONDARY FILTER BUTTONS --}}
-<div class="grid grid-cols-2 gap-2 mb-4">
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
     <button type="button"
             onclick="switchFilter('semua', 'blue', event)"
             data-filter="semua"
@@ -126,6 +126,15 @@ $cards = [
                 : 'bg-white text-red-600 hover:bg-red-50 hover:text-red-700 border-gray-200' }}">
         <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat ({{ $stats['terlambat'] ?? count($terlambat ?? []) }})
     </button>
+    <button type="button"
+            onclick="switchFilter('dihubungi', 'purple', event)"
+            data-filter="dihubungi"
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center col-span-2 sm:col-span-1
+            {{ $filter === 'dihubungi'
+                ? 'active bg-purple-600 text-white shadow-sm border-transparent hover:bg-purple-700'
+                : 'bg-white text-purple-600 hover:bg-purple-50 hover:text-purple-700 border-gray-200' }}">
+        <i class="fas fa-phone-alt mr-1.5"></i>Dihubungi ({{ count($dihubungi ?? []) }})
+    </button>
 </div>
 
 {{-- DAFTAR DISPENSASI --}}
@@ -140,6 +149,7 @@ $cards = [
                 'keluar' => 'Siswa Sedang Keluar',
                 'selesai' => 'Siswa Sudah Kembali',
                 'terlambat' => 'Siswa Terlambat Kembali',
+                'dihubungi' => 'Siswa Sudah Dihubungi',
             ];
             @endphp
             {{ $titleMap[$filter] ?? 'Daftar Dispensasi' }}
@@ -185,6 +195,11 @@ $cards = [
                                     <i class="fas fa-exclamation-triangle mr-1"></i>Terlambat {{ $lateText }}
                                 </span>
                             @endif
+                            @if($item->is_warned)
+                                <span class="warned-badge px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide bg-purple-100 text-purple-800 border-purple-200">
+                                    <i class="fas fa-phone-alt mr-1"></i>Sudah Dihubungi
+                                </span>
+                            @endif
                         </div>
                         <p class="font-semibold text-gray-900 text-sm truncate mt-1">
                             {!! $highlightName !!}
@@ -204,12 +219,18 @@ $cards = [
                         @endif
                     </div>
                     <div class="flex flex-wrap items-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 sm:border-gray-100">
-                        @if($isLate && $waLink)
-                            <button onclick="handleGuruWaContacted({{ $item->id }}, '{{ $waLink }}', this)"
-                                    class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors {{ $item->is_warned ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                    {{ $item->is_warned ? 'disabled' : '' }}>
+                        @if($item->is_warned)
+                            <button type="button"
+                                    class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-green-600 text-white text-xs font-semibold rounded-lg opacity-50 cursor-not-allowed"
+                                    disabled>
                                 <i class="fab fa-whatsapp mr-1.5"></i>
-                                <span class="wa-text">{{ $item->is_warned ? 'Sudah Dihubungi' : 'Hubungi' }}</span>
+                                <span class="wa-text">Sudah Dihubungi</span>
+                            </button>
+                        @elseif($isLate && $waLink)
+                            <button onclick="handleGuruWaContacted({{ $item->id }}, '{{ $waLink }}', this)"
+                                    class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                                <i class="fab fa-whatsapp mr-1.5"></i>
+                                <span class="wa-text">Hubungi</span>
                             </button>
                         @endif
                         <a href="{{ route('guru.pengajuan.show', $item) }}"
@@ -449,6 +470,7 @@ window.addEventListener('popstate', function(event) {
         if(filter === 'keluar') color = 'sky';
         if(filter === 'selesai') color = 'gray';
         if(filter === 'terlambat') color = 'red';
+        if(filter === 'dihubungi') color = 'purple';
         switchFilter(filter, color, null);
     }
 });

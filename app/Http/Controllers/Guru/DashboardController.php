@@ -51,6 +51,7 @@ class DashboardController extends Controller
             'selesai'   => $displayQuery->where('status', 'selesai')->latest()->get(),
             'terlambat' => $displayQuery->where('status', 'keluar')->where('batas_waktu_kembali', '<', now())->latest()->get(),
             'disetujui' => $displayQuery->where('status', 'disetujui')->latest()->get(),
+            'dihubungi' => $displayQuery->where('is_warned', true)->latest('warned_at')->get(),
             default     => $displayQuery->latest()->get(),
         };
 

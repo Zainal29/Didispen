@@ -189,17 +189,33 @@ $cards = [
                             $waLink = "https://wa.me/{$hp}?text=" . urlencode("*PERINGATAN KETERLAMBATAN*\n\nYth. *{$dispensasi->siswa->nama_lengkap}*,\nBatas waktu kembali dispensasi Anda telah LEWAT.\n\nLokasi Tujuan: {$dispensasi->tujuan}\nSEGERA KEMBALI ke sekolah.\n\nPetugas Satpam SMKN 1 Bangsri");
                         @endphp
                         <div id="wa-section-{{ $dispensasi->id }}" class="bg-green-50 border border-green-200 rounded-lg p-3">
-                            <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center justify-between {{ $dispensasi->is_warned ? 'mb-1' : 'mb-2' }}">
                                 <div>
                                     <p class="text-[10px] font-bold text-green-700 uppercase">Kontak Darurat</p>
                                     <p class="text-sm font-semibold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
                                 </div>
-                                <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}')"
-                                        class="inline-flex items-center justify-center w-10 h-10 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors {{ $dispensasi->is_warned ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                        {{ $dispensasi->is_warned ? 'disabled' : '' }}>
-                                    <i class="fab fa-whatsapp text-lg"></i>
-                                </button>
+                                @if($dispensasi->is_warned)
+                                    <div class="inline-flex items-center justify-center w-10 h-10 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" title="Sudah dihubungi">
+                                        <i class="fas fa-check text-base"></i>
+                                    </div>
+                                @else
+                                    <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}')"
+                                            class="inline-flex items-center justify-center w-10 h-10 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                                        <i class="fab fa-whatsapp text-lg"></i>
+                                    </button>
+                                @endif
                             </div>
+                            @if($dispensasi->is_warned)
+                                <p class="text-[10px] text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i>Sudah dihubungi via WhatsApp</p>
+                            @endif
+                        </div>
+                    @elseif($dispensasi->is_warned)
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] font-bold text-purple-700 uppercase">Status Kontak</p>
+                                <p class="text-xs font-semibold text-purple-900 mt-0.5"><i class="fas fa-check-circle mr-1"></i>Sudah Dihubungi</p>
+                            </div>
+                            <span class="text-xs text-purple-600 font-mono">{{ $dispensasi->warned_at ? \Carbon\Carbon::parse($dispensasi->warned_at)->format('H:i') . ' WIB' : '-' }}</span>
                         </div>
                     @endif
                     <a href="{{ route('satpam.scan') }}"
