@@ -16,6 +16,7 @@ class Dispensasi extends Model
     protected $fillable = [
         'siswa_id', 'guru_id', 'nomor_surat', 'kategori', 'alasan', 'tujuan', 'lokasi',
         'jam_keluar', 'jam_kembali', 'batas_waktu_kembali', 'status', 'catatan_admin',
+        'approved_at', 'rejected_at',
         'qr_code', 'qr_token', 'print_count', 'max_print_limit', 'printed_at',
         'student_print_count', 'teacher_print_count', 'waktu_keluar_aktual', 'waktu_kembali_aktual',
         'satpam_keluar_id', 'satpam_kembali_id', 'is_warned', 'warned_at',
@@ -26,6 +27,8 @@ class Dispensasi extends Model
 
     protected $casts = [
         'batas_waktu_kembali' => 'datetime',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
         'is_warned' => 'boolean',
         'dibuat_manual_oleh_guru' => 'boolean',
         'warned_at' => 'datetime',
@@ -62,14 +65,6 @@ class Dispensasi extends Model
     {
         return $this->belongsTo(Guru::class, 'guru_id');
     }
-
-    /**
-        * Relasi ke User yang menyetujui dispensasi
-        */
-       public function approvedBy(): BelongsTo
-       {
-           return $this->belongsTo(User::class, 'disetujui_oleh');
-       }
 
 
     /**

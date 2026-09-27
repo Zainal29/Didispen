@@ -112,7 +112,7 @@
                 <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
                     @forelse($siswas as $s)
                     <tr class="hover:bg-indigo-50/40 transition-colors group">
-                        <td class="p-4 font-mono text-xs text-gray-500 align-top">{{ $s->user->nis_nip ?? '-' }}</td>
+                        <td class="p-4 font-mono text-xs text-gray-500 align-top">{{ $s->user?->nis_nip ?? '-' }}</td>
 
                         <td class="p-4 align-top">
                             <div class="font-semibold text-gray-900">{{ $s->nama_lengkap }}</div>
@@ -132,8 +132,8 @@
                             {{ $s->jurusan?->nama_jurusan ?? $s->kelas?->jurusan?->nama_jurusan ?? '-' }}
                         </td>
 
-                        <td class="p-4 align-top text-xs text-gray-500 font-mono break-all">{{ $s->user->email ?? '-' }}</td>
-                        <td class="p-4 align-top text-xs text-gray-500">{{ $s->created_at->format('d/m/Y') }}</td>
+                        <td class="p-4 align-top text-xs text-gray-500 font-mono break-all">{{ $s->user?->email ?? '-' }}</td>
+                        <td class="p-4 align-top text-xs text-gray-500">{{ $s->created_at?->format('d/m/Y') ?? '-' }}</td>
 
                         <td class="p-4 text-center align-middle whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
@@ -171,11 +171,13 @@
 
 {{-- MODAL FORM SISWA --}}
 <div id="formModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeModal()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <!-- Backdrop overlay -->
+    <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
 
-        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl w-full max-h-[90dvh] flex flex-col">
+    <!-- Centering wrapper -->
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <!-- Modal Card -->
+        <div class="relative z-10 w-full max-w-2xl bg-white rounded-xl text-left shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col my-8">
             <form id="siswaForm" method="POST" action="{{ route('admin.siswa.store') }}" class="flex flex-col min-h-0 flex-1">
                 @csrf
                 <input type="hidden" id="siswaId" name="siswa_id">
@@ -332,7 +334,7 @@ document.addEventListener('keydown', function(e) {
 // }
 function editItem(siswaId) {
     // Tambahkan loading state (opsional)
-    Swal.fire({ title: 'Memuat data...', didOpen: () => { Swal.showLoading() } });
+    // Swal.fire({ title: 'Memuat data...', didOpen: () => { Swal.showLoading() } });
 
     fetch(`/admin/siswa/${siswaId}/edit`, {
         headers: {

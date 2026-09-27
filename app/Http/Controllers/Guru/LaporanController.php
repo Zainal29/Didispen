@@ -15,12 +15,13 @@ class LaporanController extends Controller
     public function index(Request $request)
     {
         $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
 
         // Query dasar: hanya dispensasi yang diproses oleh guru yang login
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-            ->whereHas('guru', function ($q) use ($guru) {
-                $q->where('guru_id', $guru->id);
-            });
+            ->where('guru_id', $guru->id);
 
         // Fitur Filter
         if ($request->filled('tanggal_dari')) {
@@ -53,11 +54,12 @@ class LaporanController extends Controller
     public function exportPdf(Request $request)
     {
         $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
 
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-            ->whereHas('guru', function ($q) use ($guru) {
-                $q->where('guru_id', $guru->id);
-            });
+            ->where('guru_id', $guru->id);
 
         // Terapkan filter yang sama dengan method index
         if ($request->filled('tanggal_dari')) {
@@ -85,11 +87,12 @@ class LaporanController extends Controller
     public function exportExcel(Request $request)
     {
         $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
 
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-            ->whereHas('guru', function ($q) use ($guru) {
-                $q->where('guru_id', $guru->id);
-            });
+            ->where('guru_id', $guru->id);
 
         // Terapkan filter
         if ($request->filled('tanggal_dari')) {

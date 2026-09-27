@@ -25,9 +25,6 @@ class WarningController extends Controller
         // Tandai sebagai sudah diberi peringatan
         $dispensasi->markAsWarned();
 
-        // TODO: Di sini nanti tambahkan kode untuk kirim WhatsApp
-        // Contoh: WhatsAppService::sendWarning($dispensasi->siswa->no_telepon, $dispensasi);
-
-        return back()->with('success', 'Peringatan berhasil dikirim ke siswa '.$dispensasi->siswa->nama_lengkap);
+        return back()->with('success', 'Siswa '.$dispensasi->siswa->nama_lengkap.' berhasil ditandai sudah diperingatkan.');
     }
 }

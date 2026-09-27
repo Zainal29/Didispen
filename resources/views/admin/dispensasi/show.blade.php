@@ -31,8 +31,8 @@
         @if($dispensasi->foto_verifikasi)
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div class="flex items-start gap-4">
-                <div class="w-20 h-20 rounded-lg overflow-hidden border border-blue-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_verifikasi) }}', 'Foto Verifikasi - {{ $dispensasi->siswa->nama_lengkap }}')">
-                    <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}" alt="Foto {{ $dispensasi->siswa->nama_lengkap }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
+                <div class="w-20 h-20 rounded-lg overflow-hidden border border-blue-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_verifikasi) }}', 'Foto Verifikasi - {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}')">
+                    <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}" alt="Foto {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
                 </div>
                 <div class="flex-1">
                     <h4 class="text-sm font-bold text-blue-900 mb-1 flex items-center">
@@ -56,8 +56,8 @@
         @if($dispensasi->foto_bukti)
         <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
             <div class="flex items-start gap-4">
-                <div class="w-20 h-20 rounded-lg overflow-hidden border border-emerald-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_bukti) }}', 'Foto Bukti Kedatangan - {{ $dispensasi->siswa->nama_lengkap }}')">
-                    <img src="{{ Storage::url($dispensasi->foto_bukti) }}" alt="Foto Bukti {{ $dispensasi->siswa->nama_lengkap }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
+                <div class="w-20 h-20 rounded-lg overflow-hidden border border-emerald-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_bukti) }}', 'Foto Bukti Kedatangan - {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}')">
+                    <img src="{{ Storage::url($dispensasi->foto_bukti) }}" alt="Foto Bukti {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
                 </div>
                 <div class="flex-1">
                     <h4 class="text-sm font-bold text-emerald-900 mb-1 flex items-center">
@@ -106,19 +106,19 @@
                 <div class="space-y-2">
                     <div>
                         <span class="text-gray-500">Nama:</span>
-                        <p class="font-semibold">{{ $dispensasi->siswa->nama_lengkap }}</p>
+                        <p class="font-semibold">{{ $dispensasi->siswa?->nama_lengkap ?? '-' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-500">NIS:</span>
-                        <p class="font-mono">{{ $dispensasi->siswa->user->nis_nip ?? '-' }}</p>
+                        <p class="font-mono">{{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-500">Kelas:</span>
-                        <p class="font-semibold">{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }}</p>
+                        <p class="font-semibold">{{ $dispensasi->siswa?->kelas?->nama_kelas ?? '-' }}</p>
                     </div>
                     <div>
                         <span class="text-gray-500">Jurusan:</span>
-                        <p>{{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
+                        <p>{{ $dispensasi->siswa?->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
                     </div>
                 </div>
             </div>

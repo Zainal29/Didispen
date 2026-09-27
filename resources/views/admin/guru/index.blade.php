@@ -90,9 +90,9 @@
                 <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
                     @forelse($gurus as $g)
                     <tr class="hover:bg-blue-50/50 transition-colors group">
-                        <td class="p-4 font-mono text-xs text-gray-500 align-top">{{ $g->nip }}</td>
+                        <td class="p-4 font-mono text-xs text-gray-500 align-top">{{ $g->nip ?? '-' }}</td>
 
-                        <td class="p-4 align-top font-semibold text-gray-900">{{ $g->nama_lengkap }}</td>
+                        <td class="p-4 align-top font-semibold text-gray-900">{{ $g->nama_lengkap ?? '-' }}</td>
 
                         <td class="p-4 align-top">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
@@ -117,7 +117,7 @@
                                     <p class="text-xs text-gray-600 leading-relaxed line-clamp-2" title="{{ $g->alamat }}">
                                         {{ $g->alamat }}
                                     </p>
-                                    <button onclick="copyToClipboard('{{ addslashes($g->alamat) }}', this)"
+                                    <button onclick="copyToClipboard('{{ addslashes($g->alamat ?? '') }}', this)"
                                             class="mt-1.5 text-[10px] text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors opacity-0 group-hover/address:opacity-100"
                                             title="Salin Alamat">
                                         <i class="far fa-copy"></i> <span class="copy-text">Salin</span>
@@ -128,7 +128,6 @@
                             @endif
                         </td>
 
-                        <!-- <td class="p-4 align-top text-xs text-gray-500 font-mono break-all">{{ $g->user->email }}</td> -->
                         {{-- EMAIL GURU ASLI DARI SIPINTU (GOOGLE / PRIBADI) --}}
                         <td class="p-4 align-top">
                             @if($g->email)
@@ -162,10 +161,14 @@
                         </td>
                         <td class="p-4 text-center align-middle whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                                <button onclick='openModal(@json($g))' class="w-9 h-9 inline-flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat Data">
+                                <button type="button"
+                                        data-guru="{{ json_encode($g) }}"
+                                        onclick="openModalFromButton(this)"
+                                        class="w-9 h-9 inline-flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                        title="Lihat Data">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button onclick="deleteItem({{ $g->id }}, '{{ addslashes($g->nama_lengkap) }}')" class="w-9 h-9 inline-flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Data">
+                                <button onclick="deleteItem({{ $g->id }}, '{{ addslashes($g->nama_lengkap ?? '') }}')" class="w-9 h-9 inline-flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Data">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -196,11 +199,13 @@
 
 {{-- MODAL FORM --}}
 <div id="modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeModal()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <!-- Backdrop overlay -->
+    <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
 
-        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full max-h-[90dvh] flex flex-col">
+    <!-- Centering wrapper -->
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <!-- Modal Card -->
+        <div class="relative z-10 w-full max-w-lg bg-white rounded-xl text-left shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col my-8">
             <form id="form" method="POST" class="flex flex-col min-h-0 flex-1">
                 @csrf
                 <input type="hidden" id="method" name="_method" value="POST">
@@ -297,6 +302,17 @@ function copyToClipboard(text, btnElement) {
     });
 }
 
+function openModalFromButton(btn) {
+    try {
+        const raw = btn.getAttribute('data-guru');
+        const data = JSON.parse(raw);
+        openModal(data);
+    } catch (err) {
+        console.error('Gagal membaca data guru:', err);
+        Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat data guru.' });
+    }
+}
+
 function openModal(data = null) {
     const modal = document.getElementById('modal');
     const title = document.getElementById('modalTitle');
@@ -305,7 +321,7 @@ function openModal(data = null) {
     modal.classList.remove('hidden');
 
     if (data) {
-        title.innerHTML = '<i class="fas fa-user-edit"></i> Edit Data Guru';
+        title.innerHTML = '<i class="fas fa-eye"></i> Lihat Data Guru';
         form.action = `/admin/guru/${data.id}`;
         document.getElementById('method').value = 'PUT';
 

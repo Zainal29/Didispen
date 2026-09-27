@@ -144,7 +144,7 @@ class DashboardController extends Controller
     /**
      * Konfirmasi kembali (Mendukung AJAX & Form)
      */
-    public function konfirmasiKembali(Dispensasi $dispensasi)
+    public function konfirmasiKembali(Dispensasi $dispensasi, \App\Services\DispensasiService $dispensasiService)
     {
         if ($dispensasi->status !== 'keluar') {
             $message = 'Dispensasi harus dalam status keluar untuk dikonfirmasi kembali.';
@@ -153,30 +153,14 @@ class DashboardController extends Controller
                 : redirect()->back()->with('error', $message);
         }
 
-        // Hapus foto verifikasi jika ada
-        if ($dispensasi->foto_verifikasi) {
-            Storage::disk('public')->delete($dispensasi->foto_verifikasi);
+        try {
+            $dispensasiService->konfirmasiKembali($dispensasi, (int) auth()->id());
+        } catch (\Throwable $e) {
+            $message = $e->getMessage() ?: 'Gagal memproses kembali dispensasi.';
+            return request()->wantsJson()
+                ? response()->json(['success' => false, 'message' => $message])
+                : redirect()->back()->with('error', $message);
         }
-
-        // // <i class="fas fa-check-circle"></i> BARU: HAPUS FOTO BUKTI (jika ada)
-            if ($dispensasi->foto_bukti) {
-                Storage::disk('public')->delete($dispensasi->foto_bukti);
-            }
-
-        $dispensasi->update([
-            'status' => 'selesai',
-            'waktu_kembali_aktual' => now(),
-            'satpam_kembali_id' => auth()->id(),
-            'foto_verifikasi' => null,
-            'foto_bukti' => null, // <i class="fas fa-check-circle"></i> Reset field foto bukti
-
-        ]);
-
-        app(NotifikasiService::class)->send(
-            $dispensasi->siswa->user_id,
-            "Dispensasi ({$dispensasi->nomor_surat}) telah SELESAI. Terima kasih sudah kembali ke sekolah.",
-            route('siswa.pengajuan.show', $dispensasi, false)
-        );
 
         $message = "Siswa {$dispensasi->siswa->nama_lengkap} berhasil dikonfirmasi KEMBALI.";
 

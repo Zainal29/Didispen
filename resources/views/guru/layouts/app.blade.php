@@ -26,7 +26,7 @@
 
 @php
     $user    = auth()->user();
-    $pending = $stats['pending'] ?? 0;
+    $pending = $stats['menunggu'] ?? $stats['pending'] ?? 0;
     $keluar  = isset($siswaKeluar) ? $siswaKeluar->count() : 0;
     $navOn   = 'flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg shadow-blue-500/30';
     $navOff  = 'flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-colors';

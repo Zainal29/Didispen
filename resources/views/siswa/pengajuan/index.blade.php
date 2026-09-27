@@ -86,7 +86,7 @@
                     <th class="p-4 text-left font-semibold">Tujuan</th>
                     <th class="p-4 text-left font-semibold">Waktu</th>
                     <th class="p-4 text-left font-semibold">Status</th>
-                    <!--<th class="p-4 text-center font-semibold">Foto Bukti</th>-->
+                    <th class="p-4 text-center font-semibold">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -111,23 +111,10 @@
                                 {{ ucfirst($p->status) }}
                             </span>
                         </td>
-                        <!--<td class="p-4 text-center">
-                            @if($p->status === 'keluar')
-                                @if($p->foto_bukti)
-                                    <div class="flex items-center justify-center gap-2">
-                                        <img src="{{ asset('storage/' . $p->foto_bukti) }}" class="w-10 h-10 object-cover rounded-lg border border-gray-200 cursor-pointer hover:scale-105 transition-transform" onclick="showPreview('{{ asset('storage/' . $p->foto_bukti) }}', '{{ $p->nomor_surat }}')">
-                                        <button onclick="hapusFoto({{ $p->id }})" class="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Hapus Foto">
-                                            <i class="fas fa-trash-alt text-xs"></i>
-                                        </button>
-                                    </div>-->
-                                <!--@else
-                                    <button onclick="openUploadModal({{ $p->id }})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5">
-                                        <i class="fas fa-camera"></i> Ambil Foto
-                                    </button>
-                                @endif-->
-                            <!--@else
-                                <span class="text-gray-300 text-xs">—</span>
-                            @endif-->
+                        <td class="p-4 text-center">
+                            <a href="{{ route('siswa.pengajuan.show', $p) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-eye mr-1.5"></i>Detail
+                            </a>
                         </td>
                     </tr>
                 @empty

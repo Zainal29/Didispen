@@ -50,9 +50,10 @@
                         @php
                             $statusClass = match($item->status) {
                                 'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                                'keluar' => 'bg-sky-100 text-sky-700 border-sky-200',
-                                'selesai' => 'bg-gray-100 text-gray-700 border-gray-200',
-                                default => 'bg-amber-100 text-amber-700 border-amber-200'
+                                'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
+                                'keluar'    => 'bg-sky-100 text-sky-700 border-sky-200',
+                                'selesai'   => 'bg-gray-100 text-gray-700 border-gray-200',
+                                default     => 'bg-amber-100 text-amber-700 border-amber-200'
                             };
                         @endphp
                         <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold border {{ $statusClass }}">
@@ -71,7 +72,7 @@
                         <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3">
                             <i class="fas fa-inbox"></i>
                         </div>
-                        <p class="text-gray-700 font-semibold text-sm">Belum ada pengajuan yang Anda buat.</p>
+                        <p class="text-gray-700 font-semibold text-sm">Belum ada data pengajuan dispensasi.</p>
                     </td>
                 </tr>
                 @endforelse
@@ -92,9 +93,10 @@
                 @php
                     $statusClass = match($item->status) {
                         'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                        'keluar' => 'bg-sky-100 text-sky-700 border-sky-200',
-                        'selesai' => 'bg-gray-100 text-gray-700 border-gray-200',
-                        default => 'bg-amber-100 text-amber-700 border-amber-200'
+                        'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
+                        'keluar'    => 'bg-sky-100 text-sky-700 border-sky-200',
+                        'selesai'   => 'bg-gray-100 text-gray-700 border-gray-200',
+                        default     => 'bg-amber-100 text-amber-700 border-amber-200'
                     };
                 @endphp
                 <span class="px-2.5 py-1 rounded-md text-[10px] font-semibold border flex-shrink-0 {{ $statusClass }}">
@@ -126,7 +128,7 @@
             <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3">
                 <i class="fas fa-inbox"></i>
             </div>
-            <p class="text-gray-700 font-semibold text-sm">Belum ada pengajuan yang Anda buat</p>
+            <p class="text-gray-700 font-semibold text-sm">Belum ada data pengajuan dispensasi.</p>
         </div>
         @endforelse
     </div>

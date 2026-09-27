@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class QRScanService
 {
+    public function __construct(
+        private ?AuditLogService $auditLogService = null
+    ) {
+        $this->auditLogService = $auditLogService ?? app(AuditLogService::class);
+    }
     /**
      * Parse QR data dan mencari data dispensasi.
      *
@@ -279,6 +284,15 @@ class QRScanService
             ];
         }
 
+        $this->auditLogService->log(
+            $userId,
+            'qr_keluar',
+            'dispensasi',
+            $dispensasi->id,
+            ['status' => 'disetujui'],
+            ['status' => 'keluar', 'satpam_keluar_id' => $userId]
+        );
+
         return [
             'success' => true,
             'message' => 'Siswa berhasil diverifikasi KELUAR sekolah.',
@@ -308,11 +322,9 @@ class QRScanService
             && now()->greaterThan($dispensasi->batas_waktu_kembali);
 
         /*
-         * Jangan hapus file foto di sini.
-         *
-         * Foto merupakan bagian dari histori/bukti dispensasi.
-         * Penghapusan file sebaiknya dilakukan oleh command
-         * cleanup yang memang menangani retensi foto.
+         * Setelah status menjadi 'selesai', file fisik (QR code, foto verifikasi,
+         * dan foto bukti) dihapus untuk menghemat kapasitas storage server.
+         * Record database dan histori dispensasi tetap dipertahankan secara utuh.
          */
 
         $updated = DB::transaction(function () use (
@@ -350,6 +362,21 @@ class QRScanService
                 'status_code' => 400,
             ];
         }
+
+        // Refresh model agar statusnya 'selesai' sebelum cleanup dipanggil
+        $dispensasi->refresh();
+
+        // Cleanup file fisik (QR code, foto_verifikasi, foto_bukti) setelah status menjadi selesai
+        DispensasiService::cleanupCompletedDispensasiFiles($dispensasi);
+
+        $this->auditLogService->log(
+            $userId,
+            'qr_kembali',
+            'dispensasi',
+            $dispensasi->id,
+            ['status' => 'keluar'],
+            ['status' => 'selesai', 'satpam_kembali_id' => $userId, 'is_terlambat' => $isLate]
+        );
 
         $message = $isLate
             ? 'Siswa berhasil dicatat KEMBALI. PERINGATAN: Terlambat dari batas waktu!'

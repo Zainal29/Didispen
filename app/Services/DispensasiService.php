@@ -137,28 +137,71 @@ class DispensasiService
         $this->auditLogService->log($satpamId, 'konfirmasi_keluar', 'dispensasi', $dispensasi->id);
     }
 
+    /**
+     * Cleanup file fisik (QR code, foto verifikasi, foto bukti) saat dispensasi selesai.
+     * Record database dan histori TETAP DIPERTAHANKAN.
+     * Idempotent & aman: hanya dijalankan jika status benar-benar 'selesai'.
+     */
+    public static function cleanupCompletedDispensasiFiles(Dispensasi $dispensasi): void
+    {
+        // Guard: Jangan pernah menghapus file jika status bukan 'selesai'
+        if ($dispensasi->status !== 'selesai') {
+            return;
+        }
+
+        // 1. Hapus QR code fisik milik dispensasi ini
+        if (!empty($dispensasi->qr_code) && Storage::disk('public')->exists($dispensasi->qr_code)) {
+            Storage::disk('public')->delete($dispensasi->qr_code);
+        }
+        foreach (['qr_codes/dispensasi_'.$dispensasi->id.'.svg', 'qr_codes/dispensasi_'.$dispensasi->id.'.png'] as $qrPath) {
+            if (Storage::disk('public')->exists($qrPath)) {
+                Storage::disk('public')->delete($qrPath);
+            }
+        }
+
+        // 2. Hapus foto verifikasi fisik
+        if (!empty($dispensasi->foto_verifikasi) && Storage::disk('public')->exists($dispensasi->foto_verifikasi)) {
+            Storage::disk('public')->delete($dispensasi->foto_verifikasi);
+        }
+
+        // 3. Hapus foto bukti fisik
+        if (!empty($dispensasi->foto_bukti) && Storage::disk('public')->exists($dispensasi->foto_bukti)) {
+            Storage::disk('public')->delete($dispensasi->foto_bukti);
+        }
+    }
+
     public function konfirmasiKembali(Dispensasi $dispensasi, $satpamId): void
     {
+        if ($dispensasi->status !== 'keluar') {
+            throw new \InvalidArgumentException('Dispensasi harus dalam status keluar untuk dikonfirmasi kembali.');
+        }
+
         $isLate = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
         $slug = $isLate ? 'terlambat' : 'kembali';
 
-        // Hapus foto verifikasi & foto bukti fisik saat dispensasi selesai
-        if ($dispensasi->foto_verifikasi && Storage::disk('public')->exists($dispensasi->foto_verifikasi)) {
-            Storage::disk('public')->delete($dispensasi->foto_verifikasi);
-        }
-        if ($dispensasi->foto_bukti && Storage::disk('public')->exists($dispensasi->foto_bukti)) {
-            Storage::disk('public')->delete($dispensasi->foto_bukti);
-        }
+        // 1. DB transaction + lockForUpdate untuk memastikan update status berhasil sebelum file disentuh
+        \Illuminate\Support\Facades\DB::transaction(function () use ($dispensasi, $satpamId, $isLate) {
+            $updated = Dispensasi::whereKey($dispensasi->id)
+                ->where('status', 'keluar')
+                ->lockForUpdate()
+                ->update([
+                    'status' => 'selesai',
+                    'waktu_kembali_aktual' => now(),
+                    'satpam_kembali_id' => $satpamId,
+                    'is_warned' => $isLate ? true : $dispensasi->is_warned,
+                    'warned_at' => $isLate ? now() : $dispensasi->warned_at,
+                ]);
 
-        $dispensasi->update([
-            'status' => 'selesai',
-            'waktu_kembali_aktual' => now(),
-            'satpam_kembali_id' => $satpamId,
-            'is_warned' => $isLate ? true : $dispensasi->is_warned,
-            'warned_at' => $isLate ? now() : $dispensasi->warned_at,
-            'foto_verifikasi' => null,
-            'foto_bukti' => null,
-        ]);
+            if ($updated !== 1) {
+                throw new \RuntimeException('Gagal mengubah status dispensasi menjadi selesai. Status mungkin sudah berubah.');
+            }
+        });
+
+        // 2. Refresh model setelah transaction commit agar status di memori menjadi 'selesai'
+        $dispensasi->refresh();
+
+        // 3. Cleanup file fisik (QR code, foto_verifikasi, foto_bukti) SETELAH commit berhasil
+        self::cleanupCompletedDispensasiFiles($dispensasi);
 
         // GUNAKAN TEMPLATE
         $template = WhatsappTemplate::where('slug', $slug)->where('is_active', true)->first();

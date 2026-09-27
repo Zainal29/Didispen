@@ -204,7 +204,6 @@ Route::middleware(['auth'])->group(function () {
 
         // Detail & Lainnya
         Route::get('dispensasi/{dispensasi}/detail', [DashboardController::class, 'showDetail'])->name('dispensasi.detail');
-        Route::post('dispensasi/{dispensasi}/mark-contacted', [DashboardController::class, 'markContacted'])->name('mark-contacted');
         Route::post('dispensasi/{dispensasi}/wa-contacted', [DashboardController::class, 'markWaContacted'])->name('wa-contacted');
     });
 

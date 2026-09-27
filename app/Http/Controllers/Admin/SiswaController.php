@@ -35,11 +35,15 @@ class SiswaController extends Controller
 
         $query = Siswa::with(['user', 'kelas', 'jurusan'])
             ->where('status_aktif', true)
-            ->whereHas('kelas', function ($kelasQuery) {
-                $kelasQuery->whereRaw(
-                    'UPPER(TRIM(nama_kelas)) != ?',
-                    ['BELUM_DIKELOMPOKKAN']
-                );
+            ->where(function ($q) {
+                $q->whereNull('kelas_id')
+                  ->orWhereDoesntHave('kelas')
+                  ->orWhereHas('kelas', function ($kelasQuery) {
+                      $kelasQuery->whereRaw(
+                          'UPPER(TRIM(nama_kelas)) != ?',
+                          ['BELUM_DIKELOMPOKKAN']
+                      );
+                  });
             });
 
         if ($request->filled('search')) {
@@ -123,30 +127,26 @@ class SiswaController extends Controller
                 'kelas_id'      => $siswa->kelas_id,
                 'jurusan_id'    => $siswa->jurusan_id,
                 'user'          => [
-                    'nis_nip' => $siswa->user->nis_nip ?? '',
-                    'email'   => $siswa->user->email ?? '',
+                    'nis_nip' => $siswa->user?->nis_nip ?? '',
+                    'email'   => $siswa->user?->email ?? '',
                 ]
             ]);
         }
 
-        // 2. FALLBACK: Jika dibuka biasa di browser, tetap kirim View (agar tidak merusak fitur lain)
-        $kelasList   = \App\Models\Kelas::with('jurusan')
-            ->whereRaw('UPPER(TRIM(nama_kelas)) != ?', ['BELUM_DIKELOMPOKKAN'])
-            ->orderBy('nama_kelas')
-            ->get();
-        $jurusanList = \App\Models\Jurusan::orderBy('nama_jurusan')->get();
-
-        return view('admin.siswa.edit', compact('siswa', 'kelasList', 'jurusanList'));
+        // 2. FALLBACK: Jika dibuka biasa di browser tanpa AJAX, kembalikan ke index
+        return redirect()->route('admin.siswa.index');
     }
 
     public function update(StoreSiswaRequest $request, Siswa $siswa)
     {
         DB::transaction(function () use ($request, $siswa) {
-            $siswa->user->update([
-                'name'    => $request->name,
-                'email'   => $request->email,
-                'nis_nip' => $request->nis,
-            ]);
+            if ($siswa->user) {
+                $siswa->user->update([
+                    'name'    => $request->name,
+                    'email'   => $request->email,
+                    'nis_nip' => $request->nis,
+                ]);
+            }
 
             $siswa->update([
                 'nis_nip'       => $request->nis,
@@ -169,7 +169,7 @@ class SiswaController extends Controller
     {
         \Illuminate\Support\Facades\DB::transaction(function () use ($siswa) {
             $siswa->delete();
-            $siswa->user()->delete();
+            $siswa->user?->delete();
         });
         return redirect()->route('admin.siswa.index')->with('success', 'Siswa berhasil dihapus.');
     }

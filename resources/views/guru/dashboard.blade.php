@@ -124,7 +124,7 @@ $cards = [
             {{ $filter === 'terlambat'
                 ? 'active bg-red-600 text-white shadow-sm border-transparent hover:bg-red-700'
                 : 'bg-white text-red-600 hover:bg-red-50 hover:text-red-700 border-gray-200' }}">
-        <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat ({{ count($terlambat ?? []) }})
+        <i class="fas fa-exclamation-triangle mr-1.5"></i>Terlambat ({{ $stats['terlambat'] ?? count($terlambat ?? []) }})
     </button>
 </div>
 

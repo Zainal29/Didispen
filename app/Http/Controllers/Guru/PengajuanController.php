@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
-use App\Services\NotifikasiService; // ✅ TAMBAHKAN INI
+use App\Services\NotifikasiService;
+use App\Services\AuditLogService;
 use App\Models\Siswa;
 use App\Models\Setting;
 use App\Helpers\TimeHelper;
@@ -14,14 +15,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PengajuanController extends Controller
 {
+    private ?AuditLogService $auditLogService = null;
 
     public function __construct(
-           private NotifikasiService $notifikasiService // ✅ INJEKSI SERVICE
-       ) {}
+        private NotifikasiService $notifikasiService,
+        ?AuditLogService $auditLogService = null
+    ) {
+        $this->auditLogService = $auditLogService ?? app(AuditLogService::class);
+    }
 
     /**
      * Daftar riwayat pengajuan yang dibuat guru
@@ -45,6 +52,11 @@ class PengajuanController extends Controller
      */
     public function create()
     {
+        $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
+
         $settings = [
             'start_time' => Setting::get('dispensasi_start_time', '07:00'),
             'end_time' => Setting::get('dispensasi_end_time', '15:00'),
@@ -52,16 +64,12 @@ class PengajuanController extends Controller
             'allowed_days' => array_map('intval', explode(',', Setting::get('dispensasi_days', '1,2,3,4,5'))),
         ];
 
-        $maxJam = DispensasiTimeHelper::getMaxJamPelajaran(now()->dayOfWeek);
+        $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
+        $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
+        $jadwalPelajaran = TimeHelper::getAllJadwal();
+        $jadwalHariIni = TimeHelper::getJadwalHari($dayOfWeek);
 
-        // ✅ AMBIL JADWAL DINAMIS DARI DATABASE
-        $defaultJadwal = json_encode([
-            'regular' => array_fill(1, 10, ['start' => '00:00', 'end' => '00:00']),
-            'friday'  => array_fill(1, 8, ['start' => '00:00', 'end' => '00:00'])
-        ]);
-        $jadwalPelajaran = json_decode(Setting::get('jam_pelajaran', $defaultJadwal), true);
-
-        return view('guru.pengajuan.create', compact('settings', 'maxJam', 'jadwalPelajaran'));
+        return view('guru.pengajuan.create', compact('settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni'));
     }
 
     /**
@@ -114,15 +122,17 @@ class PengajuanController extends Controller
     public function store(Request $request)
     {
         $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
 
-        // ✅ PERBAIKAN: Gunakan method yang benar
         $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
         if (!$timeCheck['allowed']) {
             return back()->withInput()->with('error', $timeCheck['reason']);
         }
 
-        $dayOfWeek = now()->dayOfWeek;
-        $maxJam = DispensasiTimeHelper::getMaxJamPelajaran($dayOfWeek);
+        $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
+        $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
 
         $validated = $request->validate([
             'siswa_id'        => 'required|exists:siswa,id',
@@ -130,20 +140,18 @@ class PengajuanController extends Controller
             'alasan'          => 'required|string|min:10|max:1000',
             'tujuan'          => 'required|string|max:255',
             'lokasi'          => 'nullable|string|max:255',
-            'jam_keluar'      => "required|integer|min:1|max:{$maxJam}", // ✅ Dinamis
-            'jam_kembali'     => "required|integer|min:1|max:{$maxJam}|gt:jam_keluar", // ✅ Dinamis
+            'jam_keluar'      => "required|integer|min:1|max:{$maxJam}",
+            'jam_kembali'     => "required|integer|min:1|max:{$maxJam}|gt:jam_keluar",
             'foto_verifikasi' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ], [
-            'jam_keluar.max' => "Jam keluar maksimal adalah jam ke-{$maxJam} untuk hari ini (" . now()->isoFormat('dddd') . ").",
-            'jam_kembali.max' => "Jam kembali maksimal adalah jam ke-{$maxJam} untuk hari ini (" . now()->isoFormat('dddd') . ").",
+            'jam_keluar.max' => "Jam keluar maksimal adalah Jam ke-{$maxJam} untuk hari ini (" . now('Asia/Jakarta')->isoFormat('dddd') . ").",
+            'jam_kembali.max' => "Jam kembali maksimal adalah Jam ke-{$maxJam} untuk hari ini (" . now('Asia/Jakarta')->isoFormat('dddd') . ").",
             'jam_kembali.gt' => 'Jam kembali harus lebih dari jam keluar.',
             'foto_verifikasi.required' => 'Foto verifikasi siswa wajib diupload.',
             'foto_verifikasi.image'    => 'File harus berupa gambar.',
             'foto_verifikasi.mimes'    => 'Format gambar harus JPEG, PNG, atau JPG.',
             'foto_verifikasi.max'      => 'Ukuran gambar maksimal 2MB.',
         ]);
-
-        // ... (sisa kode tetap sama)
 
         $fotoPath = null;
         if ($request->hasFile('foto_verifikasi')) {
@@ -152,36 +160,54 @@ class PengajuanController extends Controller
             $fotoPath = $foto->storeAs('foto_verifikasi', $filename, 'public');
         }
 
-        // ✅ PERBAIKAN: Gunakan getWaktuAktual dengan $dayOfWeek
-        $waktuAktual = TimeHelper::getWaktuAktual(
-            'Jam Pelajaran ke-' . $validated['jam_kembali'],
-            $dayOfWeek
-        );
+        $batasWaktuKembali = TimeHelper::getBatasWaktuKembali($validated['jam_kembali'], $dayOfWeek);
 
-        $jamMasukCarbon = null;
-        if ($waktuAktual !== '-' && str_contains($waktuAktual, ' - ')) {
-            $parts = array_map('trim', explode(' - ', $waktuAktual, 2));
-            if (isset($parts[1]) && preg_match('/^\d{2}:\d{2}$/', $parts[1])) {
-                $jamMasukCarbon = Carbon::today()->setTimeFromTimeString($parts[1]);
+        try {
+            $dispensasi = DB::transaction(function () use ($validated, $guru, $fotoPath, $batasWaktuKembali) {
+                // Cek apakah siswa memiliki dispensasi aktif (menunggu, disetujui, keluar)
+                $activeDispensasi = Dispensasi::where('siswa_id', $validated['siswa_id'])
+                    ->whereIn('status', ['menunggu', 'disetujui', 'keluar'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($activeDispensasi) {
+                    $statusText = match ($activeDispensasi->status) {
+                        'menunggu' => 'masih menunggu persetujuan',
+                        'disetujui' => 'sudah disetujui dan menunggu keluar',
+                        'keluar' => 'sedang berlangsung (status: keluar)',
+                        default => 'masih aktif',
+                    };
+
+                    throw ValidationException::withMessages([
+                        'siswa_id' => "Siswa masih memiliki dispensasi aktif yang {$statusText}. Selesaikan atau tolak dispensasi tersebut terlebih dahulu.",
+                    ]);
+                }
+
+                return Dispensasi::create([
+                    'nomor_surat'             => Dispensasi::generateNomorSurat(),
+                    'siswa_id'                => $validated['siswa_id'],
+                    'guru_id'                 => $guru->id,
+                    'kategori'                => $validated['kategori'],
+                    'alasan'                  => $validated['alasan'],
+                    'tujuan'                  => $validated['tujuan'],
+                    'lokasi'                  => $validated['lokasi'] ?? null,
+                    'jam_keluar'              => 'Jam Pelajaran ke-' . $validated['jam_keluar'],
+                    'jam_kembali'             => 'Jam Pelajaran ke-' . $validated['jam_kembali'],
+                    'batas_waktu_kembali'     => $batasWaktuKembali,
+                    'status'                  => 'disetujui',
+                    'approved_at'             => now(),
+                    'rejected_at'             => null,
+                    'dibuat_manual_oleh_guru' => true,
+                    'qr_token'                => Str::random(64),
+                    'foto_verifikasi'         => $fotoPath,
+                ]);
+            });
+        } catch (\Throwable $e) {
+            if ($fotoPath && Storage::disk('public')->exists($fotoPath)) {
+                Storage::disk('public')->delete($fotoPath);
             }
+            throw $e;
         }
-
-        $dispensasi = Dispensasi::create([
-            'nomor_surat'     => Dispensasi::generateNomorSurat(),
-            'siswa_id'        => $validated['siswa_id'],
-            'guru_id'         => $guru->id,
-            'kategori'        => $validated['kategori'],
-            'alasan'          => $validated['alasan'],
-            'tujuan'          => $validated['tujuan'],
-            'lokasi'          => $validated['lokasi'] ?? null,
-            'jam_keluar'      => 'Jam Pelajaran ke-' . $validated['jam_keluar'],   // ✅ BENAR
-            'jam_kembali'     => 'Jam Pelajaran ke-' . $validated['jam_kembali'],  // ✅ BENAR
-            'status'          => 'disetujui',
-            'dibuat_manual_oleh_guru' => true,
-            'qr_token'        => Str::random(64),
-            'jam_masuk'       => $jamMasukCarbon,
-            'foto_verifikasi' => $fotoPath,
-        ]);
 
         $this->generateQRCode($dispensasi);
 
@@ -204,25 +230,52 @@ class PengajuanController extends Controller
      */
     public function approve(Request $request, Dispensasi $dispensasi)
     {
-        if ($dispensasi->status !== 'menunggu') {
+        $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
+
+        $processed = DB::transaction(function () use ($dispensasi, $guru, $request) {
+    $locked = Dispensasi::whereKey($dispensasi->id)
+        ->lockForUpdate()
+        ->first();
+
+    if (! $locked || $locked->status !== 'menunggu') {
+        return false;
+    }
+
+    $locked->update([
+        'status'        => 'disetujui',
+        'guru_id'       => $guru->id,
+        'approved_at'   => now(),
+        'rejected_at'   => null,
+        'catatan_admin' => $request->catatan_admin ?? null,
+    ]);
+
+    return $locked;
+});
+
+        if (! $processed) {
             return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
         }
 
-        $guru = auth()->user()->guru;
+        $this->generateQRCode($processed);
 
-        $dispensasi->update([
-            'status'         => 'disetujui',
-            'guru_id'        => $guru?->id,
-            'catatan_admin'  => $request->catatan_admin ?? null,
-        ]);
-
-        $this->generateQRCode($dispensasi);
-
-        // ✅ TAMBAHKAN INI: Kirim Notifikasi ke Siswa
+        // Kirim Notifikasi ke Siswa
         $this->notifikasiService->send(
-            $dispensasi->siswa->user_id,
-            "Pengajuan dispensasi Anda ({$dispensasi->nomor_surat}) telah DISETUJUI oleh Guru Piket. Silakan tunjukkan QR Code ke Satpam.",
-            route('siswa.pengajuan.show', $dispensasi->id)
+            $processed->siswa->user_id,
+            "Pengajuan dispensasi Anda ({$processed->nomor_surat}) telah DISETUJUI oleh Guru Piket. Silakan tunjukkan QR Code ke Satpam.",
+            route('siswa.pengajuan.show', $processed->id)
+        );
+
+        // Audit Log
+        $this->auditLogService?->log(
+            auth()->id(),
+            'approve',
+            'dispensasi',
+            $processed->id,
+            ['status' => 'menunggu'],
+            ['status' => 'disetujui', 'guru_id' => $guru->id]
         );
 
         return redirect()->route('guru.pengajuan.index')
@@ -234,8 +287,9 @@ class PengajuanController extends Controller
      */
     public function reject(Request $request, Dispensasi $dispensasi)
     {
-        if ($dispensasi->status !== 'menunggu') {
-            return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
+        $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
         }
 
         $validated = $request->validate([
@@ -245,13 +299,44 @@ class PengajuanController extends Controller
             'catatan_admin.min' => 'Alasan penolakan minimal 5 karakter.',
         ]);
 
-        $guru = auth()->user()->guru;
+        $processed = DB::transaction(function () use ($dispensasi, $guru, $validated) {
+            $locked = Dispensasi::whereKey($dispensasi->id)->lockForUpdate()->first();
+            if (! $locked || $locked->status !== 'menunggu') {
+                return false;
+            }
 
-        $dispensasi->update([
-            'status'        => 'ditolak',
-            'guru_id'       => $guru?->id,
-            'catatan_admin' => $validated['catatan_admin'],
-        ]);
+            $locked->update([
+                'status'        => 'ditolak',
+                'guru_id'       => $guru->id,
+                'rejected_at'   => now(),
+                'approved_at'   => null,
+                'catatan_admin' => $validated['catatan_admin'],
+            ]);
+
+            return $locked;
+        });
+
+        if (! $processed) {
+            return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
+        }
+
+        // Kirim Notifikasi ke Siswa
+        $alasan = $validated['catatan_admin'];
+        $this->notifikasiService->send(
+            $processed->siswa->user_id,
+            "Pengajuan dispensasi Anda ({$processed->nomor_surat}) DITOLAK oleh Guru Piket. Alasan: {$alasan}",
+            route('siswa.pengajuan.show', $processed->id)
+        );
+
+        // Audit Log
+        $this->auditLogService?->log(
+            auth()->id(),
+            'reject',
+            'dispensasi',
+            $processed->id,
+            ['status' => 'menunggu'],
+            ['status' => 'ditolak', 'guru_id' => $guru->id, 'catatan_admin' => $validated['catatan_admin']]
+        );
 
         return redirect()->route('guru.pengajuan.index')
             ->with('success', 'Dispensasi berhasil ditolak.');

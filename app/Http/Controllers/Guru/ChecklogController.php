@@ -13,7 +13,12 @@ class ChecklogController extends Controller
 
     public function index()
     {
-        $guruId = auth()->user()->guru->id;
+        $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
+
+        $guruId = $guru->id;
         
         // Cek apakah sedang ada log yang statusnya 'keluar' (belum kembali)
         $sedangKeluar = GuruChecklog::where('guru_id', $guruId)
@@ -35,6 +40,19 @@ class ChecklogController extends Controller
      */
     public function store(Request $request)
     {
+        $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
+
+        $activeLog = GuruChecklog::where('guru_id', $guru->id)
+            ->where('status', 'keluar')
+            ->first();
+
+        if ($activeLog) {
+            return back()->with('error', 'Anda masih memiliki catatan keluar yang aktif. Selesaikan check-in terlebih dahulu sebelum mencatat keluar kembali.');
+        }
+
         $data = $request->validate([
             'alasan' => 'required|string|min:5',
             'tujuan' => 'required|string|max:255',
@@ -42,7 +60,7 @@ class ChecklogController extends Controller
         ]);
 
         $log = GuruChecklog::create([
-            'guru_id' => auth()->user()->guru->id,
+            'guru_id' => $guru->id,
             'alasan' => $data['alasan'],
             'tujuan' => $data['tujuan'],
             'lokasi' => $data['lokasi'],
@@ -60,15 +78,29 @@ class ChecklogController extends Controller
      */
     public function checkIn(GuruChecklog $log)
     {
-        // Pastikan yang di-checkin adalah milik guru yang login dan masih status 'keluar'
-        if ($log->guru_id !== auth()->user()->guru->id || $log->status !== 'keluar') {
-            abort(403, 'Aksi tidak valid.');
+        $guru = auth()->user()->guru;
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
         }
 
-        $log->update([
-            'jam_kembali' => now(), // Waktu otomatis saat tombol ditekan
-            'status' => 'selesai',
-        ]);
+        // Pastikan yang di-checkin adalah milik guru yang login dan masih status 'keluar'
+        if ($log->guru_id !== $guru->id || $log->status !== 'keluar') {
+            return redirect()->route('guru.checklog.index')
+                ->with('error', 'Tidak ada catatan keluar aktif untuk diselesaikan.');
+        }
+
+        $updated = GuruChecklog::whereKey($log->id)
+            ->where('guru_id', $guru->id)
+            ->where('status', 'keluar')
+            ->update([
+                'jam_kembali' => now(),
+                'status' => 'selesai',
+            ]);
+
+        if (! $updated) {
+            return redirect()->route('guru.checklog.index')
+                ->with('error', 'Catatan keluar sudah diselesaikan sebelumnya.');
+        }
 
         $this->auditLog->log(auth()->id(), 'guru_check_in', 'guru_checklog', $log->id);
 

@@ -80,26 +80,7 @@ class DispensasiTimeHelper
      */
     public static function getMaxJamPelajaran(?int $dayOfWeek = null): int
     {
-        if ($dayOfWeek === null) {
-            $dayOfWeek = now()->dayOfWeek;
-        }
-
-        $defaultJadwal = json_encode([
-            'regular' => array_fill(1, 10, ['start' => '00:00', 'end' => '00:00']),
-            'friday'  => array_fill(1, 8, ['start' => '00:00', 'end' => '00:00'])
-        ]);
-
-        $jadwalData = json_decode(Setting::get('jam_pelajaran', $defaultJadwal), true);
-
-        if ($dayOfWeek === 5) {
-            // Hitung jumlah jam yang diisi untuk Jumat, fallback ke 8
-            $count = count(array_filter($jadwalData['friday'] ?? [], fn($j) => !empty($j['start'])));
-            return $count > 0 ? $count : 8;
-        }
-
-        // Hitung jumlah jam yang diisi untuk Regular, fallback ke 10
-        $count = count(array_filter($jadwalData['regular'] ?? [], fn($j) => !empty($j['start'])));
-        return $count > 0 ? $count : 10;
+        return TimeHelper::getMaxJamPelajaran($dayOfWeek);
     }
     /**
      * Hitung selisih menit keterlambatan

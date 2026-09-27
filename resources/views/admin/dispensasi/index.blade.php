@@ -73,8 +73,8 @@
                 @forelse($dispensasi as $d)
                 <tr class="hover:bg-gray-50/60 transition-colors">
                     <td class="p-3.5 font-mono text-xs text-gray-600 font-semibold">{{ $d->nomor_surat }}</td>
-                    <td class="p-3.5 font-semibold text-gray-900">{{ $d->siswa->nama_lengkap }}</td>
-                    <td class="p-3.5 text-sm text-gray-600">{{ $d->siswa->kelas?->nama_kelas ?? '-' }}</td>
+                    <td class="p-3.5 font-semibold text-gray-900">{{ $d->siswa?->nama_lengkap ?? '-' }}</td>
+                    <td class="p-3.5 text-sm text-gray-600">{{ $d->siswa?->kelas?->nama_kelas ?? '-' }}</td>
                     <td class="p-3.5 text-sm capitalize text-gray-600">{{ str_replace('_', ' ', $d->kategori) }}</td>
                     <td class="p-3.5 text-sm text-gray-600">{{ Str::limit($d->tujuan, 30) }}</td>
                     <td class="p-3.5">
@@ -103,7 +103,7 @@
 
                             {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Menggunakan route 'admin.semua.pengajuan.destroy' --}}
                             <button type="button"
-                                    onclick="confirmDelete({{ $d->id }}, '{{ $d->nomor_surat }}', '{{ $d->siswa->nama_lengkap }}')"
+                                    onclick="confirmDelete({{ $d->id }}, '{{ $d->nomor_surat }}', '{{ addslashes($d->siswa?->nama_lengkap ?? '-') }}')"
                                     class="inline-flex items-center justify-center w-9 h-9 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
                                     title="Hapus Dispensasi">
                                 <i class="fas fa-trash-alt text-sm"></i>

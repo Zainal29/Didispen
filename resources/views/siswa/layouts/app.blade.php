@@ -236,7 +236,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-gray-900">{{ $user->name }}</h3>
-                        <p class="text-sm text-gray-500">{{ $siswa->kelas?->nama_kelas ?? '-' }} • NIS {{ $user->nis_nip }}</p>
+                        <p class="text-sm text-gray-500">{{ $siswa?->kelas?->nama_kelas ?? '-' }} • NIS {{ $user->nis_nip }}</p>
                     </div>
                 </div>
 

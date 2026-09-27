@@ -154,6 +154,67 @@
                 @endif
             </div>
 
+            {{-- Foto Verifikasi & Foto Bukti --}}
+            <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
+                <h3 class="text-sm font-bold text-gray-900 border-b border-gray-100 pb-3 flex items-center">
+                    <i class="fas fa-camera text-gray-400 mr-2"></i>Foto Verifikasi & Bukti
+                </h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {{-- Foto Verifikasi --}}
+                    <div>
+                        <p class="text-xs font-bold text-gray-700 mb-2 flex items-center">
+                            <i class="fas fa-user-check text-blue-600 mr-1.5"></i>Foto Verifikasi (Selfie)
+                        </p>
+                        @php
+                            $hasFotoVerif = !empty($dispensasi->foto_verifikasi) && \Illuminate\Support\Facades\Storage::disk('public')->exists($dispensasi->foto_verifikasi);
+                        @endphp
+                        @if($hasFotoVerif)
+                            <div class="rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-video max-h-48 flex items-center justify-center cursor-pointer hover:shadow-md transition-shadow" onclick="openPhotoModal('{{ asset('storage/' . $dispensasi->foto_verifikasi) }}', 'Foto Verifikasi (Selfie)')">
+                                <img src="{{ asset('storage/' . $dispensasi->foto_verifikasi) }}" alt="Foto Verifikasi" class="w-full h-full object-cover">
+                            </div>
+                        @else
+                            <div class="p-5 rounded-lg bg-gray-50 border border-dashed border-gray-300 text-center">
+                                <i class="fas fa-camera text-gray-400 text-2xl mb-2 block"></i>
+                                <p class="text-xs text-gray-600 font-medium">
+                                    @if($dispensasi->status === 'selesai')
+                                        Foto verifikasi sudah dihapus karena dispensasi telah diselesaikan.
+                                    @else
+                                        Foto verifikasi tidak tersedia.
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Foto Bukti --}}
+                    <div>
+                        <p class="text-xs font-bold text-gray-700 mb-2 flex items-center">
+                            <i class="fas fa-image text-emerald-600 mr-1.5"></i>Foto Bukti Kegiatan
+                        </p>
+                        @php
+                            $hasFotoBukti = !empty($dispensasi->foto_bukti) && \Illuminate\Support\Facades\Storage::disk('public')->exists($dispensasi->foto_bukti);
+                        @endphp
+                        @if($hasFotoBukti)
+                            <div class="rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-video max-h-48 flex items-center justify-center cursor-pointer hover:shadow-md transition-shadow" onclick="openPhotoModal('{{ asset('storage/' . $dispensasi->foto_bukti) }}', 'Foto Bukti Kegiatan')">
+                                <img src="{{ asset('storage/' . $dispensasi->foto_bukti) }}" alt="Foto Bukti" class="w-full h-full object-cover">
+                            </div>
+                        @else
+                            <div class="p-5 rounded-lg bg-gray-50 border border-dashed border-gray-300 text-center">
+                                <i class="fas fa-image text-gray-400 text-2xl mb-2 block"></i>
+                                <p class="text-xs text-gray-600 font-medium">
+                                    @if($dispensasi->status === 'selesai')
+                                        Foto bukti sudah dihapus karena dispensasi telah diselesaikan.
+                                    @else
+                                        Foto bukti belum diupload.
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             {{-- Status QR Code & Cetak --}}
             <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                 <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center border-b border-gray-100 pb-3">
@@ -423,6 +484,23 @@
             </a>
         </div>
     </div>
+    {{-- Modal Preview Foto --}}
+    <div id="photoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm" onclick="closePhotoModal(event)">
+        <div class="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onclick="event.stopPropagation()">
+            <div class="w-full bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
+                <h3 id="photoModalTitle" class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <i class="fas fa-image text-blue-600"></i>
+                    <span>Preview Foto</span>
+                </h3>
+                <button type="button" onclick="closePhotoModal()" class="w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-base"></i>
+                </button>
+            </div>
+            <div class="p-3 bg-gray-950 flex items-center justify-center overflow-hidden">
+                <img id="photoModalImage" src="" alt="Preview Foto" class="max-w-full max-h-[70vh] w-auto h-auto object-contain rounded-lg">
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -434,6 +512,25 @@ function handleAfterPrintSiswa() {
         btn.classList.add('opacity-75', 'cursor-not-allowed');
     }
     setTimeout(function() { location.reload(); }, 2500);
+}
+
+function openPhotoModal(imageUrl, title = 'Preview Foto') {
+    const modal = document.getElementById('photoModal');
+    const modalImg = document.getElementById('photoModalImage');
+    const modalTitle = document.getElementById('photoModalTitle');
+
+    if (modal && modalImg) {
+        modalImg.src = imageUrl;
+        if (modalTitle) modalTitle.querySelector('span').textContent = title;
+        modal.classList.remove('hidden');
+    }
+}
+
+function closePhotoModal(e) {
+    const modal = document.getElementById('photoModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
 }
 </script>
 @endpush

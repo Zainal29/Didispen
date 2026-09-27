@@ -179,9 +179,15 @@
                             <div class="relative">
                                 <select name="jam_keluar" id="jam_keluar" required class="w-full h-11 px-3.5 pr-10 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all appearance-none @error('jam_keluar') border-red-500 @enderror">
                                     <option value="">-- Pilih Jam Keluar --</option>
-                                    @for($i = 1; $i <= $maxJam; $i++)
-                                        <option value="{{ $i }}" {{ old('jam_keluar') == $i ? 'selected' : '' }}>Jam Pelajaran ke-{{ $i }}</option>
-                                    @endfor
+                                    @foreach($jadwalHariIni ?? [] as $i => $slot)
+                                        @php
+                                            $sDot = str_replace(':', '.', $slot['start'] ?? '');
+                                            $eDot = str_replace(':', '.', $slot['end'] ?? '');
+                                        @endphp
+                                        <option value="{{ $i }}" {{ old('jam_keluar') == $i ? 'selected' : '' }}>
+                                            Jam {{ $i }} ({{ $sDot }} - {{ $eDot }})
+                                        </option>
+                                    @endforeach
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
                                     <i class="fas fa-chevron-down text-xs"></i>
@@ -197,9 +203,15 @@
                                 <select name="jam_kembali" id="jam_kembali" required disabled
                                         class="w-full h-11 px-3.5 pr-10 rounded-lg border border-gray-300 bg-gray-100 text-sm text-gray-400 cursor-not-allowed focus:outline-none transition-all appearance-none opacity-60 @error('jam_kembali') border-red-500 @enderror">
                                     <option value="">-- Pilih Jam Keluar Dulu --</option>
-                                    @for($i = 1; $i <= $maxJam; $i++)
-                                        <option value="{{ $i }}" {{ old('jam_kembali') == $i ? 'selected' : '' }}>Jam Pelajaran ke-{{ $i }}</option>
-                                    @endfor
+                                    @foreach($jadwalHariIni ?? [] as $i => $slot)
+                                        @php
+                                            $sDot = str_replace(':', '.', $slot['start'] ?? '');
+                                            $eDot = str_replace(':', '.', $slot['end'] ?? '');
+                                        @endphp
+                                        <option value="{{ $i }}" {{ old('jam_kembali') == $i ? 'selected' : '' }}>
+                                            Jam {{ $i }} ({{ $sDot }} - {{ $eDot }})
+                                        </option>
+                                    @endforeach
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
                                     <i class="fas fa-chevron-down text-xs"></i>
@@ -500,77 +512,80 @@
         }
 
         // ==========================================
-        // 5. BATASI JAM KELUAR BERDASARKAN JADWAL DINAMIS
+        // 5. LOGIKA JAM PELAJARAN & DROPDOWN (SINGLE SOURCE OF TRUTH)
         // ==========================================
         const jamKeluarSelect = document.getElementById('jam_keluar');
-        const dayOfWeek = {{ now()->dayOfWeek }};
-        const maxJam = {{ $maxJam ?? 10 }};
-        const jadwalPelajaran = @json($jadwalPelajaran ?? ['regular' => [], 'friday' => []]);
-
-        function getCurrentLessonHour() {
-            const now = new Date();
-            const currentTime = now.getHours() * 60 + now.getMinutes();
-
-            // Gunakan jadwal dinamis berdasarkan hari (Jumat atau Regular)
-            const jadwalHariIni = (dayOfWeek === 5) ? jadwalPelajaran.friday : jadwalPelajaran.regular;
-
-            let currentLesson = 1;
-            for (const [jam, waktu] of Object.entries(jadwalHariIni)) {
-                if (!waktu || !waktu.start || !waktu.end) continue;
-
-                const [startH, startM] = waktu.start.split(':').map(Number);
-                const [endH, endM] = waktu.end.split(':').map(Number);
-                const startMinutes = startH * 60 + startM;
-                const endMinutes = endH * 60 + endM;
-
-                if (currentTime >= startMinutes) {
-                    if (currentTime <= endMinutes) {
-                        currentLesson = parseInt(jam);
-                    } else {
-                        currentLesson = parseInt(jam) + 1;
-                    }
-                }
-            }
-            return Math.min(currentLesson, maxJam + 1);
-        }
-
-        function disablePastLessons() {
-            if (!jamKeluarSelect) return;
-            const currentLesson = getCurrentLessonHour();
-
-            jamKeluarSelect.querySelectorAll('option').forEach(option => {
-                const value = parseInt(option.value);
-                if (option.value === '') return;
-
-                const isPast = value < currentLesson;
-                const isLimit = value > maxJam;
-
-                if (isPast || isLimit) {
-                    option.disabled = true;
-                    option.classList.add('text-gray-400');
-                    option.textContent = `Jam Pelajaran ke-${value} (${isLimit ? 'Tidak Tersedia' : 'Sudah Lewat'})`;
-                } else {
-                    option.disabled = false;
-                    option.classList.remove('text-gray-400');
-                    option.textContent = `Jam Pelajaran ke-${value}`;
-                }
-            });
-
-            const currentValue = parseInt(jamKeluarSelect.value);
-            if (!isNaN(currentValue) && (currentValue < currentLesson || currentValue > maxJam)) {
-                jamKeluarSelect.value = '';
-            }
-        }
-
-        // ==========================================
-        // 6. DINAMISASI JAM KEMBALI
-        // ==========================================
         const jamKembaliSelect = document.getElementById('jam_kembali');
         const infoJam = document.getElementById('infoJam');
 
+        let jadwalHariIni = @json($jadwalHariIni ?? []);
+        const maxJam = {{ $maxJam ?? 10 }};
+
+        function getWibNow() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            return new Date(utc + (3600000 * 7));
+        }
+
+        function formatDot(timeStr) {
+            if (!timeStr) return '';
+            return timeStr.replace(':', '.');
+        }
+
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const parts = timeStr.split(':');
+            return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+        }
+
+        function updateJamPelajaranDropdowns() {
+            if (!jamKeluarSelect) return;
+
+            const wib = getWibNow();
+            const currentMinutes = wib.getHours() * 60 + wib.getMinutes();
+
+            // 1. Evaluasi Opsi Jam Keluar
+            jamKeluarSelect.querySelectorAll('option').forEach(option => {
+                const val = parseInt(option.value, 10);
+                if (isNaN(val) || val <= 0) return;
+
+                const slot = jadwalHariIni[val];
+                if (!slot || !slot.start || !slot.end) {
+                    option.disabled = true;
+                    option.textContent = `Jam ${val} - Tidak Tersedia`;
+                    return;
+                }
+
+                const endMin = timeToMinutes(slot.end);
+                const isPast = currentMinutes >= endMin;
+
+                if (isPast) {
+                    option.disabled = true;
+                    option.classList.add('text-gray-400');
+                    option.textContent = `Jam ${val} (${formatDot(slot.start)}) - Sudah Lewat`;
+                } else {
+                    option.disabled = false;
+                    option.classList.remove('text-gray-400');
+                    option.textContent = `Jam ${val} (${formatDot(slot.start)} - ${formatDot(slot.end)})`;
+                }
+            });
+
+            // Jika jam keluar yang dipilih sudah lewat, reset pilihan
+            const selectedKeluar = parseInt(jamKeluarSelect.value, 10);
+            if (!isNaN(selectedKeluar) && selectedKeluar > 0) {
+                const slot = jadwalHariIni[selectedKeluar];
+                if (slot && currentMinutes >= timeToMinutes(slot.end)) {
+                    jamKeluarSelect.value = '';
+                }
+            }
+
+            // 2. Evaluasi Opsi Jam Kembali
+            updateJamKembaliOptions();
+        }
+
         function updateJamKembaliOptions() {
             if (!jamKeluarSelect || !jamKembaliSelect) return;
-            const keluarValue = parseInt(jamKeluarSelect.value);
+            const keluarValue = parseInt(jamKeluarSelect.value, 10);
             const defaultOption = jamKembaliSelect.querySelector('option[value=""]');
 
             if (isNaN(keluarValue) || keluarValue <= 0) {
@@ -588,25 +603,42 @@
             jamKembaliSelect.classList.add('bg-white', 'text-gray-900');
             if (defaultOption) defaultOption.textContent = '-- Pilih Jam Kembali --';
 
-            let adaOptionAktif = false;
+            const wib = getWibNow();
+            const currentMinutes = wib.getHours() * 60 + wib.getMinutes();
+
             jamKembaliSelect.querySelectorAll('option').forEach(option => {
-                const val = parseInt(option.value);
+                const val = parseInt(option.value, 10);
                 if (option.value === '') return;
 
-                // ✅ PERBAIKAN: Gunakan maxJam dinamis, JANGAN hardcode angka 5
-                const isInvalid = (val <= keluarValue) || (val > maxJam);
+                const slot = jadwalHariIni[val];
+                if (!slot || !slot.start || !slot.end) {
+                    option.disabled = true;
+                    option.textContent = `Jam ${val} - Tidak Tersedia`;
+                    return;
+                }
 
-                if (isInvalid) {
+                const isPast = currentMinutes >= timeToMinutes(slot.end);
+                const isLessOrEqualKeluar = val <= keluarValue;
+
+                if (isPast) {
+                    // Sudah lewat berdasarkan waktu
                     option.disabled = true;
                     option.classList.add('text-gray-400');
+                    option.textContent = `Jam ${val} (${formatDot(slot.start)}) - Sudah Lewat`;
+                } else if (isLessOrEqualKeluar) {
+                    // Tidak boleh <= Jam Keluar, tapi waktu belum lewat: label normal!
+                    option.disabled = true;
+                    option.classList.add('text-gray-400');
+                    option.textContent = `Jam ${val} (${formatDot(slot.start)} - ${formatDot(slot.end)})`;
                 } else {
+                    // Aktif
                     option.disabled = false;
                     option.classList.remove('text-gray-400');
-                    adaOptionAktif = true;
+                    option.textContent = `Jam ${val} (${formatDot(slot.start)} - ${formatDot(slot.end)})`;
                 }
             });
 
-            const kembaliValue = parseInt(jamKembaliSelect.value);
+            const kembaliValue = parseInt(jamKembaliSelect.value, 10);
             if (!isNaN(kembaliValue) && kembaliValue <= keluarValue) {
                 jamKembaliSelect.value = '';
             }
@@ -614,11 +646,8 @@
             if (infoJam) {
                 infoJam.classList.remove('hidden');
                 const spanInfo = infoJam.querySelector('span');
-                // ✅ PERBAIKAN: Tampilkan maxJam dinamis di pesan info
-                if (dayOfWeek === 5) {
-                    spanInfo.textContent = `Jam kembali harus lebih dari Jam ke-${keluarValue} (Maksimal Jam ke-${maxJam} untuk hari Jumat)`;
-                } else {
-                    spanInfo.textContent = `Jam kembali harus lebih dari Jam Pelajaran ke-${keluarValue}`;
+                if (spanInfo) {
+                    spanInfo.textContent = `Jam kembali harus lebih dari Jam ${keluarValue}`;
                 }
             }
         }
@@ -626,8 +655,7 @@
         if (jamKeluarSelect) {
             jamKeluarSelect.addEventListener('change', updateJamKembaliOptions);
             jamKeluarSelect.addEventListener('input', updateJamKembaliOptions);
-            disablePastLessons();
-            updateJamKembaliOptions();
+            updateJamPelajaranDropdowns();
         }
 
         // ==========================================
@@ -746,6 +774,7 @@
 
         checkDispensasiTime();
         setInterval(checkDispensasiTime, 60000);
+        setInterval(updateJamPelajaranDropdowns, 30000);
     });
     </script>
     @endpush

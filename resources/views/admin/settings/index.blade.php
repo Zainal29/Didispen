@@ -100,58 +100,139 @@
             </div>
 
             {{-- ========================================== --}}
-            {{-- 3. JADWAL JAM PELAJARAN (BARU) --}}
+            {{-- 3. JADWAL JAM PELAJARAN (3 POLA) --}}
             {{-- ========================================== --}}
             <div class="p-5 border-t border-gray-100 bg-gray-50/50">
-                <h3 class="text-base font-bold text-gray-900 mb-4 flex items-center">
+                <h3 class="text-base font-bold text-gray-900 mb-2 flex items-center">
                     <i class="fas fa-clock text-indigo-600 mr-2"></i>Jadwal Jam Pelajaran
                 </h3>
-                <p class="text-sm text-gray-500 mb-4">Atur waktu mulai dan selesai untuk setiap jam pelajaran. Kosongkan jika jam tersebut tidak digunakan.</p>
+                <p class="text-sm text-gray-500 mb-4">Atur waktu mulai dan selesai untuk setiap jam pelajaran sesuai pola hari KBM.</p>
 
                 @php
-                    $jadwalData = json_decode($jam_pelajaran, true) ?? ['regular' => [], 'friday' => []];
+                    $jadwalData = is_array($jam_pelajaran) ? $jam_pelajaran : (json_decode($jam_pelajaran, true) ?? []);
+                    $seninSelasa = $jadwalData['senin_selasa'] ?? [];
+                    $rabuKamis = $jadwalData['rabu_kamis'] ?? [];
+                    $jumat = $jadwalData['jumat'] ?? [];
+                    $sabtu = $jadwalData['sabtu'] ?? [];
+                    $minggu = $jadwalData['minggu'] ?? [];
                 @endphp
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {{-- Senin - Kamis --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {{-- 1. SENIN & SELASA (10 Jam) --}}
                     <div>
-                        <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2 rounded border flex justify-between">
-                            <span>Senin - Kamis</span>
-                            <span class="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Maksimal 10 Jam</span>
+                        <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
+                            <span class="text-indigo-700"><i class="fas fa-calendar-day mr-1.5"></i>Senin & Selasa</span>
+                            <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">10 Jam (45m)</span>
                         </h4>
-                        <div class="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
                             @for($i = 1; $i <= 10; $i++)
-                                <div class="flex items-center gap-2 bg-white p-2.5 rounded border border-gray-200 hover:border-indigo-300 transition-colors">
-                                    <span class="text-xs font-bold text-gray-600 w-16">Jam ke-{{ $i }}</span>
-                                    <input type="time" name="jam_pelajaran_regular[{{ $i }}][start]"
-                                           value="{{ old('jam_pelajaran_regular.'.$i.'.start', $jadwalData['regular'][$i]['start'] ?? '') }}"
-                                           class="flex-1 text-base sm:text-sm border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
-                                    <span class="text-gray-400 font-bold">-</span>
-                                    <input type="time" name="jam_pelajaran_regular[{{ $i }}][end]"
-                                           value="{{ old('jam_pelajaran_regular.'.$i.'.end', $jadwalData['regular'][$i]['end'] ?? '') }}"
-                                           class="flex-1 text-base sm:text-sm border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_senin_selasa[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_senin_selasa.'.$i.'.start', $seninSelasa[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_senin_selasa[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_senin_selasa.'.$i.'.end', $seninSelasa[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none py-1.5 px-2">
                                 </div>
                             @endfor
                         </div>
                     </div>
 
-                    {{-- Jumat --}}
+                    {{-- 2. RABU & KAMIS (11 Jam) --}}
                     <div>
-                        <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2 rounded border flex justify-between">
-                            <span>Jumat</span>
-                            <span class="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Maksimal 8 Jam</span>
+                        <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
+                            <span class="text-emerald-700"><i class="fas fa-calendar-day mr-1.5"></i>Rabu & Kamis</span>
+                            <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">11 Jam (40m)</span>
                         </h4>
-                        <div class="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                            @for($i = 1; $i <= 11; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-emerald-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_rabu_kamis[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_rabu_kamis.'.$i.'.start', $rabuKamis[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_rabu_kamis[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_rabu_kamis.'.$i.'.end', $rabuKamis[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+                        </div>
+                    </div>
+
+                    {{-- 3. JUMAT (8 Jam) --}}
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
+                            <span class="text-amber-700"><i class="fas fa-calendar-day mr-1.5"></i>Jumat</span>
+                            <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">8 Jam</span>
+                        </h4>
+                        <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
                             @for($i = 1; $i <= 8; $i++)
-                                <div class="flex items-center gap-2 bg-white p-2.5 rounded border border-gray-200 hover:border-indigo-300 transition-colors">
-                                    <span class="text-xs font-bold text-gray-600 w-16">Jam ke-{{ $i }}</span>
-                                    <input type="time" name="jam_pelajaran_friday[{{ $i }}][start]"
-                                           value="{{ old('jam_pelajaran_friday.'.$i.'.start', $jadwalData['friday'][$i]['start'] ?? '') }}"
-                                           class="flex-1 text-base sm:text-sm border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
-                                    <span class="text-gray-400 font-bold">-</span>
-                                    <input type="time" name="jam_pelajaran_friday[{{ $i }}][end]"
-                                           value="{{ old('jam_pelajaran_friday.'.$i.'.end', $jadwalData['friday'][$i]['end'] ?? '') }}"
-                                           class="flex-1 text-base sm:text-sm border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-amber-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_jumat[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_jumat.'.$i.'.start', $jumat[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_jumat[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_jumat.'.$i.'.end', $jumat[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+                        </div>
+                    </div>
+
+                    {{-- 4. SABTU (Testing - 10 Jam) --}}
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
+                            <span class="text-purple-700"><i class="fas fa-flask mr-1.5"></i>Sabtu (Testing)</span>
+                            <span class="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">10 Jam (Testing)</span>
+                        </h4>
+                        <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                            @for($i = 1; $i <= 10; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_sabtu[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_sabtu.'.$i.'.start', $sabtu[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_sabtu[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_sabtu.'.$i.'.end', $sabtu[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+                        </div>
+                    </div>
+
+                    {{-- 5. MINGGU (Testing - 10 Jam) --}}
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
+                            <span class="text-rose-700"><i class="fas fa-flask mr-1.5"></i>Minggu (Testing)</span>
+                            <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">10 Jam (Testing)</span>
+                        </h4>
+                        <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                            @for($i = 1; $i <= 10; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-rose-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_minggu[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_minggu.'.$i.'.start', $minggu[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_minggu[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_minggu.'.$i.'.end', $minggu[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none py-1.5 px-2">
                                 </div>
                             @endfor
                         </div>

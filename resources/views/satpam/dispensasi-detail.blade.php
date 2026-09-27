@@ -78,8 +78,23 @@
             </div>
             @endif-->
 
-            {{-- Foto Verifikasi (Jika Ada) --}}
-            @if($dispensasi->foto_verifikasi)
+            {{-- Foto Verifikasi & Bukti --}}
+            @php
+                $hasFotoVerif = $dispensasi->foto_verifikasi && \Illuminate\Support\Facades\Storage::disk('public')->exists($dispensasi->foto_verifikasi);
+                $hasFotoBukti = $dispensasi->foto_bukti && \Illuminate\Support\Facades\Storage::disk('public')->exists($dispensasi->foto_bukti);
+            @endphp
+
+            @if($dispensasi->status === 'selesai' && !$hasFotoVerif && !$hasFotoBukti)
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center gap-3 text-gray-600 text-xs">
+                    <i class="fas fa-info-circle text-gray-400 text-base flex-shrink-0"></i>
+                    <span>Foto verifikasi dan bukti kedatangan telah dihapus otomatis dari penyimpanan untuk efisiensi server karena dispensasi telah diselesaikan. Riwayat data tetap tersimpan aman.</span>
+                </div>
+            </div>
+            @endif
+
+            {{-- Foto Verifikasi (Jika Ada & File Fisik Tersedia) --}}
+            @if($hasFotoVerif)
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div class="flex flex-col sm:flex-row items-start gap-4">
                     <div class="w-20 h-20 rounded-lg overflow-hidden border border-blue-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_verifikasi) }}', 'Foto Verifikasi - {{ $dispensasi->siswa->nama_lengkap }}')">
@@ -104,8 +119,8 @@
             </div>
             @endif
 
-            {{-- Foto Bukti Siswa --}}
-            @if($dispensasi->foto_bukti)
+            {{-- Foto Bukti Siswa (Jika Ada & File Fisik Tersedia) --}}
+            @if($hasFotoBukti)
             <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                 <div class="flex flex-col sm:flex-row items-start gap-4">
                     <div class="w-20 h-20 rounded-lg overflow-hidden border border-emerald-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_bukti) }}', 'Foto Bukti Kedatangan - {{ $dispensasi->siswa->nama_lengkap }}')">
@@ -367,10 +382,21 @@
                     <p class="text-gray-500 text-[10px] font-semibold uppercase mb-1 tracking-wider">Nama Guru</p>
                     <p class="font-bold text-gray-900">{{ $dispensasi->guru->nama_lengkap }}</p>
                 </div>
-                <div>
-                    <p class="text-gray-500 text-[10px] font-semibold uppercase mb-1 tracking-wider">Disetujui Pada</p>
-                    <p class="text-gray-700 text-sm font-medium">{{ $dispensasi->updated_at->isoFormat('D MMMM Y, HH:mm') }} WIB</p>
-                </div>
+                @if($dispensasi->status === 'ditolak')
+                    @if($dispensasi->rejected_at)
+                    <div>
+                        <p class="text-gray-500 text-[10px] font-semibold uppercase mb-1 tracking-wider">Ditolak Pada</p>
+                        <p class="text-red-700 text-sm font-medium">{{ $dispensasi->rejected_at->isoFormat('D MMMM Y, HH:mm') }} WIB</p>
+                    </div>
+                    @endif
+                @elseif(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
+                    @if($dispensasi->approved_at)
+                    <div>
+                        <p class="text-gray-500 text-[10px] font-semibold uppercase mb-1 tracking-wider">{{ $dispensasi->dibuat_manual_oleh_guru ? 'Diterbitkan Pada' : 'Disetujui Pada' }}</p>
+                        <p class="text-gray-700 text-sm font-medium">{{ $dispensasi->approved_at->isoFormat('D MMMM Y, HH:mm') }} WIB</p>
+                    </div>
+                    @endif
+                @endif
             </div>
         </div>
         @endif
@@ -386,11 +412,30 @@
                     <p class="text-xs font-bold text-gray-800">Pengajuan Dibuat</p>
                     <p class="text-[10px] text-gray-500 mt-0.5">{{ $dispensasi->created_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                 </div>
-                @if($dispensasi->guru)
+                @if($dispensasi->status === 'ditolak')
+                <div class="relative pl-6">
+                    <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-sm"></div>
+                    <p class="text-xs font-bold text-gray-800">Ditolak Guru Piket</p>
+                    @if($dispensasi->guru)
+                        <p class="text-[11px] text-gray-600 mt-0.5">Oleh: {{ $dispensasi->guru->nama_lengkap }}</p>
+                    @endif
+                    @if($dispensasi->rejected_at)
+                        <p class="text-[10px] text-gray-500 mt-0.5">{{ $dispensasi->rejected_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                    @endif
+                    @if($dispensasi->catatan_admin)
+                        <p class="text-xs text-red-600 mt-0.5">Alasan: {{ $dispensasi->catatan_admin }}</p>
+                    @endif
+                </div>
+                @elseif(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
                 <div class="relative pl-6">
                     <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-sm"></div>
-                    <p class="text-xs font-bold text-gray-800">Disetujui Guru Piket</p>
-                    <p class="text-[10px] text-gray-500 mt-0.5">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                    <p class="text-xs font-bold text-gray-800">{{ $dispensasi->dibuat_manual_oleh_guru ? 'Dibuat Manual & Disetujui' : 'Disetujui Guru Piket' }}</p>
+                    @if($dispensasi->guru)
+                        <p class="text-[11px] text-gray-600 mt-0.5">Oleh: {{ $dispensasi->guru->nama_lengkap }}</p>
+                    @endif
+                    @if($dispensasi->approved_at)
+                        <p class="text-[10px] text-gray-500 mt-0.5">{{ $dispensasi->approved_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                    @endif
                 </div>
                 @endif
                 @if($dispensasi->waktu_keluar_aktual)

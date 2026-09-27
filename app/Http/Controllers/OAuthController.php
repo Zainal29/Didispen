@@ -453,6 +453,40 @@ class OAuthController extends Controller
         $this->ensureUserProfile($user);
 
         /*
+         * STEP 8.5: Validasi status keaktifan siswa.
+         */
+        if ($user->role === 'siswa') {
+            $siswa = $user->siswa ?: Siswa::where('user_id', $user->id)->first();
+            if ($siswa && ! $siswa->status_aktif) {
+                Log::warning('SiPintu SSO: Login siswa tidak aktif ditolak.', [
+                    'user_id' => $user->id,
+                    'nis_nip' => $user->nis_nip,
+                ]);
+
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Akun siswa Anda tidak aktif. Silakan hubungi Administrator.',
+                ]);
+            }
+        }
+
+        /*
+         * STEP 8.6: Validasi status keaktifan guru.
+         */
+        if ($user->role === 'guru') {
+            $guru = $user->guru ?: Guru::where('user_id', $user->id)->first();
+            if ($guru && ! $guru->status_aktif) {
+                Log::warning('SiPintu SSO: Login guru tidak aktif ditolak.', [
+                    'user_id' => $user->id,
+                    'nis_nip' => $user->nis_nip,
+                ]);
+
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Akun guru Anda tidak aktif. Silakan hubungi Administrator.',
+                ]);
+            }
+        }
+
+        /*
          * STEP 9: Login lokal.
          */
         Auth::login($user, true);

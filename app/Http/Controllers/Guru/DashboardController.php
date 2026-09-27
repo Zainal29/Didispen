@@ -15,15 +15,18 @@ class DashboardController extends Controller
         $search = $request->get('search', ''); // <i class="fas fa-check-circle"></i> BARU: Ambil kata kunci pencarian
 
         // 1. STATISTIK HARI INI (Tetap global untuk hari ini)
+        $menungguCount = Dispensasi::where('status', 'menunggu')->whereDate('created_at', $today)->count();
         $stats = [
-            'menunggu' => Dispensasi::where('status', 'menunggu')->whereDate('created_at', $today)->count(),
+            'menunggu'  => $menungguCount,
+            'pending'   => $menungguCount,
             'disetujui' => Dispensasi::where('status', 'disetujui')->whereDate('created_at', $today)->count(),
-            'keluar' => Dispensasi::where('status', 'keluar')->whereDate('created_at', $today)->count(),
-            'selesai' => Dispensasi::where('status', 'selesai')->whereDate('created_at', $today)->count(),
-            'total' => Dispensasi::whereDate('created_at', $today)->count(),
+            'keluar'    => Dispensasi::where('status', 'keluar')->whereDate('created_at', $today)->count(),
+            'selesai'   => Dispensasi::where('status', 'selesai')->whereDate('created_at', $today)->count(),
+            'terlambat' => Dispensasi::where('status', 'keluar')->where('batas_waktu_kembali', '<', now())->whereDate('created_at', $today)->count(),
+            'total'     => Dispensasi::whereDate('created_at', $today)->count(),
         ];
 
-        // 2. QUERY DASAR DENGAN PENCARIAN <i class="fas fa-check-circle"></i>
+        // 2. QUERY DASAR DENGAN PENCARIAN
         $baseQuery = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
             ->whereDate('created_at', $today);
 
@@ -40,22 +43,22 @@ class DashboardController extends Controller
             });
         }
 
-        // 3. CLONE QUERY UNTUK SETIAP KATEGORI (Agar search berlaku di semua tab)
-        $menunggu = (clone $baseQuery)->where('status', 'menunggu')->latest()->get();
-        $disetujui = (clone $baseQuery)->where('status', 'disetujui')->latest()->get();
-        $sedangKeluar = (clone $baseQuery)->where('status', 'keluar')->latest()->get();
-        $selesai = (clone $baseQuery)->where('status', 'selesai')->latest()->get();
-        $terlambat = (clone $baseQuery)->where('status', 'keluar')->where('batas_waktu_kembali', '<', now())->latest()->get();
-
-        // 4. TENTUKAN DATA YANG DITAMPILKAN
+        // 3. TENTUKAN DATA YANG DITAMPILKAN SECARA EFISIEN LANGSUNG DARI DATABASE
+        $displayQuery = clone $baseQuery;
         $displayData = match($filter) {
-            'menunggu' => $menunggu,
-            'keluar' => $sedangKeluar,
-            'selesai' => $selesai,
-            'terlambat' => $terlambat,
-            'disetujui' => $disetujui,
-            default => $menunggu->merge($disetujui)->merge($sedangKeluar)->merge($selesai)->sortByDesc('created_at')->values(),
+            'menunggu'  => $displayQuery->where('status', 'menunggu')->latest()->get(),
+            'keluar'    => $displayQuery->where('status', 'keluar')->latest()->get(),
+            'selesai'   => $displayQuery->where('status', 'selesai')->latest()->get(),
+            'terlambat' => $displayQuery->where('status', 'keluar')->where('batas_waktu_kembali', '<', now())->latest()->get(),
+            'disetujui' => $displayQuery->where('status', 'disetujui')->latest()->get(),
+            default     => $displayQuery->latest()->get(),
         };
+
+        $menunggu = collect();
+        $disetujui = collect();
+        $sedangKeluar = collect();
+        $selesai = collect();
+        $terlambat = collect();
 
         $dihubungi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
             ->where('is_warned', true)

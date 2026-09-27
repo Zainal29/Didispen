@@ -82,7 +82,11 @@
                class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
                 <i class="fas fa-qrcode mr-1.5"></i>Lihat QR Code
             </a>
-            @if($dispensasiAktif->student_print_count < 15)
+            @php
+                $maxLimitAktif = \App\Helpers\PrintHelper::maxStudentLimit();
+                $isWithinPrintTime = \App\Helpers\PrintHelper::isWithinOperatingHours();
+            @endphp
+            @if(($dispensasiAktif->student_print_count ?? 0) < $maxLimitAktif && $isWithinPrintTime)
             <a href="{{ route('siswa.cetak', $dispensasiAktif) }}"
                target="_blank"
                class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors">
@@ -246,13 +250,13 @@ $cards = [
                         'selesai'   => 'bg-gray-100 text-gray-700',
                     ];
                     $maxPrint = \App\Helpers\PrintHelper::maxStudentLimit();
-                    $canPrint = in_array($pengajuan->status, \App\Helpers\PrintHelper::PRINTABLE_STATUSES) &&
-                                $pengajuan->print_count < $maxPrint;
+                    $studentPrintCount = $pengajuan->student_print_count ?? 0;
                     $currentTime = \App\Helpers\PrintHelper::currentTime();
                     $startTime = \App\Helpers\PrintHelper::startTime();
                     $endTime = \App\Helpers\PrintHelper::endTime();
                     $isWithinTime = \App\Helpers\PrintHelper::isWithinOperatingHours($currentTime);
-                    $canPrint = $canPrint && $isWithinTime;
+                    $canPrint = in_array($pengajuan->status, \App\Helpers\PrintHelper::PRINTABLE_STATUSES) &&
+                                $studentPrintCount < $maxPrint && $isWithinTime;
                 @endphp
                 <div class="p-4 sm:p-5 hover:bg-gray-50 transition-colors">
                     <div class="flex justify-between items-start gap-3 mb-2">
@@ -276,7 +280,7 @@ $cards = [
                             <i class="fas fa-eye mr-1.5"></i>Detail
                         </a>
                         @if(in_array($pengajuan->status, ['disetujui', 'keluar']))
-                            @if($pengajuan->print_count < $maxPrint && $isWithinTime)
+                            @if($canPrint)
                                 <a href="{{ route('siswa.cetak', $pengajuan) }}" target="_blank"
                                    class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
                                     <i class="fas fa-print mr-1.5"></i>Cetak
@@ -284,7 +288,7 @@ $cards = [
                             @else
                                 <button disabled
                                         class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-gray-400 bg-gray-100 cursor-not-allowed"
-                                        title="{{ $pengajuan->print_count >= $maxPrint ? 'Batas cetak tercapai (' . $maxPrint . ' kali)' : 'Di luar jam cetak (' . $startTime . ' - ' . $endTime . ' WIB)' }}">
+                                        title="{{ $studentPrintCount >= $maxPrint ? 'Batas cetak tercapai (' . $maxPrint . ' kali)' : 'Di luar jam cetak (' . $startTime . ' - ' . $endTime . ' WIB)' }}">
                                     <i class="fas fa-lock mr-1.5"></i>Cetak
                                 </button>
                             @endif

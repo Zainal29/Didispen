@@ -15,6 +15,9 @@ class DashboardController extends Controller
     public function __invoke()
     {
         $siswa = auth()->user()->siswa;
+        if (! $siswa) {
+            abort(403, 'Profil siswa tidak ditemukan.');
+        }
 
         // Ambil dispensasi aktif (disetujui atau keluar)
         $dispensasiAktif = Dispensasi::with(['guru', 'siswa.kelas.jurusan'])
