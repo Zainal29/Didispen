@@ -1,325 +1,298 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <title>Struk Dispensasi - {{ $dispensasi->nomor_surat }}</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<style>
+    * {
+        box-sizing: border-box;
+    }
 
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            background: #fff;
-            color: #000;
-        }
+    @page {
+        margin: 0;
+    }
 
-        body {
-            width: 58mm;
-            padding: 2mm;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 10px;
-            line-height: 1.15;
-        }
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+        color: #000;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 8.5px;
+        line-height: 1.2;
+    }
 
-        .header {
-            text-align: center;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 4px;
-            margin-bottom: 4px;
-        }
+    .container {
+        width: 100%;
+        max-width: 58mm;
+        padding: 4mm 3mm;
+        margin: 0 auto;
+    }
 
-        .logo {
-            width: 34px;
-            height: 34px;
-            object-fit: contain;
-            margin: 0 auto 3px;
-            display: block;
-            filter: grayscale(100%) contrast(1.2);
-        }
+    /* HEADER */
+    .header {
+        text-align: center;
+        width: 100%;
+        margin-bottom: 4px;
+    }
 
-        .school-name {
-            font-weight: bold;
-            font-size: 11px;
-            margin: 2px 0;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
+    .logo {
+        width: 28px;
+        height: 28px;
+        margin: 0 auto 2px;
+        display: block;
+    }
 
-        .school-address {
-            font-size: 8px;
-            margin: 1px 0;
-        }
+    .school-name {
+        font-weight: bold;
+        font-size: 9.5px;
+        margin: 2px 0 1px;
+        text-align: center;
+    }
 
-        .title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 11px;
-            margin: 6px 0;
-            text-decoration: underline;
-            letter-spacing: 0.7px;
-        }
+    .school-address {
+        font-size: 7.5px;
+        margin: 0;
+        text-align: center;
+    }
 
-        .info-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+    /* GARIS PEMBATAS */
+    .divider {
+        border-top: 1px dashed #000;
+        margin: 5px 0;
+        width: 100%;
+    }
 
-        .info-table td {
-            padding: 1.5px 0;
-            vertical-align: top;
-        }
+    /* JUDUL */
+    .title-table {
+        width: 100%;
+        margin: 4px 0;
+    }
 
-        .info-table td.label {
-            width: 25%;
-            white-space: nowrap;
-        }
+    .title-text {
+        text-align: center;
+        font-weight: bold;
+        font-size: 9.5px;
+        letter-spacing: 0.5px;
+        text-decoration: underline;
+    }
 
-        .info-table td.separator {
-            width: 5%;
-            text-align: center;
-        }
+    /* DATA DISPENSASI */
+    .info-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
 
-        .info-table td.value {
-            width: 70%;
-            word-wrap: break-word;
-        }
+    .info-table td {
+        padding: 1.5px 0;
+        vertical-align: top;
+    }
 
-        .divider {
-            border-top: 1px dashed #000;
-            margin: 5px 0;
-        }
+    .info-table td.label {
+        width: 26%;
+        white-space: nowrap;
+    }
 
-        .signature-section {
-            margin-top: 7px;
-            text-align: right;
-            padding-right: 3px;
-        }
+    .info-table td.separator {
+        width: 5%;
+        text-align: center;
+    }
 
-        .signature-section .date {
-            font-size: 8px;
-            margin: 0 0 2px;
-        }
+    .info-table td.value {
+        width: 69%;
+        word-break: break-word;
+    }
 
-        .signature-section .role {
-            font-size: 8px;
-            margin: 0 0 25px;
-        }
+    /* TANDA TANGAN (TABLE BASED - PASTI RAPI DI DOMPDF) */
+    .sign-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 5px;
+    }
 
-        .signature-section .name {
-            font-weight: bold;
-            font-size: 9px;
-            border-top: 1px solid #000;
-            display: inline-block;
-            padding-top: 1px;
-            min-width: 90px;
-        }
+    .sign-space {
+        width: 40%;
+    }
 
-        .signature-section .nip {
-            font-size: 8px;
-            margin: 1px 0 0;
-        }
+    .sign-content {
+        width: 60%;
+        text-align: center;
+        vertical-align: top;
+    }
 
-        .footer {
-            text-align: center;
-            font-size: 8px;
-            margin-top: 7px;
-        }
+    .sign-content .date {
+        font-size: 7.5px;
+        margin: 0 0 2px;
+    }
 
-        .footer p {
-            margin: 2px 0;
-        }
+    .sign-content .role {
+        font-size: 7.5px;
+        margin: 0 0 35px; /* Ruang tanda tangan */
+    }
 
-        .footer-note {
-            font-size: 8px;
-            font-style: italic;
-            margin-top: 2px !important;
-        }
+    .sign-content .name {
+        font-weight: bold;
+        font-size: 8px;
+        text-decoration: underline;
+        margin: 0;
+    }
 
-        .thank-you {
-            margin-top: 6px !important;
-            font-weight: bold;
-        }
-    </style>
+    .sign-content .nip {
+        font-size: 7px;
+        margin: 2px 0 0;
+    }
+
+    /* FOOTER */
+    .footer-table {
+        width: 100%;
+        margin-top: 4px;
+        text-align: center;
+    }
+
+    .footer-table td {
+        text-align: center;
+    }
+
+    .footer-note {
+        font-size: 7.5px;
+        font-style: italic;
+        margin: 3px 0;
+    }
+
+    .thank-you {
+        font-weight: bold;
+        font-size: 8px;
+        margin: 4px 0 0;
+    }
+</style>
 </head>
 
 <body>
+<div class="container">
 
     {{-- HEADER --}}
     <div class="header">
         @php
             $logoPath = public_path('images/logo-didispen.png');
             $logoBase64 = null;
-
             if (file_exists($logoPath)) {
                 $logoBase64 = base64_encode(file_get_contents($logoPath));
             }
         @endphp
 
         @if($logoBase64)
-            <img
-                src="data:image/png;base64,{{ $logoBase64 }}"
-                class="logo"
-                alt="Logo"
-            >
-        @else
-            <div style="margin-bottom: 3px;">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="28"
-                    height="28"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#000"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    style="display:inline-block;"
-                >
-                    <path d="M14 22v-4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4"/>
-                    <path d="M18 10h4l-10-8-10 8h4v12h12v-12z"/>
-                    <path d="M6 10v12"/>
-                    <path d="M18 10v12"/>
-                </svg>
-            </div>
+            <img src="data:image/png;base64,{{ $logoBase64 }}" class="logo" alt="Logo">
         @endif
 
-        <p class="school-name">SMKN 1 BANGSRI</p>
-        <!-- <p class="school-address">SMKN1 Bangsri, Kab. Jepara</p> -->
-        <p class="school-address">Sistem Informasi Dispensasi</p>
+        <div class="school-name">SMKN 1 BANGSRI</div>
+        <div class="school-address">Sistem Informasi Dispensasi</div>
     </div>
 
+    <div class="divider"></div>
 
-    {{-- JUDUL --}}
-    <div class="title">
-        BUKTI DISPENSASI
-    </div>
+    {{-- JUDUL BUKTI DISPENSASI (CENTER PRESISI) --}}
+    <table class="title-table">
+        <tr>
+            <td class="title-text">BUKTI DISPENSASI</td>
+        </tr>
+    </table>
 
+    {{-- EKSTRAKSI WAKTU --}}
+    @php
+        $extractTime = function ($value) {
+            if (empty($value)) return null;
+            preg_match('/\b(\d{1,2}[:.]\d{2})\b/', (string) $value, $matches);
+            return $matches[1] ?? null;
+        };
 
-    {{-- DATA --}}
+        $waktuKeluar = $extractTime(\App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar));
+        $waktuKembali = $extractTime(\App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali));
+    @endphp
+
+    {{-- TABEL DATA DISPENSASI --}}
     <table class="info-table">
-
         <tr>
             <td class="label">No. Surat</td>
             <td class="separator">:</td>
-            <td class="value">
-                {{ $dispensasi->nomor_surat }}
-            </td>
+            <td class="value">{{ $dispensasi->nomor_surat ?? '-' }}</td>
         </tr>
-
         <tr>
             <td class="label">NIS</td>
             <td class="separator">:</td>
-            <td class="value">
-                {{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}
-            </td>
+            <td class="value">{{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</td>
         </tr>
-
         <tr>
             <td class="label">Nama</td>
             <td class="separator">:</td>
-            <td class="value">
-                {{ $dispensasi->siswa->nama_lengkap }}
-            </td>
+            <td class="value">{{ $dispensasi->siswa?->nama_lengkap ?? '-' }}</td>
         </tr>
-
         <tr>
             <td class="label">Kelas</td>
             <td class="separator">:</td>
-            <td class="value">
-                {{ $dispensasi->siswa->kelas->nama_kelas ?? '-' }}
-            </td>
+            <td class="value">{{ $dispensasi->siswa?->kelas?->nama_kelas ?? '-' }}</td>
         </tr>
-
         <tr>
             <td class="label">Tujuan</td>
             <td class="separator">:</td>
-            <td class="value">
-                {{ $dispensasi->tujuan }}
-            </td>
+            <td class="value">{{ $dispensasi->tujuan ?? '-' }}</td>
         </tr>
-
         <tr>
             <td class="label">Lokasi</td>
             <td class="separator">:</td>
-            <td class="value">
-                {{ $dispensasi->lokasi }}
-            </td>
+            <td class="value">{{ $dispensasi->lokasi ?? '-' }}</td>
         </tr>
-
-        {{-- JAM DIGABUNG --}}
         <tr>
             <td class="label">Jam</td>
             <td class="separator">:</td>
-            <td class="value">
-                {{ \Carbon\Carbon::parse($dispensasi->jam_keluar)->format('H.i') }}
-                -
-                {{ \Carbon\Carbon::parse($dispensasi->jam_kembali)->format('H.i') }}
-            </td>
+            <td class="value">{{ $waktuKeluar ?? '-' }} - {{ $waktuKembali ?? '-' }}</td>
         </tr>
-
     </table>
 
+    <div class="divider"></div>
+
+    {{-- TANDA TANGAN GURU PIKET (RATA KANAN & ANTI HILANG) --}}
+    @php
+        $namaGuru = $dispensasi->guru?->nama_lengkap 
+            ?? $dispensasi->guru?->user?->name 
+            ?? $dispensasi->user?->name 
+            ?? 'Guru Piket';
+
+        $nipGuru = $dispensasi->guru?->nip 
+            ?? $dispensasi->guru?->user?->nis_nip 
+            ?? $dispensasi->user?->nis_nip;
+    @endphp
+
+    <table class="sign-table">
+        <tr>
+            <td class="sign-space"></td>
+            <td class="sign-content">
+                <div class="date">Bangsri, {{ now()->format('d/m/Y') }}</div>
+                <div class="role">Guru Piket,</div>
+                <div class="name">{{ $namaGuru }}</div>
+                @if(!empty($nipGuru))
+                    <div class="nip">NIP. {{ $nipGuru }}</div>
+                @endif
+            </td>
+        </tr>
+    </table>
 
     <div class="divider"></div>
 
+    {{-- FOOTER (SIMETRIS TENGAH) --}}
+    <table class="footer-table">
+        <tr>
+            <td>
+                <div>Dicetak: {{ now()->format('d/m/Y H:i') }} WIB</div>
+                <div class="footer-note">
+                    Struk ini sah jika ditandatangani<br>oleh Guru Piket.
+                </div>
+                <div class="thank-you">- TERIMA KASIH -</div>
+            </td>
+        </tr>
+    </table>
 
-    {{-- TANDA TANGAN --}}
-    <div class="signature-section">
-
-        <p class="date">
-           Bangsri, {{ now()->format('d/m/Y') }}
-        </p>
-
-        <p class="role">
-            Guru Piket,
-        </p>
-
-        <p class="name">
-            {{ $dispensasi->guru?->nama_lengkap
-                ?? $dispensasi->guru?->user?->name
-                ?? 'Guru Piket' }}
-        </p>
-
-        @if(!empty(
-            $dispensasi->guru?->nip
-            ?? $dispensasi->guru?->user?->nis_nip
-        ))
-            <p class="nip">
-                NIP. {{
-                    $dispensasi->guru?->nip
-                    ?? $dispensasi->guru?->user?->nis_nip
-                }}
-            </p>
-        @endif
-
-    </div>
-
-
-    <div class="divider"></div>
-
-
-    {{-- FOOTER --}}
-    <div class="footer">
-
-        <p>
-            Dicetak: {{ now()->format('d/m/Y H:i') }} WIB
-        </p>
-
-        <p class="footer-note">
-            Struk ini sah jika ditandatangani<br>
-            oleh Guru Piket.
-        </p>
-
-        <p class="thank-you">
-            - TERIMA KASIH -
-        </p>
-
-    </div>
-
+</div>
 </body>
 </html>

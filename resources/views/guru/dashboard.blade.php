@@ -39,6 +39,127 @@
     </div>
 </div>
 
+{{-- SECTION GURU PIKET HARI INI --}}
+<div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 mb-4 shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5 pb-3 border-b border-gray-100">
+        <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-sm sm:text-base font-bold text-gray-900 flex items-center">
+                    <i class="fas fa-user-shield text-blue-600 mr-2"></i>
+                    <span>{{ isset($infoPiket['status_sesi']) && $infoPiket['status_sesi'] === 'Akan Datang' ? 'Guru Piket Berikutnya' : 'Guru Piket Hari Ini' }}</span>
+                </h3>
+                @if(!empty($infoPiket['jadwal']))
+                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-100">
+                        {{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} - {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB
+                    </span>
+                    @if($infoPiket['status_sesi'] === 'Berlangsung')
+                        <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1.5 animate-pulse"></span>
+                            Sedang Berlangsung
+                        </span>
+                    @elseif($infoPiket['status_sesi'] === 'Akan Datang')
+                        <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            <i class="far fa-clock mr-1 text-[11px]"></i>
+                            Akan Datang
+                        </span>
+                    @endif
+                @endif
+            </div>
+            <p class="text-xs text-gray-500 mt-0.5">Daftar petugas piket aktual yang bertugas pada sesi ini.</p>
+        </div>
+
+        {{-- Status Keikutsertaan Guru Login & Tombol Aksi --}}
+        <div class="flex items-center gap-2 flex-wrap">
+            @if(!empty($incomingSwapCount) && $incomingSwapCount > 0)
+                <a href="{{ route('guru.piket.swap.incoming') }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-xs font-bold transition-colors">
+                    <i class="fas fa-inbox mr-1.5"></i>Permintaan Masuk
+                    <span class="ml-1.5 px-1.5 py-0.5 bg-indigo-600 text-white rounded-full text-[10px] leading-none">{{ $incomingSwapCount }}</span>
+                </a>
+            @endif
+
+            @if($isPetugasAktual)
+                <span class="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg inline-flex items-center">
+                    <i class="fas fa-check-circle mr-1.5 text-emerald-600"></i>Anda bertugas pada sesi ini
+                </span>
+                <a href="{{ route('guru.piket.swap.create', ['jadwal_id' => $infoPiket['jadwal']?->id]) }}" class="inline-flex items-center px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-colors">
+                    <i class="fas fa-exchange-alt mr-1.5"></i>Tukar Jadwal
+                </a>
+                @if(isset($infoPiket['status_sesi']) && $infoPiket['status_sesi'] === 'Berlangsung')
+                    <a href="{{ route('guru.checklog.index') }}" class="inline-flex items-center px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition-colors">
+                        <i class="fas fa-sign-out-alt mr-1.5"></i>Catat Keluar
+                    </a>
+                @endif
+            @else
+                <span class="text-xs font-medium text-gray-500 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg">
+                    Anda tidak bertugas pada sesi ini.
+                </span>
+                <a href="{{ route('guru.piket.swap.incoming') }}" class="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold transition-colors">
+                    <i class="fas fa-handshake mr-1.5 text-gray-400"></i>Jadwal Tukar
+                </a>
+            @endif
+        </div>
+    </div>
+
+    {{-- KONDISI 1: CONFLICT REPLACEMENT --}}
+    @if(!empty($infoPiket['conflict']))
+        <div class="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-center gap-2.5">
+            <i class="fas fa-exclamation-triangle text-base text-red-600 flex-shrink-0"></i>
+            <span class="font-medium">Data jadwal membutuhkan pemeriksaan admin.</span>
+        </div>
+
+    {{-- KONDISI 2: TIDAK ADA JADWAL SESI --}}
+    @elseif(empty($infoPiket['jadwal']))
+        <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 flex items-center gap-2">
+            <i class="fas fa-info-circle text-base text-gray-400 flex-shrink-0"></i>
+            <span>{{ empty($adaJadwalHariIni) ? 'Belum ada jadwal Guru Piket untuk hari ini.' : 'Tidak ada sesi Guru Piket berikutnya hari ini.' }}</span>
+        </div>
+
+    {{-- KONDISI 3: ADA SESI & PETUGAS AKTUAL --}}
+    @else
+        @if(empty($infoPiket['petugas']))
+            <p class="text-xs text-gray-500 italic">Belum ada petugas piket yang ditentukan untuk sesi ini.</p>
+        @else
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                @foreach($infoPiket['petugas'] as $p)
+                    @php
+                        $statusClass = match($p['status']) {
+                            'Sedang Bertugas' => 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                            'Sedang Keluar'   => 'bg-amber-50 text-amber-800 border-amber-200',
+                            'Sudah Kembali'   => 'bg-sky-50 text-sky-800 border-sky-200',
+                            'Akan Bertugas'   => 'bg-indigo-50 text-indigo-800 border-indigo-200',
+                            default           => 'bg-gray-50 text-gray-700 border-gray-200',
+                        };
+                        $dotColor = match($p['status']) {
+                            'Sedang Bertugas' => 'bg-emerald-500',
+                            'Sedang Keluar'   => 'bg-amber-500',
+                            'Sudah Kembali'   => 'bg-sky-500',
+                            'Akan Bertugas'   => 'bg-indigo-500',
+                            default           => 'bg-gray-400',
+                        };
+                    @endphp
+                    <div class="p-3.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-all flex flex-col justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="font-bold text-sm text-gray-900 truncate">{{ $p['guru']->nama_lengkap }}</p>
+                            @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
+                                <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
+                                    <i class="fas fa-exchange-alt text-[10px]"></i>
+                                    <span class="truncate">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
+                                </p>
+                            @endif
+                        </div>
+                        <div class="pt-1">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border {{ $statusClass }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} mr-1.5"></span>
+                                {{ $p['status'] }}
+                            </span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    @endif
+</div>
+
 {{-- KOLOM PENCARIAN SISWA --}}
 <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4">
     <form method="GET" action="{{ route('guru.dashboard') }}" class="flex gap-2">

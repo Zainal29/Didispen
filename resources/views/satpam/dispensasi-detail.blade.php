@@ -191,10 +191,29 @@
                 </div>
             @endif
 
+            @php
+                $dayOfWeek = $dispensasi->created_at ? $dispensasi->created_at->dayOfWeek : null;
+                $waktuKeluar = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dayOfWeek);
+                $jamMulai = str_contains($waktuKeluar, ' - ') ? explode(' - ', $waktuKeluar)[0] : ($waktuKeluar !== '-' ? $waktuKeluar : null);
+
+                $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dayOfWeek);
+                $jamSelesai = str_contains($waktuKembali, ' - ') ? explode(' - ', $waktuKembali)[1] : ($waktuKembali !== '-' ? $waktuKembali : null);
+                if (!$jamSelesai && $dispensasi->batas_waktu_kembali) {
+                    $jamSelesai = $dispensasi->batas_waktu_kembali->format('H:i');
+                }
+            @endphp
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div class="bg-blue-50 rounded-lg p-3.5 border border-blue-200">
                     <p class="text-blue-600 text-[10px] font-semibold uppercase mb-1 tracking-wider">Jam Keluar</p>
-                    <p class="font-bold text-blue-900 text-lg">{{ $dispensasi->jam_keluar }}</p>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <p class="font-bold text-blue-900 text-lg">{{ $dispensasi->jam_keluar }}</p>
+                        @if($jamMulai)
+                            <span class="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-200">
+                                <i class="far fa-clock mr-1 text-[11px]"></i>{{ $jamMulai }} WIB
+                            </span>
+                        @endif
+                    </div>
                     @if($dispensasi->waktu_keluar_aktual)
                         <p class="text-blue-700 text-xs mt-1.5 font-medium bg-blue-100 w-fit px-2 py-0.5 rounded-md">
                             <i class="fas fa-check-circle mr-1"></i>Aktual: {{ \Carbon\Carbon::parse($dispensasi->waktu_keluar_aktual)->format('H:i') }} WIB
@@ -203,7 +222,14 @@
                 </div>
                 <div class="bg-amber-50 rounded-lg p-3.5 border border-amber-200">
                     <p class="text-amber-600 text-[10px] font-semibold uppercase mb-1 tracking-wider">Batas Kembali</p>
-                    <p class="font-bold text-amber-900 text-lg">{{ $dispensasi->jam_kembali }}</p>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <p class="font-bold text-amber-900 text-lg">{{ $dispensasi->jam_kembali }}</p>
+                        @if($jamSelesai)
+                            <span class="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200">
+                                <i class="far fa-clock mr-1 text-[11px]"></i>{{ $jamSelesai }} WIB
+                            </span>
+                        @endif
+                    </div>
                     @if($dispensasi->waktu_kembali_aktual)
                         <p class="text-emerald-700 text-xs mt-1.5 font-medium bg-emerald-100 w-fit px-2 py-0.5 rounded-md">
                             <i class="fas fa-check-circle mr-1"></i>Aktual: {{ \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->format('H:i') }} WIB

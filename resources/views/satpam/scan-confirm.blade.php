@@ -65,10 +65,28 @@
         </div>
 
         {{-- Waktu Keluar & Kembali --}}
+        @php
+            $dayOfWeek = $dispensasi->created_at ? $dispensasi->created_at->dayOfWeek : null;
+            $waktuKeluar = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dayOfWeek);
+            $jamMulai = str_contains($waktuKeluar, ' - ') ? explode(' - ', $waktuKeluar)[0] : ($waktuKeluar !== '-' ? $waktuKeluar : null);
+
+            $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dayOfWeek);
+            $jamSelesai = str_contains($waktuKembali, ' - ') ? explode(' - ', $waktuKembali)[1] : ($waktuKembali !== '-' ? $waktuKembali : null);
+            if (!$jamSelesai && $dispensasi->batas_waktu_kembali) {
+                $jamSelesai = $dispensasi->batas_waktu_kembali->format('H:i');
+            }
+        @endphp
         <div class="grid grid-cols-2 gap-3 mb-4">
             <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
                 <p class="text-[10px] font-bold text-emerald-600 uppercase mb-1">Jam Keluar</p>
-                <p class="font-semibold text-emerald-900 text-sm">{{ $dispensasi->jam_keluar }}</p>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <p class="font-semibold text-emerald-900 text-sm">{{ $dispensasi->jam_keluar }}</p>
+                    @if($jamMulai)
+                        <span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <i class="far fa-clock mr-1 text-[10px]"></i>{{ $jamMulai }} WIB
+                        </span>
+                    @endif
+                </div>
                 @if($dispensasi->waktu_keluar_aktual)
                 <p class="text-xs text-emerald-700 mt-1">
                     <i class="fas fa-check-circle mr-1"></i>
@@ -79,7 +97,14 @@
 
             <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p class="text-[10px] font-bold text-amber-600 uppercase mb-1">Jam Kembali</p>
-                <p class="font-semibold text-amber-900 text-sm">{{ $dispensasi->jam_kembali }}</p>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <p class="font-semibold text-amber-900 text-sm">{{ $dispensasi->jam_kembali }}</p>
+                    @if($jamSelesai)
+                        <span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200">
+                            <i class="far fa-clock mr-1 text-[10px]"></i>{{ $jamSelesai }} WIB
+                        </span>
+                    @endif
+                </div>
                 @if($dispensasi->waktu_kembali_aktual)
                 <p class="text-xs text-amber-700 mt-1">
                     <i class="fas fa-check-circle mr-1"></i>

@@ -195,6 +195,101 @@
     @endif
 @endif
 
+{{-- ============ GURU PIKET HARI INI ============ --}}
+<div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 pb-3 mb-3">
+        <div>
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xs">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h3 class="text-sm font-bold text-gray-900">Guru Piket Hari Ini</h3>
+                @if(!empty($infoPiket['jadwal']))
+                    <span class="text-xs text-gray-400 font-normal hidden sm:inline">•</span>
+                    <span class="text-xs text-gray-600 font-medium">
+                        {{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} – {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }}
+                    </span>
+                    @if($infoPiket['status_sesi'] === 'Berlangsung')
+                        <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
+                            Sedang Berlangsung
+                        </span>
+                    @elseif($infoPiket['status_sesi'] === 'Akan Datang')
+                        <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            <i class="far fa-clock mr-1 text-[10px]"></i>
+                            Akan Datang
+                        </span>
+                    @elseif($infoPiket['status_sesi'] === 'Sesi Selesai')
+                        <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">
+                            Sesi Selesai
+                        </span>
+                    @endif
+                @endif
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Daftar Bapak/Ibu Guru yang bertugas piket pada sesi ini.</p>
+        </div>
+    </div>
+
+    {{-- KONDISI 1: CONFLICT REPLACEMENT --}}
+    @if(!empty($infoPiket['conflict']))
+        <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2.5">
+            <i class="fas fa-info-circle text-base text-amber-600 flex-shrink-0"></i>
+            <span class="font-medium">Data Guru Piket sedang diperiksa.</span>
+        </div>
+
+    {{-- KONDISI 2: TIDAK ADA JADWAL SESI --}}
+    @elseif(empty($infoPiket['jadwal']))
+        <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 flex items-center gap-2">
+            <i class="fas fa-info-circle text-base text-gray-400 flex-shrink-0"></i>
+            <span>{{ empty($adaJadwalHariIni) ? 'Belum ada jadwal Guru Piket untuk hari ini.' : 'Tidak ada sesi berikutnya hari ini.' }}</span>
+        </div>
+
+    {{-- KONDISI 3: ADA SESI & PETUGAS AKTUAL --}}
+    @else
+        @if(empty($infoPiket['petugas']))
+            <p class="text-xs text-gray-500 italic">Belum ada petugas piket yang ditentukan untuk sesi ini.</p>
+        @else
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                @foreach($infoPiket['petugas'] as $p)
+                    @php
+                        $statusClass = match($p['status']) {
+                            'Sedang Bertugas' => 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                            'Sedang Keluar'   => 'bg-amber-50 text-amber-800 border-amber-200',
+                            'Sudah Kembali'   => 'bg-sky-50 text-sky-800 border-sky-200',
+                            'Akan Bertugas'   => 'bg-indigo-50 text-indigo-800 border-indigo-200',
+                            default           => 'bg-gray-50 text-gray-700 border-gray-200',
+                        };
+                        $dotColor = match($p['status']) {
+                            'Sedang Bertugas' => 'bg-emerald-500',
+                            'Sedang Keluar'   => 'bg-amber-500',
+                            'Sudah Kembali'   => 'bg-sky-500',
+                            'Akan Bertugas'   => 'bg-indigo-500',
+                            default           => 'bg-gray-400',
+                        };
+                    @endphp
+                    <div class="p-3 rounded-xl border border-gray-200 bg-white flex flex-col justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="font-bold text-sm text-gray-900 truncate">{{ $p['guru']->nama_lengkap }}</p>
+                            @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
+                                <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
+                                    <i class="fas fa-exchange-alt text-[10px]"></i>
+                                    <span class="truncate">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
+                                </p>
+                            @endif
+                        </div>
+                        <div class="pt-0.5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border {{ $statusClass }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} mr-1.5"></span>
+                                {{ $p['status'] }}
+                            </span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    @endif
+</div>
+
 {{-- ============ STATISTIK UTAMA ============ --}}
 @php
 $cards = [
