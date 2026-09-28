@@ -4,15 +4,39 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
+use App\Services\GuruPiketService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, GuruPiketService $guruPiketService)
     {
         $today = now()->format('Y-m-d');
         $filter = $request->get('filter', 'semua');
         $search = $request->get('search', ''); // <i class="fas fa-check-circle"></i> BARU: Ambil kata kunci pencarian
+
+        // GURU PIKET HARI INI
+        $infoPiket = $guruPiketService->getInformasiSesi();
+        $jadwalHariIni = $guruPiketService->getJadwalUntukTanggal();
+        $adaJadwalHariIni = $jadwalHariIni->isNotEmpty();
+
+        $currentGuru = auth()->user()?->guru;
+        $isPetugasAktual = false;
+        if ($currentGuru && !empty($infoPiket['petugas'])) {
+            foreach ($infoPiket['petugas'] as $p) {
+                if (isset($p['guru']) && $p['guru']->id === $currentGuru->id) {
+                    $isPetugasAktual = true;
+                    break;
+                }
+            }
+        }
+
+        $incomingSwapCount = 0;
+        if ($currentGuru) {
+            $incomingSwapCount = \App\Models\PertukaranJadwalPiket::where('guru_pengganti_id', $currentGuru->id)
+                ->where('status', 'menunggu')
+                ->count();
+        }
 
         // 1. STATISTIK HARI INI (Tetap global untuk hari ini)
         $menungguCount = Dispensasi::where('status', 'menunggu')->whereDate('created_at', $today)->count();
@@ -69,7 +93,8 @@ class DashboardController extends Controller
             ->get();
 
         return view('guru.dashboard', compact(
-            'stats', 'filter', 'search', 'menunggu', 'sedangKeluar', 'selesai', 'terlambat', 'disetujui', 'displayData', 'dihubungi'
+            'stats', 'filter', 'search', 'menunggu', 'sedangKeluar', 'selesai', 'terlambat', 'disetujui', 'displayData', 'dihubungi',
+            'infoPiket', 'adaJadwalHariIni', 'isPetugasAktual', 'incomingSwapCount'
         ));
     }
 

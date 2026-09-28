@@ -8,6 +8,7 @@ use App\Models\WhatsappTemplate;
 use App\Services\QRScanService;
 use App\Services\NotifikasiService;
 use App\Services\WhatsappMessageService; // ✅ TAMBAHKAN
+use App\Services\GuruPiketService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -15,9 +16,16 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request) // <i class="fas fa-check-circle"></i> 1. TAMBAHKAN Request $request
+    public function index(Request $request, GuruPiketService $guruPiketService) // <i class="fas fa-check-circle"></i> 1. TAMBAHKAN Request $request
     {
         $today = now()->format('Y-m-d');
+
+        // Informasi Guru Piket
+        $infoPiket = $guruPiketService->getInformasiSesi();
+        $adaJadwalHariIni = false;
+        if (empty($infoPiket['jadwal'])) {
+            $adaJadwalHariIni = $guruPiketService->getJadwalUntukTanggal()->isNotEmpty();
+        }
 
         // <i class="fas fa-check-circle"></i> 2. TAMBAHKAN INI: Baca parameter filter dari URL (default: 'semua')
         $filter = $request->get('filter', 'semua');
@@ -56,7 +64,7 @@ class DashboardController extends Controller
 
 
         // <i class="fas fa-check-circle"></i> 3. TAMBAHKAN 'filter' ke dalam compact agar bisa dibaca oleh View
-        return view('satpam.dashboard', compact('stats', 'menungguKeluar', 'siswaKeluar', 'selesai', 'dihubungi', 'filter'));
+        return view('satpam.dashboard', compact('stats', 'menungguKeluar', 'siswaKeluar', 'selesai', 'dihubungi', 'filter', 'infoPiket', 'adaJadwalHariIni'));
     }
 
     /**
