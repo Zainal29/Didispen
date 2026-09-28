@@ -27,6 +27,29 @@ class WhatsappMessageService
     }
 
     /**
+     * Format nomor HP Indonesia menjadi format internasional WhatsApp (628...)
+     */
+    public static function formatPhoneNumber(?string $noTelepon): ?string
+    {
+        if (empty($noTelepon)) {
+            return null;
+        }
+
+        $hp = preg_replace('/[^0-9]/', '', $noTelepon);
+        if (empty($hp)) {
+            return null;
+        }
+
+        if (str_starts_with($hp, '0')) {
+            $hp = '62' . substr($hp, 1);
+        } elseif (str_starts_with($hp, '8')) {
+            $hp = '62' . $hp;
+        }
+
+        return $hp;
+    }
+
+    /**
      * Generate link WhatsApp dari template database
      *
      * @param Dispensasi $dispensasi
@@ -35,17 +58,13 @@ class WhatsappMessageService
      */
     public function generateWaLink(Dispensasi $dispensasi, string $context): ?string
     {
-        // 1. Validasi nomor HP
-        $noTelepon = $dispensasi->siswa->no_telepon ?? null;
-        if (empty($noTelepon)) {
+        // 1. Validasi dan format nomor HP
+        $hp = self::formatPhoneNumber($dispensasi->siswa->no_telepon ?? null);
+        if (!$hp) {
             return null;
         }
 
-        // 2. Format nomor: 08xx → 628xx
-        $hp = preg_replace('/[^0-9]/', '', $noTelepon);
-        $hp = str_starts_with($hp, '0') ? '62' . substr($hp, 1) : $hp;
-
-        // 3. Ambil template dari DB
+        // 2. Ambil template dari DB
         $templates = $this->getTemplates();
         $content = $templates[$context] ?? null;
 
@@ -54,11 +73,92 @@ class WhatsappMessageService
             $content = $this->getDefaultContent($context);
         }
 
-        // 4. Render pesan (replace variabel)
+        // 3. Render pesan (replace variabel)
         $pesan = $this->renderContent($content, $dispensasi, $context);
 
-        // 5. Generate URL
+        // 4. Generate URL
         return "https://wa.me/{$hp}?text=" . urlencode($pesan);
+    }
+
+    /**
+     * Generate link WhatsApp untuk pengingat jadwal piket guru
+     *
+     * @param mixed $guru Guru model atau objek dengan nama_lengkap & no_telepon
+     * @param \App\Models\JadwalPiket $jadwal
+     * @param string|null $templateSlug
+     * @return string|null
+     */
+    public function generatePiketWaLink($guru, \App\Models\JadwalPiket $jadwal, ?string $templateSlug = null): ?string
+    {
+        if (!$guru) {
+            return null;
+        }
+
+        $noTelepon = $guru->no_telepon ?? $guru->no_hp ?? null;
+        $hp = self::formatPhoneNumber($noTelepon);
+        if (!$hp) {
+            return null;
+        }
+
+        $templates = $this->getTemplates();
+
+        $content = null;
+        if ($templateSlug && isset($templates[$templateSlug])) {
+            $content = $templates[$templateSlug];
+        } else {
+            // Cek variasi slug piket
+            $content = $templates['pengingat-piket']
+                ?? $templates['pengingat_piket']
+                ?? $templates['pengingat-jadwal-guru-piket']
+                ?? null;
+
+            if (!$content) {
+                // Cari template manapun yang memiliki kata 'piket' di slug
+                foreach ($templates as $slug => $text) {
+                    if (str_contains($slug, 'piket')) {
+                        $content = $text;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!$content) {
+            $content = "Halo Yth. Bapak/Ibu *{nama_guru}*,\n\nKami mengingatkan bahwa Anda memiliki jadwal piket di sekolah pada:\n📅 Hari: *{hari}*\n⏰ Sesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n👤 Koordinator: {koordinator}\n\nMohon untuk hadir tepat waktu dan bertugas di pos piket untuk memantau kehadiran serta dispensasi siswa.\n\nTerima kasih atas dedikasi dan kerjasamanya.\n- Admin DIDISPEN SMK N 1 Bangsri";
+        }
+
+        $pesan = $this->renderPiketContent($content, $guru, $jadwal);
+
+        return "https://wa.me/{$hp}?text=" . urlencode($pesan);
+    }
+
+    /**
+     * Render pesan pengingat jadwal piket
+     */
+    public function renderPiketContent(string $content, $guru, \App\Models\JadwalPiket $jadwal): string
+    {
+        $namaHari = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+        $hariStr = is_numeric($jadwal->hari) ? ($namaHari[(int)$jadwal->hari] ?? 'Hari '.$jadwal->hari) : (string)$jadwal->hari;
+
+        $jamMulai = $jadwal->jam_mulai ? substr($jadwal->jam_mulai, 0, 5) : '-';
+        $jamSelesai = $jadwal->jam_selesai ? substr($jadwal->jam_selesai, 0, 5) : '-';
+        $koordinatorNama = $jadwal->koordinator?->nama_lengkap ?? '-';
+
+        $replacements = [
+            '{nama_guru}'   => $guru->nama_lengkap ?? $guru->nama ?? 'Bapak/Ibu Guru',
+            '{hari}'        => $hariStr,
+            '{nama_sesi}'   => $jadwal->nama_sesi ?? 'Piket',
+            '{jam_mulai}'   => $jamMulai,
+            '{jam_selesai}' => $jamSelesai,
+            '{koordinator}' => $koordinatorNama,
+            '{tanggal}'     => now()->translatedFormat('d F Y'),
+        ];
+
+        return str_replace(
+            array_keys($replacements),
+            array_values($replacements),
+            $content
+        );
     }
 
     /**
