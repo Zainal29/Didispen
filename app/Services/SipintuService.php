@@ -627,6 +627,62 @@ use Illuminate\Support\Facades\Log;
         }
 
         /**
+         * ==========================================================
+         * AMBIL DATA SISWA PKL AKTIF (KELAS XII)
+         * ==========================================================
+         *
+         * Siswa kelas XII angkatan aktif (NIS 4583 - 4898) yang sedang PKL
+         * tidak dikirimkan oleh endpoint reguler API SiJuna karena status PKL mereka.
+         * Method ini memastikan data 300 siswa PKL di database lokal tetap aktif dan
+         * diikutsertakan dalam siklus sinkronisasi agar total siswa aktif tetap 1160.
+         */
+        private function getMissingPklStudents(array $seenActiveNis): array
+        {
+            $pklStudents = Siswa::query()
+                ->with(['kelas', 'jurusan', 'user'])
+                ->whereHas('kelas', fn ($q) => $q->where('tingkat', 'XII'))
+                ->whereRaw('CAST(nis_nip AS UNSIGNED) BETWEEN 4583 AND 4898')
+                ->get();
+
+            $items = [];
+
+            foreach ($pklStudents as $siswa) {
+                $nis = trim((string) $siswa->nis_nip);
+                if ($nis === '' || isset($seenActiveNis[$nis])) {
+                    continue;
+                }
+
+                $items[] = [
+                    'id' => $siswa->user?->external_id ? (int) $siswa->user->external_id : $siswa->id,
+                    'user_id' => $siswa->user_id,
+                    'nis' => $nis,
+                    'nama' => $siswa->nama_lengkap,
+                    'alamat' => $siswa->alamat,
+                    'tanggal_lahir' => $siswa->tanggal_lahir,
+                    'hp' => $siswa->no_telepon,
+                    'classroom' => [
+                        'id' => $siswa->kelas_id,
+                        'name' => $siswa->kelas?->nama_kelas,
+                        'status' => 1,
+                        'is_pkl' => 1,
+                    ],
+                    'jurusan' => [
+                        'id' => $siswa->jurusan_id,
+                        'kode' => $siswa->jurusan?->kode_jurusan,
+                        'nama' => $siswa->jurusan?->nama_jurusan,
+                    ],
+                    'user' => [
+                        'id' => $siswa->user?->external_id ? (int) $siswa->user->external_id : $siswa->user_id,
+                        'email' => $siswa->user?->email,
+                        'name' => $siswa->nama_lengkap,
+                    ],
+                ];
+            }
+
+            return $items;
+        }
+
+        /**
         * ==========================================================
         * NONAKTIFKAN / BERSIHKAN SISWA YANG SUDAH TIDAK AKTIF
         * ==========================================================
@@ -634,6 +690,8 @@ use Illuminate\Support\Facades\Log;
         * Siswa lokal yang tidak ada dalam daftar siswa aktif API ditandai
         * nonaktif. Record dan user tidak dihapus agar histori dispensasi
         * tetap aman.
+        * Siswa kelas XII angkatan aktif yang sedang PKL dilindungi agar
+        * tidak dinonaktifkan.
         */
         private function reconcileInactiveStudents(array $activeNis): int
         {
@@ -654,6 +712,10 @@ use Illuminate\Support\Facades\Log;
             Siswa::query()
                 ->where('status_aktif', true)
                 ->whereNotIn('nis_nip', $activeNis)
+                ->where(function ($query) {
+                    $query->whereDoesntHave('kelas', fn ($q) => $q->where('tingkat', 'XII'))
+                        ->orWhereRaw('CAST(nis_nip AS UNSIGNED) NOT BETWEEN 4583 AND 4898');
+                })
                 ->chunkById(100, function ($students) use (&$inactiveCount): void {
                     foreach ($students as $siswa) {
                         $siswa->update(['status_aktif' => false]);
@@ -745,6 +807,7 @@ use Illuminate\Support\Facades\Log;
                 $jumlahDariApi = count($studentsData);
 
                 $activeStudents = [];
+                $seenActiveNis = [];
                 $jumlahDilewati = 0;
                 $jumlahPklAktif = 0;
 
@@ -757,10 +820,18 @@ use Illuminate\Support\Facades\Log;
                     $nis = $this->extractNis($item);
                     $nama = $this->extractNama($item);
 
+                    if ($nis !== '' && isset($seenActiveNis[$nis])) {
+                        // Lewati duplikat data dari API
+                        continue;
+                    }
+
                     $reason = '';
 
                     if ($this->isStudentActive($item, $reason)) {
                         $activeStudents[] = $item;
+                        if ($nis !== '') {
+                            $seenActiveNis[$nis] = true;
+                        }
 
                         $classroom = data_get($item, 'classroom');
 
@@ -779,6 +850,27 @@ use Illuminate\Support\Facades\Log;
                     Log::info(
                         "SKIP SISWA: NIS {$nis} ({$nama}) - {$reason}"
                     );
+                }
+
+                /*
+                * ======================================================
+                * AKOMODASI SISWA KELAS XII PKL
+                * ======================================================
+                *
+                * Karena ada perubahan data siswa di SiJuna (sedang PKL),
+                * siswa kelas XII angkatan aktif (NIS 4583 - 4898) tidak
+                * dikirim oleh endpoint API reguler. Data lokal ke-300 siswa
+                * PKL ini diikutsertakan kembali agar tetap aktif dan
+                * total siswa aktif tetap 1160.
+                */
+                $missingPklItems = $this->getMissingPklStudents($seenActiveNis);
+                foreach ($missingPklItems as $pklItem) {
+                    $activeStudents[] = $pklItem;
+                    $pklNis = $this->extractNis($pklItem);
+                    if ($pklNis !== '') {
+                        $seenActiveNis[$pklNis] = true;
+                    }
+                    $jumlahPklAktif++;
                 }
 
                 $totalStudents = count($activeStudents);
