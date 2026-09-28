@@ -77,6 +77,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::resource('siswa', Admin\SiswaController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
                 Route::resource('guru', Admin\GuruController::class)->only(['index', 'store', 'update', 'destroy']);
                 Route::resource('piket', GuruPiketController::class)->only(['index', 'store', 'update', 'destroy']);
+                Route::patch('jadwal-piket/{jadwal}/toggle', [Admin\JadwalPiketController::class, 'toggle'])->name('jadwal-piket.toggle');
+                Route::resource('jadwal-piket', Admin\JadwalPiketController::class)->parameters(['jadwal-piket' => 'jadwal']);
                 Route::resource('satpam', Admin\SatpamController::class)->only(['index', 'store', 'update', 'destroy']);
 
                 // ✅ SEMUA PENGAJUAN (Dispensasi) - Termasuk Route Hapus
@@ -162,6 +164,14 @@ Route::middleware(['auth'])->group(function () {
           // ✅ TAMBAHKAN INI: Route untuk tandai sudah dihubungi via WA
          Route::post('dispensasi/{dispensasi}/wa-contacted', [\App\Http\Controllers\Guru\DashboardController::class, 'markWaContacted'])
              ->name('dispensasi.wa-contacted');
+
+        // Pertukaran / Penggantian Jadwal Piket
+        Route::get('piket/swap/create', [\App\Http\Controllers\Guru\PiketSwapController::class, 'create'])->name('piket.swap.create');
+        Route::post('piket/swap', [\App\Http\Controllers\Guru\PiketSwapController::class, 'store'])->name('piket.swap.store');
+        Route::get('piket/swap/incoming', [\App\Http\Controllers\Guru\PiketSwapController::class, 'incoming'])->name('piket.swap.incoming');
+        Route::post('piket/swap/{pertukaran}/accept', [\App\Http\Controllers\Guru\PiketSwapController::class, 'accept'])->name('piket.swap.accept');
+        Route::post('piket/swap/{pertukaran}/reject', [\App\Http\Controllers\Guru\PiketSwapController::class, 'reject'])->name('piket.swap.reject');
+        Route::post('piket/swap/{pertukaran}/cancel', [\App\Http\Controllers\Guru\PiketSwapController::class, 'cancel'])->name('piket.swap.cancel');
     });
 
     // ==========================================

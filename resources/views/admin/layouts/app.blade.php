@@ -100,8 +100,8 @@
                     <i class="fas fa-id-card-alt w-5 mr-3"></i> Izin Guru
                 </a>
                 <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Operasional</p>
-                <a href="{{ route('admin.piket.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.piket.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.jadwal-piket.index') }}"
+                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.jadwal-piket.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar-alt w-5 mr-3"></i> Jadwal Piket
                 </a>
                 <a href="{{ route('admin.semua.pengajuan') }}"

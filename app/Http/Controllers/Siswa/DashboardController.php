@@ -6,17 +6,25 @@ use App\Http\Controllers\Controller;
 use App\Models\Dispensasi;
 use App\Models\Notifikasi;
 use App\Helpers\DispensasiTimeHelper;
+use App\Services\GuruPiketService;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
-    public function __invoke()
+    public function __invoke(GuruPiketService $guruPiketService)
     {
         $siswa = auth()->user()->siswa;
         if (! $siswa) {
             abort(403, 'Profil siswa tidak ditemukan.');
+        }
+
+        // Informasi Guru Piket
+        $infoPiket = $guruPiketService->getInformasiSesi();
+        $adaJadwalHariIni = false;
+        if (empty($infoPiket['jadwal'])) {
+            $adaJadwalHariIni = $guruPiketService->getJadwalUntukTanggal()->isNotEmpty();
         }
 
         // Ambil dispensasi aktif (disetujui atau keluar)
@@ -88,7 +96,9 @@ class DashboardController extends Controller
             'dispensasiAktif',
             'isTerlambat',
             'terlambatJam',
-            'terlambatMenit'
+            'terlambatMenit',
+            'infoPiket',
+            'adaJadwalHariIni'
         ));
     }
 }
