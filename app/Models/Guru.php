@@ -45,4 +45,25 @@ class Guru extends Model
     {
         return $this->hasMany(Dispensasi::class, 'guru_id');
     }
+
+    public function jadwalPiketGurus(): HasMany
+    {
+        return $this->hasMany(JadwalPiketGuru::class, 'guru_id');
+    }
+
+    public function pertukaranAsal(): HasMany
+    {
+        return $this->hasMany(PertukaranJadwalPiket::class, 'guru_asal_id');
+    }
+
+    public function pertukaranPengganti(): HasMany
+    {
+        return $this->hasMany(PertukaranJadwalPiket::class, 'guru_pengganti_id');
+    }
+
+    public function jadwalPikets(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(JadwalPiket::class, 'jadwal_piket_guru', 'guru_id', 'jadwal_piket_id')
+            ->withTimestamps();
+    }
 }
