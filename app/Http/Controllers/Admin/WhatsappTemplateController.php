@@ -17,69 +17,45 @@ class WhatsappTemplateController extends Controller
 
     public function store(Request $request)
     {
-        // $validated = $request->validate([
-        //     'name' => 'required|string|max:100',
-        //     'content' => 'required|string',
-        //     'is_active' => 'boolean',
-        // ]);
         $validated = $request->validate([
-                   // ✅ Tambahkan validasi unique agar tidak bisa membuat nama yang sama
-                   'name' => 'required|string|max:100|unique:whatsapp_templates,name',
-                   'content' => 'required|string',
-                   'is_active' => 'nullable|boolean', // nullable agar tidak error saat checkbox tidak dicentang
-               ]);
+            'name' => 'required|string|max:100|unique:whatsapp_templates,name',
+            'content' => 'required|string',
+            'is_active' => 'nullable|boolean',
+        ]);
 
-                   $validated['slug'] = Str::slug($validated['name']);
-                   // ✅ Konversi checkbox ke boolean yang benar
-                   $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['slug'] = Str::slug($validated['name']);
+        $validated['is_active'] = $request->has('is_active') ? true : false;
 
-                   WhatsappTemplate::create($validated);
+        WhatsappTemplate::create($validated);
+        \App\Services\WhatsappMessageService::clearCache();
 
-                   return redirect()->route('admin.whatsapp-templates.index')
-                       ->with('success', 'Template WhatsApp berhasil ditambahkan!');
-               }
-    //     $validated['slug'] = Str::slug($validated['name']);
-    //     WhatsappTemplate::create($validated);
-
-    //     return redirect()->route('admin.whatsapp-templates.index')
-    //         ->with('success', 'Template WhatsApp berhasil ditambahkan!');
-    // }
+        return redirect()->route('admin.whatsapp-templates.index')
+            ->with('success', 'Template WhatsApp berhasil ditambahkan!');
+    }
 
     public function update(Request $request, WhatsappTemplate $whatsappTemplate)
     {
-        // $validated = $request->validate([
-        //     'name' => 'required|string|max:100',
-        //     'content' => 'required|string',
-        //     'is_active' => 'boolean',
-        // ]);
-
         $validated = $request->validate([
-                'name' => 'required|string|max:100|unique:whatsapp_templates,name,' . $whatsappTemplate->id,
-                'content' => 'required|string',
-                // ✅ HAPUS validasi boolean
-                'is_active' => 'nullable',
-            ]);
+            'name' => 'required|string|max:100|unique:whatsapp_templates,name,' . $whatsappTemplate->id,
+            'content' => 'required|string',
+            'is_active' => 'nullable',
+        ]);
 
-            $validated['slug'] = Str::slug($validated['name']);
-            // ✅ Konversi checkbox ke boolean yang benar
-            $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['slug'] = Str::slug($validated['name']);
+        $validated['is_active'] = $request->has('is_active') ? true : false;
 
-            $whatsappTemplate->update($validated);
+        $whatsappTemplate->update($validated);
+        \App\Services\WhatsappMessageService::clearCache();
 
-            return redirect()->route('admin.whatsapp-templates.index')
-                ->with('success', 'Template WhatsApp berhasil diperbarui!');
-        }
-
-    //     $validated['slug'] = Str::slug($validated['name']);
-    //     $whatsappTemplate->update($validated);
-
-    //     return redirect()->route('admin.whatsapp-templates.index')
-    //         ->with('success', 'Template WhatsApp berhasil diperbarui!');
-    // }
+        return redirect()->route('admin.whatsapp-templates.index')
+            ->with('success', 'Template WhatsApp berhasil diperbarui!');
+    }
 
     public function destroy(WhatsappTemplate $whatsappTemplate)
     {
         $whatsappTemplate->delete();
+        \App\Services\WhatsappMessageService::clearCache();
+
         return redirect()->route('admin.whatsapp-templates.index')
             ->with('success', 'Template berhasil dihapus!');
     }
@@ -87,25 +63,37 @@ class WhatsappTemplateController extends Controller
     /**
      * AJAX Preview untuk melihat hasil render sebelum disimpan
      */
-     public function preview(Request $request)
-     {
-         $request->validate(['content' => 'required|string']);
+    public function preview(Request $request)
+    {
+        $request->validate(['content' => 'required|string']);
 
-         $sampleData = [
-             'nama_siswa' => 'MUHAMMAD ZAINAL ARIEF',
-             'nomor_surat' => 'DISP-2026-0042',
-             'catatan' => 'Alasan kurang jelas',
-             'waktu_aktual' => now()->format('H:i'),
-             'jam_kembali' => 'Jam Pelajaran ke-9',
-             'durasi_terlambat' => '15 menit',
-         ];
+        $sampleData = [
+            // Variabel Siswa / Dispensasi
+            'nama_siswa' => 'MUHAMMAD ZAINAL ARIEF',
+            'nomor_surat' => 'DISP-2026-0042',
+            'catatan' => 'Alasan tugas OSIS di luar sekolah',
+            'waktu_aktual' => now()->format('H:i'),
+            'jam_kembali' => 'Jam Pelajaran ke-9',
+            'durasi_terlambat' => '15 menit',
+            'tujuan' => 'Dinas Pendidikan Kabupaten Jepara',
+            'alasan' => 'Rapat koordinasi pengurus OSIS',
 
-         // ✅ ESCAPE DULU SEBELUM REPLACE
-         $content = e($request->content);
-         foreach ($sampleData as $key => $value) {
-             $content = str_replace('{' . $key . '}', e($value), $content);
-         }
+            // Variabel Guru / Piket
+            'nama_guru' => 'Budi Santoso, S.Pd.',
+            'hari' => 'Senin',
+            'nama_sesi' => 'Sesi 1',
+            'jam_mulai' => '07:00',
+            'jam_selesai' => '09:30',
+            'koordinator' => "Almu'idul 'Afwan, S.Pd.",
+            'tanggal' => now()->translatedFormat('d F Y'),
+        ];
 
-         return response()->json(['preview' => nl2br($content)]);
-     }
+        // Escape dulu sebelum replace agar aman
+        $content = e($request->content);
+        foreach ($sampleData as $key => $value) {
+            $content = str_replace('{' . $key . '}', e($value), $content);
+        }
+
+        return response()->json(['preview' => nl2br($content)]);
+    }
 }
