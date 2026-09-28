@@ -8,6 +8,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call([
+            UserSeeder::class,
+            SatpamSeeder::class,
+        ]);
+
         $this->command->info('✅ DatabaseSeeder selesai. Data master akan diambil melalui sinkronisasi SIPINTU.');
     }
 }
