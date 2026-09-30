@@ -2,7 +2,7 @@
 @section('title', 'Notifikasi')
 @section('page-title', 'Notifikasi Siswa')
 @section('content')
-@include('components.alert')
+
 
 <div class="max-w-3xl mx-auto">
     <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">

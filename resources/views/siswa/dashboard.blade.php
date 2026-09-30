@@ -197,36 +197,48 @@
 
 {{-- ============ GURU PIKET HARI INI ============ --}}
 <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-xs">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 pb-3 mb-3">
-        <div>
-            <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-xs">
+    <div class="border-b border-gray-100 pb-3 mb-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="flex items-start gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5 sm:mt-0">
                     <i class="fas fa-user-shield"></i>
                 </div>
-                <h3 class="text-sm font-bold text-gray-900">Guru Piket Hari Ini</h3>
-                @if(!empty($infoPiket['jadwal']))
-                    <span class="text-xs text-gray-400 font-normal hidden sm:inline">•</span>
-                    <span class="text-xs text-gray-600 font-medium">
-                        {{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} – {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }}
-                    </span>
+                <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <h3 class="text-sm font-bold text-gray-900 whitespace-nowrap">Guru Piket Hari Ini</h3>
+                        @if(!empty($infoPiket['jadwal']))
+                            @if(!empty($infoPiket['jadwal']->nama_sesi))
+                                <span class="text-[10px] sm:text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 whitespace-nowrap">
+                                    {{ $infoPiket['jadwal']->nama_sesi }}
+                                </span>
+                            @endif
+                            <span class="text-[11px] sm:text-xs font-mono font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded whitespace-nowrap">
+                                <i class="far fa-clock text-[10px] text-gray-400 mr-1"></i>{{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} – {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Daftar Bapak/Ibu Guru yang bertugas piket pada sesi ini.</p>
+                </div>
+            </div>
+            @if(!empty($infoPiket['jadwal']))
+                <div class="flex items-center sm:self-center self-start pl-10 sm:pl-0">
                     @if($infoPiket['status_sesi'] === 'Berlangsung')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
                             Sedang Berlangsung
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Akan Datang')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200">
-                            <i class="far fa-clock mr-1 text-[10px]"></i>
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 shadow-2xs whitespace-nowrap">
+                            <i class="far fa-clock mr-1.5 text-[10px]"></i>
                             Akan Datang
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Sesi Selesai')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap">
                             Sesi Selesai
                         </span>
                     @endif
-                @endif
-            </div>
-            <p class="text-xs text-gray-500 mt-1">Daftar Bapak/Ibu Guru yang bertugas piket pada sesi ini.</p>
+                </div>
+            @endif
         </div>
     </div>
 
