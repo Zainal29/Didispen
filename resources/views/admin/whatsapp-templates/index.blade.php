@@ -94,7 +94,9 @@
                 </div>
 
                 <div>
-                    <span class="font-semibold text-[11px] text-indigo-900 block mb-1">📅 Variabel Pengingat Piket Guru:</span>
+                    <span class="font-semibold text-[11px] text-indigo-900 block mb-1">
+                        <i class="fas fa-calendar-alt text-indigo-600 mr-1.5"></i>Variabel Pengingat Piket Guru:
+                    </span>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach(['{nama_guru}', '{hari}', '{nama_sesi}', '{jam_mulai}', '{jam_selesai}', '{koordinator}', '{tanggal}'] as $var)
                             <button type="button" onclick="insertVariable('{{ $var }}')" class="px-2 py-0.5 bg-white border border-indigo-200 text-indigo-700 font-mono text-[11px] rounded hover:bg-indigo-100 transition-colors">
@@ -105,9 +107,11 @@
                 </div>
 
                 <div>
-                    <span class="font-semibold text-[11px] text-emerald-900 block mb-1">🎓 Variabel Dispensasi Siswa:</span>
+                    <span class="font-semibold text-[11px] text-emerald-900 block mb-1">
+                        <i class="fas fa-user-graduate text-emerald-600 mr-1.5"></i>Variabel Dispensasi Siswa:
+                    </span>
                     <div class="flex flex-wrap gap-1.5">
-                        @foreach(['{nama_siswa}', '{nomor_surat}', '{catatan}', '{waktu_aktual}', '{jam_kembali}', '{durasi_terlambat}', '{tujuan}', '{alasan}'] as $var)
+                        @foreach(['{nama_siswa}', '{nis}', '{kelas}', '{jurusan}', '{nomor_surat}', '{kategori}', '{catatan}', '{waktu_aktual}', '{jam_keluar}', '{jam_kembali}', '{durasi_terlambat}', '{tujuan}', '{lokasi}', '{alasan}', '{link_dispensasi}', '{link_web}'] as $var)
                             <button type="button" onclick="insertVariable('{{ $var }}')" class="px-2 py-0.5 bg-white border border-emerald-200 text-emerald-700 font-mono text-[11px] rounded hover:bg-emerald-100 transition-colors">
                                 {{ $var }}
                             </button>
@@ -153,6 +157,7 @@
                     <div id="previewArea" class="w-full px-3.5 py-2.5 bg-emerald-50/50 border border-emerald-200 rounded-xl text-xs sm:text-sm text-gray-800 min-h-[90px] whitespace-pre-wrap break-words leading-relaxed font-sans shadow-inner">
                         <span class="text-gray-400 italic">Klik tombol "Preview" di bawah untuk melihat simulasi pesan terisi variabel.</span>
                     </div>
+                    <div id="previewWarning" class="hidden mt-2 px-3 py-2 bg-amber-50 border border-amber-300 rounded-lg text-xs text-amber-800 font-medium"></div>
                 </div>
             </form>
         </div>
@@ -187,7 +192,7 @@ function insertVariable(variableText) {
 
 function loadPiketPreset() {
     document.getElementById('tplName').value = 'Pengingat Jadwal Guru Piket';
-    document.getElementById('tplContent').value = "Halo Yth. Bapak/Ibu *{nama_guru}*,\n\nKami mengingatkan bahwa Anda memiliki jadwal piket di sekolah pada:\n📅 Hari: *{hari}*\n⏰ Sesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n👤 Koordinator: {koordinator}\n\nMohon untuk hadir tepat waktu dan bertugas di pos piket untuk memantau kehadiran serta perizinan siswa.\n\nTerima kasih atas dedikasi dan kerjasamanya.\n- Admin DIDISPEN SMK N 1 Bangsri";
+    document.getElementById('tplContent').value = "Halo Yth. Bapak/Ibu *{nama_guru}*,\n\nKami mengingatkan bahwa Anda memiliki jadwal piket di sekolah pada:\nHari: *{hari}*\nSesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\nKoordinator: {koordinator}\n\nMohon untuk hadir tepat waktu dan bertugas di pos piket untuk memantau kehadiran serta perizinan siswa.\n\nTerima kasih atas dedikasi dan kerjasamanya.\n- Admin DIDISPEN SMK N 1 Bangsri";
     fetchPreview();
 }
 
@@ -237,6 +242,16 @@ function fetchPreview() {
     .then(r => r.json())
     .then(data => {
         document.getElementById('previewArea').innerHTML = data.preview;
+
+        // Tampilkan warning jika ada placeholder tidak dikenal
+        const warnEl = document.getElementById('previewWarning');
+        if (data.unknown_placeholders && data.unknown_placeholders.length > 0) {
+            warnEl.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Placeholder tidak dikenal: <span class="font-mono">' + data.unknown_placeholders.map(p => '{' + p + '}').join(', ') + '</span>';
+            warnEl.classList.remove('hidden');
+        } else {
+            warnEl.innerHTML = '';
+            warnEl.classList.add('hidden');
+        }
     })
     .catch(err => {
         console.error(err);

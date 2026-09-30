@@ -25,16 +25,14 @@
 }
 </style>
 
-{{-- HERO SECTION - Clean, solid color --}}
-<div class="bg-blue-600 rounded-xl p-4 sm:p-6 mb-4 text-white">
-    <div class="flex items-center justify-between gap-3">
-        <div class="min-w-0">
-            <p class="text-blue-100 text-[10px] sm:text-xs font-semibold uppercase tracking-wider">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5 truncate">Halo, {{ auth()->user()->name }}!</h2>
-            <p class="text-blue-100 text-xs sm:text-sm mt-1">Pantau dan kelola dispensasi siswa hari ini.</p>
-        </div>
-        <a href="{{ route('guru.pengajuan.create') }}" class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-white text-blue-700 text-xs font-semibold hover:bg-blue-50 transition-colors flex-shrink-0 shadow-sm">
-            <i class="fas fa-plus mr-1.5"></i><span>Buat Dispensasi</span>
+{{-- HERO SECTION - Format layout sama persis seperti siswa tanpa notifikasi --}}
+<div class="bg-blue-600 rounded-xl p-4 sm:p-6 mb-4">
+    <p class="text-blue-100 text-xs font-medium uppercase tracking-wide">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
+    <h2 class="text-lg sm:text-xl font-bold text-white mt-1">Halo, {{ auth()->user()->name }}!</h2>
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+        <a href="{{ route('guru.pengajuan.create') }}"
+           class="inline-flex items-center px-3.5 py-1.5 rounded-lg bg-white text-blue-700 text-xs font-semibold hover:bg-blue-50 transition-colors shadow-sm">
+            <i class="fas fa-plus mr-1.5"></i>Buat Dispensasi
         </a>
     </div>
 </div>
@@ -44,21 +42,21 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5 pb-3 border-b border-gray-100">
         <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="text-sm sm:text-base font-bold text-gray-900 flex items-center">
+                <h3 class="text-sm sm:text-base font-bold text-gray-900 flex items-center whitespace-nowrap">
                     <i class="fas fa-user-shield text-blue-600 mr-2"></i>
                     <span>{{ isset($infoPiket['status_sesi']) && $infoPiket['status_sesi'] === 'Akan Datang' ? 'Guru Piket Berikutnya' : 'Guru Piket Hari Ini' }}</span>
                 </h3>
                 @if(!empty($infoPiket['jadwal']))
-                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-100">
+                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-100 whitespace-nowrap">
                         {{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} - {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB
                     </span>
                     @if($infoPiket['status_sesi'] === 'Berlangsung')
-                        <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1.5 animate-pulse"></span>
                             Sedang Berlangsung
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Akan Datang')
-                        <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200">
+                        <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200 whitespace-nowrap">
                             <i class="far fa-clock mr-1 text-[11px]"></i>
                             Akan Datang
                         </span>
@@ -90,8 +88,8 @@
                     </a>
                 @endif
             @else
-                <span class="text-xs font-medium text-gray-500 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg">
-                    Anda tidak bertugas pada sesi ini.
+                <span class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg inline-flex items-center shadow-2xs">
+                    <i class="fas fa-times-circle text-red-500 mr-1.5 text-sm"></i>Anda tidak bertugas pada sesi ini/hari ini.
                 </span>
                 <a href="{{ route('guru.piket.swap.incoming') }}" class="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold transition-colors">
                     <i class="fas fa-handshake mr-1.5 text-gray-400"></i>Jadwal Tukar
