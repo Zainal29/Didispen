@@ -195,6 +195,11 @@ Route::middleware(['auth'])->group(function () {
         // ✅ TAMBAHKAN 2 ROUTE INI:
         Route::post('pengajuan/{dispensasi}/upload-foto-bukti', [\App\Http\Controllers\Siswa\PengajuanController::class, 'uploadFotoBukti'])->name('pengajuan.upload-foto-bukti');
         Route::delete('pengajuan/{dispensasi}/hapus-foto-bukti', [\App\Http\Controllers\Siswa\PengajuanController::class, 'hapusFotoBukti'])->name('pengajuan.hapus-foto-bukti');
+    
+   Route::get(
+    'pengajuan/{dispensasi}/hubungi-guru-piket',
+    [PengajuanController::class, 'hubungiGuruPiket']
+)->name('pengajuan.hubungi-guru-piket');
        });
 
     // ==========================================

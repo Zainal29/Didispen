@@ -159,15 +159,281 @@ namespace App\Http\Controllers\Siswa;
         }
 
         public function show(Dispensasi $dispensasi)
-        {
-            $siswa = auth()->user()->siswa;
-            if (! $siswa || $dispensasi->siswa_id !== $siswa->id) {
-                abort(403, 'Akses ditolak.');
+{
+    $siswa = auth()->user()->siswa;
+
+    if (! $siswa || $dispensasi->siswa_id !== $siswa->id) {
+        abort(403, 'Akses ditolak.');
+    }
+
+    $dispensasi->load([
+        'guru',
+        'siswa.kelas.jurusan',
+        'siswa.user',
+    ]);
+
+    // ============================================================
+    // FITUR: Hubungi Guru Piket
+    // Popup hanya tersedia selama 3 menit sejak created_at
+    // ============================================================
+    $popupEligible = false;
+    $popupSecondsLeft = 0;
+    $hubungiGuru = null;
+    $hubungiError = null;
+
+    if ($dispensasi->status === 'menunggu') {
+        $expiredAt = $dispensasi->created_at
+        ->copy()
+        ->addMinutes(3);
+
+    $now = now('Asia/Jakarta');
+
+   $popupSecondsLeft = 0;
+
+        if ($now->lt($expiredAt)) {
+            $popupEligible = true;
+            $popupSecondsLeft = max(
+                0,
+                $expiredAt->timestamp - $now->timestamp
+            );
+        
+
+            /*
+             * Prioritas:
+             *
+             * 1. Guru yang tersimpan pada dispensasi
+             * 2. Guru Piket aktual dari GuruPiketService
+             * 3. Guru fallback dari Settings Admin
+             *
+             * URL WhatsApp TIDAK dibuat di sini.
+             * URL akan dibuat oleh endpoint server-side setelah
+             * ownership, status, dan batas waktu divalidasi ulang.
+             */
+
+            if ($dispensasi->guru && $dispensasi->guru->status_aktif) {
+                $hubungiGuru = $dispensasi->guru;
             }
 
-            $dispensasi->load(['guru', 'siswa.kelas.jurusan', 'siswa.user']);
-            return view('siswa.pengajuan.show', compact('dispensasi'));
+            // --------------------------------------------------------
+            // Cari Guru Piket aktual dari sesi
+            // --------------------------------------------------------
+            if (! $hubungiGuru) {
+                try {
+                    $guruPiketService = app(
+                        \App\Services\GuruPiketService::class
+                    );
+
+                    $infoSesi = $guruPiketService->getInformasiSesi();
+
+                    /*
+                     * Jika sesi conflict, jangan memilih guru
+                     * secara sembarangan.
+                     */
+                    if (
+                        ! ($infoSesi['conflict'] ?? false)
+                        && ! empty($infoSesi['petugas'])
+                    ) {
+                        $petugas = collect($infoSesi['petugas']);
+
+                        /*
+                         * Prioritaskan guru yang benar-benar berstatus
+                         * "Sedang Bertugas".
+                         */
+                        $sedangBertugas = $petugas->first(function ($p) {
+                            return isset($p['guru'])
+                                && $p['guru']
+                                && $p['guru']->status_aktif
+                                && ($p['status'] ?? null) === 'Sedang Bertugas';
+                        });
+
+                        if ($sedangBertugas) {
+                            $hubungiGuru = $sedangBertugas['guru'];
+                        }
+
+                        /*
+                         * Jika tidak ada yang berstatus "Sedang Bertugas",
+                         * gunakan petugas aktual pertama dari service.
+                         *
+                         * Ini BUKAN Guru::first().
+                         * Guru tersebut berasal dari resolver
+                         * GuruPiketService, termasuk replacement jika ada.
+                         */
+                        if (! $hubungiGuru) {
+                            $petugasAktual = $petugas->first(function ($p) {
+                                return isset($p['guru'])
+                                    && $p['guru']
+                                    && $p['guru']->status_aktif;
+                            });
+
+                            if ($petugasAktual) {
+                                $hubungiGuru = $petugasAktual['guru'];
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning(
+                        'Gagal resolve Guru Piket untuk fitur Hubungi Guru.',
+                        [
+                            'dispensasi_id' => $dispensasi->id,
+                            'error' => $e->getMessage(),
+                        ]
+                    );
+                }
+            }
+
+            // --------------------------------------------------------
+            // Fallback Guru dari Settings Admin
+            // --------------------------------------------------------
+            if (! $hubungiGuru) {
+                $fallbackGuruId = \App\Models\Setting::get(
+                    'fallback_guru_piket_id'
+                );
+
+                if ($fallbackGuruId) {
+                    $hubungiGuru = \App\Models\Guru::query()
+                        ->whereKey($fallbackGuruId)
+                        ->where('status_aktif', true)
+                        ->first();
+                }
+            }
+
+            if (! $hubungiGuru) {
+                $hubungiError = 'Guru Piket belum tersedia untuk pengajuan ini.';
+            } elseif (! $hubungiGuru->no_telepon) {
+                $hubungiError = 'Nomor WhatsApp Guru Piket belum tersedia.';
+            }
         }
+    }
+
+    return view('siswa.pengajuan.show', compact(
+        'dispensasi',
+        'popupEligible',
+        'popupSecondsLeft',
+        'hubungiGuru',
+        'hubungiError',
+    ));
+}
+
+public function hubungiGuruPiket(Dispensasi $dispensasi)
+{
+    $siswa = auth()->user()->siswa;
+
+    if (! $siswa || $dispensasi->siswa_id !== $siswa->id) {
+        abort(403, 'Akses ditolak.');
+    }
+
+    if ($dispensasi->status !== 'menunggu') {
+        return redirect()
+            ->route('siswa.pengajuan.show', $dispensasi)
+            ->with('error', 'Pengajuan ini sudah tidak dapat digunakan untuk menghubungi Guru Piket.');
+    }
+
+    $expiredAt = $dispensasi->created_at
+        ->copy()
+        ->addMinutes(3);
+
+    if (! now('Asia/Jakarta')->lt($expiredAt)) {
+        return redirect()
+            ->route('siswa.pengajuan.show', $dispensasi)
+            ->with('error', 'Waktu untuk menghubungi Guru Piket telah berakhir.');
+    }
+
+    $dispensasi->load([
+        'guru',
+        'siswa.kelas.jurusan',
+        'siswa.user',
+    ]);
+
+    $hubungiGuru = null;
+
+    // 1. Guru yang tersimpan pada pengajuan
+    if ($dispensasi->guru && $dispensasi->guru->status_aktif) {
+        $hubungiGuru = $dispensasi->guru;
+    }
+
+    // 2. Guru Piket aktif dari sesi saat ini
+    if (! $hubungiGuru) {
+        try {
+            $guruPiketService = app(\App\Services\GuruPiketService::class);
+            $infoSesi = $guruPiketService->getInformasiSesi();
+
+            if (
+                ! ($infoSesi['conflict'] ?? false)
+                && ! empty($infoSesi['petugas'])
+            ) {
+                $petugas = collect($infoSesi['petugas']);
+
+                // Prioritas: guru yang sedang bertugas
+                $sedangBertugas = $petugas->first(function ($p) {
+                    return isset($p['guru'])
+                        && $p['guru']
+                        && $p['guru']->status_aktif
+                        && ($p['status'] ?? null) === 'Sedang Bertugas';
+                });
+
+                if ($sedangBertugas) {
+                    $hubungiGuru = $sedangBertugas['guru'];
+                }
+
+                // Fallback deterministic dari petugas aktual
+                if (! $hubungiGuru) {
+                    $petugasAktual = $petugas->first(function ($p) {
+                        return isset($p['guru'])
+                            && $p['guru']
+                            && $p['guru']->status_aktif;
+                    });
+
+                    if ($petugasAktual) {
+                        $hubungiGuru = $petugasAktual['guru'];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning(
+                'Gagal resolve Guru Piket untuk WhatsApp.',
+                [
+                    'dispensasi_id' => $dispensasi->id,
+                    'error' => $e->getMessage(),
+                ]
+            );
+        }
+    }
+
+    // 3. Fallback Guru Piket dari Settings Admin
+    if (! $hubungiGuru) {
+        $fallbackGuruId = \App\Models\Setting::get(
+            'fallback_guru_piket_id'
+        );
+
+        if ($fallbackGuruId) {
+            $hubungiGuru = \App\Models\Guru::query()
+                ->whereKey($fallbackGuruId)
+                ->where('status_aktif', true)
+                ->first();
+        }
+    }
+
+    if (! $hubungiGuru) {
+        return redirect()
+            ->route('siswa.pengajuan.show', $dispensasi)
+            ->with('error', 'Guru Piket belum tersedia untuk pengajuan ini.');
+    }
+
+    $waService = app(\App\Services\WhatsappMessageService::class);
+
+    $result = $waService->generateHubungiGuruPiketWaLink(
+        $dispensasi,
+        $hubungiGuru
+    );
+
+    if (! $result['url']) {
+        return redirect()
+            ->route('siswa.pengajuan.show', $dispensasi)
+            ->with('error', $result['error'] ?? 'WhatsApp Guru Piket belum tersedia.');
+    }
+
+    return redirect()->away($result['url']);
+}
 
         /**
         * <i class="fas fa-check-circle"></i> PERBAIKAN: Generate QR Code hanya berisi Token JSON, dan kembalikan URL absolut

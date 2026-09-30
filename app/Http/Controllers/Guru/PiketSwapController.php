@@ -23,25 +23,31 @@ class PiketSwapController extends Controller
     public function create(Request $request)
     {
         $guru = auth()->user()->guru;
+
         if (! $guru) {
             abort(403, 'Akses khusus guru.');
         }
 
-        // Ambil jadwal resmi milik guru ini yang aktif
+        // Ambil jadwal resmi milik guru yang sedang login dan masih aktif.
         $jadwalList = $guru->jadwalPikets()
             ->where('jadwal_piket.is_active', true)
             ->orderBy('hari')
             ->orderBy('jam_mulai')
             ->get();
 
-        // Daftar guru pengganti yang berstatus aktif (kecuali guru yang login)
-        $guruPenggantiList = Guru::where('status_aktif', true)
-            ->where('id', '!=', $guru->id)
-            ->orderBy('nama_lengkap')
-            ->get();
+        // Ambil SEMUA guru sebagai calon guru pengganti,
+        // kecuali guru yang sedang login.
+       $guruPenggantiList = Guru::query()
+    ->orderBy('nama_lengkap')
+    ->get();
+
+
 
         $selectedJadwalId = (int) $request->get('jadwal_id', 0);
-        $selectedTanggal = $request->get('tanggal', now()->toDateString());
+        $selectedTanggal = $request->get(
+            'tanggal',
+            now()->toDateString()
+        );
 
         return view('guru.piket.swap-create', compact(
             'guru',
@@ -58,16 +64,23 @@ class PiketSwapController extends Controller
     public function store(StorePiketSwapRequest $request)
     {
         $guruAsal = auth()->user()->guru;
+
         if (! $guruAsal) {
             abort(403, 'Akses khusus guru.');
         }
 
         try {
-            $this->swapService->createSwapRequest($guruAsal, $request->validated());
+            $this->swapService->createSwapRequest(
+                $guruAsal,
+                $request->validated()
+            );
 
             return redirect()
                 ->route('guru.piket.swap.incoming')
-                ->with('success', 'Permintaan penggantian guru piket berhasil diajukan.');
+                ->with(
+                    'success',
+                    'Permintaan penggantian guru piket berhasil diajukan.'
+                );
         } catch (ValidationException $e) {
             return redirect()
                 ->back()
@@ -82,18 +95,31 @@ class PiketSwapController extends Controller
     public function incoming(Request $request)
     {
         $guru = auth()->user()->guru;
+
         if (! $guru) {
             abort(403, 'Akses khusus guru.');
         }
 
-        // Permintaan masuk untuk guru login sebagai guru pengganti
-        $incomingRequests = PertukaranJadwalPiket::with(['jadwalPiket', 'guruAsal'])
+        // Permintaan masuk untuk guru login sebagai guru pengganti.
+        $incomingRequests = PertukaranJadwalPiket::with([
+            'jadwalPiket',
+            'guruAsal',
+        ])
             ->where('guru_pengganti_id', $guru->id)
             ->latest()
             ->get();
 
-        // Riwayat pengajuan yang dibuat oleh guru login
-        $outgoingRequests = PertukaranJadwalPiket::with(['jadwalPiket', 'guruPengganti'])
+        // Jumlah permintaan masuk yang masih menunggu respons.
+        $pendingSwapCount = PertukaranJadwalPiket::query()
+            ->where('guru_pengganti_id', $guru->id)
+            ->where('status', 'menunggu')
+            ->count();
+
+        // Riwayat pengajuan yang dibuat oleh guru login.
+        $outgoingRequests = PertukaranJadwalPiket::with([
+            'jadwalPiket',
+            'guruPengganti',
+        ])
             ->where('guru_asal_id', $guru->id)
             ->latest()
             ->get();
@@ -101,7 +127,8 @@ class PiketSwapController extends Controller
         return view('guru.piket.swap-incoming', compact(
             'guru',
             'incomingRequests',
-            'outgoingRequests'
+            'outgoingRequests',
+            'pendingSwapCount'
         ));
     }
 
@@ -111,11 +138,17 @@ class PiketSwapController extends Controller
     public function accept(PertukaranJadwalPiket $pertukaran)
     {
         try {
-            $this->swapService->acceptSwapRequest($pertukaran, auth()->user());
+            $this->swapService->acceptSwapRequest(
+                $pertukaran,
+                auth()->user()
+            );
 
             return redirect()
                 ->back()
-                ->with('success', 'Permintaan penggantian guru piket berhasil disetujui.');
+                ->with(
+                    'success',
+                    'Permintaan penggantian guru piket berhasil disetujui.'
+                );
         } catch (\Throwable $e) {
             return redirect()
                 ->back()
@@ -126,16 +159,25 @@ class PiketSwapController extends Controller
     /**
      * Menolak permintaan penggantian oleh guru pengganti.
      */
-    public function reject(Request $request, PertukaranJadwalPiket $pertukaran)
-    {
+    public function reject(
+        Request $request,
+        PertukaranJadwalPiket $pertukaran
+    ) {
         $catatan = $request->input('catatan');
 
         try {
-            $this->swapService->rejectSwapRequest($pertukaran, auth()->user(), $catatan);
+            $this->swapService->rejectSwapRequest(
+                $pertukaran,
+                auth()->user(),
+                $catatan
+            );
 
             return redirect()
                 ->back()
-                ->with('success', 'Permintaan penggantian guru piket berhasil ditolak.');
+                ->with(
+                    'success',
+                    'Permintaan penggantian guru piket berhasil ditolak.'
+                );
         } catch (\Throwable $e) {
             return redirect()
                 ->back()
@@ -149,11 +191,17 @@ class PiketSwapController extends Controller
     public function cancel(PertukaranJadwalPiket $pertukaran)
     {
         try {
-            $this->swapService->cancelSwapRequest($pertukaran, auth()->user());
+            $this->swapService->cancelSwapRequest(
+                $pertukaran,
+                auth()->user()
+            );
 
             return redirect()
                 ->back()
-                ->with('success', 'Permintaan penggantian guru piket berhasil dibatalkan.');
+                ->with(
+                    'success',
+                    'Permintaan penggantian guru piket berhasil dibatalkan.'
+                );
         } catch (\Throwable $e) {
             return redirect()
                 ->back()
