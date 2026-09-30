@@ -91,12 +91,12 @@
             <span>{{ empty($adaJadwalHariIni) ? 'Belum ada jadwal Guru Piket untuk hari ini.' : 'Tidak ada sesi Guru Piket berikutnya hari ini.' }}</span>
         </div>
 
-    {{-- KONDISI 3: ADA SESI & PETUGAS AKTUAL --}}
+     {{-- KONDISI 3: ADA SESI & PETUGAS AKTUAL --}}
     @else
         @if(empty($infoPiket['petugas']))
             <p class="text-xs text-gray-500 italic">Belum ada petugas piket yang ditentukan untuk sesi ini.</p>
         @else
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 @foreach($infoPiket['petugas'] as $p)
                     @php
                         $statusClass = match($p['status']) {
@@ -114,7 +114,7 @@
                             default           => 'bg-gray-400',
                         };
                     @endphp
-                    <div class="p-3 rounded-xl border border-gray-200 bg-white flex flex-col justify-between gap-2">
+                    <div class="p-3.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-all flex flex-col justify-between gap-2">
                         <div class="min-w-0">
                             <p class="font-bold text-sm text-gray-900 truncate">{{ $p['guru']->nama_lengkap }}</p>
                             @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
@@ -124,11 +124,25 @@
                                 </p>
                             @endif
                         </div>
-                        <div class="pt-0.5">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border {{ $statusClass }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} mr-1.5"></span>
-                                {{ $p['status'] }}
-                            </span>
+                    	<div class="pt-1">
+    <div class="flex flex-col items-start gap-1">
+
+        {{-- Status utama --}}
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border {{ $statusClass }}">
+            <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }}"></span>
+            {{ $p['status'] }}
+        </span>
+
+   {{-- Setelah kembali, guru kembali menjalankan tugas --}}
+@if($p['status'] === 'Sudah Kembali' && ($infoPiket['status_sesi'] ?? null) === 'Berlangsung')
+    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-emerald-50 text-emerald-800 border-emerald-200">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        Sedang Bertugas
+    </span>
+@endif
+
+    </div>
+
                         </div>
                     </div>
                 @endforeach
