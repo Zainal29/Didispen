@@ -20,7 +20,7 @@
         color: #000;
         font-family: 'Courier New', Courier, monospace;
         font-size: 8.5px;
-        line-height: 1.2;
+        line-height: 1.25;
     }
 
     .container {
@@ -30,18 +30,24 @@
         margin: 0 auto;
     }
 
-    /* HEADER */
-    .header {
-        text-align: center;
+    /* HEADER TABLE (KUNCI AGAR LOGO DAN TEKS PASTI PERSIS DI TENGAH) */
+    .header-table {
         width: 100%;
-        margin-bottom: 4px;
+        border-collapse: collapse;
+        margin-bottom: 2px;
+    }
+
+    .header-table td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 0;
     }
 
     .logo {
-        width: 28px;
-        height: 28px;
-        margin: 0 auto 2px;
-        display: block;
+        width: 34px;
+        height: 34px;
+        display: inline-block;
+        margin-bottom: 2px;
     }
 
     .school-name {
@@ -67,6 +73,7 @@
     /* JUDUL */
     .title-table {
         width: 100%;
+        border-collapse: collapse;
         margin: 4px 0;
     }
 
@@ -105,7 +112,7 @@
         word-break: break-word;
     }
 
-    /* TANDA TANGAN (TABLE BASED - PASTI RAPI DI DOMPDF) */
+    /* TANDA TANGAN (TABLE BASED) */
     .sign-table {
         width: 100%;
         border-collapse: collapse;
@@ -125,11 +132,13 @@
     .sign-content .date {
         font-size: 7.5px;
         margin: 0 0 2px;
+        text-align: center;
     }
 
     .sign-content .role {
         font-size: 7.5px;
-        margin: 0 0 35px; /* Ruang tanda tangan */
+        margin: 0 0 35px;
+        text-align: center;
     }
 
     .sign-content .name {
@@ -137,18 +146,20 @@
         font-size: 8px;
         text-decoration: underline;
         margin: 0;
+        text-align: center;
     }
 
     .sign-content .nip {
         font-size: 7px;
         margin: 2px 0 0;
+        text-align: center;
     }
 
     /* FOOTER */
     .footer-table {
         width: 100%;
+        border-collapse: collapse;
         margin-top: 4px;
-        text-align: center;
     }
 
     .footer-table td {
@@ -159,12 +170,14 @@
         font-size: 7.5px;
         font-style: italic;
         margin: 3px 0;
+        text-align: center;
     }
 
     .thank-you {
         font-weight: bold;
         font-size: 8px;
         margin: 4px 0 0;
+        text-align: center;
     }
 </style>
 </head>
@@ -172,8 +185,8 @@
 <body>
 <div class="container">
 
-    {{-- HEADER --}}
-    <div class="header">
+    {{-- HEADER MENGGUNAKAN TABEL SUPAYA SENTRALISASI LOGO TIDAK MENCONG --}}
+    <table class="header-table">
         @php
             $logoPath = public_path('images/logo-didispen.png');
             $logoBase64 = null;
@@ -183,16 +196,23 @@
         @endphp
 
         @if($logoBase64)
-            <img src="data:image/png;base64,{{ $logoBase64 }}" class="logo" alt="Logo">
+            <tr>
+                <td>
+                    <img src="data:image/png;base64,{{ $logoBase64 }}" class="logo" alt="Logo">
+                </td>
+            </tr>
         @endif
-
-        <div class="school-name">SMKN 1 BANGSRI</div>
-        <div class="school-address">Sistem Informasi Dispensasi</div>
-    </div>
+        <tr>
+            <td class="school-name">SMKN 1 BANGSRI</td>
+        </tr>
+        <tr>
+            <td class="school-address">Sistem Informasi Dispensasi</td>
+        </tr>
+    </table>
 
     <div class="divider"></div>
 
-    {{-- JUDUL BUKTI DISPENSASI (CENTER PRESISI) --}}
+    {{-- JUDUL --}}
     <table class="title-table">
         <tr>
             <td class="title-text">BUKTI DISPENSASI</td>
@@ -211,7 +231,7 @@
         $waktuKembali = $extractTime(\App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali));
     @endphp
 
-    {{-- TABEL DATA DISPENSASI --}}
+    {{-- DATA DISPENSASI --}}
     <table class="info-table">
         <tr>
             <td class="label">No. Surat</td>
@@ -252,7 +272,7 @@
 
     <div class="divider"></div>
 
-    {{-- TANDA TANGAN GURU PIKET (RATA KANAN & ANTI HILANG) --}}
+    {{-- TANDA TANGAN GURU PIKET --}}
     @php
         $namaGuru = $dispensasi->guru?->nama_lengkap 
             ?? $dispensasi->guru?->user?->name 
@@ -280,7 +300,7 @@
 
     <div class="divider"></div>
 
-    {{-- FOOTER (SIMETRIS TENGAH) --}}
+    {{-- FOOTER --}}
     <table class="footer-table">
         <tr>
             <td>
