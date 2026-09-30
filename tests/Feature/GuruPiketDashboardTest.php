@@ -100,8 +100,11 @@ class GuruPiketDashboardTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Guru Piket Hari Ini');
         $response->assertSee('Guru Petugas');
-        $response->assertSee('Anda tidak bertugas pada sesi ini.');
-        $response->assertDontSee('Anda bertugas pada sesi ini');
+        $response->assertSee('Anda tidak bertugas pada sesi ini/hari ini.');
+        $response->assertSee('text-red-700', false);
+        $response->assertSee('Halo, Guru Non-Petugas!', false);
+        $response->assertDontSee('truncate');
+        $response->assertDontSee('Anda bertugas pada sesi ini/hari ini.');
     }
 
     /**
@@ -175,8 +178,8 @@ class GuruPiketDashboardTest extends TestCase
 
         $response->assertStatus(200);
         // Guru Asal tidak boleh diakui bertugas pada sesi ini karena sudah digantikan
-        $response->assertSee('Anda tidak bertugas pada sesi ini.');
-        $response->assertDontSee('Anda bertugas pada sesi ini');
+        $response->assertSee('Anda tidak bertugas pada sesi ini/hari ini.');
+        $response->assertDontSee('Anda bertugas pada sesi ini/hari ini.');
     }
 
     /**
