@@ -182,14 +182,15 @@
         {{-- ================================================== --}}
 <nav
     class="lg:hidden fixed left-0 right-0 bottom-0 z-50 w-full bg-white border-t border-gray-200 shadow-lg"
-    style="padding-bottom: env(safe-area-inset-bottom, 0px);"
->             style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 50 !important; padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px); transform: translateZ(0); -webkit-transform: translateZ(0);">
-<div class="grid grid-cols-5 h-16 w-full">                {{-- 1. Beranda --}}
-                <a href="{{ route('siswa.dashboard') }}"
-                   class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('siswa.dashboard') ? $mobOn : $mobOff }}">
-                    <i class="fas fa-home text-lg"></i>
-                    <span class="text-[9px] font-semibold leading-tight">Beranda</span>
-                </a>
+    style="padding-bottom: env(safe-area-inset-bottom, 0px);">             
+    <div class="grid grid-cols-5 h-16 w-full">               
+        
+        {{-- 1. Beranda --}}
+        <a href="{{ route('siswa.dashboard') }}"
+           class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('siswa.dashboard') ? $mobOn : $mobOff }}">
+            <i class="fas fa-home text-lg"></i>
+            <span class="text-[9px] font-semibold leading-tight">Beranda</span>
+        </a>
 
                 {{-- 2. Riwayat --}}
                 <a href="{{ route('siswa.pengajuan.index') }}"
