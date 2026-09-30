@@ -2,7 +2,6 @@
 @section('title', 'Check In/Out')
 @section('page-title', 'Catatan Keluar & Kembali')
 @section('content')
-@include('components.alert')
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full min-w-0">
     {{-- KOLOM KIRI: FORM / STOPWATCH --}}

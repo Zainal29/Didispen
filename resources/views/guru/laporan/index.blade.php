@@ -2,7 +2,6 @@
 @section('title', 'Laporan')
 @section('page-title', 'Laporan Dispensasi & Aktivitas')
 @section('content')
-@include('components.alert')
 
 {{-- ============ HEADER + EXPORT ============ --}}
 <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 sm:p-5 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
