@@ -69,23 +69,31 @@ class WhatsappTemplateController extends Controller
 
         $sampleData = [
             // Variabel Siswa / Dispensasi
-            'nama_siswa' => 'MUHAMMAD ZAINAL ARIEF',
-            'nomor_surat' => 'DISP-2026-0042',
-            'catatan' => 'Alasan tugas OSIS di luar sekolah',
-            'waktu_aktual' => now()->format('H:i'),
-            'jam_kembali' => 'Jam Pelajaran ke-9',
+            'nama_siswa'      => 'MUHAMMAD ZAINAL ARIEF',
+            'nis'             => '4717',
+            'kelas'           => 'XII PPLG 2',
+            'jurusan'         => 'PPLG',
+            'nomor_surat'     => 'DISP-2026-0042',
+            'kategori'        => 'Keperluan Sekolah',
+            'catatan'         => 'Alasan tugas OSIS di luar sekolah',
+            'waktu_aktual'    => now()->format('H:i'),
+            'jam_keluar'      => 'Jam Pelajaran ke-3',
+            'jam_kembali'     => 'Jam Pelajaran ke-7',
             'durasi_terlambat' => '15 menit',
-            'tujuan' => 'Dinas Pendidikan Kabupaten Jepara',
-            'alasan' => 'Rapat koordinasi pengurus OSIS',
+            'tujuan'          => 'Dinas Pendidikan Kabupaten Jepara',
+            'lokasi'          => 'Jepara',
+            'alasan'          => 'Rapat koordinasi pengurus OSIS',
+            'link_dispensasi' => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/') . '/siswa/pengajuan/123',
+            'link_web'        => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/'),
 
             // Variabel Guru / Piket
-            'nama_guru' => 'Budi Santoso, S.Pd.',
-            'hari' => 'Senin',
-            'nama_sesi' => 'Sesi 1',
-            'jam_mulai' => '07:00',
+            'nama_guru'   => 'Budi Santoso, S.Pd.',
+            'hari'        => 'Senin',
+            'nama_sesi'   => 'Sesi 1',
+            'jam_mulai'   => '07:00',
             'jam_selesai' => '09:30',
             'koordinator' => "Almu'idul 'Afwan, S.Pd.",
-            'tanggal' => now()->translatedFormat('d F Y'),
+            'tanggal'     => now()->translatedFormat('d F Y'),
         ];
 
         // Escape dulu sebelum replace agar aman
@@ -94,6 +102,15 @@ class WhatsappTemplateController extends Controller
             $content = str_replace('{' . $key . '}', e($value), $content);
         }
 
-        return response()->json(['preview' => nl2br($content)]);
+        // Deteksi placeholder yang tidak dikenal (masih ada {xxx} setelah replace)
+        preg_match_all('/\{(\w+)\}/', $request->content, $matches);
+        $allPlaceholders   = array_unique($matches[1] ?? []);
+        $knownPlaceholders = array_keys($sampleData);
+        $unknownPlaceholders = array_diff($allPlaceholders, $knownPlaceholders);
+
+        return response()->json([
+            'preview'             => nl2br($content),
+            'unknown_placeholders' => array_values($unknownPlaceholders),
+        ]);
     }
 }
