@@ -4,7 +4,6 @@
 @section('page-title', 'Pengajuan Penggantian Guru Piket')
 
 @section('content')
-@include('components.alert')
 
 <div class="max-w-2xl mx-auto">
 

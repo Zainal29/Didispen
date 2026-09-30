@@ -4,7 +4,6 @@
 @section('page-title', 'Dashboard Satpam')
 
 @section('content')
-@include('components.alert')
 
 <style>
     .filter-btn { transition: all 0.2s ease-in-out; }
