@@ -11,7 +11,7 @@ return new class extends Migration {
             [
                 'name' => 'Pengingat Jadwal Guru Piket',
                 'slug' => 'pengingat-piket',
-                'content' => "Halo Yth. Bapak/Ibu *{nama_guru}*,\n\nKami mengingatkan bahwa Anda memiliki jadwal piket di sekolah pada:\n📅 Hari: *{hari}*\n⏰ Sesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n👤 Koordinator: {koordinator}\n\nMohon untuk hadir tepat waktu dan bertugas di pos piket untuk memantau kehadiran serta dispensasi siswa.\n\nTerima kasih atas dedikasi dan kerjasamanya.\n- Admin DIDISPEN SMK N 1 Bangsri",
+                'content' => "Halo Yth. Bapak/Ibu *{nama_guru}*,\n\nKami mengingatkan bahwa Anda memiliki jadwal piket di sekolah pada:\nHari: *{hari}*\nSesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\nKoordinator: {koordinator}\n\nMohon untuk hadir tepat waktu dan bertugas di pos piket untuk memantau kehadiran serta dispensasi siswa.\n\nTerima kasih atas dedikasi dan kerjasamanya.\n- Admin DIDISPEN SMK N 1 Bangsri",
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
