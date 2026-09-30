@@ -79,10 +79,10 @@ class SipintuSyncController extends Controller
                     'ip_address' => request()->ip(),
                 ]);
 
-                return redirect()->back()->with('success', '✅ Koneksi ke SiPintu Gateway BERHASIL.');
+                return redirect()->back()->with('success', 'Koneksi ke SiPintu Gateway BERHASIL.');
             }
 
-            // ✅ CATAT KE AUDIT LOG (GAGAL)
+            // CATAT KE AUDIT LOG (GAGAL)
             \App\Models\AuditLog::create([
                 'user_id' => auth()->id(),
                 'action' => 'test_connection_sipintu',
@@ -98,10 +98,10 @@ class SipintuSyncController extends Controller
                 'ip_address' => request()->ip(),
             ]);
 
-            return redirect()->back()->with('error', '❌ Gagal terhubung ke SiPintu (HTTP Status: ' . $response->status() . ')');
+            return redirect()->back()->with('error', 'Gagal terhubung ke SiPintu (HTTP Status: ' . $response->status() . ')');
 
         } catch (\Exception $e) {
-            // ✅ CATAT KE AUDIT LOG (ERROR)
+            // CATAT KE AUDIT LOG (ERROR)
             \App\Models\AuditLog::create([
                 'user_id' => auth()->id(),
                 'action' => 'test_connection_sipintu',
@@ -117,7 +117,7 @@ class SipintuSyncController extends Controller
                 'ip_address' => request()->ip(),
             ]);
 
-            return redirect()->back()->with('error', '❌ Error koneksi: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error koneksi: ' . $e->getMessage());
         }
     }
 }

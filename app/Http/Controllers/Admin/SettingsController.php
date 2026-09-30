@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\TimeHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\Guru;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SettingsController extends Controller
 {
@@ -13,27 +15,38 @@ class SettingsController extends Controller
     {
         $jadwalPelajaran = TimeHelper::getAllJadwal();
 
-        return view('admin.settings.index', [
-            // Pengaturan Cetak (Existing)
-            'print_start_time'    => Setting::get('print_start_time', '06:00'),
-            'print_end_time'      => Setting::get('print_end_time', '17:00'),
-            'student_print_limit' => Setting::get('student_print_limit', 3),
-            'teacher_print_limit' => Setting::get('teacher_print_limit', 10),
+       return view('admin.settings.index', [
+    // Pengaturan Cetak (Existing)
+    'print_start_time'    => Setting::get('print_start_time', '06:00'),
+    'print_end_time'      => Setting::get('print_end_time', '17:00'),
+    'student_print_limit' => Setting::get('student_print_limit', 3),
+    'teacher_print_limit' => Setting::get('teacher_print_limit', 10),
 
-            // Pengaturan Jam Operasional Dispensasi
-            'dispensasi_start_time'       => Setting::get('dispensasi_start_time', '07:00'),
-            'dispensasi_end_time'         => Setting::get('dispensasi_end_time', '15:00'),
-            'dispensasi_end_time_friday'  => Setting::get('dispensasi_end_time_friday', '14:00'),
-            'dispensasi_days'             => explode(',', Setting::get('dispensasi_days', '1,2,3,4,5')),
+    // Pengaturan Jam Operasional Dispensasi
+    'dispensasi_start_time'      => Setting::get('dispensasi_start_time', '07:00'),
+    'dispensasi_end_time'        => Setting::get('dispensasi_end_time', '15:00'),
+    'dispensasi_end_time_friday' => Setting::get('dispensasi_end_time_friday', '14:00'),
+    'dispensasi_days'            => explode(',', Setting::get('dispensasi_days', '1,2,3,4,5')),
 
-            // Jadwal Jam Pelajaran (3 Pola: senin_selasa, rabu_kamis, jumat)
-            'jam_pelajaran' => $jadwalPelajaran,
-        ]);
+    // Guru fallback WhatsApp
+    'fallback_guru_piket_id' => Setting::get('fallback_guru_piket_id'),
+
+    // Daftar Guru aktif untuk dropdown fallback
+    'guruFallback' => Guru::query()
+        ->where('status_aktif', true)
+        ->orderBy('nama_lengkap')
+        ->get(),
+
+    // Jadwal Jam Pelajaran
+    'jam_pelajaran' => $jadwalPelajaran,
+]);
     }
 
     public function update(Request $request)
     {
         $data = $request->validate([
+           
+
             // Validasi Cetak
             'print_start_time'    => ['required', 'date_format:H:i'],
             'print_end_time'      => ['required', 'date_format:H:i', 'after:print_start_time'],
@@ -70,6 +83,14 @@ class SettingsController extends Controller
             'jam_pelajaran_minggu'               => ['required', 'array'],
             'jam_pelajaran_minggu.*.start'       => ['required', 'date_format:H:i'],
             'jam_pelajaran_minggu.*.end'         => ['required', 'date_format:H:i'],
+
+            'fallback_guru_piket_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('gurus', 'id')->where(
+                    fn ($query) => $query->where('status_aktif', true)
+                ),
+            ],
         ]);
 
         try {
@@ -85,6 +106,11 @@ class SettingsController extends Controller
             Setting::set('dispensasi_end_time_friday', $data['dispensasi_end_time_friday']);
             Setting::set('dispensasi_days', implode(',', $data['dispensasi_days']));
 
+            Setting::set(
+                'fallback_guru_piket_id',
+                $data['fallback_guru_piket_id'] ?? null
+            );
+            
             // 3. Simpan Jadwal Jam Pelajaran 5 Pola
             $jadwalPelajaran = [
                 'senin_selasa' => $data['jam_pelajaran_senin_selasa'],
