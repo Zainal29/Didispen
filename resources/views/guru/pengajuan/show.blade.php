@@ -4,7 +4,7 @@
 @section('page-title', 'Detail Pengajuan')
 
 @section('content')
-@include('components.alert')
+
 
 @php
     $statusColors = [
@@ -149,23 +149,7 @@
                 <p class="text-sm text-gray-800 font-medium">{{ $dispensasi->tujuan }}</p>
             </div>
 
-            {{-- Waktu --}}
-            <!--<div class="grid grid-cols-2 gap-3">
-                <div class="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                    <span class="text-blue-600 text-[10px] font-semibold uppercase tracking-wider block mb-1">Jam Keluar</span>
-                    <p class="font-bold text-blue-900 text-sm">{{ $dispensasi->jam_keluar }}</p>
-                    <p class="text-[10px] text-blue-600 mt-1">
-                        <i class="far fa-clock mr-1"></i>{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar) }}
-                    </p>
-                </div>
-                <div class="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                    <span class="text-blue-600 text-[10px] font-semibold uppercase tracking-wider block mb-1">Jam Kembali</span>
-                    <p class="font-bold text-blue-900 text-sm">{{ $dispensasi->jam_kembali }}</p>
-                    <p class="text-[10px] text-blue-600 mt-1">
-                        <i class="far fa-clock mr-1"></i>{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali) }}
-                    </p>
-                </div>
-            </div>-->
+         
 
             {{-- Jam Keluar & Jam Kembali --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -243,7 +227,7 @@
                         {{ $currentPrint }} / {{ $maxPrint }} kali
                     </span>
                 </div>
-                <p class="text-xs text-emerald-700 mb-3">Cetak PDF Struk Thermal (Ukuran Kertas 58mm).</p>
+                <p class="text-xs text-emerald-700 mb-3">Cetak Struk Thermal PNG (Ukuran Kertas 58mm).</p>
 
                 {{-- Progress Bar --}}
                 <div class="w-full bg-emerald-200 rounded-full h-1.5 mb-3">
@@ -269,9 +253,9 @@
 
                 <div class="flex justify-center">
                     @if($canPrintStruk)
-                        <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" target="_blank"
+                        <a href="{{ route('guru.cetak-struk', $dispensasi) }}" target="_blank"
                            class="px-5 py-3 min-h-[44px] bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors inline-flex items-center justify-center">
-                            <i id="iconCetak" class="fas fa-file-pdf mr-1.5 text-sm"></i> <span id="textCetak">Cetak PDF Thermal (58mm)</span>
+                            <i id="iconCetak" class="fas fa-image mr-1.5 text-sm"></i> <span id="textCetak">Cetak Struk Thermal (58mm)</span>
                         </a>
                     @else
                         <button disabled class="w-full inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-gray-400 bg-gray-100 cursor-not-allowed border border-gray-200">
@@ -389,31 +373,51 @@
             </div>
             @endif
 
-            {{-- Action Buttons --}}
-            <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
-                @if($dispensasi->status === 'menunggu')
-                    <form method="POST" action="{{ route('guru.pengajuan.approve', $dispensasi) }}" class="flex-1">
-                        @csrf
-                        <button type="submit" data-confirm="Setujui dispensasi {{ $dispensasi->siswa->nama_lengkap }} dan generate QR Code?"
-                                class="w-full inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
-                            <i class="fas fa-check mr-2"></i>Setujui & Generate QR
-                        </button>
-                    </form>
-                    <button onclick="rejectDispensasi()"
-                            class="flex-1 inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
-                        <i class="fas fa-times mr-2"></i>Tolak
-                    </button>
-                @else
-                    <div class="flex-1 px-4 py-3 min-h-[44px] rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 flex items-center">
-                        <i class="fas fa-info-circle mr-2 text-blue-500 text-sm flex-shrink-0"></i>
-                        <span>Status: <strong class="capitalize">{{ $dispensasi->status }}</strong>. <span class="text-gray-500 block sm:inline mt-1 sm:mt-0">(Konfirmasi keluar/kembali dilakukan oleh Satpam via Scan QR)</span></span>
-                    </div>
-                @endif
+           {{-- Action Buttons --}}
+<div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
 
-                <a href="{{ route('guru.pengajuan.index') }}"
-                class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors sm:w-auto">
-                    <i class="fas fa-arrow-left mr-2"></i>Kembali
-                </a>
+    @if($dispensasi->status === 'menunggu')
+        <form method="POST" action="{{ route('guru.pengajuan.approve', $dispensasi) }}" class="flex-1">
+            @csrf
+            <button type="submit"
+                    data-confirm="Setujui dispensasi {{ $dispensasi->siswa->nama_lengkap }} dan generate QR Code?"
+                    class="w-full inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+                <i class="fas fa-check mr-2"></i>Setujui & Generate QR
+            </button>
+        </form>
+
+        <button onclick="rejectDispensasi()"
+                class="flex-1 inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+            <i class="fas fa-times mr-2"></i>Tolak
+        </button>
+    @else
+        <div class="flex-1 px-4 py-3 min-h-[44px] rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 flex items-center">
+            <i class="fas fa-info-circle mr-2 text-blue-500 text-sm flex-shrink-0"></i>
+            <span>
+                Status: <strong class="capitalize">{{ $dispensasi->status }}</strong>.
+                <span class="text-gray-500 block sm:inline mt-1 sm:mt-0">
+                    (Konfirmasi keluar/kembali dilakukan oleh Satpam via Scan QR)
+                </span>
+            </span>
+        </div>
+    @endif
+
+    {{-- Navigasi --}}
+    <div class="flex flex-col sm:flex-row gap-2 sm:w-auto">
+        <a href="{{ route('guru.pengajuan.create') }}"
+           class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>
+            Buat Dispensasi Baru
+        </a>
+
+        <a href="{{ route('guru.pengajuan.index') }}"
+           class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">
+            <i class="fas fa-list mr-2"></i>
+            Daftar Pengajuan
+        </a>
+    </div>
+
+
             </div>
         </div>
     </div>
@@ -631,13 +635,7 @@ document.querySelectorAll('[data-confirm]').forEach(btn => {
 // Fungsi deteksi perangkat untuk tombol cetak otomatis
 function handleCetakOtomatis(event) {
     event.preventDefault();
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    if (isMobile) {
-        window.open("{{ route('guru.laporan.pdf', $dispensasi) }}", "_blank");
-    } else {
-        window.open("{{ route('guru.cetak-struk', $dispensasi) }}", "_blank");
-    }
+    window.open("{{ route('guru.cetak-struk', $dispensasi) }}", "_blank");
 }
 
 // Ubah teks tombol secara otomatis saat halaman dimuat
@@ -647,10 +645,10 @@ document.addEventListener("DOMContentLoaded", function() {
     const iconCetak = document.getElementById('iconCetak');
 
     if (isMobile) {
-        if(textCetak) textCetak.textContent = "Buka PDF / Scan (HP)";
-        if(iconCetak) iconCetak.className = "fas fa-file-pdf mr-1.5";
+        if(textCetak) textCetak.textContent = "Buka Struk PNG (HP)";
+        if(iconCetak) iconCetak.className = "fas fa-image mr-1.5";
     } else {
-        if(textCetak) textCetak.textContent = "Cetak Struk (PC)";
+        if(textCetak) textCetak.textContent = "Cetak Struk Thermal (PC)";
         if(iconCetak) iconCetak.className = "fas fa-print mr-1.5";
     }
 });

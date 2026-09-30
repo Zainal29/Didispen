@@ -56,7 +56,8 @@
 
                 <form
                     x-data="{ loading: false }"
-                    @submit="loading = true"
+                    @submit="if (loading) { $event.preventDefault(); return; } loading = true;"
+                    @invalid.window="loading = false"
                     method="POST"
                     action="{{ route('guru.pengajuan.store') }}"
                     enctype="multipart/form-data"
@@ -232,8 +233,6 @@
                         <button
                             type="submit"
                             id="submitBtn"
-                            x-data="{ loading: false }"
-                            @click="loading = true"
                             :disabled="loading"
                             class="flex-1 inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all gap-2">
 

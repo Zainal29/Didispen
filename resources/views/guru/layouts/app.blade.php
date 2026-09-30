@@ -87,7 +87,26 @@
                 </a>
                 <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
                     <i class="fas fa-book-open w-5 mr-3 text-center"></i> Panduan
+                    
                 </a>
+                @php
+    $pendingSwapCount = \App\Models\PertukaranJadwalPiket::query()
+        ->where('guru_pengganti_id', auth()->user()->guru?->id)
+        ->where('status', 'menunggu')
+        ->count();
+@endphp
+                <a href="{{ route('guru.piket.swap.incoming') }}"
+   class="{{ request()->routeIs('guru.piket.swap.*') ? $navOn : $navOff }}">
+    <i class="fas fa-exchange-alt w-5 mr-3 text-center"></i>
+    <span>Ajukan Tukar Jadwal</span>
+
+    @if($pendingSwapCount > 0)
+        <span class="ml-auto min-w-[22px] h-5 px-1.5 flex items-center justify-center
+                     rounded-full bg-red-500 text-white text-[11px] font-bold leading-none">
+            {{ $pendingSwapCount > 99 ? '99+' : $pendingSwapCount }}
+        </span>
+    @endif
+</a>
                 {{-- PROFIL --}}
                 <a href="{{ route('profil.show') }}"
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all
@@ -156,9 +175,15 @@
             </div>
         </header>
 
+        <!-- <main class="flex-1 p-4 sm:p-6 pb-28 lg:pb-6 bg-gradient-to-br from-gray-50 via-white to-blue-50/40">
+            @yield('content')
+        </main> -->
+        
         <main class="flex-1 p-4 sm:p-6 pb-28 lg:pb-6 bg-gradient-to-br from-gray-50 via-white to-blue-50/40">
+            @include('components.alert')
             @yield('content')
         </main>
+
     </div>
 
     <!--{{-- ================================================== --}}
@@ -313,37 +338,6 @@
     </div>
 @stack('scripts')
 
-<!--{{-- <i class="fas fa-check-circle"></i> GLOBAL SWEETALERT NOTIFICATION --}}
-{{-- @if(session('success'))
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: '{{ session('success') }}',
-        timer: 3000,
-        showConfirmButton: false,
-        position: 'top-end',
-        toast: true,
-        background: '#d1fae5',
-        color: '#065f46'
-    });
-</script>
-@endif-->
 
-<!--@if(session('error'))
-<script>
-    Swal.fire({
-        icon: 'error',
-        title: 'Gagal!',
-        text: '{{ session('error') }}',
-        timer: 4000,
-        showConfirmButton: false,
-        position: 'top-end',
-        toast: true,
-        background: '#fee2e2',
-        color: '#991b1b'
-    });
-</script>-->
-<!--@endif --}}-->
 </body>
 </html>
