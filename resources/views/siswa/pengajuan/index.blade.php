@@ -2,7 +2,7 @@
 @section('title', 'Riwayat Pengajuan')
 @section('page-title', 'Riwayat Pengajuan Dispensasi')
 @section('content')
-@include('components.alert')
+
 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
     {{-- Header + Filter --}}
     <div class="p-4 sm:p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50">
@@ -54,7 +54,7 @@
                     <a href="{{ route('siswa.pengajuan.show', $p) }}" class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                         <i class="fas fa-eye mr-1.5"></i>Detail
                     </a>
-                    @if($p->status === 'keluar')
+                    <!-- @if($p->status === 'keluar')
                         @if($p->foto_bukti)
                             <button onclick="showPreview('{{ asset('storage/' . $p->foto_bukti) }}', '{{ $p->nomor_surat }}')" class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors flex items-center justify-center" title="Lihat Foto Bukti">
                                 <i class="fas fa-image"></i>
@@ -63,7 +63,7 @@
                             <button onclick="openUploadModal({{ $p->id }})" class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center justify-center" title="Ambil Foto Bukti (Kamera)">
                                 <i class="fas fa-camera"></i>
                             </button>
-                        @endif
+                        @endif -->
                     @endif
                 </div>
             </div>

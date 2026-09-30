@@ -34,6 +34,70 @@
         </div>
     </div>
 
+  {{-- ============================================================ --}}
+{{-- HUBUNGI GURU PIKET --}}
+{{-- ============================================================ --}}
+@if($popupEligible)
+<div id="piketBanner"
+     class="bg-white border border-amber-200 rounded-xl shadow-sm overflow-hidden">
+
+    <div class="p-4 sm:p-5">
+        <div class="flex items-start gap-3 sm:gap-4">
+
+            {{-- Icon --}}
+            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-50 border border-amber-100
+                        flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-user-clock text-amber-600"></i>
+            </div>
+
+            {{-- Content --}}
+            <div class="flex-1 min-w-0">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-900">
+                            Guru Piket Belum Merespons
+                        </h3>
+
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            Anda dapat menghubungi Guru Piket melalui WhatsApp.
+                        </p>
+                    </div>
+
+                    {{-- Countdown --}}
+                    <div class="inline-flex items-center self-start sm:self-auto
+                                gap-1.5 px-2.5 py-1 rounded-lg
+                                bg-amber-50 border border-amber-100">
+                        <i class="fas fa-clock text-amber-500 text-[10px]"></i>
+                        <span id="countdownDisplay"
+                              class="text-[11px] font-bold font-mono text-amber-700">
+                            @php
+                                $mins = intdiv($popupSecondsLeft, 60);
+                                $secs = $popupSecondsLeft % 60;
+                            @endphp
+                            {{ sprintf('%02d:%02d', $mins, $secs) }}
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Action --}}
+                <div class="mt-3">
+                    <button type="button"
+                            onclick="openPiketPopup()"
+                            class="inline-flex items-center justify-center gap-2
+                                   px-4 py-2.5 rounded-lg
+                                   bg-green-600 hover:bg-green-700
+                                   text-white text-xs font-bold
+                                   shadow-sm transition-colors">
+                        <i class="fab fa-whatsapp text-sm"></i>
+                        Hubungi Guru Piket
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
     {{-- PERINGATAN TERLAMBAT --}}
     @php
         $isTerlambatDetail = $dispensasi->status === 'keluar' && $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
@@ -503,6 +567,184 @@
     </div>
 </div>
 
+@if($popupEligible)
+{{-- ============================================================ --}}
+{{-- MODAL: HUBUNGI GURU PIKET --}}
+{{-- ============================================================ --}}
+<div id="piketModal"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center
+            bg-black/50 backdrop-blur-sm p-4">
+
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl
+                border border-gray-200 overflow-hidden">
+
+        {{-- Header --}}
+        <div class="px-5 py-4 border-b border-gray-100">
+            <div class="flex items-center justify-between gap-3">
+
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 rounded-xl bg-green-50 border border-green-100
+                                flex items-center justify-center flex-shrink-0">
+                        <i class="fab fa-whatsapp text-green-600 text-xl"></i>
+                    </div>
+
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-gray-900">
+                            Hubungi Guru Piket
+                        </h3>
+
+                        <p class="text-[11px] text-gray-500 mt-0.5">
+                            Kirim pesan melalui WhatsApp
+                        </p>
+                    </div>
+                </div>
+
+                <button type="button"
+                        onclick="closePiketPopup()"
+                        class="w-8 h-8 rounded-lg
+                               text-gray-400 hover:text-gray-600
+                               hover:bg-gray-100
+                               flex items-center justify-center
+                               transition-colors flex-shrink-0">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <div class="p-5 space-y-4">
+
+            {{-- Guru --}}
+            @if($hubungiGuru)
+            <div class="flex items-center gap-3 p-3.5
+                        bg-gray-50 border border-gray-200 rounded-xl">
+
+                <div class="w-10 h-10 rounded-full bg-blue-50
+                            flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user-tie text-blue-600"></i>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] uppercase tracking-wide
+                              font-bold text-gray-400">
+                        Guru Piket
+                    </p>
+
+                    <p class="text-sm font-bold text-gray-900 truncate">
+                        {{ $hubungiGuru->nama_lengkap }}
+                    </p>
+
+                    @if($hubungiGuru->no_telepon)
+                        <p class="text-[11px] text-gray-500 font-mono mt-0.5">
+                            {{ $hubungiGuru->no_telepon }}
+                        </p>
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            {{-- Information --}}
+            <div class="rounded-xl border border-blue-100 bg-blue-50 p-3.5">
+                <div class="flex items-start gap-2.5">
+                    <i class="fas fa-info-circle text-blue-500 mt-0.5 text-sm"></i>
+
+                    <div class="text-xs text-blue-800 leading-relaxed">
+                        <p class="font-semibold">
+                            Pesan WhatsApp sudah disiapkan oleh sistem.
+                        </p>
+                        <p class="mt-0.5 text-blue-700">
+                            Anda hanya perlu membuka WhatsApp dan mengirim pesan tersebut
+                            kepada Guru Piket.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Error --}}
+            @if($hubungiError)
+            <div class="flex items-start gap-2.5
+                        bg-amber-50 border border-amber-200
+                        rounded-xl p-3.5">
+                <i class="fas fa-exclamation-circle
+                          text-amber-500 mt-0.5 text-sm"></i>
+
+                <p class="text-xs text-amber-800 leading-relaxed">
+                    {{ $hubungiError }}
+                </p>
+            </div>
+            @endif
+
+            {{-- Countdown --}}
+            <div class="flex items-center justify-between
+                        px-3.5 py-3 rounded-xl
+                        bg-gray-50 border border-gray-200">
+
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-clock text-gray-400 text-xs"></i>
+                    <span class="text-xs text-gray-500">
+                        Waktu tersedia
+                    </span>
+                </div>
+
+                <span id="modalCountdownDisplay"
+                      class="font-mono text-sm font-bold text-gray-900">
+                    --:--
+                </span>
+            </div>
+        </div>
+
+        {{-- Footer --}}
+        <div class="px-5 py-4 bg-gray-50 border-t border-gray-100
+                    flex flex-col-reverse sm:flex-row gap-2">
+
+            <button type="button"
+                    onclick="closePiketPopup()"
+                    class="flex-1 py-2.5 px-4
+                           rounded-xl
+                           bg-white border border-gray-200
+                           text-gray-700 text-xs font-semibold
+                           hover:bg-gray-100
+                           transition-colors">
+                Tutup
+            </button>
+
+            @if($hubungiGuru && !$hubungiError)
+
+                <a href="{{ route('siswa.pengajuan.hubungi-guru-piket', $dispensasi) }}"
+                   id="btnHubungiWa"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   onclick="onWaClick()"
+                   class="flex-1 py-2.5 px-4
+                          rounded-xl
+                          bg-green-600 hover:bg-green-700
+                          text-white text-xs font-bold
+                          flex items-center justify-center gap-2
+                          shadow-sm
+                          transition-colors">
+
+                    <i class="fab fa-whatsapp text-base"></i>
+                    Buka WhatsApp
+                </a>
+
+            @else
+
+                <button type="button"
+                        disabled
+                        class="flex-1 py-2.5 px-4
+                               rounded-xl
+                               bg-gray-200
+                               text-gray-400 text-xs font-semibold
+                               cursor-not-allowed">
+                    WhatsApp Tidak Tersedia
+                </button>
+
+            @endif
+        </div>
+    </div>
+</div>
+@endif
+
 @push('scripts')
 <script>
 function handleAfterPrintSiswa() {
@@ -532,6 +774,108 @@ function closePhotoModal(e) {
         modal.classList.add('hidden');
     }
 }
+
+// ============================================================
+// HUBUNGI GURU PIKET — Countdown & Popup Logic
+// ============================================================
+@if($popupEligible)
+let _piketSecondsLeft = Math.max(0, Math.floor({{ $popupSecondsLeft }}));
+let _piketTimerInterval = null;
+
+function _formatTime(seconds) {
+    seconds = Math.max(0, Math.floor(seconds));
+
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    return String(minutes).padStart(2, '0') + ':' +
+           String(remainingSeconds).padStart(2, '0');
+}
+
+function _updatePiketCountdown() {
+    const formatted = _formatTime(_piketSecondsLeft);
+
+    const display = document.getElementById('countdownDisplay');
+    const modalDisplay = document.getElementById('modalCountdownDisplay');
+
+    if (display) {
+        display.textContent = formatted;
+    }
+
+    if (modalDisplay) {
+        modalDisplay.textContent = formatted;
+    }
+}
+
+function _tickPiket() {
+    _piketSecondsLeft--;
+
+    if (_piketSecondsLeft <= 0) {
+        _piketSecondsLeft = 0;
+
+        clearInterval(_piketTimerInterval);
+        _piketTimerInterval = null;
+
+        const banner = document.getElementById('piketBanner');
+        const modal = document.getElementById('piketModal');
+
+        if (banner) {
+            banner.remove();
+        }
+
+        if (modal) {
+            modal.remove();
+        }
+
+        return;
+    }
+
+    _updatePiketCountdown();
+}
+
+function openPiketPopup() {
+    if (_piketSecondsLeft <= 0) {
+        return;
+    }
+
+    const modal = document.getElementById('piketModal');
+
+    if (modal) {
+        modal.classList.remove('hidden');
+        _updatePiketCountdown();
+    }
+}
+
+function closePiketPopup() {
+    const modal = document.getElementById('piketModal');
+
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function onWaClick() {
+    setTimeout(closePiketPopup, 300);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    _updatePiketCountdown();
+
+    if (_piketSecondsLeft > 0) {
+        _piketTimerInterval = setInterval(_tickPiket, 1000);
+    }
+
+    const modal = document.getElementById('piketModal');
+
+    if (modal) {
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                closePiketPopup();
+            }
+        });
+    }
+});
+@endif
 </script>
 @endpush
 @endsection
