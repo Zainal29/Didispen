@@ -2,7 +2,7 @@
 @section('title', 'Detail Pengajuan Dispensasi')
 @section('page-title', 'Detail Pengajuan Dispensasi')
 @section('content')
-@include('components.alert')
+
 <div class="max-w-5xl mx-auto space-y-4">
 
     {{-- Header Card --}}
@@ -484,15 +484,25 @@
                                 <p class="text-[10px] text-gray-500">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                             </div>
                         </div>
-                    @elseif($dispensasi->guru)
-                        <div class="flex items-start gap-3">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></div>
-                            <div class="flex-1">
-                                <p class="text-xs font-bold text-gray-900">Disetujui oleh Guru Piket</p>
-                                <p class="text-[10px] text-gray-500">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                            </div>
-                        </div>
-                    @endif
+@elseif($dispensasi->guru)
+    <div class="flex items-start gap-3">
+        <div class="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></div>
+
+        <div class="flex-1">
+            <p class="text-xs font-bold text-gray-900">
+                Disetujui oleh Guru Piket
+            </p>
+
+            <p class="text-[10px] text-gray-500">
+                {{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB
+            </p>
+
+            <p class="text-[11px] text-gray-600 mt-0.5">
+                Oleh: {{ $dispensasi->guru->nama_lengkap }}
+            </p>
+        </div>
+    </div>
+@endif
 
                     {{-- 3. Menunggu Scan Keluar --}}
                     @if($dispensasi->status === 'disetujui')
