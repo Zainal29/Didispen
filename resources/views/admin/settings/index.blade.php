@@ -99,6 +99,63 @@
                 </div>
             </div>
 
+
+            {{-- ========================================== --}}
+{{-- 3. GURU FALLBACK WHATSAPP --}}
+{{-- ========================================== --}}
+<div class="p-5 border-t border-gray-100 bg-white">
+    <h3 class="text-base font-bold text-gray-900 mb-2 flex items-center">
+        <i class="fab fa-whatsapp text-green-600 mr-2"></i>
+        Guru Piket Fallback WhatsApp
+    </h3>
+
+    <p class="text-sm text-gray-500 mb-4">
+        Guru ini digunakan sebagai fallback ketika Guru Piket dari pengajuan
+        atau sesi piket tidak tersedia.
+    </p>
+
+    <div>
+        <label
+            for="fallback_guru_piket_id"
+            class="block text-sm font-bold text-gray-700 mb-1.5"
+        >
+            Guru Fallback
+        </label>
+
+        <select
+            id="fallback_guru_piket_id"
+            name="fallback_guru_piket_id"
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl
+                   focus:ring-2 focus:ring-green-500 focus:border-green-500
+                   outline-none text-sm"
+        >
+            <option value="">-- Tidak menggunakan fallback --</option>
+
+            @foreach($guruFallback as $guru)
+                <option
+                    value="{{ $guru->id }}"
+                    {{ (string) old('fallback_guru_piket_id', $fallback_guru_piket_id ?? '') === (string) $guru->id ? 'selected' : '' }}
+                >
+                    {{ $guru->nama_lengkap }}
+                    @if($guru->no_telepon)
+                        — {{ $guru->no_telepon }}
+                    @else
+                        — Nomor WhatsApp belum tersedia
+                    @endif
+                </option>
+            @endforeach
+        </select>
+
+        @error('fallback_guru_piket_id')
+            <p class="mt-1.5 text-sm text-red-600">
+                {{ $message }}
+            </p>
+        @enderror
+    </div>
+</div>
+
+
+
             {{-- ========================================== --}}
             {{-- 3. JADWAL JAM PELAJARAN (3 POLA) --}}
             {{-- ========================================== --}}
@@ -190,6 +247,10 @@
                         </div>
                     </div>
 
+
+
+
+
                     {{-- 4. SABTU (Testing - 10 Jam) --}}
                     <div>
                         <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
@@ -213,6 +274,9 @@
                             @endfor
                         </div>
                     </div>
+
+
+
 
                     {{-- 5. MINGGU (Testing - 10 Jam) --}}
                     <div>

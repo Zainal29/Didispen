@@ -214,8 +214,12 @@
                                         {{ $p->status }}
                                     </span>
                                 </td>
-                                <td class="py-2.5 px-3 text-center font-bold">
-                                    {{ $p->is_active ? '✓' : '-' }}
+                                <td class="py-2.5 px-3 text-center">
+                                    @if($p->is_active)
+                                        <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                                    @else
+                                        <span class="text-gray-300 font-bold">-</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

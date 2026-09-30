@@ -162,8 +162,16 @@
                                                 <span class="font-bold text-blue-800">{{ $sesi->nama_sesi ?? 'Sesi' }}</span>
                                                 <span class="text-[11px] text-gray-500 font-mono">({{ substr($sesi->jam_mulai, 0, 5) }} - {{ substr($sesi->jam_selesai, 0, 5) }})</span>
                                             </div>
-                                            <div class="text-[10px] text-gray-400 mt-0.5">
-                                                {{ $sesi->is_active ? '✓ Aktif' : '✗ Nonaktif' }}
+                                            <div class="text-[10px] mt-0.5">
+                                                @if($sesi->is_active)
+                                                    <span class="text-emerald-700 font-semibold inline-flex items-center">
+                                                        <i class="fas fa-check-circle text-emerald-500 mr-1 text-[10px]"></i> Aktif
+                                                    </span>
+                                                @else
+                                                    <span class="text-gray-400 font-semibold inline-flex items-center">
+                                                        <i class="fas fa-times-circle text-gray-400 mr-1 text-[10px]"></i> Nonaktif
+                                                    </span>
+                                                @endif
                                             </div>
                                         </td>
 
