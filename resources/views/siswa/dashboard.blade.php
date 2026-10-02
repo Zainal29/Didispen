@@ -3,18 +3,33 @@
 @section('page-title', 'Dashboard Siswa')
 @section('content')
 
-{{-- ============ HERO (compact, solid color) ============ --}}
-<div class="bg-blue-600 rounded-xl p-4 sm:p-6 mb-4">
-    <p class="text-blue-100 text-xs font-medium uppercase tracking-wide">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-    <h2 class="text-lg sm:text-xl font-bold text-white mt-1">Halo, {{ auth()->user()->name }}!</h2>
-    <div class="mt-3 flex flex-wrap items-center gap-2">
-        <span class="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-700 text-white text-xs font-medium">
-            <i class="fas fa-bell mr-1.5 text-yellow-300"></i>{{ $notifikasiBelumDibaca ?? 0 }} Notifikasi Baru
-        </span>
-        <a href="{{ route('siswa.pengajuan.create') }}"
-           class="inline-flex items-center px-3.5 py-1.5 rounded-lg bg-white text-blue-700 text-xs font-semibold hover:bg-blue-50 transition-colors">
-            <i class="fas fa-plus mr-1.5"></i>Buat Pengajuan
-        </a>
+{{-- ============ HERO BANNER (MODERN, RESPONSIVE, COMFORTABLE) ============ --}}
+<div class="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-4 sm:p-6 mb-5 shadow-lg shadow-blue-500/15 text-white">
+    {{-- Subtle decorative elements --}}
+    <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="absolute right-12 top-2 w-24 h-24 bg-indigo-400/20 rounded-full blur-xl pointer-events-none"></div>
+    
+    <div class="relative z-10">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-semibold text-blue-100 uppercase tracking-wide mb-2">
+            <i class="far fa-calendar-alt text-blue-200"></i>
+            {{ now()->isoFormat('dddd, D MMMM Y') }}
+        </div>
+        <h2 class="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
+            Halo, {{ auth()->user()->name }}!
+        </h2>
+        <p class="text-xs sm:text-sm text-blue-100/90 mt-1 max-w-xl">
+            Sistem Digital Dispensasi SMKN 1 Bangsri. Ajukan dan pantau izin dispensasi Anda secara real-time.
+        </p>
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+            <a href="{{ route('siswa.notifikasi.index') }}"
+               class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-xs font-semibold border border-white/20 transition-all">
+                <i class="fas fa-bell mr-1.5 text-yellow-300"></i>{{ $notifikasiBelumDibaca ?? 0 }} Notifikasi Baru
+            </a>
+            <a href="{{ route('siswa.pengajuan.create') }}"
+               class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-sm active:scale-95 transition-all">
+                <i class="fas fa-plus mr-1.5"></i>Buat Pengajuan
+            </a>
+        </div>
     </div>
 </div>
 
@@ -278,36 +293,39 @@
                             'Akan Bertugas'   => 'bg-indigo-500',
                             default           => 'bg-gray-400',
                         };
+                        $initials = collect(explode(' ', $p['guru']->nama_lengkap ?? 'G'))
+                            ->filter()
+                            ->take(2)
+                            ->map(fn($part) => strtoupper(substr($part, 0, 1)))
+                            ->join('');
                     @endphp
-                    <div class="p-3.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-all flex flex-col justify-between gap-2">
-                        <div class="min-w-0">
-                            <p class="font-bold text-sm text-gray-900 truncate">{{ $p['guru']->nama_lengkap }}</p>
-                            @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
-                                <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
-                                    <i class="fas fa-exchange-alt text-[10px]"></i>
-                                    <span class="truncate">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
-                                </p>
-                            @endif
+                    <div class="p-3.5 rounded-xl border border-gray-200/90 bg-white hover:border-blue-200 hover:shadow-xs transition-all flex flex-col justify-between gap-3">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                {{ $initials ?: 'GP' }}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-bold text-sm text-gray-900 truncate">{{ $p['guru']->nama_lengkap }}</p>
+                                @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
+                                    <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
+                                        <i class="fas fa-exchange-alt text-[10px]"></i>
+                                        <span class="truncate">Gantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
+                                    </p>
+                                @endif
+                            </div>
                         </div>
-                    	<div class="pt-1">
-    <div class="flex flex-col items-start gap-1">
+                        <div class="pt-1 border-t border-gray-100 flex flex-wrap items-center gap-1.5">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border {{ $statusClass }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} {{ $p['status'] === 'Sedang Bertugas' ? 'animate-pulse' : '' }}"></span>
+                                {{ $p['status'] }}
+                            </span>
 
-        {{-- Status utama --}}
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border {{ $statusClass }}">
-            <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }}"></span>
-            {{ $p['status'] }}
-        </span>
-
-   {{-- Setelah kembali, guru kembali menjalankan tugas --}}
-@if($p['status'] === 'Sudah Kembali' && ($infoPiket['status_sesi'] ?? null) === 'Berlangsung')
-    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-emerald-50 text-emerald-800 border-emerald-200">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-        Sedang Bertugas
-    </span>
-@endif
-
-    </div>
-
+                            @if($p['status'] === 'Sudah Kembali' && ($infoPiket['status_sesi'] ?? null) === 'Berlangsung')
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-emerald-50 text-emerald-800 border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Sedang Bertugas
+                                </span>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -316,26 +334,26 @@
     @endif
 </div>
 
-{{-- ============ STATISTIK UTAMA ============ --}}
+{{-- ============ STATISTIK UTAMA (MODERN, EXPLICIT COLORS, RESPONSIVE) ============ --}}
 @php
 $cards = [
-    'menunggu'  => ['Menunggu',  $stats['menunggu'] ?? 0,  'fa-clock',          'amber'],
-    'disetujui' => ['Disetujui', $stats['disetujui'] ?? 0, 'fa-check-circle',   'emerald'],
-    'ditolak'   => ['Ditolak',   $stats['ditolak'] ?? 0,   'fa-times-circle',   'red'],
-    'selesai'   => ['Selesai',   $stats['selesai'] ?? 0,   'fa-check-double',   'blue'],
+    'menunggu'  => ['Menunggu',  $stats['menunggu'] ?? 0,  'fa-clock',        'bg-amber-100 text-amber-600',   'hover:border-amber-300'],
+    'disetujui' => ['Disetujui', $stats['disetujui'] ?? 0, 'fa-check-circle', 'bg-emerald-100 text-emerald-600', 'hover:border-emerald-300'],
+    'ditolak'   => ['Ditolak',   $stats['ditolak'] ?? 0,   'fa-times-circle', 'bg-red-100 text-red-600',       'hover:border-red-300'],
+    'selesai'   => ['Selesai',   $stats['selesai'] ?? 0,   'fa-check-double', 'bg-blue-100 text-blue-600',     'hover:border-blue-300'],
 ];
 @endphp
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-3">
-    @foreach($cards as $key => [$label, $value, $icon, $color])
+    @foreach($cards as $key => [$label, $value, $icon, $iconStyle, $borderHover])
     <a href="{{ route('siswa.pengajuan.index', ['status' => $key]) }}"
-       class="stat-card-btn text-left rounded-xl border border-gray-200 bg-white p-3 sm:p-4 min-h-[44px] hover:border-gray-300 hover:shadow-sm transition-all w-full block">
+       class="stat-card-btn text-left rounded-2xl border border-gray-200/90 bg-white p-3.5 sm:p-4 min-h-[44px] shadow-xs hover:shadow-md {{ $borderHover }} active:scale-95 transition-all w-full block">
         <div class="flex items-center justify-between mb-2">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-{{ $color }}-100 text-{{ $color }}-600">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center {{ $iconStyle }}">
                 <i class="fas {{ $icon }} text-sm"></i>
             </div>
-            <span class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $value }}</span>
+            <span class="text-2xl sm:text-3xl font-black text-gray-900">{{ $value }}</span>
         </div>
-        <p class="text-[11px] sm:text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ $label }}</p>
+        <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $label }}</p>
     </a>
     @endforeach
 </div>
