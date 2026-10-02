@@ -11,9 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- PWA & Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo-didispen.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo-didispen.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
     <link rel="manifest" href="/manifest.json">
 
     <meta name="theme-color" content="#2563eb">
