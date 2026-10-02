@@ -102,7 +102,7 @@
                     </span>
                 </div>
                 <p class="text-xs text-gray-500">
-                    {{ $d->created_at->format('d/m/Y') }} • {{ $d->siswa->kelas?->nama_kelas }} • Jam Keluar: {{ $d->jam_keluar }}
+                    {{ $d->created_at->format('d/m/Y') }} • {{ $d->siswa->kelas?->nama_kelas }} • Jam Keluar: {{ \App\Helpers\TimeHelper::getWaktuAktual($d->jam_keluar, $d->created_at?->dayOfWeek) }}
                 </p>
             </div>
         @empty
@@ -140,7 +140,7 @@
                         <td class="p-4 text-gray-500">{{ $d->created_at->format('d/m/Y') }}</td>
                         <td class="p-4 font-semibold text-gray-900">{{ $d->siswa->nama_lengkap }}</td>
                         <td class="p-4 text-xs text-gray-500">{{ $d->siswa->kelas?->nama_kelas }}</td>
-                        <td class="p-4 font-medium text-gray-700">{{ $d->jam_keluar }}</td>
+                        <td class="p-4 font-medium text-gray-700">{{ \App\Helpers\TimeHelper::getWaktuAktual($d->jam_keluar, $d->created_at?->dayOfWeek) }}</td>
                         <td class="p-4">
                             <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold border {{ $badges[$d->status] ?? 'bg-gray-100 text-gray-600 border-gray-200' }}">
                                 {{ ucfirst($d->status) }}

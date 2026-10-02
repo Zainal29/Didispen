@@ -2,7 +2,6 @@
 @section('title', 'Dashboard Guru Piket')
 @section('page-title', 'Dashboard')
 @section('content')
-@include('components.alert')
 
 <style>
 .stat-card-btn { transition: all 0.2s ease; }
@@ -137,11 +136,11 @@
                     @endphp
                     <div class="p-3.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-all flex flex-col justify-between gap-2">
                         <div class="min-w-0">
-                            <p class="font-bold text-sm text-gray-900 truncate">{{ $p['guru']->nama_lengkap }}</p>
+                            <p class="font-bold text-sm text-gray-900 break-words">{{ $p['guru']->nama_lengkap }}</p>
                             @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
                                 <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
                                     <i class="fas fa-exchange-alt text-[10px]"></i>
-                                    <span class="truncate">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
+                                    <span class="break-words">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
                                 </p>
                             @endif
                         </div>
@@ -334,7 +333,7 @@ $cards = [
                                 </span>
                             @endif
                         </div>
-                        <p class="font-semibold text-gray-900 text-sm truncate mt-1">
+                        <p class="font-semibold text-gray-900 text-sm break-words mt-1">
                             {!! $highlightName !!}
                         </p>
                         <p class="text-xs font-medium text-gray-600 mb-1">

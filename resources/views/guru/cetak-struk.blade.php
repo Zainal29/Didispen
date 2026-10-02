@@ -109,8 +109,8 @@
         @if($dispensasi->lokasi)
             <div class="row"><span>Lokasi</span><span>: {{ $dispensasi->lokasi }}</span></div>
         @endif
-        <div class="row"><span>Jam Keluar</span><span>: {{ $dispensasi->jam_keluar }}</span></div>
-        <div class="row"><span>Jam Kembali</span><span>: {{ $dispensasi->jam_kembali }}</span></div>
+        <div class="row"><span>Jam Keluar</span><span>: {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->created_at?->dayOfWeek) }}</span></div>
+        <div class="row"><span>Jam Kembali</span><span>: {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek) }}</span></div>
     </div>
 
     @if(!empty($dispensasi->qr_code))
