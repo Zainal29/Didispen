@@ -147,7 +147,7 @@
                     </div>
                     <div class="min-w-0">
                         <h1 class="text-sm font-black text-gray-900 tracking-tight leading-none">DIDISPEN</h1>
-                        <p class="text-[11px] text-gray-500 font-medium mt-0.5 truncate">@yield('page-title', 'Dashboard')</p>
+                        <p class="text-[11px] text-gray-500 font-medium mt-0.5">@yield('page-title', 'Dashboard')</p>
                     </div>
                 </div>
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold flex-shrink-0">

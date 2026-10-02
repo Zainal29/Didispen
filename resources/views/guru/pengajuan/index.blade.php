@@ -42,8 +42,8 @@
                     </td>
                     <td class="px-6 py-4 capitalize text-gray-700 text-sm">{{ str_replace('_', ' ', $item->kategori) }}</td>
                     <td class="px-6 py-4 text-xs text-gray-600">
-                        <p>{{ $item->jam_keluar }}</p>
-                        <p class="text-gray-400">s/d {{ $item->jam_kembali }}</p>
+                        <p class="font-medium text-gray-900">{{ \App\Helpers\TimeHelper::getWaktuAktual($item->jam_keluar, $item->created_at?->dayOfWeek) }}</p>
+                        <p class="text-gray-400">s/d {{ \App\Helpers\TimeHelper::getWaktuAktual($item->jam_kembali, $item->created_at?->dayOfWeek) }}</p>
                     </td>
                     <td class="px-6 py-4">
                         @php
@@ -111,9 +111,9 @@
                 <div class="flex items-start">
                     <i class="fas fa-clock text-gray-400 mt-0.5 mr-2 w-4 flex-shrink-0"></i>
                     <div class="text-gray-600">
-                        <span>{{ $item->jam_keluar }}</span>
+                        <span class="font-medium text-gray-900">{{ \App\Helpers\TimeHelper::getWaktuAktual($item->jam_keluar, $item->created_at?->dayOfWeek) }}</span>
                         <span class="text-gray-400 mx-1">s/d</span>
-                        <span>{{ $item->jam_kembali }}</span>
+                        <span>{{ \App\Helpers\TimeHelper::getWaktuAktual($item->jam_kembali, $item->created_at?->dayOfWeek) }}</span>
                     </div>
                 </div>
             </div>
