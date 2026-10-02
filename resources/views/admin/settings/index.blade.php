@@ -163,7 +163,7 @@
                 <h3 class="text-base font-bold text-gray-900 mb-2 flex items-center">
                     <i class="fas fa-clock text-indigo-600 mr-2"></i>Jadwal Jam Pelajaran
                 </h3>
-                <p class="text-sm text-gray-500 mb-4">Atur waktu mulai dan selesai untuk setiap jam pelajaran sesuai pola hari KBM.</p>
+                <p class="text-sm text-gray-500 mb-4">Atur waktu mulai dan selesai untuk setiap jam pelajaran, jam istirahat, dan pembiasaan sesuai pola hari KBM.</p>
 
                 @php
                     $jadwalData = is_array($jam_pelajaran) ? $jam_pelajaran : (json_decode($jam_pelajaran, true) ?? []);
@@ -172,17 +172,87 @@
                     $jumat = $jadwalData['jumat'] ?? [];
                     $sabtu = $jadwalData['sabtu'] ?? [];
                     $minggu = $jadwalData['minggu'] ?? [];
+
+                    $istirahatData = is_array($jam_istirahat ?? null) ? $jam_istirahat : (json_decode($jam_istirahat ?? '[]', true) ?? []);
+                    $defIstirahat = \App\Helpers\TimeHelper::getDefaultIstirahat();
+                    $istirahatSeninSelasa = $istirahatData['senin_selasa'] ?? $defIstirahat['senin_selasa'];
+                    $istirahatRabuKamis = $istirahatData['rabu_kamis'] ?? $defIstirahat['rabu_kamis'];
+                    $istirahatJumat = $istirahatData['jumat'] ?? $defIstirahat['jumat'];
+                    $istirahatSabtu = $istirahatData['sabtu'] ?? $defIstirahat['sabtu'];
+                    $istirahatMinggu = $istirahatData['minggu'] ?? $defIstirahat['minggu'];
                 @endphp
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {{-- 1. SENIN & SELASA (10 Jam) --}}
+                    {{-- 1. SENIN & SELASA (10 Jam + 2 Istirahat) --}}
                     <div>
                         <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
                             <span class="text-indigo-700"><i class="fas fa-calendar-day mr-1.5"></i>Senin & Selasa</span>
-                            <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">10 Jam (45m)</span>
+                            <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">10 Jam + 2 Istirahat</span>
                         </h4>
                         <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
-                            @for($i = 1; $i <= 10; $i++)
+                            @for($i = 1; $i <= 3; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_senin_selasa[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_senin_selasa.'.$i.'.start', $seninSelasa[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_senin_selasa[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_senin_selasa.'.$i.'.end', $seninSelasa[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 1 --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1">
+                                    <i class="fas fa-mug-hot text-amber-600 text-[10px]"></i> Ist. 1
+                                </span>
+                                <input type="time" name="jam_istirahat_senin_selasa[1][start]"
+                                       value="{{ old('jam_istirahat_senin_selasa.1.start', $istirahatSeninSelasa[1]['start'] ?? '09:15') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_senin_selasa[1][end]"
+                                       value="{{ old('jam_istirahat_senin_selasa.1.end', $istirahatSeninSelasa[1]['end'] ?? '09:30') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 4; $i <= 6; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_senin_selasa[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_senin_selasa.'.$i.'.start', $seninSelasa[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_senin_selasa[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_senin_selasa.'.$i.'.end', $seninSelasa[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 2 --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1">
+                                    <i class="fas fa-mug-hot text-amber-600 text-[10px]"></i> Ist. 2
+                                </span>
+                                <input type="time" name="jam_istirahat_senin_selasa[2][start]"
+                                       value="{{ old('jam_istirahat_senin_selasa.2.start', $istirahatSeninSelasa[2]['start'] ?? '11:45') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_senin_selasa[2][end]"
+                                       value="{{ old('jam_istirahat_senin_selasa.2.end', $istirahatSeninSelasa[2]['end'] ?? '12:15') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 7; $i <= 10; $i++)
                                 <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors">
                                     <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
                                     <input type="time" name="jam_pelajaran_senin_selasa[{{ $i }}][start]"
@@ -199,14 +269,76 @@
                         </div>
                     </div>
 
-                    {{-- 2. RABU & KAMIS (11 Jam) --}}
+                    {{-- 2. RABU & KAMIS (11 Jam + 2 Istirahat) --}}
                     <div>
                         <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
                             <span class="text-emerald-700"><i class="fas fa-calendar-day mr-1.5"></i>Rabu & Kamis</span>
-                            <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">11 Jam (40m)</span>
+                            <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">11 Jam + 2 Istirahat</span>
                         </h4>
                         <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
-                            @for($i = 1; $i <= 11; $i++)
+                            @for($i = 1; $i <= 3; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-emerald-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_rabu_kamis[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_rabu_kamis.'.$i.'.start', $rabuKamis[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_rabu_kamis[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_rabu_kamis.'.$i.'.end', $rabuKamis[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 1 --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1">
+                                    <i class="fas fa-mug-hot text-amber-600 text-[10px]"></i> Ist. 1
+                                </span>
+                                <input type="time" name="jam_istirahat_rabu_kamis[1][start]"
+                                       value="{{ old('jam_istirahat_rabu_kamis.1.start', $istirahatRabuKamis[1]['start'] ?? '09:00') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_rabu_kamis[1][end]"
+                                       value="{{ old('jam_istirahat_rabu_kamis.1.end', $istirahatRabuKamis[1]['end'] ?? '09:15') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 4; $i <= 7; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-emerald-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_rabu_kamis[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_rabu_kamis.'.$i.'.start', $rabuKamis[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_rabu_kamis[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_rabu_kamis.'.$i.'.end', $rabuKamis[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 2 --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1">
+                                    <i class="fas fa-mug-hot text-amber-600 text-[10px]"></i> Ist. 2
+                                </span>
+                                <input type="time" name="jam_istirahat_rabu_kamis[2][start]"
+                                       value="{{ old('jam_istirahat_rabu_kamis.2.start', $istirahatRabuKamis[2]['start'] ?? '11:55') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_rabu_kamis[2][end]"
+                                       value="{{ old('jam_istirahat_rabu_kamis.2.end', $istirahatRabuKamis[2]['end'] ?? '12:30') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 8; $i <= 11; $i++)
                                 <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-emerald-300 transition-colors">
                                     <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
                                     <input type="time" name="jam_pelajaran_rabu_kamis[{{ $i }}][start]"
@@ -223,14 +355,92 @@
                         </div>
                     </div>
 
-                    {{-- 3. JUMAT (8 Jam) --}}
+                    {{-- 3. JUMAT (Pembiasaan + 8 Jam + 2 Istirahat) --}}
                     <div>
                         <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
                             <span class="text-amber-700"><i class="fas fa-calendar-day mr-1.5"></i>Jumat</span>
-                            <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">8 Jam</span>
+                            <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Biasa + 8 Jam + 2 Ist.</span>
                         </h4>
                         <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
-                            @for($i = 1; $i <= 8; $i++)
+                            {{-- Pembiasaan --}}
+                            <div class="flex items-center gap-2 bg-indigo-50 p-2 rounded-lg border border-indigo-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-indigo-800 w-14 flex items-center gap-1" title="Pembiasaan">
+                                    <i class="fas fa-book-reader text-indigo-600 text-[10px]"></i> Biasa
+                                </span>
+                                <input type="time" name="jam_istirahat_jumat[0][start]"
+                                       value="{{ old('jam_istirahat_jumat.0.start', $istirahatJumat[0]['start'] ?? '07:00') }}"
+                                       required
+                                       class="flex-1 text-xs border-indigo-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-indigo-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_jumat[0][end]"
+                                       value="{{ old('jam_istirahat_jumat.0.end', $istirahatJumat[0]['end'] ?? '08:00') }}"
+                                       required
+                                       class="flex-1 text-xs border-indigo-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 1; $i <= 2; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-amber-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_jumat[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_jumat.'.$i.'.start', $jumat[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_jumat[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_jumat.'.$i.'.end', $jumat[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 1 --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1">
+                                    <i class="fas fa-mug-hot text-amber-600 text-[10px]"></i> Ist. 1
+                                </span>
+                                <input type="time" name="jam_istirahat_jumat[1][start]"
+                                       value="{{ old('jam_istirahat_jumat.1.start', $istirahatJumat[1]['start'] ?? '09:10') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_jumat[1][end]"
+                                       value="{{ old('jam_istirahat_jumat.1.end', $istirahatJumat[1]['end'] ?? '09:30') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 3; $i <= 6; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-amber-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_jumat[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_jumat.'.$i.'.start', $jumat[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_jumat[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_jumat.'.$i.'.end', $jumat[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 2 (Sholat Jumat) --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1" title="Istirahat Sholat Jumat">
+                                    <i class="fas fa-mosque text-amber-600 text-[10px]"></i> Sholat
+                                </span>
+                                <input type="time" name="jam_istirahat_jumat[2][start]"
+                                       value="{{ old('jam_istirahat_jumat.2.start', $istirahatJumat[2]['start'] ?? '11:30') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_jumat[2][end]"
+                                       value="{{ old('jam_istirahat_jumat.2.end', $istirahatJumat[2]['end'] ?? '12:40') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 7; $i <= 8; $i++)
                                 <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-amber-300 transition-colors">
                                     <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
                                     <input type="time" name="jam_pelajaran_jumat[{{ $i }}][start]"
@@ -247,18 +457,76 @@
                         </div>
                     </div>
 
-
-
-
-
-                    {{-- 4. SABTU (Testing - 10 Jam) --}}
+                    {{-- 4. SABTU (Testing - 10 Jam + 2 Istirahat) --}}
                     <div>
                         <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
                             <span class="text-purple-700"><i class="fas fa-flask mr-1.5"></i>Sabtu (Testing)</span>
-                            <span class="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">10 Jam (Testing)</span>
+                            <span class="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">10 Jam + 2 Ist.</span>
                         </h4>
                         <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
-                            @for($i = 1; $i <= 10; $i++)
+                            @for($i = 1; $i <= 3; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_sabtu[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_sabtu.'.$i.'.start', $sabtu[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_sabtu[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_sabtu.'.$i.'.end', $sabtu[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 1 --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1">
+                                    <i class="fas fa-mug-hot text-amber-600 text-[10px]"></i> Ist. 1
+                                </span>
+                                <input type="time" name="jam_istirahat_sabtu[1][start]"
+                                       value="{{ old('jam_istirahat_sabtu.1.start', $istirahatSabtu[1]['start'] ?? '09:15') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_sabtu[1][end]"
+                                       value="{{ old('jam_istirahat_sabtu.1.end', $istirahatSabtu[1]['end'] ?? '09:30') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 4; $i <= 6; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_sabtu[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_sabtu.'.$i.'.start', $sabtu[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_sabtu[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_sabtu.'.$i.'.end', $sabtu[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 2 --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1">
+                                    <i class="fas fa-mug-hot text-amber-600 text-[10px]"></i> Ist. 2
+                                </span>
+                                <input type="time" name="jam_istirahat_sabtu[2][start]"
+                                       value="{{ old('jam_istirahat_sabtu.2.start', $istirahatSabtu[2]['start'] ?? '11:45') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_sabtu[2][end]"
+                                       value="{{ old('jam_istirahat_sabtu.2.end', $istirahatSabtu[2]['end'] ?? '12:15') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 7; $i <= 10; $i++)
                                 <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors">
                                     <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
                                     <input type="time" name="jam_pelajaran_sabtu[{{ $i }}][start]"
@@ -275,17 +543,76 @@
                         </div>
                     </div>
 
-
-
-
-                    {{-- 5. MINGGU (Testing - 10 Jam) --}}
+                    {{-- 5. MINGGU (Testing - 10 Jam + 2 Istirahat) --}}
                     <div>
                         <h4 class="font-bold text-sm text-gray-700 mb-3 bg-white p-2.5 rounded-lg border flex justify-between items-center shadow-sm">
                             <span class="text-rose-700"><i class="fas fa-flask mr-1.5"></i>Minggu (Testing)</span>
-                            <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">10 Jam (Testing)</span>
+                            <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">10 Jam + 2 Ist.</span>
                         </h4>
                         <div class="space-y-2 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
-                            @for($i = 1; $i <= 10; $i++)
+                            @for($i = 1; $i <= 3; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-rose-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_minggu[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_minggu.'.$i.'.start', $minggu[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_minggu[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_minggu.'.$i.'.end', $minggu[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 1 --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1">
+                                    <i class="fas fa-mug-hot text-amber-600 text-[10px]"></i> Ist. 1
+                                </span>
+                                <input type="time" name="jam_istirahat_minggu[1][start]"
+                                       value="{{ old('jam_istirahat_minggu.1.start', $istirahatMinggu[1]['start'] ?? '09:15') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_minggu[1][end]"
+                                       value="{{ old('jam_istirahat_minggu.1.end', $istirahatMinggu[1]['end'] ?? '09:30') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 4; $i <= 6; $i++)
+                                <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-rose-300 transition-colors">
+                                    <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
+                                    <input type="time" name="jam_pelajaran_minggu[{{ $i }}][start]"
+                                           value="{{ old('jam_pelajaran_minggu.'.$i.'.start', $minggu[$i]['start'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none py-1.5 px-2">
+                                    <span class="text-gray-400 font-bold text-xs">-</span>
+                                    <input type="time" name="jam_pelajaran_minggu[{{ $i }}][end]"
+                                           value="{{ old('jam_pelajaran_minggu.'.$i.'.end', $minggu[$i]['end'] ?? '') }}"
+                                           required
+                                           class="flex-1 text-xs border-gray-300 rounded focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-none py-1.5 px-2">
+                                </div>
+                            @endfor
+
+                            {{-- Istirahat 2 --}}
+                            <div class="flex items-center gap-2 bg-amber-50 p-2 rounded-lg border border-amber-300 transition-colors shadow-xs">
+                                <span class="text-xs font-bold text-amber-800 w-14 flex items-center gap-1">
+                                    <i class="fas fa-mug-hot text-amber-600 text-[10px]"></i> Ist. 2
+                                </span>
+                                <input type="time" name="jam_istirahat_minggu[2][start]"
+                                       value="{{ old('jam_istirahat_minggu.2.start', $istirahatMinggu[2]['start'] ?? '11:45') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                                <span class="text-amber-500 font-bold text-xs">-</span>
+                                <input type="time" name="jam_istirahat_minggu[2][end]"
+                                       value="{{ old('jam_istirahat_minggu.2.end', $istirahatMinggu[2]['end'] ?? '12:15') }}"
+                                       required
+                                       class="flex-1 text-xs border-amber-300 rounded focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none py-1.5 px-2 bg-white font-medium">
+                            </div>
+
+                            @for($i = 7; $i <= 10; $i++)
                                 <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 hover:border-rose-300 transition-colors">
                                     <span class="text-xs font-bold text-gray-600 w-14">Jam {{ $i }}</span>
                                     <input type="time" name="jam_pelajaran_minggu[{{ $i }}][start]"
