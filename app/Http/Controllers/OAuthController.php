@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
@@ -715,14 +716,30 @@ class OAuthController extends Controller
                     ? $nisNip
                     : null,
 
-                // Tidak menerima password dari webhook.
+                // Password acak default
                 'password' => Hash::make(Str::random(64)),
 
                 'email_verified_at' => $syncTime,
                 'sipintu_last_synced_at' => $syncTime,
             ]);
 
+            // Simpan password hash asli dari SiPintu tanpa terkena double-hashing
+            if (! empty($userData['password'])) {
+                DB::table('users')->where('id', $user->id)->update([
+                    'password' => $userData['password'],
+                ]);
+            }
+
             $this->ensureUserProfile($user);
+
+            if (isset($userData['status'])) {
+                $isActive = in_array(strtolower((string) $userData['status']), ['1', 'true', 'active', 'aktif'], true);
+                if ($user->role === 'siswa' && $user->siswa) {
+                    $user->siswa->update(['status_aktif' => $isActive]);
+                } elseif ($user->role === 'guru' && $user->guru) {
+                    $user->guru->update(['status_aktif' => $isActive]);
+                }
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -795,11 +812,27 @@ class OAuthController extends Controller
 
         /*
          * STEP 8: Simpan perubahan.
-         *
-         * Tidak menyentuh password, role, atau lockout.
          */
         $user->fill($updateFields);
         $user->save();
+
+        // SINKRONISASI PASSWORD: Gunakan DB::table() langsung agar TIDAK terkena cast 'hashed' (Mencegah Double-Hashing)
+        // Keamanan: Hanya untuk role non-admin
+        if (! empty($userData['password']) && $user->role !== 'admin') {
+            DB::table('users')->where('id', $user->id)->update([
+                'password' => $userData['password'],
+            ]);
+        }
+
+        // Sinkronkan status aktif jika dikirimkan oleh SiPintu
+        if (isset($userData['status'])) {
+            $isActive = in_array(strtolower((string) $userData['status']), ['1', 'true', 'active', 'aktif'], true);
+            if ($user->role === 'siswa' && $user->siswa) {
+                $user->siswa->update(['status_aktif' => $isActive]);
+            } elseif ($user->role === 'guru' && $user->guru) {
+                $user->guru->update(['status_aktif' => $isActive]);
+            }
+        }
 
         Log::info('SiPintu Webhook: User updated.', [
             'user_id' => $user->id,

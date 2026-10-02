@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
     class SipintuService
     {
@@ -22,35 +23,27 @@ use Illuminate\Support\Facades\Log;
         * ==========================================================
         * RESOLVE PASSWORD
         * ==========================================================
-        *
-        * Password hanya dibuat ketika user BARU.
-        *
-        * User yang sudah ada tidak akan di-hash ulang setiap sync.
-        */
-        private function resolvePasswordHash(
-            array $item,
-            string $defaultPlaintext = 'password'
-        ): string {
-            $raw = data_get($item, 'password_hash')
-                ?? data_get($item, 'password')
-                ?? data_get($item, 'pass')
-                ?? data_get($item, 'password_default')
-                ?? data_get($item, 'user.password_hash')
-                ?? data_get($item, 'user.password');
+    private function resolveSyncedPasswordHash(array $item): ?string
+    {
+        $raw = data_get($item, 'password_hash')
+            ?? data_get($item, 'password')
+            ?? data_get($item, 'pass')
+            ?? data_get($item, 'user.password_hash')
+            ?? data_get($item, 'user.password');
 
-            if (filled($raw)) {
-                $raw = (string) $raw;
-
-                if (preg_match('/^\$2[ayb]\$|\$argon2/i', $raw)) {
-                    return $raw;
-                }
-
-                return Hash::make($raw);
-            }
-
-            return Hash::make($defaultPlaintext);
+        if (! filled($raw)) {
+            return null;
         }
 
+        $raw = (string) $raw;
+
+        if (! preg_match('/^\$2[ayb]\$|^\$argon2/i', $raw)) {
+            return null;
+        }
+
+        return $raw;
+    }
+        
         /**
         * ==========================================================
         * BOOLEAN NORMALIZER
@@ -1448,18 +1441,31 @@ use Illuminate\Support\Facades\Log;
                                         * Ini menghindari:
                                         * Hash::make() x 1.300 setiap sync.
                                         */
+                                        // $updateUserData = [
+                                        //     'name' =>
+                                        //         $nama,
+
+                                        //     'email' =>
+                                        //         $email,
+
+                                        //     'nis_nip' =>
+                                        //         $nis,
+
+                                        //     'role' =>
+                                        //         'siswa',
+                                        // ];
+
+                                        // if ($externalId && empty($user->external_id)) {
+                                        //     $updateUserData['external_id'] = (string) $externalId;
+                                        // }
+
+                                        // $user->update($updateUserData);
+
                                         $updateUserData = [
-                                            'name' =>
-                                                $nama,
-
-                                            'email' =>
-                                                $email,
-
-                                            'nis_nip' =>
-                                                $nis,
-
-                                            'role' =>
-                                                'siswa',
+                                            'name' => $nama,
+                                            'email' => $email,
+                                            'nis_nip' => $nis,
+                                            'role' => 'siswa',
                                         ];
 
                                         if ($externalId && empty($user->external_id)) {
@@ -1467,6 +1473,13 @@ use Illuminate\Support\Facades\Log;
                                         }
 
                                         $user->update($updateUserData);
+
+                                        $passwordHash = $this->resolveSyncedPasswordHash($item);
+                                        if ($passwordHash !== null) {
+                                            DB::table('users')->where('id', $user->id)->update([
+                                                'password' => $passwordHash,
+                                            ]);
+                                        }
 
                                         $stats['updated']++;
 
@@ -1477,32 +1490,26 @@ use Illuminate\Support\Facades\Log;
                                         * USER BARU
                                         * ==================================================
                                         */
-                                        $passwordHash =
-                                            $this->resolvePasswordHash(
-                                                $item,
-                                                'password'
-                                            );
+                                        $passwordHash = $this->resolveSyncedPasswordHash($item);
 
-                                        $user =
-                                            User::create([
-                                                'name' =>
-                                                    $nama,
+                                        $user = User::create([
+                                            'name' => $nama,
+                                            'email' => $email,
+                                            'password' => Hash::make(Str::random(32)),
+                                            'role' => 'siswa',
+                                            'nis_nip' => $nis,
+                                            'external_id' => $externalId ? (string) $externalId : null,
+                                        ]);
 
-                                                'email' =>
-                                                    $email,
-
-                                                'password' =>
-                                                    $passwordHash,
-
-                                                'role' =>
-                                                    'siswa',
-
-                                                'nis_nip' =>
-                                                    $nis,
-
-                                                'external_id' =>
-                                                    $externalId ? (string) $externalId : null,
+                                        if ($passwordHash !== null) {
+                                            DB::table('users')->where('id', $user->id)->update([
+                                                'password' => $passwordHash,
                                             ]);
+                                        } else {
+                                            DB::table('users')->where('id', $user->id)->update([
+                                                'password' => Hash::make('password'),
+                                            ]);
+                                        }
 
                                         $isNewUser = true;
 
@@ -2042,51 +2049,64 @@ $emailGuru = $emailGuru !== ''
                                     /*
                                     * Password user lama TIDAK disentuh.
                                     */
-                                    $user->update([
-                                        'name' =>
-                                            $nama,
+                                    // $user->update([
+                                    //     'name' =>
+                                    //         $nama,
 
-                                        'email' =>
-                                            $email,
+                                    //     'email' =>
+                                    //         $email,
 
-                                        'nis_nip' =>
-                                            $nip,
+                                    //     'nis_nip' =>
+                                    //         $nip,
 
-                                        'role' =>
-                                            $user->role === 'admin' ? 'admin' : 'guru',
-                                    ]);
+                                    //     'role' =>
+                                    //         $user->role === 'admin' ? 'admin' : 'guru',
+                                    // ]);
+
+                                    $updateUserData = [
+                                        'name' => $nama,
+                                        'email' => $email,
+                                        'nis_nip' => $nip,
+                                        'role' => $user->role === 'admin' ? 'admin' : 'guru',
+                                    ];
+
+                                    $user->update($updateUserData);
+
+                                    if ($user->role !== 'admin') {
+                                        $passwordHash = $this->resolveSyncedPasswordHash($item);
+                                        if ($passwordHash !== null) {
+                                            DB::table('users')->where('id', $user->id)->update([
+                                                'password' => $passwordHash,
+                                            ]);
+                                        }
+                                    }
 
                                     $stats['updated']++;
 
                                 } else {
 
                                     /*
-                                    * Password hanya di-hash
-                                    * untuk user baru.
+                                    * Password user baru
                                     */
-                                    $passwordHash =
-                                        $this->resolvePasswordHash(
-                                            $item,
-                                            'password'
-                                        );
+                                    $passwordHash = $this->resolveSyncedPasswordHash($item);
 
-                                    $user =
-                                        User::create([
-                                            'name' =>
-                                                $nama,
+                                    $user = User::create([
+                                        'name' => $nama,
+                                        'email' => $email,
+                                        'password' => Hash::make(Str::random(32)),
+                                        'role' => 'guru',
+                                        'nis_nip' => $nip,
+                                    ]);
 
-                                            'email' =>
-                                                $email,
-
-                                            'password' =>
-                                                $passwordHash,
-
-                                            'role' =>
-                                                'guru',
-
-                                            'nis_nip' =>
-                                                $nip,
+                                    if ($passwordHash !== null) {
+                                        DB::table('users')->where('id', $user->id)->update([
+                                            'password' => $passwordHash,
                                         ]);
+                                    } else {
+                                        DB::table('users')->where('id', $user->id)->update([
+                                            'password' => Hash::make('password'),
+                                        ]);
+                                    }
 
                                     $stats['inserted']++;
                                 }

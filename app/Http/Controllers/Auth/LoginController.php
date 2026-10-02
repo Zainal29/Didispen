@@ -3,11 +3,17 @@
  namespace App\Http\Controllers\Auth;
 
  use App\Http\Controllers\Controller;
+ use App\Models\Guru;
+ use App\Models\Siswa;
  use App\Models\User;
  use App\Services\AuditLogService;
  use Illuminate\Http\Request;
  use Illuminate\Support\Facades\Auth;
+ use Illuminate\Support\Facades\DB;
  use Illuminate\Support\Facades\Hash;
+ use Illuminate\Support\Facades\Http;
+ use Illuminate\Support\Facades\Log;
+ use Illuminate\Support\Str;
 
  class LoginController extends Controller
 {
@@ -102,9 +108,57 @@
 
         /*
         |--------------------------------------------------------------------------
-        | 3. USER TIDAK DITEMUKAN
+        | 3. USER TIDAK DITEMUKAN (DENGAN FALLBACK SIPINTU GATEWAY)
         |--------------------------------------------------------------------------
         */
+        if (! $user && $credentials['role'] !== 'admin') {
+            $sipFallback = $this->verifyWithSipintuGateway($loginInput, $credentials['password']);
+
+            if ($sipFallback && ! empty($sipFallback['valid'])) {
+                $sipData = $sipFallback['user'] ?? [];
+                $newHash = $sipFallback['password_hash'] ?? null;
+                $rawRole = strtolower(trim((string) ($sipData['role'] ?? '')));
+                $mappedRole = match ($rawRole) {
+                    'student', 'siswa' => 'siswa',
+                    'teacher', 'guru' => 'guru',
+                    'satpam', 'security' => 'satpam',
+                    default => null,
+                };
+
+                if ($mappedRole === $credentials['role']) {
+                    $syncTime = now();
+                    $nisNip = trim((string) (
+                        $sipData['nis']
+                        ?? $sipData['nip']
+                        ?? $sipData['nis_nip']
+                        ?? data_get($sipData, 'student.nis')
+                        ?? data_get($sipData, 'guru.nip')
+                        ?? $nipFromSchoolEmail
+                        ?? ''
+                    ));
+
+                    $user = User::create([
+                        'name' => $sipData['name'] ?? 'User SiPintu',
+                        'email' => strtolower(trim($sipData['email'] ?? $loginInput)),
+                        'role' => $mappedRole,
+                        'external_id' => $sipData['external_id'] ?? $sipData['id'] ?? null,
+                        'nis_nip' => $nisNip !== '' ? $nisNip : null,
+                        'password' => Hash::make(Str::random(64)),
+                        'email_verified_at' => $syncTime,
+                        'sipintu_last_synced_at' => $syncTime,
+                    ]);
+
+                    if ($newHash) {
+                        DB::table('users')->where('id', $user->id)->update([
+                            'password' => $newHash,
+                        ]);
+                    }
+
+                    $this->ensureUserProfile($user);
+                }
+            }
+        }
+
         if (! $user) {
             return back()
                 ->withErrors([
@@ -207,10 +261,31 @@
         | 8. CEK PASSWORD
         |--------------------------------------------------------------------------
         */
-        if (! Hash::check(
+        $passwordMatched = Hash::check(
             $credentials['password'],
             $user->password
-        )) {
+        );
+
+        // FALLBACK SIPINTU GATEWAY (Langkah 5 PERINTAH.MD):
+        // Jika gagal verifikasi lokal dan bukan admin, tanyakan langsung ke SiPintu Gateway
+        if (! $passwordMatched && $user->role !== 'admin') {
+            $sipFallback = $this->verifyWithSipintuGateway($loginInput, $credentials['password']);
+
+            if ($sipFallback && ! empty($sipFallback['valid'])) {
+                $passwordMatched = true;
+                $newHash = $sipFallback['password_hash'] ?? null;
+
+                if ($newHash) {
+                    // Update password hash lokal tanpa double hashing
+                    DB::table('users')->where('id', $user->id)->update([
+                        'password' => $newHash,
+                        'sipintu_last_synced_at' => now(),
+                    ]);
+                }
+            }
+        }
+
+        if (! $passwordMatched) {
             $user->increment('failed_login_attempts');
 
             $currentAttempts = $user->fresh()->failed_login_attempts;
@@ -336,6 +411,90 @@
                 'success',
                 'Berhasil keluar.'
             );
+    }
+
+    /**
+     * Fallback verifikasi kredensial langsung ke SiPintu Gateway (Langkah 5 PERINTAH.MD)
+     */
+    private function verifyWithSipintuGateway(string $identity, string $password): ?array
+    {
+        $baseUrl = rtrim(
+            config('services.sipintu.base_url')
+                ?: config('services.sipintu.url')
+                ?: env('SIPINTU_BASE_URL', 'http://localhost:8000'),
+            '/'
+        );
+
+        $clientId = config('services.sipintu.client_id') ?: env('SIPINTU_CLIENT_ID');
+        $clientSecret = config('services.sipintu.client_secret') ?: env('SIPINTU_CLIENT_SECRET');
+
+        if (! $clientId || ! $clientSecret) {
+            return null;
+        }
+
+        try {
+            $response = Http::asForm()
+                ->acceptJson()
+                ->timeout(10)
+                ->post("{$baseUrl}/api/v1/auth/verify-credentials", [
+                    'client_id'     => $clientId,
+                    'client_secret' => $clientSecret,
+                    'identity'      => $identity,
+                    'password'      => $password,
+                ]);
+
+            if ($response->successful() && $response->json('valid')) {
+                return $response->json();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('SiPintu Fallback Auth Error: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Pastikan relasi Siswa/Guru tersedia saat auto-provisioning
+     */
+    private function ensureUserProfile(User $user): void
+    {
+        if ($user->role === 'siswa') {
+            $siswa = Siswa::where('user_id', $user->id)->first();
+
+            if (! $siswa && filled($user->nis_nip)) {
+                $siswa = Siswa::where('nis_nip', $user->nis_nip)->first();
+                if ($siswa) {
+                    $siswa->update(['user_id' => $user->id]);
+                }
+            }
+
+            if (! $siswa) {
+                Siswa::create([
+                    'user_id' => $user->id,
+                    'nis_nip' => $user->nis_nip,
+                    'nama_lengkap' => $user->name,
+                    'status_aktif' => true,
+                ]);
+            }
+        } elseif ($user->role === 'guru') {
+            $guru = Guru::where('user_id', $user->id)->first();
+
+            if (! $guru && filled($user->nis_nip)) {
+                $guru = Guru::where('nip', $user->nis_nip)->first();
+                if ($guru) {
+                    $guru->update(['user_id' => $user->id]);
+                }
+            }
+
+            if (! $guru) {
+                Guru::create([
+                    'user_id' => $user->id,
+                    'nip' => $user->nis_nip,
+                    'nama_lengkap' => $user->name,
+                    'status_aktif' => true,
+                ]);
+            }
+        }
     }
 }
 
