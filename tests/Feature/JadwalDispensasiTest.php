@@ -510,4 +510,68 @@ class JadwalDispensasiTest extends TestCase
 
         $response->assertSessionHasErrors(['jam_kembali']);
     }
+
+    /**
+     * 28. Senin & Selasa memiliki 2 slot istirahat default dan total slot lengkap.
+     */
+    public function test_senin_dan_selasa_memiliki_2_istirahat_dan_seluruh_slot_kbm(): void
+    {
+        $istirahat = TimeHelper::getIstirahatHari(1);
+        $this->assertCount(2, $istirahat);
+        $this->assertEquals('09:15', $istirahat[1]['start']);
+        $this->assertEquals('09:30', $istirahat[1]['end']);
+        $this->assertEquals('11:45', $istirahat[2]['start']);
+        $this->assertEquals('12:15', $istirahat[2]['end']);
+
+        $semuaSlot = TimeHelper::getSemuaSlotHari(1);
+        // 10 jam KBM + 2 jam istirahat = 12 slot terurut
+        $this->assertCount(12, $semuaSlot);
+        $this->assertEquals('07:00', $semuaSlot[0]['start']);
+        $this->assertEquals('15:15', $semuaSlot[11]['end']);
+    }
+
+    /**
+     * 29. Jumat memiliki Pembiasaan dan 2 slot istirahat.
+     */
+    public function test_jumat_memiliki_pembiasaan_dan_2_istirahat(): void
+    {
+        $istirahat = TimeHelper::getIstirahatHari(5);
+        $this->assertCount(3, $istirahat);
+        $this->assertEquals('Pembiasaan', $istirahat[0]['label']);
+        $this->assertEquals('07:00', $istirahat[0]['start']);
+        $this->assertEquals('08:00', $istirahat[0]['end']);
+
+        $semuaSlot = TimeHelper::getSemuaSlotHari(5);
+        // 1 pembiasaan + 8 jam KBM + 2 jam istirahat = 11 slot terurut
+        $this->assertCount(11, $semuaSlot);
+        $this->assertEquals('07:00', $semuaSlot[0]['start']);
+        $this->assertEquals('14:00', $semuaSlot[10]['end']);
+    }
+
+    /**
+     * 30. Siswa dapat mengajukan dispensasi pada jam istirahat (format HH:MM).
+     */
+    public function test_siswa_bisa_mengajukan_dispensasi_pada_jam_istirahat(): void
+    {
+        // Set waktu ke hari Senin jam 09:15 WIB (Awal Istirahat 1)
+        Carbon::setTestNow(Carbon::parse('2026-09-21 09:15:00', 'Asia/Jakarta'));
+
+        $response = $this->actingAs($this->siswaUser)->post(route('siswa.pengajuan.store'), [
+            'kategori'        => 'keperluan_sekolah',
+            'alasan'          => 'Dispen saat jam istirahat untuk ambil berkas OSIS',
+            'tujuan'          => 'Ruang OSIS',
+            'lokasi'          => 'Gedung Depan',
+            'no_telepon'      => '081234567890',
+            'jam_keluar'      => '09:20', // Dalam rentang istirahat 1 (09:15 - 09:30)
+            'jam_kembali'     => '09:30',
+            'foto_verifikasi' => UploadedFile::fake()->image('selfie.jpg'),
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('dispensasi', [
+            'siswa_id'    => $this->siswa->id,
+            'jam_keluar'  => '09:20',
+            'jam_kembali' => '09:30',
+        ]);
+    }
 }
