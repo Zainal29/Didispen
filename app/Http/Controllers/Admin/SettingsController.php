@@ -39,6 +39,9 @@ class SettingsController extends Controller
 
     // Jadwal Jam Pelajaran
     'jam_pelajaran' => $jadwalPelajaran,
+
+    // Jadwal Jam Istirahat & Pembiasaan
+    'jam_istirahat' => TimeHelper::getAllIstirahat(),
 ]);
     }
 
@@ -84,10 +87,31 @@ class SettingsController extends Controller
             'jam_pelajaran_minggu.*.start'       => ['required', 'date_format:H:i'],
             'jam_pelajaran_minggu.*.end'         => ['required', 'date_format:H:i'],
 
+            // Validasi Jadwal Istirahat & Pembiasaan
+            'jam_istirahat_senin_selasa'         => ['nullable', 'array'],
+            'jam_istirahat_senin_selasa.*.start' => ['required_with:jam_istirahat_senin_selasa', 'date_format:H:i'],
+            'jam_istirahat_senin_selasa.*.end'   => ['required_with:jam_istirahat_senin_selasa', 'date_format:H:i'],
+
+            'jam_istirahat_rabu_kamis'           => ['nullable', 'array'],
+            'jam_istirahat_rabu_kamis.*.start'   => ['required_with:jam_istirahat_rabu_kamis', 'date_format:H:i'],
+            'jam_istirahat_rabu_kamis.*.end'     => ['required_with:jam_istirahat_rabu_kamis', 'date_format:H:i'],
+
+            'jam_istirahat_jumat'                => ['nullable', 'array'],
+            'jam_istirahat_jumat.*.start'        => ['required_with:jam_istirahat_jumat', 'date_format:H:i'],
+            'jam_istirahat_jumat.*.end'          => ['required_with:jam_istirahat_jumat', 'date_format:H:i'],
+
+            'jam_istirahat_sabtu'                => ['nullable', 'array'],
+            'jam_istirahat_sabtu.*.start'        => ['required_with:jam_istirahat_sabtu', 'date_format:H:i'],
+            'jam_istirahat_sabtu.*.end'          => ['required_with:jam_istirahat_sabtu', 'date_format:H:i'],
+
+            'jam_istirahat_minggu'               => ['nullable', 'array'],
+            'jam_istirahat_minggu.*.start'       => ['required_with:jam_istirahat_minggu', 'date_format:H:i'],
+            'jam_istirahat_minggu.*.end'         => ['required_with:jam_istirahat_minggu', 'date_format:H:i'],
+
             'fallback_guru_piket_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('gurus', 'id')->where(
+                Rule::exists('guru', 'id')->where(
                     fn ($query) => $query->where('status_aktif', true)
                 ),
             ],
@@ -120,6 +144,34 @@ class SettingsController extends Controller
                 'minggu'       => $data['jam_pelajaran_minggu'],
             ];
             Setting::set('jam_pelajaran', json_encode($jadwalPelajaran));
+
+            // 4. Simpan Jadwal Istirahat & Pembiasaan
+            if (! empty($data['jam_istirahat_senin_selasa'])) {
+                $jadwalIstirahat = [
+                    'senin_selasa' => [
+                        1 => ['label' => 'Istirahat 1', 'start' => $data['jam_istirahat_senin_selasa'][1]['start'] ?? '09:15', 'end' => $data['jam_istirahat_senin_selasa'][1]['end'] ?? '09:30'],
+                        2 => ['label' => 'Istirahat 2', 'start' => $data['jam_istirahat_senin_selasa'][2]['start'] ?? '11:45', 'end' => $data['jam_istirahat_senin_selasa'][2]['end'] ?? '12:15'],
+                    ],
+                    'rabu_kamis' => [
+                        1 => ['label' => 'Istirahat 1', 'start' => $data['jam_istirahat_rabu_kamis'][1]['start'] ?? '09:00', 'end' => $data['jam_istirahat_rabu_kamis'][1]['end'] ?? '09:15'],
+                        2 => ['label' => 'Istirahat 2', 'start' => $data['jam_istirahat_rabu_kamis'][2]['start'] ?? '11:55', 'end' => $data['jam_istirahat_rabu_kamis'][2]['end'] ?? '12:30'],
+                    ],
+                    'jumat' => [
+                        0 => ['label' => 'Pembiasaan', 'start' => $data['jam_istirahat_jumat'][0]['start'] ?? '07:00', 'end' => $data['jam_istirahat_jumat'][0]['end'] ?? '08:00'],
+                        1 => ['label' => 'Istirahat 1', 'start' => $data['jam_istirahat_jumat'][1]['start'] ?? '09:10', 'end' => $data['jam_istirahat_jumat'][1]['end'] ?? '09:30'],
+                        2 => ['label' => 'Istirahat 2 (Jumat)', 'start' => $data['jam_istirahat_jumat'][2]['start'] ?? '11:30', 'end' => $data['jam_istirahat_jumat'][2]['end'] ?? '12:40'],
+                    ],
+                    'sabtu' => [
+                        1 => ['label' => 'Istirahat 1', 'start' => $data['jam_istirahat_sabtu'][1]['start'] ?? '09:15', 'end' => $data['jam_istirahat_sabtu'][1]['end'] ?? '09:30'],
+                        2 => ['label' => 'Istirahat 2', 'start' => $data['jam_istirahat_sabtu'][2]['start'] ?? '11:45', 'end' => $data['jam_istirahat_sabtu'][2]['end'] ?? '12:15'],
+                    ],
+                    'minggu' => [
+                        1 => ['label' => 'Istirahat 1', 'start' => $data['jam_istirahat_minggu'][1]['start'] ?? '09:15', 'end' => $data['jam_istirahat_minggu'][1]['end'] ?? '09:30'],
+                        2 => ['label' => 'Istirahat 2', 'start' => $data['jam_istirahat_minggu'][2]['start'] ?? '11:45', 'end' => $data['jam_istirahat_minggu'][2]['end'] ?? '12:15'],
+                    ],
+                ];
+                Setting::set('jam_istirahat', json_encode($jadwalIstirahat));
+            }
 
             return redirect()->route('admin.settings.index')
                 ->with('success', 'Semua pengaturan sistem berhasil diperbarui.');

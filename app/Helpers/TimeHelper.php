@@ -128,6 +128,146 @@ class TimeHelper
     }
 
     /**
+     * Jadwal istirahat & pembiasaan default acuan (Sesuai KBM SMKN 1 Bangsri per 18 Agustus 2026)
+     */
+    public static function getDefaultIstirahat(): array
+    {
+        return [
+            'senin_selasa' => [
+                1 => ['label' => 'Istirahat 1', 'start' => '09:15', 'end' => '09:30'],
+                2 => ['label' => 'Istirahat 2', 'start' => '11:45', 'end' => '12:15'],
+            ],
+            'rabu_kamis' => [
+                1 => ['label' => 'Istirahat 1', 'start' => '09:00', 'end' => '09:15'],
+                2 => ['label' => 'Istirahat 2', 'start' => '11:55', 'end' => '12:30'],
+            ],
+            'jumat' => [
+                0 => ['label' => 'Pembiasaan', 'start' => '07:00', 'end' => '08:00'],
+                1 => ['label' => 'Istirahat 1', 'start' => '09:10', 'end' => '09:30'],
+                2 => ['label' => 'Istirahat 2 (Jumat)', 'start' => '11:30', 'end' => '12:40'],
+            ],
+            'sabtu' => [
+                1 => ['label' => 'Istirahat 1', 'start' => '09:15', 'end' => '09:30'],
+                2 => ['label' => 'Istirahat 2', 'start' => '11:45', 'end' => '12:15'],
+            ],
+            'minggu' => [
+                1 => ['label' => 'Istirahat 1', 'start' => '09:15', 'end' => '09:30'],
+                2 => ['label' => 'Istirahat 2', 'start' => '11:45', 'end' => '12:15'],
+            ],
+        ];
+    }
+
+    /**
+     * Mengambil seluruh jadwal istirahat dari Setting dengan fallback aman
+     */
+    public static function getAllIstirahat(): array
+    {
+        $raw = Setting::get('jam_istirahat');
+        return self::normalizeIstirahat($raw);
+    }
+
+    /**
+     * Normalisasi payload jadwal istirahat dari database
+     */
+    public static function normalizeIstirahat(mixed $data): array
+    {
+        $default = self::getDefaultIstirahat();
+
+        if (is_string($data)) {
+            $decoded = json_decode($data, true);
+            $data = is_array($decoded) ? $decoded : [];
+        }
+
+        if (! is_array($data) || empty($data)) {
+            return $default;
+        }
+
+        $result = [];
+        foreach ($default as $dayKey => $defaultSlots) {
+            $result[$dayKey] = [];
+            $slots = $data[$dayKey] ?? [];
+            foreach ($defaultSlots as $idx => $def) {
+                $slot = $slots[$idx] ?? $slots[(string) $idx] ?? $def;
+                $start = ! empty($slot['start']) ? substr((string) $slot['start'], 0, 5) : $def['start'];
+                $end   = ! empty($slot['end'])   ? substr((string) $slot['end'], 0, 5)   : $def['end'];
+                $label = $slot['label'] ?? $def['label'];
+                $result[$dayKey][$idx] = [
+                    'label' => $label,
+                    'start' => $start,
+                    'end'   => $end,
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Mengambil jadwal istirahat hari tertentu
+     */
+    public static function getIstirahatHari(?int $dayOfWeek = null): array
+    {
+        if ($dayOfWeek === null) {
+            $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
+        }
+
+        $all = self::getAllIstirahat();
+        $key = self::getJadwalKeyByDay($dayOfWeek);
+
+        if (! $key || ! isset($all[$key])) {
+            return [];
+        }
+
+        return $all[$key];
+    }
+
+    /**
+     * Mengambil gabungan seluruh slot (KBM + Istirahat/Pembiasaan) terurut kronologis
+     */
+    public static function getSemuaSlotHari(?int $dayOfWeek = null): array
+    {
+        if ($dayOfWeek === null) {
+            $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
+        }
+
+        $jadwalHari = self::getJadwalHari($dayOfWeek);
+        $istirahatHari = self::getIstirahatHari($dayOfWeek);
+
+        $slots = [];
+
+        foreach ($jadwalHari as $jamKe => $slot) {
+            if (! empty($slot['start']) && ! empty($slot['end'])) {
+                $slots[] = [
+                    'type'   => 'kbm',
+                    'jam_ke' => (int) $jamKe,
+                    'label'  => 'Jam ' . $jamKe,
+                    'start'  => substr((string) $slot['start'], 0, 5),
+                    'end'    => substr((string) $slot['end'], 0, 5),
+                ];
+            }
+        }
+
+        foreach ($istirahatHari as $idx => $slot) {
+            if (! empty($slot['start']) && ! empty($slot['end'])) {
+                $label = $slot['label'] ?? ('Istirahat ' . $idx);
+                $slots[] = [
+                    'type'   => strtolower($label) === 'pembiasaan' ? 'pembiasaan' : 'istirahat',
+                    'jam_ke' => null,
+                    'label'  => $label,
+                    'start'  => substr((string) $slot['start'], 0, 5),
+                    'end'    => substr((string) $slot['end'], 0, 5),
+                ];
+            }
+        }
+
+        usort($slots, function ($a, $b) {
+            return strcmp($a['start'], $b['start']);
+        });
+
+        return $slots;
+    }
+
+    /**
      * Mengambil seluruh jadwal dari Setting dengan fallback aman
      */
     public static function getAllJadwal(): array
@@ -213,46 +353,138 @@ class TimeHelper
      * @param int|null $dayOfWeek Day of week (0=Minggu s.d. 6=Sabtu)
      * @return string Format: "HH:MM - HH:MM" atau "-" jika tidak ditemukan
      */
-    public static function getWaktuAktual(string|int|null $teksJam, ?int $dayOfWeek = null): string
-    {
-        if ($teksJam === null || $teksJam === '') {
-            return '-';
-        }
+    // public static function getWaktuAktual(string|int|null $teksJam, ?int $dayOfWeek = null): string
+    // {
+    //     if ($teksJam === null || $teksJam === '') {
+    //         return '-';
+    //     }
 
-        // Ekstrak angka dari string
-        preg_match('/(\d+)/', (string) $teksJam, $matches);
-        $angka = isset($matches[1]) ? (int) $matches[1] : 0;
+    //     // Ekstrak angka dari string
+    //     preg_match('/(\d+)/', (string) $teksJam, $matches);
+    //     $angka = isset($matches[1]) ? (int) $matches[1] : 0;
 
-        if ($angka <= 0) {
-            return '-';
-        }
+    //     if ($angka <= 0) {
+    //         return '-';
+    //     }
 
-        if ($dayOfWeek === null) {
-            $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
-        }
+    //     if ($dayOfWeek === null) {
+    //         $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
+    //     }
 
-        $jadwalHari = self::getJadwalHari($dayOfWeek);
+    //     $jadwalHari = self::getJadwalHari($dayOfWeek);
 
-        // Fallback untuk hari libur (Sabtu/Minggu) jika melihat riwayat dispensasi
-        if (empty($jadwalHari)) {
-            $all = self::getAllJadwal();
-            $jadwalHari = $all['senin_selasa'] ?? [];
-        }
+    //     // Fallback untuk hari libur (Sabtu/Minggu) jika melihat riwayat dispensasi
+    //     if (empty($jadwalHari)) {
+    //         $all = self::getAllJadwal();
+    //         $jadwalHari = $all['senin_selasa'] ?? [];
+    //     }
 
-        if (isset($jadwalHari[$angka]) && ! empty($jadwalHari[$angka]['start']) && ! empty($jadwalHari[$angka]['end'])) {
-            return $jadwalHari[$angka]['start'] . ' - ' . $jadwalHari[$angka]['end'];
-        }
+    //     if (isset($jadwalHari[$angka]) && ! empty($jadwalHari[$angka]['start']) && ! empty($jadwalHari[$angka]['end'])) {
+    //         return $jadwalHari[$angka]['start'] . ' - ' . $jadwalHari[$angka]['end'];
+    //     }
 
+    //     return '-';
+    // }
+
+    /**
+ * Mengubah nilai jam dispensasi menjadi waktu aktual.
+ *
+ * Kompatibel dengan:
+ * - Data lama: "Jam Pelajaran ke-5"
+ * - Data lama: "Jam ke-5"
+ * - Data lama: 5
+ * - Data baru: "09:30"
+ *
+ * Untuk data lama:
+ *     "Jam Pelajaran ke-5" -> "10:15 - 11:00"
+ *
+ * Untuk data baru:
+ *     "09:30" -> "09:30"
+ */
+public static function getWaktuAktual(
+    string|int|null $teksJam,
+    ?int $dayOfWeek = null
+): string {
+    if ($teksJam === null || $teksJam === '') {
         return '-';
     }
 
-    /**
-     * Menghitung batas waktu kembali (Carbon instance) berdasarkan jam kembali dan hari
+    $nilai = trim((string) $teksJam);
+
+    /*
+     * FORMAT BARU
+     * Contoh:
+     * 09:30
+     * 10:15
+     *
+     * Jangan diproses sebagai nomor jam pelajaran.
      */
+    if (preg_match('/^\d{2}:\d{2}$/', $nilai)) {
+        return $nilai;
+    }
+
+    /*
+     * FORMAT LAMA
+     * Contoh:
+     * "Jam Pelajaran ke-5"
+     * "Jam ke-5"
+     * "5"
+     */
+    preg_match('/(\d+)/', $nilai, $matches);
+
+    $angka = isset($matches[1]) ? (int) $matches[1] : 0;
+
+    if ($angka <= 0) {
+        return '-';
+    }
+
+    if ($dayOfWeek === null) {
+        $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
+    }
+
+    // Cek jika teks merujuk ke istirahat atau pembiasaan
+    $istirahatHari = self::getIstirahatHari($dayOfWeek);
+    foreach ($istirahatHari as $slot) {
+        if (! empty($slot['label']) && stripos($nilai, $slot['label']) !== false && ! empty($slot['start']) && ! empty($slot['end'])) {
+            return $slot['start'] . ' - ' . $slot['end'];
+        }
+    }
+
+    $jadwalHari = self::getJadwalHari($dayOfWeek);
+
+    /*
+     * Fallback untuk hari libur ketika melihat
+     * riwayat dispensasi lama.
+     */
+    if (empty($jadwalHari)) {
+        $all = self::getAllJadwal();
+        $jadwalHari = $all['senin_selasa'] ?? [];
+    }
+
+    if (
+        isset($jadwalHari[$angka])
+        && ! empty($jadwalHari[$angka]['start'])
+        && ! empty($jadwalHari[$angka]['end'])
+    ) {
+        return $jadwalHari[$angka]['start']
+            . ' - '
+            . $jadwalHari[$angka]['end'];
+    }
+
+    return '-';
+}
+
     public static function getBatasWaktuKembali(int|string|null $jamKembali, ?int $dayOfWeek = null): ?Carbon
     {
         if ($jamKembali === null || $jamKembali === '') {
             return null;
+        }
+
+        $nilai = trim((string) $jamKembali);
+
+        // Format waktu langsung (HH:MM atau HH:MM:SS)
+        if (preg_match('/^(\d{1,2}):(\d{2})(:00)?$/', $nilai, $m)) {
+            return Carbon::today('Asia/Jakarta')->setTime((int)$m[1], (int)$m[2], 0);
         }
 
         if ($dayOfWeek === null) {

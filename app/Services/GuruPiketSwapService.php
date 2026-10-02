@@ -52,15 +52,14 @@ class GuruPiketSwapService
             ]);
         }
 
-        // 4. Guru Pengganti harus ada di data guru.
-// Tidak harus memiliki jadwal piket dan tidak harus berstatus aktif.
-$guruPengganti = Guru::find($guruPenggantiId);
+        // 4. Guru Pengganti harus ada di data guru dan berstatus aktif
+        $guruPengganti = Guru::find($guruPenggantiId);
 
-if (! $guruPengganti) {
-    throw ValidationException::withMessages([
-        'guru_pengganti_id' => 'Guru pengganti tidak ditemukan.',
-    ]);
-}
+        if (! $guruPengganti || ! $guruPengganti->status_aktif) {
+            throw ValidationException::withMessages([
+                'guru_pengganti_id' => 'Guru pengganti tidak ditemukan atau berstatus tidak aktif.',
+            ]);
+        }
 
         // 5. Validasi Tanggal
         if (! $tanggalRaw) {
