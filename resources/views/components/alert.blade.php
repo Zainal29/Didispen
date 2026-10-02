@@ -1,33 +1,31 @@
 {{-- resources/views/components/alert.blade.php --}}
 
 @if(session('success'))
-<div class="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3 shadow-sm animate-slide-in">
-    <i class="fas fa-check-circle text-emerald-600 text-xl flex-shrink-0 mt-0.5"></i>
-    <div class="flex-1 min-w-0">
-        <p class="font-bold text-emerald-800 text-sm">Berhasil!</p>
-        <p class="text-sm text-emerald-700 leading-relaxed mt-0.5">{{ session('success') }}</p>
+<div x-data="{ show: true }"
+     x-show="show"
+     x-init="setTimeout(() => show = false, 4500)"
+     x-transition:leave="transition ease-in duration-300"
+     x-transition:leave-start="opacity-100 transform scale-100"
+     x-transition:leave-end="opacity-0 transform -translate-y-2 scale-95"
+     class="mb-3.5 p-3.5 bg-emerald-50/95 backdrop-blur-xs border border-emerald-200 rounded-xl flex items-start gap-3 shadow-xs animate-slide-in">
+    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <i class="fas fa-check-circle text-base"></i>
+    </div>
+    <div class="flex-1 min-w-0 pt-0.5">
+        <p class="font-bold text-emerald-900 text-xs sm:text-sm">Berhasil!</p>
+        <p class="text-xs sm:text-sm text-emerald-700 leading-snug mt-0.5">{{ session('success') }}</p>
 
         @if(session('sync_stats'))
             @php $stats = session('sync_stats'); @endphp
-            <div class="mt-3 p-3 bg-white/80 rounded-md border border-emerald-200 text-xs text-emerald-900 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div><span class="font-bold">Total Data:</span> {{ $stats['total'] ?? 0 }}</div>
-                <div><span class="font-bold text-green-600">Baru (Inserted):</span> {{ $stats['inserted'] ?? 0 }}</div>
-                <div><span class="font-bold text-blue-600">Diperbarui (Updated):</span> {{ $stats['updated'] ?? 0 }}</div>
+            <div class="mt-2.5 p-2.5 bg-white/90 rounded-lg border border-emerald-200 text-xs text-emerald-900 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div><span class="font-bold">Total:</span> {{ $stats['total'] ?? 0 }}</div>
+                <div><span class="font-bold text-green-600">Baru:</span> {{ $stats['inserted'] ?? 0 }}</div>
+                <div><span class="font-bold text-blue-600">Update:</span> {{ $stats['updated'] ?? 0 }}</div>
                 <div><span class="font-bold text-red-600">Gagal:</span> {{ $stats['failed'] ?? 0 }}</div>
             </div>
-            @if(!empty($stats['errors']))
-                <div class="mt-2 text-xs text-red-600">
-                    <strong class="block mb-1">Rincian Error:</strong>
-                    <ul class="list-disc pl-4 space-y-0.5 max-h-32 overflow-y-auto">
-                        @foreach($stats['errors'] as $err)
-                            <li>{{ $err }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
         @endif
     </div>
-    <button onclick="this.closest('.animate-slide-in').remove()" class="text-emerald-400 hover:text-emerald-600 transition-colors ml-auto p-0.5 flex-shrink-0" title="Tutup">
+    <button @click="show = false" class="text-emerald-400 hover:text-emerald-700 transition-colors p-1 flex-shrink-0" title="Tutup">
         <i class="fas fa-times text-xs"></i>
     </button>
 </div>
