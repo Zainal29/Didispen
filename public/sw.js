@@ -1,17 +1,23 @@
-const CACHE_NAME = 'didispen-v1';
+const CACHE_NAME = 'didispen-v2';
 
 const STATIC_ASSETS = [
-    '/login',
     '/manifest.json',
     '/icons/icon-192.png',
     '/icons/icon-512.png',
-    '/icons/icon-512-maskable.png'
+    '/icons/icon-512-maskable.png',
+    '/images/logo-didispen.png',
+    '/images/foto-smk.png',
+    '/images/tagline.png'
 ];
 
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(STATIC_ASSETS))
+            .then(cache => {
+                return cache.addAll(STATIC_ASSETS).catch(err => {
+                    console.warn('Cache addAll warning:', err);
+                });
+            })
             .then(() => self.skipWaiting())
     );
 });
@@ -30,6 +36,11 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') {
+        return;
+    }
+
+    // Ignore non-http(s) requests like chrome-extension://
+    if (!event.request.url.startsWith('http')) {
         return;
     }
 

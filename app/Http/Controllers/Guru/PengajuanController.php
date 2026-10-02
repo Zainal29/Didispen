@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -68,8 +69,10 @@ class PengajuanController extends Controller
         $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
         $jadwalPelajaran = TimeHelper::getAllJadwal();
         $jadwalHariIni = TimeHelper::getJadwalHari($dayOfWeek);
+        $istirahatHariIni = TimeHelper::getIstirahatHari($dayOfWeek);
+        $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
 
-        return view('guru.pengajuan.create', compact('settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni'));
+        return view('guru.pengajuan.create', compact('settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni', 'istirahatHariIni', 'semuaSlotHariIni'));
     }
 
     /**
@@ -84,14 +87,17 @@ class PengajuanController extends Controller
             return response()->json(['results' => []]);
         }
 
-        // Cari siswa berdasarkan NIS atau Nama Siswa
+        // Cari siswa aktif berdasarkan NIS, nama, atau kelas
         $siswa = Siswa::with(['user', 'kelas.jurusan'])
+            ->where('status_aktif', true)
             ->where(function($q) use ($query) {
-                // Pencarian berdasarkan nama lengkap
                 $q->where('nama_lengkap', 'like', "%{$query}%")
-                  // ATAU pencarian berdasarkan NIS pada relasi user
+                  ->orWhere('nis_nip', 'like', "%{$query}%")
                   ->orWhereHas('user', function($userQuery) use ($query) {
                       $userQuery->where('nis_nip', 'like', "%{$query}%");
+                  })
+                  ->orWhereHas('kelas', function($kelasQuery) use ($query) {
+                      $kelasQuery->where('nama_kelas', 'like', "%{$query}%");
                   });
             })
             ->limit(20)
@@ -100,9 +106,9 @@ class PengajuanController extends Controller
         // Format hasil untuk Select2
         $results = $siswa->map(function($item) {
             $kelas = $item->kelas ? $item->kelas->nama_kelas : '-';
-            $jurusan = ($item->kelas && $item->kelas->jurusan) ? $item->kelas->jurusan->nama_jurusan : '';
-            $kelasLengkap = $jurusan ? "{$kelas} - {$jurusan}" : $kelas;
-            $nis = $item->user ? $item->user->nis_nip : '-';
+            $jurusan = ($item->kelas && $item->kelas->jurusan) ? $item->kelas->jurusan->nama_jurusan : '-';
+            $kelasLengkap = $jurusan !== '-' ? "{$kelas} - {$jurusan}" : $kelas;
+            $nis = $item->nis_nip ?? ($item->user ? $item->user->nis_nip : '-');
 
             return [
                 'id' => $item->id,
@@ -110,6 +116,7 @@ class PengajuanController extends Controller
                 'nama' => $item->nama_lengkap,
                 'nis' => $nis,
                 'kelas' => $kelasLengkap,
+                'jurusan' => $jurusan,
             ];
         });
 
@@ -119,150 +126,232 @@ class PengajuanController extends Controller
     /**
      * Simpan pengajuan baru oleh guru
      */
-  public function store(Request $request)
-{
-    $user = auth()->user();
-    $guru = $user?->guru;
+    public function store(Request $request)
+    {
+        $user = auth()->user();
+        $guru = $user?->guru;
 
-    if (! $guru) {
-        abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
-    }
-
-    /*
-     * Waktu dispensasi menggunakan timezone Asia/Jakarta.
-     * Jangan menggunakan timezone server secara langsung.
-     */
-    $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
-
-    if (! $timeCheck['allowed']) {
-        return back()
-            ->withInput()
-            ->with('error', $timeCheck['reason'] ?? 'Pengajuan dispensasi tidak dapat dilakukan saat ini.');
-    }
-
-    $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
-    $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
-
-    $validated = $request->validate([
-        'siswa_id'        => ['required', 'exists:siswa,id'],
-        'kategori'        => ['required', 'in:sakit,izin,keperluan_sekolah,lainnya'],
-        'alasan'          => ['required', 'string', 'min:10', 'max:1000'],
-        'tujuan'          => ['required', 'string', 'max:255'],
-        'lokasi'          => ['nullable', 'string', 'max:255'],
-        'jam_keluar'      => ['required', 'integer', 'min:1', "max:{$maxJam}"],
-        'jam_kembali'     => ['required', 'integer', 'min:1', "max:{$maxJam}", 'gt:jam_keluar'],
-        'foto_verifikasi' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
-    ], [
-        'jam_keluar.max' => "Jam keluar maksimal adalah Jam ke-{$maxJam} untuk hari ini (" .
-            now('Asia/Jakarta')->isoFormat('dddd') . ").",
-
-        'jam_kembali.max' => "Jam kembali maksimal adalah Jam ke-{$maxJam} untuk hari ini (" .
-            now('Asia/Jakarta')->isoFormat('dddd') . ").",
-
-        'jam_kembali.gt' => 'Jam kembali harus lebih dari jam keluar.',
-
-        'foto_verifikasi.required' => 'Foto verifikasi siswa wajib diupload.',
-        'foto_verifikasi.image'    => 'File harus berupa gambar.',
-        'foto_verifikasi.mimes'    => 'Format gambar harus JPEG, PNG, atau JPG.',
-        'foto_verifikasi.max'      => 'Ukuran gambar maksimal 2MB.',
-    ]);
-
-    $fotoPath = null;
-
-    try {
-        /*
-         * Simpan foto verifikasi.
-         */
-        if ($request->hasFile('foto_verifikasi')) {
-            $foto = $request->file('foto_verifikasi');
-
-            $filename = 'verif_' .
-                now('Asia/Jakarta')->format('YmdHis') .
-                '_' .
-                Str::random(10) .
-                '.' .
-                $foto->getClientOriginalExtension();
-
-            $fotoPath = $foto->storeAs(
-                'foto_verifikasi',
-                $filename,
-                'public'
-            );
+        if (! $guru) {
+            abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
         }
 
-        $batasWaktuKembali = TimeHelper::getBatasWaktuKembali(
-            $validated['jam_kembali'],
-            $dayOfWeek
-        );
+        /*
+         * Waktu dispensasi menggunakan timezone Asia/Jakarta.
+         * Jangan menggunakan timezone server secara langsung.
+         */
+        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
 
-        $dispensasi = DB::transaction(function () use (
-            $validated,
-            $guru,
-            $fotoPath,
-            $batasWaktuKembali
-        ) {
-            /*
-             * Satu siswa tidak boleh memiliki dispensasi aktif
-             * lebih dari satu pada waktu yang sama.
-             */
-            $activeDispensasi = Dispensasi::where(
-                    'siswa_id',
-                    $validated['siswa_id']
-                )
-                ->whereIn('status', [
-                    'menunggu',
-                    'disetujui',
-                    'keluar',
-                ])
-                ->lockForUpdate()
-                ->first();
+        if (! $timeCheck['allowed']) {
+            return back()
+                ->withInput()
+                ->with('error', $timeCheck['reason'] ?? 'Pengajuan dispensasi tidak dapat dilakukan saat ini.');
+        }
 
-            if ($activeDispensasi) {
-                $statusText = match ($activeDispensasi->status) {
-                    'menunggu' => 'masih menunggu persetujuan',
-                    'disetujui' => 'sudah disetujui dan menunggu keluar',
-                    'keluar' => 'sedang berlangsung (status: keluar)',
-                    default => 'masih aktif',
-                };
+        $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
+        $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
 
+        $validated = $request->validate([
+            'siswa_id'        => [
+                'required',
+                Rule::exists('siswa', 'id')->where(function ($query) {
+                    $query->where('status_aktif', true);
+                }),
+            ],
+            'kategori'        => ['required', 'in:sakit,izin,keperluan_sekolah,lainnya'],
+            'alasan'          => ['required', 'string', 'min:10', 'max:500'],
+            'tujuan'          => ['required', 'string', 'max:255'],
+            'lokasi'          => ['nullable', 'string', 'max:255'],
+            'jam_keluar'      => ['required'],
+            'jam_kembali'     => ['required'],
+            'foto_verifikasi' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+        ], [
+            'siswa_id.exists'          => 'Siswa yang dipilih tidak ditemukan atau sudah tidak aktif.',
+            'alasan.min'               => 'Alasan dispensasi minimal 10 karakter.',
+            'alasan.max'               => 'Alasan dispensasi maksimal 500 karakter.',
+            'foto_verifikasi.image'    => 'File harus berupa gambar.',
+            'foto_verifikasi.mimes'    => 'Format gambar harus JPEG, PNG, atau JPG.',
+            'foto_verifikasi.max'      => 'Ukuran gambar maksimal 2MB.',
+        ]);
+
+        $rawJamKeluar = (string) $request->input('jam_keluar');
+        $rawJamKembali = (string) $request->input('jam_kembali');
+
+        if (is_numeric($rawJamKeluar) && is_numeric($rawJamKembali)) {
+            $jamKeluar = (int) $rawJamKeluar;
+            $jamKembali = (int) $rawJamKembali;
+
+            if ($jamKeluar < 1 || $jamKeluar > $maxJam) {
                 throw ValidationException::withMessages([
-                    'siswa_id' =>
-                        "Siswa masih memiliki dispensasi aktif yang {$statusText}. " .
-                        "Selesaikan atau tolak dispensasi tersebut terlebih dahulu.",
+                    'jam_keluar' => "Jam keluar maksimal adalah Jam ke-{$maxJam} untuk hari ini (" .
+                        now('Asia/Jakarta')->isoFormat('dddd') . ').',
                 ]);
             }
 
-            return Dispensasi::create([
-                'nomor_surat'             => Dispensasi::generateNomorSurat(),
-                'siswa_id'                => $validated['siswa_id'],
-                'guru_id'                 => $guru->id,
-                'kategori'                => $validated['kategori'],
-                'alasan'                  => $validated['alasan'],
-                'tujuan'                  => $validated['tujuan'],
-                'lokasi'                  => $validated['lokasi'] ?? null,
+            if ($jamKembali < 1 || $jamKembali > $maxJam) {
+                throw ValidationException::withMessages([
+                    'jam_kembali' => "Jam kembali maksimal adalah Jam ke-{$maxJam} untuk hari ini (" .
+                        now('Asia/Jakarta')->isoFormat('dddd') . ').',
+                ]);
+            }
 
-                'jam_keluar' =>
-                    'Jam Pelajaran ke-' . $validated['jam_keluar'],
+            if ($jamKembali <= $jamKeluar) {
+                throw ValidationException::withMessages([
+                    'jam_kembali' => 'Jam kembali harus lebih dari jam keluar.',
+                ]);
+            }
 
-                'jam_kembali' =>
-                    'Jam Pelajaran ke-' . $validated['jam_kembali'],
+            $storedJamKeluar = 'Jam Pelajaran ke-' . $jamKeluar;
+            $storedJamKembali = 'Jam Pelajaran ke-' . $jamKembali;
+            $batasWaktuKembali = TimeHelper::getBatasWaktuKembali($jamKembali, $dayOfWeek);
+        } elseif (preg_match('/^\d{2}:\d{2}$/', $rawJamKeluar) && preg_match('/^\d{2}:\d{2}$/', $rawJamKembali)) {
+            $nowWib = now('Asia/Jakarta');
+            $currentMinutes = ($nowWib->hour * 60) + $nowWib->minute;
 
-                'batas_waktu_kembali' => $batasWaktuKembali,
+            [$jamKeluarHour, $jamKeluarMinute] = array_map('intval', explode(':', $rawJamKeluar));
+            [$jamKembaliHour, $jamKembaliMinute] = array_map('intval', explode(':', $rawJamKembali));
 
-                /*
-                 * Pengajuan manual oleh guru langsung disetujui.
-                 */
-                'status' => 'disetujui',
-                'approved_at' => now('Asia/Jakarta'),
-                'rejected_at' => null,
+            $jamKeluarMinutes = ($jamKeluarHour * 60) + $jamKeluarMinute;
+            $jamKembaliMinutes = ($jamKembaliHour * 60) + $jamKembaliMinute;
 
-                'dibuat_manual_oleh_guru' => true,
+            if ($jamKeluarMinutes < $currentMinutes) {
+                throw ValidationException::withMessages([
+                    'jam_keluar' => 'Jam keluar tidak boleh menggunakan waktu yang sudah lewat.',
+                ]);
+            }
 
-                'qr_token' => Str::random(64),
+            if ($jamKembaliMinutes <= $jamKeluarMinutes) {
+                throw ValidationException::withMessages([
+                    'jam_kembali' => 'Jam kembali harus lebih besar dari jam keluar.',
+                ]);
+            }
 
-                'foto_verifikasi' => $fotoPath,
+            $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
+            $waktuKeluarValid = false;
+            $waktuKembaliValid = false;
+
+            foreach ($semuaSlotHariIni as $slot) {
+                if (empty($slot['start']) || empty($slot['end'])) {
+                    continue;
+                }
+
+                [$startHour, $startMinute] = array_map('intval', explode(':', substr($slot['start'], 0, 5)));
+                [$endHour, $endMinute] = array_map('intval', explode(':', substr($slot['end'], 0, 5)));
+
+                $slotStart = ($startHour * 60) + $startMinute;
+                $slotEnd = ($endHour * 60) + $endMinute;
+
+                if ($jamKeluarMinutes >= $slotStart && $jamKeluarMinutes <= $slotEnd) {
+                    $waktuKeluarValid = true;
+                }
+
+                if ($jamKembaliMinutes >= $slotStart && $jamKembaliMinutes <= $slotEnd) {
+                    $waktuKembaliValid = true;
+                }
+            }
+
+            if (! $waktuKeluarValid) {
+                throw ValidationException::withMessages([
+                    'jam_keluar' => 'Jam keluar harus berada dalam jadwal sekolah yang tersedia hari ini.',
+                ]);
+            }
+
+            if (! $waktuKembaliValid) {
+                throw ValidationException::withMessages([
+                    'jam_kembali' => 'Jam kembali harus berada dalam jadwal sekolah yang tersedia hari ini.',
+                ]);
+            }
+
+            $storedJamKeluar = $rawJamKeluar;
+            $storedJamKembali = $rawJamKembali;
+            $batasWaktuKembali = TimeHelper::getBatasWaktuKembali($storedJamKembali, $dayOfWeek);
+        } else {
+            throw ValidationException::withMessages([
+                'jam_keluar' => 'Format jam keluar tidak valid.',
+                'jam_kembali' => 'Format jam kembali tidak valid.',
             ]);
-        });
+        }
+
+        $fotoPath = null;
+
+        try {
+            /*
+             * Simpan foto verifikasi jika diunggah.
+             */
+            if ($request->hasFile('foto_verifikasi')) {
+                $foto = $request->file('foto_verifikasi');
+
+                $filename = 'verif_' .
+                    now('Asia/Jakarta')->format('YmdHis') .
+                    '_' .
+                    Str::random(10) .
+                    '.' .
+                    $foto->getClientOriginalExtension();
+
+                $fotoPath = $foto->storeAs(
+                    'foto_verifikasi',
+                    $filename,
+                    'public'
+                );
+            }
+
+            $dispensasi = DB::transaction(function () use (
+                $validated,
+                $guru,
+                $fotoPath,
+                $batasWaktuKembali,
+                $storedJamKeluar,
+                $storedJamKembali
+            ) {
+                /*
+                 * Satu siswa tidak boleh memiliki dispensasi aktif
+                 * lebih dari satu pada waktu yang sama.
+                 */
+                $activeDispensasi = Dispensasi::where(
+                        'siswa_id',
+                        $validated['siswa_id']
+                    )
+                    ->whereIn('status', [
+                        'menunggu',
+                        'disetujui',
+                        'keluar',
+                    ])
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($activeDispensasi) {
+                    $statusText = match ($activeDispensasi->status) {
+                        'menunggu' => 'masih menunggu persetujuan',
+                        'disetujui' => 'sudah disetujui dan menunggu keluar',
+                        'keluar' => 'sedang berlangsung (status: keluar)',
+                        default => 'masih aktif',
+                    };
+
+                    throw ValidationException::withMessages([
+                        'siswa_id' =>
+                            "Siswa masih memiliki dispensasi aktif yang {$statusText}. " .
+                            "Selesaikan atau tolak dispensasi tersebut terlebih dahulu.",
+                    ]);
+                }
+
+                return Dispensasi::create([
+                    'nomor_surat'             => Dispensasi::generateNomorSurat(),
+                    'siswa_id'                => $validated['siswa_id'],
+                    'guru_id'                 => $guru->id,
+                    'kategori'                => $validated['kategori'],
+                    'alasan'                  => $validated['alasan'],
+                    'tujuan'                  => $validated['tujuan'],
+                    'lokasi'                  => $validated['lokasi'] ?? null,
+                    'jam_keluar'              => $storedJamKeluar,
+                    'jam_kembali'             => $storedJamKembali,
+                    'batas_waktu_kembali'     => $batasWaktuKembali,
+                    'status'                  => 'disetujui',
+                    'approved_at'             => now('Asia/Jakarta'),
+                    'rejected_at'             => null,
+                    'dibuat_manual_oleh_guru' => true,
+                    'qr_token'                => Str::random(64),
+                    'foto_verifikasi'         => $fotoPath,
+                ]);
+            });
 
         /*
          * Generate QR setelah transaksi berhasil.

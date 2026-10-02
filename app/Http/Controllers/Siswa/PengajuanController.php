@@ -55,108 +55,240 @@ namespace App\Http\Controllers\Siswa;
             $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
             $jadwalPelajaran = TimeHelper::getAllJadwal();
             $jadwalHariIni = TimeHelper::getJadwalHari($dayOfWeek);
+            $istirahatHariIni = TimeHelper::getIstirahatHari($dayOfWeek);
+            $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
 
-            return view('siswa.pengajuan.create', compact('siswa', 'settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni'));
+            return view('siswa.pengajuan.create', compact('siswa', 'settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni', 'istirahatHariIni', 'semuaSlotHariIni'));
         }
 
-        public function store(Request $request)
-            {
-                // ✅ DOUBLE CHECK: Validasi waktu di server
-                $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
-                if (!$timeCheck['allowed']) {
-                    return redirect()->route('siswa.pengajuan.index')
-                        ->with('error', 'Pengajuan ditolak: ' . $timeCheck['reason']);
+    public function store(Request $request)
+    {
+        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
+
+        if (! $timeCheck['allowed']) {
+            return redirect()->route('siswa.pengajuan.index')
+                ->with('error', 'Pengajuan ditolak: ' . $timeCheck['reason']);
+        }
+
+        $siswa = auth()->user()->siswa;
+
+        if (! $siswa) {
+            abort(403, 'Profil siswa tidak ditemukan.');
+        }
+
+        $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
+        $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
+        $jadwalHariIni = TimeHelper::getJadwalHari($dayOfWeek);
+
+        if (empty($jadwalHariIni)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'jam_keluar' => 'Jadwal pelajaran hari ini tidak tersedia.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'kategori' => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
+            'alasan' => 'required|string|min:10|max:500',
+            'tujuan' => 'required|string|max:255',
+            'lokasi' => 'nullable|string|max:255',
+            'no_telepon' => [
+                'required',
+                'string',
+                'regex:/^(?:\+?620?|0)?8[0-9]{8,12}$/',
+            ],
+            'jam_keluar' => 'required',
+            'jam_kembali' => 'required',
+            'foto_verifikasi' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ], [
+            'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
+            'alasan.max' => 'Alasan maksimal 500 karakter.',
+            'jam_keluar.required' => 'Jam keluar wajib diisi.',
+            'jam_kembali.required' => 'Jam kembali wajib diisi.',
+            'no_telepon.regex' => 'Format nomor WhatsApp tidak valid.',
+            'foto_verifikasi.required' => 'Foto verifikasi selfie wajib diambil menggunakan kamera.',
+            'foto_verifikasi.max' => 'Ukuran foto verifikasi maksimal 2048 KB (2MB).',
+        ]);
+
+        $rawJamKeluar = trim((string) $validated['jam_keluar']);
+        $rawJamKembali = trim((string) $validated['jam_kembali']);
+
+        $storedJamKeluar = null;
+        $storedJamKembali = null;
+        $batasWaktu = null;
+
+        // Mendukung input berupa nomor jam pelajaran (integer) maupun jam aktual format HH:MM
+        if (is_numeric($rawJamKeluar) && is_numeric($rawJamKembali)) {
+            $jamKeluarInt = (int) $rawJamKeluar;
+            $jamKembaliInt = (int) $rawJamKembali;
+
+            if ($jamKeluarInt < 1 || $jamKeluarInt > $maxJam) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'jam_keluar' => "Jam keluar maksimal adalah Jam ke-{$maxJam} untuk hari ini.",
+                ]);
+            }
+
+            if ($jamKembaliInt < 1 || $jamKembaliInt > $maxJam) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'jam_kembali' => "Jam kembali maksimal adalah Jam ke-{$maxJam} untuk hari ini.",
+                ]);
+            }
+
+            if ($jamKembaliInt <= $jamKeluarInt) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'jam_kembali' => 'Jam kembali harus lebih besar dari jam keluar.',
+                ]);
+            }
+
+            $storedJamKeluar = 'Jam Pelajaran ke-' . $jamKeluarInt;
+            $storedJamKembali = 'Jam Pelajaran ke-' . $jamKembaliInt;
+            $batasWaktu = TimeHelper::getBatasWaktuKembali($storedJamKembali, $dayOfWeek);
+
+        } elseif (preg_match('/^\d{2}:\d{2}$/', $rawJamKeluar) && preg_match('/^\d{2}:\d{2}$/', $rawJamKembali)) {
+            $nowWib = now('Asia/Jakarta');
+            $currentMinutes = ($nowWib->hour * 60) + $nowWib->minute;
+
+            [$jamKeluarHour, $jamKeluarMinute] = array_map('intval', explode(':', $rawJamKeluar));
+            [$jamKembaliHour, $jamKembaliMinute] = array_map('intval', explode(':', $rawJamKembali));
+
+            $jamKeluarMinutes = ($jamKeluarHour * 60) + $jamKeluarMinute;
+            $jamKembaliMinutes = ($jamKembaliHour * 60) + $jamKembaliMinute;
+
+            if ($jamKeluarMinutes < $currentMinutes) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'jam_keluar' => 'Jam keluar tidak boleh menggunakan waktu yang sudah lewat.',
+                ]);
+            }
+
+            if ($jamKembaliMinutes <= $jamKeluarMinutes) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'jam_kembali' => 'Jam kembali harus lebih besar dari jam keluar.',
+                ]);
+            }
+
+            $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
+            $waktuKeluarValid = false;
+            $waktuKembaliValid = false;
+
+            foreach ($semuaSlotHariIni as $slot) {
+                if (empty($slot['start']) || empty($slot['end'])) {
+                    continue;
                 }
 
-                // ✅ Validasi jam keluar/kembali dinamis per hari
-                $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
-                $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
+                [$startHour, $startMinute] = array_map('intval', explode(':', substr($slot['start'], 0, 5)));
+                [$endHour, $endMinute] = array_map('intval', explode(':', substr($slot['end'], 0, 5)));
 
-                $validated = $request->validate([
-                    'kategori' => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
-                    'alasan' => 'required|string|min:10|max:500',
-                    'tujuan' => 'required|string|max:255',
-                    'lokasi' => 'nullable|string|max:255',
-                    'no_telepon' => ['required', 'string', 'regex:/^(?:\+?62|0)?8[0-9]{7,12}$/'],
-                    'jam_keluar' => "required|integer|min:1|max:{$maxJam}",
-                    'jam_kembali' => "required|integer|min:1|max:{$maxJam}|gt:jam_keluar",
-                    'foto_verifikasi' => 'required|image|mimes:jpeg,png,jpg|max:5120',
-                ], [
-                    'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
-                    'jam_kembali.gt' => 'Jam kembali harus lebih besar dari jam keluar.',
-                    'no_telepon.regex' => 'Format nomor tidak valid.',
-                    'jam_keluar.max' => "Jam keluar maksimal adalah Jam ke-{$maxJam} untuk hari ini (" . now('Asia/Jakarta')->isoFormat('dddd') . ").",
-                    'jam_kembali.max' => "Jam kembali maksimal adalah Jam ke-{$maxJam} untuk hari ini (" . now('Asia/Jakarta')->isoFormat('dddd') . ").",
-                    'foto_verifikasi.required' => 'Foto verifikasi selfie wajib diambil menggunakan kamera.',
-                ]);
+                $slotStart = ($startHour * 60) + $startMinute;
+                $slotEnd = ($endHour * 60) + $endMinute;
 
-            $fotoPath = null; // ✅ Definisikan di luar agar bisa diakses catch block
+                if ($jamKeluarMinutes >= $slotStart && $jamKeluarMinutes <= $slotEnd) {
+                    $waktuKeluarValid = true;
+                }
 
-            try {
-                    \Illuminate\Support\Facades\DB::transaction(function () use ($request, $validated, &$fotoPath, $dayOfWeek) {
-                        $siswa = auth()->user()->siswa;
-                        if (! $siswa) {
-                            abort(403, 'Profil siswa tidak ditemukan.');
-                        }
-
-                    $pendingDispensasi = Dispensasi::where('siswa_id', $siswa->id)
-                        ->whereIn('status', ['menunggu', 'disetujui', 'keluar'])
-                        ->lockForUpdate()
-                        ->first();
-
-                    if ($pendingDispensasi) {
-                        $errorMessage = match ($pendingDispensasi->status) {
-                            'menunggu' => 'Pengajuan dispensasi Anda sebelumnya masih menunggu persetujuan Guru Piket.',
-                            'disetujui' => 'Pengajuan dispensasi Anda sudah disetujui. Tunjukkan QR Code ke Satpam sebelum membuat pengajuan baru.',
-                            'keluar' => 'Anda masih memiliki dispensasi yang sedang berlangsung. Selesaikan pengajuan terlebih dahulu sebelum membuat pengajuan baru.',
-                            default => 'Anda masih memiliki pengajuan dispensasi yang aktif.',
-                        };
-
-                        throw \Illuminate\Validation\ValidationException::withMessages([
-                            'kategori' => $errorMessage,
-                        ]);
-                    }
-
-                    $normalizedPhone = $this->normalizePhoneNumber($validated['no_telepon']);
-                    $siswa->update(['no_telepon' => $normalizedPhone]);
-
-                    if ($request->hasFile('foto_verifikasi')) {
-                        $fotoPath = $request->file('foto_verifikasi')->store('foto-verifikasi', ['disk' => 'public']);
-                    }
-
-                    $batasWaktu = TimeHelper::getBatasWaktuKembali($validated['jam_kembali'], $dayOfWeek);
-
-                    Dispensasi::create([
-                        'siswa_id' => $siswa->id,
-                        'guru_id' => null,
-                        'nomor_surat' => \App\Models\Dispensasi::generateNomorSurat(),
-                        'status' => 'menunggu',
-                        'kategori' => $validated['kategori'],
-                        'alasan' => $validated['alasan'],
-                        'tujuan' => $validated['tujuan'],
-                        'lokasi' => $validated['lokasi'] ?? null,
-                        'jam_keluar' => 'Jam Pelajaran ke-' . $validated['jam_keluar'],
-                        'jam_kembali' => 'Jam Pelajaran ke-' . $validated['jam_kembali'],
-                        'batas_waktu_kembali' => $batasWaktu,
-                        'foto_verifikasi' => $fotoPath,
-                    ]);
-                });
-
-                return redirect()->route('siswa.pengajuan.index')
-                    ->with('success', 'Pengajuan dispensasi berhasil dibuat.');
-
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                // ✅ Hapus foto jika validasi gagal di dalam transaction
-                if ($fotoPath) \Illuminate\Support\Facades\Storage::disk('public')->delete($fotoPath);
-                throw $e;
-            } catch (\Exception $e) {
-                // ✅ Hapus foto jika database error/rollback
-                if ($fotoPath) \Illuminate\Support\Facades\Storage::disk('public')->delete($fotoPath);
-                Log::error('Gagal membuat dispensasi: ' . $e->getMessage());
-                return redirect()->back()->withInput()
-                    ->with('error', 'Terjadi kesalahan saat menyimpan pengajuan.');
+                if ($jamKembaliMinutes >= $slotStart && $jamKembaliMinutes <= $slotEnd) {
+                    $waktuKembaliValid = true;
+                }
             }
+
+            if (! $waktuKeluarValid) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'jam_keluar' => 'Jam keluar harus berada dalam jadwal sekolah yang tersedia hari ini.',
+                ]);
+            }
+
+            if (! $waktuKembaliValid) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'jam_kembali' => 'Jam kembali harus berada dalam jadwal sekolah yang tersedia hari ini.',
+                ]);
+            }
+
+            $storedJamKeluar = $rawJamKeluar;
+            $storedJamKembali = $rawJamKembali;
+            $batasWaktu = TimeHelper::getBatasWaktuKembali($storedJamKembali, $dayOfWeek);
+
+        } else {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'jam_keluar' => 'Format jam keluar tidak valid.',
+                'jam_kembali' => 'Format jam kembali tidak valid.',
+            ]);
         }
+
+        $fotoPath = null;
+
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use (
+                $request,
+                $validated,
+                &$fotoPath,
+                $storedJamKeluar,
+                $storedJamKembali,
+                $batasWaktu
+            ) {
+                $siswa = auth()->user()->siswa;
+                if (! $siswa) {
+                    abort(403, 'Profil siswa tidak ditemukan.');
+                }
+
+                $pendingDispensasi = Dispensasi::where('siswa_id', $siswa->id)
+                    ->whereIn('status', ['menunggu', 'disetujui', 'keluar'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($pendingDispensasi) {
+                    $errorMessage = match ($pendingDispensasi->status) {
+                        'menunggu' => 'Pengajuan dispensasi Anda sebelumnya masih menunggu persetujuan Guru Piket.',
+                        'disetujui' => 'Pengajuan dispensasi Anda sudah disetujui. Tunjukkan QR Code ke Satpam sebelum membuat pengajuan baru.',
+                        'keluar' => 'Anda masih memiliki dispensasi yang sedang berlangsung. Selesaikan pengajuan terlebih dahulu sebelum membuat pengajuan baru.',
+                        default => 'Anda masih memiliki pengajuan dispensasi yang aktif.',
+                    };
+
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'kategori' => $errorMessage,
+                    ]);
+                }
+
+                $normalizedPhone = $this->normalizePhoneNumber($validated['no_telepon']);
+                $siswa->update(['no_telepon' => $normalizedPhone]);
+
+                if ($request->hasFile('foto_verifikasi')) {
+                    $foto = $request->file('foto_verifikasi');
+                    $filename = 'verif_' . now('Asia/Jakarta')->format('YmdHis') . '_' . Str::random(10) . '.' . $foto->getClientOriginalExtension();
+                    $fotoPath = $foto->storeAs('foto_verifikasi', $filename, 'public');
+                }
+
+                Dispensasi::create([
+                    'siswa_id' => $siswa->id,
+                    'guru_id' => null,
+                    'nomor_surat' => Dispensasi::generateNomorSurat(),
+                    'status' => 'menunggu',
+                    'kategori' => $validated['kategori'],
+                    'alasan' => $validated['alasan'],
+                    'tujuan' => $validated['tujuan'],
+                    'lokasi' => $validated['lokasi'] ?? null,
+                    'jam_keluar' => $storedJamKeluar,
+                    'jam_kembali' => $storedJamKembali,
+                    'batas_waktu_kembali' => $batasWaktu,
+                    'foto_verifikasi' => $fotoPath,
+                    'dibuat_manual_oleh_guru' => false,
+                ]);
+            });
+
+            return redirect()->route('siswa.pengajuan.index')
+                ->with('success', 'Pengajuan dispensasi berhasil dibuat.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($fotoPath) {
+                Storage::disk('public')->delete($fotoPath);
+            }
+            throw $e;
+        } catch (\Throwable $e) {
+            if ($fotoPath) {
+                Storage::disk('public')->delete($fotoPath);
+            }
+            Log::error('Gagal membuat dispensasi: ' . $e->getMessage());
+            return redirect()->back()->withInput()
+                ->with('error', 'Terjadi kesalahan saat menyimpan pengajuan.');
+        }
+    }
 
         public function show(Dispensasi $dispensasi)
 {
@@ -493,12 +625,16 @@ public function hubungiGuruPiket(Dispensasi $dispensasi)
         private function normalizePhoneNumber(string $phone): string
         {
             $digits = preg_replace('/[^0-9]/', '', $phone);
-            if (str_starts_with($digits, '62')) {
-                $digits = substr($digits, 2);
+
+            if (str_starts_with($digits, '620')) {
+                $digits = '62' . substr($digits, 3);
             } elseif (str_starts_with($digits, '0')) {
-                $digits = substr($digits, 1);
+                $digits = '62' . substr($digits, 1);
+            } elseif (str_starts_with($digits, '8')) {
+                $digits = '62' . $digits;
             }
-            return '+62'.$digits;
+
+            return $digits;
         }
 
 
