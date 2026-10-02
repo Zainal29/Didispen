@@ -207,10 +207,10 @@
                 <div class="bg-blue-50 rounded-lg p-3.5 border border-blue-200">
                     <p class="text-blue-600 text-[10px] font-semibold uppercase mb-1 tracking-wider">Jam Keluar</p>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <p class="font-bold text-blue-900 text-lg">{{ $dispensasi->jam_keluar }}</p>
-                        @if($jamMulai)
+                        <p class="font-bold text-blue-900 text-lg">{{ $jamMulai ? $jamMulai . ' WIB' : \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dayOfWeek) }}</p>
+                        @if(str_contains((string)$dispensasi->jam_keluar, 'Jam Pelajaran'))
                             <span class="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-200">
-                                <i class="far fa-clock mr-1 text-[11px]"></i>{{ $jamMulai }} WIB
+                                {{ $dispensasi->jam_keluar }}
                             </span>
                         @endif
                     </div>
@@ -223,10 +223,10 @@
                 <div class="bg-amber-50 rounded-lg p-3.5 border border-amber-200">
                     <p class="text-amber-600 text-[10px] font-semibold uppercase mb-1 tracking-wider">Batas Kembali</p>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <p class="font-bold text-amber-900 text-lg">{{ $dispensasi->jam_kembali }}</p>
-                        @if($jamSelesai)
+                        <p class="font-bold text-amber-900 text-lg">{{ $jamSelesai ? $jamSelesai . ' WIB' : \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dayOfWeek) }}</p>
+                        @if(str_contains((string)$dispensasi->jam_kembali, 'Jam Pelajaran'))
                             <span class="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200">
-                                <i class="far fa-clock mr-1 text-[11px]"></i>{{ $jamSelesai }} WIB
+                                {{ $dispensasi->jam_kembali }}
                             </span>
                         @endif
                     </div>

@@ -283,11 +283,11 @@ $cards = [
                     <div class="grid grid-cols-2 gap-3 text-xs">
                         <div class="bg-white p-2.5 rounded-lg border border-gray-200">
                             <p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Keluar</p>
-                            <p class="font-semibold text-gray-800">{{ $dispensasi->jam_keluar }}</p>
+                            <p class="font-semibold text-gray-800">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->created_at?->dayOfWeek) }}</p>
                         </div>
                         <div class="bg-white p-2.5 rounded-lg border border-gray-200">
                             <p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Kembali</p>
-                            <p class="font-semibold text-red-700">{{ $dispensasi->jam_kembali }}</p>
+                            <p class="font-semibold text-red-700">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek) }}</p>
                         </div>
                     </div>
                     @if(!empty($dispensasi->siswa->no_telepon))

@@ -221,12 +221,12 @@
             <tr>
                 <td class="label">Jam Keluar</td>
                 <td class="colon">:</td>
-                <td><strong>{{ $dispensasi->jam_keluar }}</strong></td>
+                <td><strong>{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->created_at?->dayOfWeek) }}</strong></td>
             </tr>
             <tr>
                 <td class="label">Jam Kembali</td>
                 <td class="colon">:</td>
-                <td><strong>{{ $dispensasi->jam_kembali }}</strong></td>
+                <td><strong>{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek) }}</strong></td>
             </tr>
         </table>
 
