@@ -152,36 +152,33 @@
          
 
             {{-- Jam Keluar & Jam Kembali --}}
+            {{-- Jam Keluar & Jam Kembali --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Jam Keluar</p>
-                    <p class="text-sm font-bold text-gray-900">
-                        {{ $dispensasi->jam_keluar }}
-                    </p>
-                    {{-- Tampilkan waktu aktual --}}
                     @php
-                        $waktuKeluar = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar);
+                        $waktuKeluar = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->created_at?->dayOfWeek);
                     @endphp
-                    @if($waktuKeluar !== '-' && str_contains($waktuKeluar, ' - '))
-                        <p class="text-xs text-gray-500 mt-1">
-                            <i class="far fa-clock mr-1"></i>
-                            {{ explode(' - ', $waktuKeluar)[0] }} WIB
+                    <p class="text-sm font-bold text-gray-900">
+                        {{ $waktuKeluar !== '-' ? $waktuKeluar . ' WIB' : $dispensasi->jam_keluar }}
+                    </p>
+                    @if(str_contains((string)$dispensasi->jam_keluar, 'Jam Pelajaran'))
+                        <p class="text-xs text-blue-600 mt-1 font-medium">
+                            <i class="far fa-clock mr-1"></i>{{ $dispensasi->jam_keluar }}
                         </p>
                     @endif
                 </div>
                 <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Jam Kembali</p>
-                    <p class="text-sm font-bold text-gray-900">
-                        {{ $dispensasi->jam_kembali }}
-                    </p>
-                    {{-- Tampilkan waktu aktual --}}
                     @php
-                        $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali);
+                        $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek);
                     @endphp
-                    @if($waktuKembali !== '-' && str_contains($waktuKembali, ' - '))
-                        <p class="text-xs text-gray-500 mt-1">
-                            <i class="far fa-clock mr-1"></i>
-                            {{ explode(' - ', $waktuKembali)[1] }} WIB
+                    <p class="text-sm font-bold text-gray-900">
+                        {{ $waktuKembali !== '-' ? $waktuKembali . ' WIB' : $dispensasi->jam_kembali }}
+                    </p>
+                    @if(str_contains((string)$dispensasi->jam_kembali, 'Jam Pelajaran'))
+                        <p class="text-xs text-blue-600 mt-1 font-medium">
+                            <i class="far fa-clock mr-1"></i>{{ $dispensasi->jam_kembali }}
                         </p>
                     @endif
                 </div>

@@ -70,7 +70,7 @@
                 <td class="text-center">{{ $d->siswa->kelas->nama_kelas ?? '-' }}</td>
                 <td class="text-center">{{ ucfirst(str_replace('_', ' ', $d->kategori)) }}</td>
                 <td>{{ Str::limit($d->tujuan, 20) }}</td>
-                <td class="text-center">{{ $d->jam_keluar }}</td>
+                <td class="text-center">{{ \App\Helpers\TimeHelper::getWaktuAktual($d->jam_keluar, $d->created_at?->dayOfWeek) }}</td>
                 <td class="text-center">{{ ucfirst($d->status) }}</td>
             </tr>
             @empty

@@ -20,7 +20,7 @@
             <span id="scanStatus" class="inline-flex items-center text-xs font-semibold text-emerald-600 truncate min-w-0">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse flex-shrink-0"></span> Kamera aktif
             </span>
-            <button onclick="restartScanner()" class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors flex-shrink-0">
+            <button onclick="window.location.reload()" class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors flex-shrink-0">
                 <i class="fas fa-redo mr-1.5"></i>Reset Scanner
             </button>
         </div>
