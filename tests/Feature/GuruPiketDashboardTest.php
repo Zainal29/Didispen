@@ -83,7 +83,7 @@ class GuruPiketDashboardTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-09-28 08:00:00', 'Asia/Jakarta'));
 
         [$userA, $guruA] = $this->createGuruUser('Guru Petugas');
-        [$userB, $guruB] = $this->createGuruUser('Guru Non Petugas');
+        [$userB, $guruB] = $this->createGuruUser('Guru Non-Petugas');
 
         $jadwal = JadwalPiket::create([
             'hari' => 1,
