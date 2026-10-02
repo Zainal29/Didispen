@@ -80,10 +80,10 @@
             <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
                 <p class="text-[10px] font-bold text-emerald-600 uppercase mb-1">Jam Keluar</p>
                 <div class="flex items-center gap-1.5 flex-wrap">
-                    <p class="font-semibold text-emerald-900 text-sm">{{ $dispensasi->jam_keluar }}</p>
-                    @if($jamMulai)
+                    <p class="font-semibold text-emerald-900 text-sm">{{ $jamMulai ? $jamMulai . ' WIB' : \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dayOfWeek) }}</p>
+                    @if(str_contains((string)$dispensasi->jam_keluar, 'Jam Pelajaran'))
                         <span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            <i class="far fa-clock mr-1 text-[10px]"></i>{{ $jamMulai }} WIB
+                            {{ $dispensasi->jam_keluar }}
                         </span>
                     @endif
                 </div>
@@ -98,10 +98,10 @@
             <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p class="text-[10px] font-bold text-amber-600 uppercase mb-1">Jam Kembali</p>
                 <div class="flex items-center gap-1.5 flex-wrap">
-                    <p class="font-semibold text-amber-900 text-sm">{{ $dispensasi->jam_kembali }}</p>
-                    @if($jamSelesai)
+                    <p class="font-semibold text-amber-900 text-sm">{{ $jamSelesai ? $jamSelesai . ' WIB' : \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dayOfWeek) }}</p>
+                    @if(str_contains((string)$dispensasi->jam_kembali, 'Jam Pelajaran'))
                         <span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200">
-                            <i class="far fa-clock mr-1 text-[10px]"></i>{{ $jamSelesai }} WIB
+                            {{ $dispensasi->jam_kembali }}
                         </span>
                     @endif
                 </div>

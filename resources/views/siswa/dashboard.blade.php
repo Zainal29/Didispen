@@ -74,7 +74,7 @@
             </div>
             <div class="bg-gray-50 rounded-lg px-3 py-2">
                 <p class="text-xs font-medium text-gray-500 uppercase mb-0.5">Waktu</p>
-                <p class="font-semibold text-gray-900">{{ $dispensasiAktif->jam_keluar }} – {{ $dispensasiAktif->jam_kembali }}</p>
+                <p class="font-semibold text-gray-900">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_keluar, $dispensasiAktif->created_at?->dayOfWeek) }} – {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali, $dispensasiAktif->created_at?->dayOfWeek) }}</p>
             </div>
         </div>
         <div class="mt-3 flex gap-2">
