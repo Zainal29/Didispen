@@ -267,7 +267,7 @@
 
         <!-- FOOTER (Dengan background tipis agar tetap terbaca jelas di atas foto) -->
         <div class="mt-4 text-center w-full text-[11px] text-slate-300 font-medium drop-shadow-sm">
-            © 2026 DIDISPEN. All rights reserved.
+            © 2026 DIDISPEN. Digawe 3M .
         </div>
     </div>
 

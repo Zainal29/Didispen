@@ -2,8 +2,8 @@ const CACHE_NAME = 'didispen-v2';
 
 const STATIC_ASSETS = [
     '/manifest.json',
-    '/icons/icon-192.png',
-    '/icons/icon-512.png',
+    '/icons/icon-512-maskable.png',
+    '/icons/icon-512-maskable.png',
     '/icons/icon-512-maskable.png',
     '/images/logo-didispen.png',
     '/images/foto-smk.png',

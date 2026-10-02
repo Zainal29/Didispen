@@ -290,53 +290,132 @@
         </div>
     </nav>
 
-    {{-- BOTTOM SHEET AKUN --}}
-    <div id="accountSheet" class="lg:hidden fixed inset-0 z-[60] flex items-end translate-y-full transition-transform duration-300">
-        <div class="absolute inset-0 bg-black/50" onclick="this.parentElement.classList.add('translate-y-full')"></div>
-        <div class="relative bg-white rounded-t-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div class="p-6">
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <span class="text-xl font-bold text-blue-700">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-bold text-gray-900">{{ $user->name }}</h3>
-                        <p class="text-sm text-gray-500">Guru Piket</p>
-                        <p class="text-xs text-gray-400">{{ $user->email }}</p>
-                    </div>
+   
+{{-- BOTTOM SHEET AKUN --}}
+<div id="accountSheet"
+     class="lg:hidden fixed inset-0 z-[60] flex items-end translate-y-full transition-transform duration-300">
+
+    {{-- Overlay --}}
+    <div class="absolute inset-0 bg-black/50"
+         onclick="this.parentElement.classList.add('translate-y-full')"></div>
+
+    {{-- Sheet --}}
+    <div class="relative bg-white rounded-t-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div class="p-6">
+
+            {{-- Informasi Akun --}}
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <span class="text-xl font-bold text-blue-700">
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                    </span>
                 </div>
 
-                <div class="space-y-2">
-                    <a href="{{ route('guru.pengajuan.index') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-file-alt w-5 mr-3 text-gray-400"></i> Verifikasi Dispensasi
-                    </a>
-                    <a href="{{ route('guru.laporan.index') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-chart-bar w-5 mr-3 text-gray-400"></i> Laporan
-                    </a>
-                    <!--<a href="{{ route('guru.scan') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-qrcode w-5 mr-3 text-gray-400"></i> Scan QR
-                    </a>-->
-                    <a href="{{ route('panduan') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-book w-5 mr-3 text-gray-400"></i> Panduan
-                    </a>
-                    <a href="{{ route('profil.show') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        <i class="fas fa-user w-5 mr-3 text-gray-400"></i> Profil Saya
-                    </a>
-                    <form method="POST" action="{{ route('logout') }}" class="mt-4 pt-4 border-t border-gray-200">
-                        @csrf
-                        <button type="submit" class="flex items-center min-h-[44px] w-full px-4 py-3 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50">
-                            <i class="fas fa-sign-out-alt w-5 mr-3"></i> Keluar dari Akun
-                        </button>
-                    </form>
-                    <button type="button" onclick="document.getElementById('accountSheet').classList.add('translate-y-full')"
-                            class="w-full mt-2 min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200">
-                        Tutup
-                    </button>
+                <div>
+                    <h3 class="text-base font-bold text-gray-900">
+                        {{ $user->name }}
+                    </h3>
+
+                    <p class="text-sm text-gray-500">
+                        Guru Piket
+                    </p>
+
+                    <p class="text-xs text-gray-400">
+                        {{ $user->email }}
+                    </p>
                 </div>
+            </div>
+
+            @php
+                $guruId = auth()->user()->guru?->id;
+
+                $pendingSwapCount = \App\Models\PertukaranJadwalPiket::query()
+                    ->where('guru_pengganti_id', $guruId)
+                    ->where('status', 'menunggu')
+                    ->count();
+            @endphp
+
+            <div class="space-y-2">
+
+                {{-- Verifikasi Dispensasi --}}
+                <a href="{{ route('guru.pengajuan.index') }}"
+                   class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-file-alt w-5 mr-3 text-gray-400"></i>
+                    <span>Verifikasi Dispensasi</span>
+                </a>
+
+                {{-- Laporan --}}
+                <a href="{{ route('guru.laporan.index') }}"
+                   class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-chart-bar w-5 mr-3 text-gray-400"></i>
+                    <span>Laporan</span>
+                </a>
+
+                {{-- Scan QR --}}
+                {{--
+                <a href="{{ route('guru.scan') }}"
+                   class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-qrcode w-5 mr-3 text-gray-400"></i>
+                    <span>Scan QR</span>
+                </a>
+                --}}
+
+                {{-- Panduan --}}
+                <a href="{{ route('panduan') }}"
+                   class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-book w-5 mr-3 text-gray-400"></i>
+                    <span>Panduan</span>
+                </a>
+
+                {{-- Tukar Jadwal --}}
+                <a href="{{ route('guru.piket.swap.incoming') }}"
+                   class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+
+                    <i class="fas fa-exchange-alt w-5 mr-3 text-gray-400"></i>
+
+                    <span>Ajukan Tukar Jadwal</span>
+
+                    @if($pendingSwapCount > 0)
+                        <span class="ml-auto min-w-[22px] h-5 px-1.5 flex items-center justify-center
+                                     rounded-full bg-red-500 text-white text-[11px] font-bold leading-none">
+                            {{ $pendingSwapCount > 99 ? '99+' : $pendingSwapCount }}
+                        </span>
+                    @endif
+                </a>
+
+                {{-- Profil --}}
+                <a href="{{ route('profil.show') }}"
+                   class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <i class="fas fa-user w-5 mr-3 text-gray-400"></i>
+                    <span>Profil Saya</span>
+                </a>
+
+                {{-- Logout --}}
+                <form method="POST"
+                      action="{{ route('logout') }}"
+                      class="mt-4 pt-4 border-t border-gray-200">
+                    @csrf
+
+                    <button type="submit"
+                            class="flex items-center min-h-[44px] w-full px-4 py-3 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50">
+                        <i class="fas fa-sign-out-alt w-5 mr-3"></i>
+                        <span>Keluar dari Akun</span>
+                    </button>
+                </form>
+
+                {{-- Tutup --}}
+                <button type="button"
+                        onclick="document.getElementById('accountSheet').classList.add('translate-y-full')"
+                        class="w-full mt-2 min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200">
+                    Tutup
+                </button>
+
             </div>
         </div>
     </div>
-@stack('scripts')
+</div>
+k('scripts')
+
 
 
 </body>
