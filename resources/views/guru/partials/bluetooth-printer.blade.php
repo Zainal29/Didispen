@@ -1032,6 +1032,7 @@
             textBytes('--------------------------------\n'),
             textBytes('Dicetak: ' + receiptData.dicetak + ' WIB\n'),
             textBytes('Struk ini sah jika ditandatangani\n'),
+            textBytes('Oleh Guru Piket.'),
             bold(true),
             textBytes('- TERIMA KASIH -\n'),
             bold(false),
