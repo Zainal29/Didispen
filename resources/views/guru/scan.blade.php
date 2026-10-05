@@ -25,6 +25,29 @@
             </button>
         </div>
     </div>
+
+    {{-- VERIFIKASI MANUAL GURU --}}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">Verifikasi Manual</p>
+        <form onsubmit="manualVerify(event)" class="flex gap-2">
+            @csrf
+            <input type="text"
+                   id="manualCode"
+                   required
+                   placeholder="Masukkan No. Surat, NIS, atau Nama"
+                   class="flex-1 h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-xs font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+            <button type="submit"
+                    class="px-4 h-11 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <i class="fas fa-search mr-1"></i> Cek
+            </button>
+        </form>
+        <p class="text-[10px] text-gray-500 mt-2">
+            <i class="fas fa-info-circle mr-1"></i> Gunakan jika QR Code tidak bisa discan.
+        </p>
+    </div>
+
+    {{-- HASIL PENCARIAN MANUAL --}}
+    <div id="manualSearchResult" class="hidden space-y-3"></div>
 </div>
 
 {{-- ======================================================== --}}
@@ -148,25 +171,32 @@ function checkQrData(code) {
         },
         body: JSON.stringify({ qr_data: code, action: 'check' })
     })
-    .then(r => {
+    .then(async r => {
+        const data = await r.json().catch(() => null);
         if (r.status === 429) {
             return {
                 success: false,
                 message: 'Terlalu banyak permintaan scan. Mohon tunggu beberapa detik.'
             };
         }
-        return r.json();
+        if (!r.ok) {
+            return {
+                success: false,
+                message: (data && data.message) ? data.message : `QR Code tidak ditemukan atau server error (${r.status}).`
+            };
+        }
+        return data;
     })
     .then(data => {
-        if (data.success && data.mode === 'preview') {
+        if (data && data.success && data.mode === 'preview') {
             renderScanDetail(data.data);
         } else {
-            renderScanError(data.message || 'QR Code tidak valid atau dispensasi tidak ditemukan.');
+            renderScanError((data && data.message) ? data.message : 'QR Code tidak valid atau dispensasi tidak ditemukan.');
         }
     })
     .catch(err => {
         console.error('Fetch error:', err);
-        renderScanError('Terjadi kesalahan jaringan saat memverifikasi QR Code.');
+        renderScanError(err.message || 'Terjadi kesalahan jaringan saat memverifikasi QR Code.');
     });
 }
 
@@ -390,13 +420,19 @@ function submitConfirmation(action) {
         },
         body: JSON.stringify({ qr_data: currentScannedQr, action: action })
     })
-    .then(r => r.json())
+    .then(async r => {
+        const data = await r.json().catch(() => null);
+        if (!r.ok) {
+            throw new Error((data && data.message) ? data.message : `Terjadi kesalahan pada server (${r.status})`);
+        }
+        return data;
+    })
     .then(data => {
-        if (data.success) {
+        if (data && data.success) {
             if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
             renderSuccessState(data);
         } else {
-            Swal.fire('Gagal', data.message || 'Terjadi kesalahan saat konfirmasi.', 'error');
+            Swal.fire('Gagal', (data && data.message) ? data.message : 'Terjadi kesalahan saat konfirmasi.', 'error');
             btn.disabled = false;
             btn.innerHTML = action === 'keluar' ? '<i class="fas fa-door-open"></i> Ya, Setujui KELUAR' : '<i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI';
             btn.classList.remove('opacity-75', 'cursor-not-allowed');
@@ -404,7 +440,7 @@ function submitConfirmation(action) {
     })
     .catch(err => {
         console.error('Submit error:', err);
-        Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
+        Swal.fire('Gagal', err.message || 'Terjadi kesalahan jaringan.', 'error');
         btn.disabled = false;
         btn.innerHTML = action === 'keluar' ? '<i class="fas fa-door-open"></i> Ya, Setujui KELUAR' : '<i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI';
         btn.classList.remove('opacity-75', 'cursor-not-allowed');
@@ -490,6 +526,8 @@ document.addEventListener('keydown', function(e) {
 
 function restartScanner() {
     closeScanModal();
+    const resultDiv = document.getElementById('manualSearchResult');
+    if (resultDiv) resultDiv.classList.add('hidden');
 }
 
 function initScanner() {
@@ -508,8 +546,135 @@ function initScanner() {
             setStatus('Kamera depan aktif');
         })
         .catch(err2 => {
-            setStatus('Kamera tidak tersedia', false);
+            setStatus('Kamera tidak tersedia — gunakan verifikasi manual', false);
         });
+    });
+}
+
+// VERIFIKASI MANUAL - AJAX GURU
+function manualVerify(e) {
+    e.preventDefault();
+
+    const code = document.getElementById('manualCode').value.trim();
+    if (!code) {
+        Swal.fire('Error', 'Masukkan nomor surat, NIS, atau nama siswa', 'error');
+        return;
+    }
+
+    const resultDiv = document.getElementById('manualSearchResult');
+    resultDiv.classList.remove('hidden');
+    resultDiv.innerHTML = '<div class="text-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm"><i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i><p class="text-xs text-gray-500 mt-2">Mencari data...</p></div>';
+
+    fetch('{{ route("guru.search-dispensasi") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ query: code })
+    })
+    .then(async r => {
+        const data = await r.json().catch(() => null);
+        if (!r.ok) {
+            throw new Error((data && data.message) ? data.message : `HTTP Error ${r.status}`);
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+            let html = '';
+            data.data.forEach(d => {
+                let actionBtn = '';
+                let statusClass = d.status === 'disetujui' ? 'bg-emerald-100 text-emerald-700' :
+                                 d.status === 'keluar' ? 'bg-sky-100 text-sky-700' :
+                                 'bg-gray-100 text-gray-700';
+
+                if (d.status === 'disetujui') {
+                    actionBtn = `<button onclick="quickAction('keluar', ${d.id})" class="w-full mt-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"><i class="fas fa-door-open"></i> Konfirmasi KELUAR</button>`;
+                } else if (d.status === 'keluar') {
+                    actionBtn = `<button onclick="quickAction('kembali', ${d.id})" class="w-full mt-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"><i class="fas fa-door-closed"></i> Konfirmasi KEMBALI</button>`;
+                } else {
+                    actionBtn = `<p class="text-xs text-gray-500 text-center mt-2 italic">Status: ${d.status}</p>`;
+                }
+
+                html += `
+                    <div class="border border-gray-200 rounded-xl p-3.5 bg-white shadow-sm space-y-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-mono font-semibold text-xs text-blue-600">${escapeHtml(d.nomor_surat)}</p>
+                                <p class="font-bold text-gray-900 text-sm mt-0.5">${escapeHtml(d.siswa_nama)}</p>
+                                <p class="text-xs text-gray-500 mt-0.5"><i class="fas fa-id-card text-gray-400 mr-1"></i>${escapeHtml(d.siswa_nis)} • ${escapeHtml(d.siswa_kelas)}</p>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${statusClass}">${escapeHtml(d.status.toUpperCase())}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2 rounded-lg border border-gray-100">
+                            <div><span class="text-gray-400">Keluar:</span> <strong>${escapeHtml(d.jam_keluar)}</strong></div>
+                            <div><span class="text-gray-400">Kembali:</span> <strong>${escapeHtml(d.jam_kembali)}</strong></div>
+                        </div>
+                        ${actionBtn}
+                    </div>
+                `;
+            });
+            resultDiv.innerHTML = html;
+        } else {
+            resultDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center"><p class="text-red-700 font-semibold text-xs">Dispensasi tidak ditemukan</p><p class="text-[11px] text-red-600 mt-0.5">Periksa kembali kata kunci pencarian</p></div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        resultDiv.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center"><p class="text-red-700 font-semibold text-xs">Terjadi kesalahan</p><p class="text-[11px] text-red-600 mt-0.5">${escapeHtml(error.message)}</p></div>`;
+    });
+}
+
+// QUICK ACTION - KONFIRMASI CEPAT MANUAL GURU
+function quickAction(action, dispensasiId) {
+    const confirmMsg = action === 'keluar' ? 'Konfirmasi siswa KELUAR dari sekolah?' : 'Konfirmasi siswa KEMBALI ke sekolah?';
+
+    Swal.fire({
+        title: 'Konfirmasi',
+        text: confirmMsg,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: action === 'keluar' ? '#2563eb' : '#059669',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Konfirmasi',
+        cancelButtonText: 'Batal'
+    }).then(result => {
+        if (result.isConfirmed) {
+            const url = action === 'keluar'
+                ? '{{ route("guru.konfirmasi.keluar", ":id") }}'.replace(':id', dispensasiId)
+                : '{{ route("guru.konfirmasi.kembali", ":id") }}'.replace(':id', dispensasiId);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async r => {
+                const data = await r.json().catch(() => null);
+                if (!r.ok) {
+                    throw new Error((data && data.message) ? data.message : `HTTP Error ${r.status}`);
+                }
+                return data;
+            })
+            .then(data => {
+                if (data && data.success) {
+                    Swal.fire('Berhasil!', data.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Gagal', (data && data.message) ? data.message : 'Gagal memproses konfirmasi.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', error.message || 'Terjadi kesalahan koneksi', 'error');
+            });
+        }
     });
 }
 

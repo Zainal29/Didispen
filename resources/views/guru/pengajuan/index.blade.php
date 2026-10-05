@@ -7,16 +7,30 @@
 
 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden w-full min-w-0">
     {{-- Header --}}
-    <div class="p-4 sm:p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50">
+    <div class="p-4 sm:p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50">
         <div class="min-w-0">
             <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                 <i class="fas fa-clock-rotate-left text-blue-600"></i> Daftar Pengajuan Dispensasi
             </h3>
             <p class="text-xs text-gray-500 mt-0.5">Verifikasi dan pantau status seluruh dispensasi siswa.</p>
         </div>
-        <a href="{{ route('guru.pengajuan.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors flex-shrink-0">
-            <i class="fas fa-plus mr-1.5"></i> Buat Pengajuan Baru
-        </a>
+        <div class="flex items-center gap-2">
+            <form method="GET" class="flex-1 sm:flex-none">
+                <select name="status" onchange="this.form.submit()" class="w-full sm:w-auto h-10 px-3 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                    <option value="">Semua Status</option>
+                    <option value="menunggu"   {{ request('status') == 'menunggu'   ? 'selected' : '' }}>Menunggu</option>
+                    <option value="disetujui"  {{ request('status') == 'disetujui'  ? 'selected' : '' }}>Disetujui</option>
+                    <option value="keluar"     {{ request('status') == 'keluar'     ? 'selected' : '' }}>Sedang Keluar</option>
+                    <option value="selesai"    {{ request('status') == 'selesai'    ? 'selected' : '' }}>Selesai</option>
+                    <option value="ditolak"    {{ request('status') == 'ditolak'    ? 'selected' : '' }}>Ditolak</option>
+                    <option value="dibatalkan" {{ request('status') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+                    <option value="kadaluarsa" {{ request('status') == 'kadaluarsa' ? 'selected' : '' }}>Kadaluarsa</option>
+                </select>
+            </form>
+            <a href="{{ route('guru.pengajuan.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 min-h-[40px] bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors flex-shrink-0">
+                <i class="fas fa-plus mr-1.5"></i> Buat Pengajuan Baru
+            </a>
+        </div>
     </div>
 
     {{-- Tampilan Desktop (Table) --}}
@@ -47,16 +61,11 @@
                     </td>
                     <td class="px-6 py-4">
                         @php
-                            $statusClass = match($item->status) {
-                                'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                                'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
-                                'keluar'    => 'bg-sky-100 text-sky-700 border-sky-200',
-                                'selesai'   => 'bg-gray-100 text-gray-700 border-gray-200',
-                                default     => 'bg-amber-100 text-amber-700 border-amber-200'
-                            };
+                            $badge = $item->status_badge;
                         @endphp
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold border {{ $statusClass }}">
-                            {{ ucfirst($item->status) }}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border {{ $badge['class'] }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                            {{ $badge['text'] }}
                         </span>
                     </td>
                     <td class="px-6 py-4 text-right">
@@ -90,16 +99,11 @@
                     <p class="text-xs text-gray-500">{{ $item->siswa->kelas?->nama_kelas ?? '-' }}</p>
                 </div>
                 @php
-                    $statusClass = match($item->status) {
-                        'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                        'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
-                        'keluar'    => 'bg-sky-100 text-sky-700 border-sky-200',
-                        'selesai'   => 'bg-gray-100 text-gray-700 border-gray-200',
-                        default     => 'bg-amber-100 text-amber-700 border-amber-200'
-                    };
+                    $badge = $item->status_badge;
                 @endphp
-                <span class="px-2.5 py-1 rounded-md text-[10px] font-semibold border flex-shrink-0 {{ $statusClass }}">
-                    {{ ucfirst($item->status) }}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border flex-shrink-0 {{ $badge['class'] }}">
+                    <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                    {{ $badge['text'] }}
                 </span>
             </div>
 

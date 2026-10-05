@@ -4,7 +4,7 @@
 @section('page-title', 'Detail Pengajuan')
 
 @section('content')
-
+@include('guru.partials.bluetooth-printer')
 
 @php
     $statusColors = [
@@ -31,8 +31,12 @@
                         <i class="far fa-calendar-plus mr-1"></i>Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB
                     </p>
                 </div>
-                <span class="px-3 py-1.5 rounded-md text-xs font-semibold flex-shrink-0 {{ $statusColors[$dispensasi->status] ?? 'bg-gray-100 text-gray-700 border-gray-200' }}">
-                    {{ ucfirst($dispensasi->status) }}
+                @php
+                    $badge = $dispensasi->status_badge;
+                @endphp
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0 border {{ $badge['class'] }}">
+                    <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                    {{ $badge['text'] }}
                 </span>
             </div>
         </div>
@@ -192,87 +196,16 @@
                 </div>
             @endif
 
-            {{-- Catatan penolakan hanya untuk pengajuan yang benar-benar ditolak. --}}
-            @if($dispensasi->status === 'ditolak' && $dispensasi->catatan_admin)
+            @if($dispensasi->catatan_admin)
                 <div class="bg-amber-50 border border-amber-200 rounded-lg p-3.5">
-                    <span class="text-amber-700 text-[10px] font-semibold uppercase tracking-wider block mb-1">Catatan Penolakan Guru Piket</span>
-                    <p class="text-amber-800 text-sm font-medium">{{ $dispensasi->catatan_admin }}</p>
-                </div>
-            @endif
-
-            {{-- Cetak Struk Thermal 58mm --}}
-            @if(in_array($dispensasi->status, ['disetujui','selesai']))
-            @php
-                $maxPrint = \App\Helpers\PrintHelper::maxTeacherLimit();
-                $currentPrint = $dispensasi->teacher_print_count ?? 0;
-                $sisaCetak = $maxPrint - $currentPrint;
-                $startTime = \App\Helpers\PrintHelper::startTime();
-                $endTime = \App\Helpers\PrintHelper::endTime();
-                $currentTime = \App\Helpers\PrintHelper::currentTime();
-                $isWithinTime = \App\Helpers\PrintHelper::isWithinOperatingHours($currentTime);
-                $canPrintStruk = $sisaCetak > 0 && $isWithinTime;
-                // ✅ PERBAIKAN: Tidak bisa cetak jika status sudah 'selesai'
-                               $isSelesai = $dispensasi->status === 'selesai';
-                               $canPrintStruk = !$isSelesai && $sisaCetak > 0 && $isWithinTime;
-            @endphp
-            <div class="mt-2 p-5 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <div class="flex items-center justify-between mb-1">
-                    <h4 class="text-sm font-bold text-emerald-900 flex items-center">
-                        <i class="fas fa-print mr-1.5"></i> Cetak Struk Dispensasi
-                    </h4>
-                    <span class="px-2.5 py-1 rounded-md text-xs font-semibold {{ $sisaCetak > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
-                        {{ $currentPrint }} / {{ $maxPrint }} kali
+                    <span class="text-amber-800 text-[10px] font-bold uppercase tracking-wider block mb-1 flex items-center gap-1.5">
+                        <i class="fas fa-comment-dots text-amber-600"></i> Catatan Guru Piket / Keterangan Sistem
                     </span>
+                    <p class="text-amber-950 text-sm font-medium leading-relaxed">{{ $dispensasi->catatan_admin }}</p>
                 </div>
-                <p class="text-xs text-emerald-700 mb-3">Cetak Struk Thermal PNG (Ukuran Kertas 58mm).</p>
-
-                {{-- Progress Bar --}}
-                <div class="w-full bg-emerald-200 rounded-full h-1.5 mb-3">
-                    <div class="bg-emerald-600 h-1.5 rounded-full transition-all" style="width: {{ min(($currentPrint / $maxPrint) * 100, 100) }}%"></div>
-                </div>
-
-                {{-- Info Jam Cetak --}}
-                <div class="bg-white rounded-md p-2.5 mb-3 border border-emerald-100 text-left">
-                    <p class="text-emerald-800 text-xs">
-                        <i class="fas fa-clock mr-1"></i>
-                        <strong>Jam Cetak:</strong> {{ $startTime }} - {{ $endTime }} WIB
-                    </p>
-                    <p class="text-emerald-600 text-[10px] mt-1">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Saat ini: {{ $currentTime }} WIB -
-                        @if($isWithinTime)
-                            <span class="text-emerald-600 font-semibold"><i class="fas fa-check mr-1"></i>Dalam jam operasional</span>
-                        @else
-                            <span class="text-red-600 font-semibold"><i class="fas fa-times mr-1"></i>Di luar jam operasional</span>
-                        @endif
-                    </p>
-                </div>
-
-                <div class="flex justify-center">
-                    @if($canPrintStruk)
-                        <a href="{{ route('guru.cetak-struk', $dispensasi) }}" target="_blank"
-                           class="px-5 py-3 min-h-[44px] bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors inline-flex items-center justify-center">
-                            <i id="iconCetak" class="fas fa-image mr-1.5 text-sm"></i> <span id="textCetak">Cetak Struk Thermal (58mm)</span>
-                        </a>
-                    @else
-                        <button disabled class="w-full inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-gray-400 bg-gray-100 cursor-not-allowed border border-gray-200">
-                            <i class="fas fa-lock mr-2"></i>Tidak Dapat Dicetak
-                        </button>
-                        <p class="text-center text-xs text-gray-500 mt-2"><i class="fas fa-shield-alt mr-1"></i>Dispensasi selesai tidak dapat dicetak ulang.</p>
-                    @endif
-                </div>
-
-                @if(!$canPrintStruk)
-                    <p class="text-center text-[11px] text-gray-500 mt-2">
-                        @if($sisaCetak <= 0)
-                            <i class="fas fa-info-circle mr-1"></i>Batas maksimal cetak telah tercapai. Hubungi admin jika membutuhkan cetak ulang.
-                        @else
-                            <i class="fas fa-info-circle mr-1"></i>Pencetakan hanya diperbolehkan pada pukul {{ $startTime }} - {{ $endTime }} WIB.
-                        @endif
-                    </p>
-                @endif
-            </div>
             @endif
+
+         
 
             {{-- PERINGATAN TERLAMBAT --}}
             @php
@@ -345,6 +278,34 @@
                         </div>
                     </div>
                 </div>
+                @elseif($dispensasi->isNotReturned())
+                <div class="bg-red-50 border border-red-200 rounded-lg p-5">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-user-xmark text-lg"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-bold text-red-900">Siswa Tidak Kembali ke Sekolah</h4>
+                            <p class="text-xs text-red-700 mt-1 leading-relaxed">
+                                Siswa keluar pukul {{ $dispensasi->waktu_keluar_aktual?->format('H:i') }} WIB, namun tidak pernah melakukan scan kembali di pos gerbang hingga KBM berakhir. Dispensasi ditutup otomatis oleh sistem.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                @elseif($dispensasi->isReturnedLate())
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-5">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-clock-rotate-left text-lg"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-bold text-amber-900">Kembali Terlambat ({{ $dispensasi->getLateDurationText() }})</h4>
+                            <p class="text-xs text-amber-800 mt-1 leading-relaxed">
+                                Siswa kembali pada pukul {{ $dispensasi->waktu_kembali_aktual?->format('H:i') }} WIB (Batas waktu: {{ $dispensasi->batas_waktu_kembali?->format('H:i') }} WIB).
+                            </p>
+                        </div>
+                    </div>
+                </div>
                 @endif
             @endif
 
@@ -387,6 +348,17 @@
                 class="flex-1 inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
             <i class="fas fa-times mr-2"></i>Tolak
         </button>
+    @elseif($dispensasi->status === 'disetujui' && empty($dispensasi->waktu_keluar_aktual))
+        <div class="flex-1 flex flex-col sm:flex-row gap-2">
+            <div class="flex-1 px-4 py-3 min-h-[44px] rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+                <i class="fas fa-check-circle text-emerald-600 flex-shrink-0"></i>
+                <span>Disetujui. Menunggu scan keluar di Satpam.</span>
+            </div>
+            <button onclick="rejectDispensasi('Batalkan Dispensasi', 'Alasan pembatalan (Siswa tidak jadi keluar / membatalkan izin):')"
+                    class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors whitespace-nowrap">
+                <i class="fas fa-ban mr-1.5"></i>Batalkan Dispensasi
+            </button>
+        </div>
     @else
         <div class="flex-1 px-4 py-3 min-h-[44px] rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 flex items-center">
             <i class="fas fa-info-circle mr-2 text-blue-500 text-sm flex-shrink-0"></i>
@@ -574,21 +546,21 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-function rejectDispensasi() {
+function rejectDispensasi(title = 'Tolak Dispensasi', text = 'Masukkan alasan penolakan untuk {{ $dispensasi->siswa->nama_lengkap }}:') {
     Swal.fire({
-        title: 'Tolak Dispensasi',
-        text: 'Masukkan alasan penolakan untuk {{ $dispensasi->siswa->nama_lengkap }}:',
+        title: title,
+        text: text,
         input: 'textarea',
-        inputPlaceholder: 'Contoh: Alasan tidak jelas, siswa masih bisa mengikuti pelajaran...',
+        inputPlaceholder: 'Tuliskan alasan yang jelas...',
         inputAttributes: { rows: 4 },
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#9ca3af',
-        confirmButtonText: 'Ya, Tolak',
+        confirmButtonText: 'Ya, Lanjutkan',
         cancelButtonText: 'Batal',
         reverseButtons: true,
         inputValidator: (value) => {
-            if (!value || value.trim() === '') return 'Alasan penolakan wajib diisi!';
+            if (!value || value.trim() === '') return 'Alasan wajib diisi!';
         }
     }).then(result => {
         if (result.isConfirmed) {
