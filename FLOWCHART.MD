@@ -2,24 +2,24 @@
 ## SISTEM DISPENSASI SISWA DIGITAL (DIDISPEN)
 **SMK NEGERI 1 BANGSRI**
 
-Dokumentasi diagram alir (*flowchart*) operasional sistem **DIDISPEN** yang memetakan seluruh interaksi pengguna (Siswa, Guru Piket, Satpam, Admin) dan integrasi eksternal (SiPintu Gateway, WhatsApp Bot, Scanner Gerbang, & Thermal Printer).
+Dokumentasi diagram alir (*flowchart*) operasional sistem **DIDISPEN** yang memetakan seluruh interaksi pengguna (Siswa, Guru Piket, Satpam, Admin) dan integrasi eksternal (SiPintu Identity Gateway, Dynamic WhatsApp Engine, Scanner Gerbang, & Thermal Printer Bluetooth ESC/POS). Disinkronkan 100% dengan alur controller dan *state machine* aplikasi aktual.
 
 ---
 
 ## DAFTAR ISI DIAGRAM ALIR
 1. [Flowchart 1: Autentikasi Multi-Role & Model Hybrid SiPintu SSO](#flowchart-1-autentikasi-multi-role--model-hybrid-sipintu-sso)
-2. [Flowchart 2: Pengajuan Dispensasi Online oleh Siswa](#flowchart-2-pengajuan-dispensasi-online-oleh-siswa)
+2. [Flowchart 2: Pengajuan Dispensasi Mandiri oleh Siswa & Selfie Verifikasi](#flowchart-2-pengajuan-dispensasi-mandiri-oleh-siswa--selfie-verifikasi)
 3. [Flowchart 3: Verifikasi, Persetujuan, & Cetak Struk Guru Piket](#flowchart-3-verifikasi-persetujuan--cetak-struk-guru-piket)
 4. [Flowchart 4: Pemindaian QR Code Pos Satpam & Deteksi Overdue](#flowchart-4-pemindaian-qr-code-pos-satpam--deteksi-overdue)
-5. [Flowchart 5: Pencatatan Keberadaan Guru (Guru Checklog)](#flowchart-5-pencatatan-keberadaan-guru-guru-checklog)
+5. [Flowchart 5: Pencatatan Keberadaan Guru (Guru Checklog Dinas Luar)](#flowchart-5-pencatatan-keberadaan-guru-guru-checklog-dinas-luar)
 6. [Flowchart 6: Manajemen & Pertukaran Jadwal Guru Piket](#flowchart-6-manajemen--pertukaran-jadwal-guru-piket)
-7. [Flowchart 7: State Machine Siklus Status Dispensasi](#flowchart-7-state-machine-siklus-status-dispensasi)
+7. [Flowchart 7: State Machine Siklus 7 Status Dispensasi & Auto-Complete KBM](#flowchart-7-state-machine-siklus-7-status-dispensasi--auto-complete-kbm)
 
 ---
 
 ## Flowchart 1: Autentikasi Multi-Role & Model Hybrid SiPintu SSO
 
-Diagram ini memetakan 2 jalur masuk aplikasi DIDISPEN: **Jalur 1 (SSO Terpusat via SiPintu)** dan **Jalur 2 (Form Login Mandiri dengan Fallback Real-Time)**.
+Diagram ini memetakan 2 jalur masuk aplikasi DIDISPEN: **Jalur 1 (SSO Terpusat via SiPintu)** dan **Jalur 2 (Form Login Mandiri dengan Fallback Real-Time)** dilengkapi proteksi anti-brute force (*account locking*).
 
 ```mermaid
 flowchart TD
@@ -80,69 +80,83 @@ flowchart TD
 
 ---
 
-## Flowchart 2: Pengajuan Dispensasi Online oleh Siswa
+## Flowchart 2: Pengajuan Dispensasi Mandiri oleh Siswa & Selfie Verifikasi
 
-Alur pengajuan izin dispensasi oleh siswa secara mandiri ataupun rombongan kegiatan.
+Alur pengajuan izin dispensasi siswa secara mandiri berbasis jadwal KBM aktif sekolah, pencegahan pengajuan ganda (*concurrency lock*), dan pengambilan foto selfie wajah sebagai verifikasi identitas fisik di pos gerbang.
 
 ```mermaid
 flowchart TD
-    StartSiswa(["Siswa Berada di Dashboard"]) --> ClickAjukan["Pilih Menu Ajukan Dispensasi"]
-    ClickAjukan --> FormDispen["Tampilkan Form Pengajuan Dispensasi"]
+    StartSiswa(["Siswa Berada di Dashboard"]) --> ClickAjukan["Pilih Menu Buat Pengajuan Dispensasi"]
+    ClickAjukan --> FormDispen["Tampilkan Form Pengajuan Berbasis Jadwal KBM Hari Ini"]
     
-    FormDispen --> InputData["Pilih Kategori: Sakit, Izin, Dinas, atau Lomba<br/>Isi Alasan, Tujuan, Lokasi, Jam Keluar dan Jam Kembali"]
-    InputData --> UploadBukti["Unggah Foto Bukti Surat atau Dokumen Kegiatan"]
+    FormDispen --> CheckTimeOp{"Apakah Masih dalam Jam Operasional Sekolah?"}
+    CheckTimeOp -- "Tidak (Di Luar Jam Operasional)" --> AlertTime["Tampilkan Peringatan: Pengajuan Hanya Dapat Dibuat Saat Jam Sekolah"]
+    AlertTime --> DashSiswa(["Kembali ke Dashboard"])
     
-    UploadBukti --> CheckRombongan{"Apakah Pengajuan Rombongan?"}
-    CheckRombongan -- "Ya" --> SearchAnggota["Cari Siswa Berdasarkan NIS atau Nama"]
-    SearchAnggota --> AddAnggota["Tambahkan Siswa ke Daftar Rombongan"]
-    AddAnggota --> SubmitForm["Klik Tombol Kirim Pengajuan"]
-    CheckRombongan -- "Tidak" --> SubmitForm
+    CheckTimeOp -- "Ya (Jam Sekolah Aktif)" --> InputData["Pilih Kategori: Sakit, Izin, Keperluan Sekolah, Lainnya<br/>Isi Alasan min 10 Karakter, Tujuan, Lokasi, dan Nomor WhatsApp"]
+    InputData --> SelectJam["Pilih Jam Keluar & Jam Kembali:<br/>Format Jam Pelajaran ke-X ATAU Jam Menit HH:MM WIB"]
+    SelectJam --> SnapSelfie["Ambil Foto Selfie Verifikasi Wajah via Kamera Perangkat (Wajib)"]
+    
+    SnapSelfie --> SubmitForm["Klik Tombol Kirim Pengajuan"]
 
-    SubmitForm --> ValidateInput{"Validasi Kelengkapan dan Jam Sekolah"}
-    ValidateInput -- "Tidak Valid" --> ShowFormError["Tampilkan Pesan Peringatan Input Form"]
-    ShowFormError --> FormDispen
+    SubmitForm --> ConcurrencyCheck{"Apakah Siswa Masih Punya Izin Aktif?<br/>(status: menunggu, disetujui, keluar)"}
+    ConcurrencyCheck -- "Ya (Ada Izin Aktif)" --> RejectDuplicate["Tolak: Selesaikan / Batalkan Izin Sebelumnya Terlebih Dahulu"]
+    RejectDuplicate --> DashSiswa
 
-    ValidateInput -- "Valid" --> GenerateNoSurat["Generate Nomor Surat Unik: DISP/YYYYMMDD/XXXXXX"]
-    GenerateNoSurat --> GenerateQRToken["Generate 64-char QR Token Unik"]
-    GenerateQRToken --> SaveDB["Simpan ke Tabel dispensasi dengan status: menunggu"]
+    ConcurrencyCheck -- "Tidak Ada Izin Aktif" --> ValidateSchedule{"Validasi Jam:<br/>Jam Kembali > Jam Keluar & Sesuai Slot KBM Hari Ini?"}
+    ValidateSchedule -- "Tidak Valid" --> ShowError["Tampilkan Pesan Validasi Jam"]
+    ShowError --> FormDispen
+
+    ValidateSchedule -- "Valid" --> CalcDeadline["Hitung batas_waktu_kembali Otomatis Berdasarkan Jam Pelajaran"]
+    CalcDeadline --> DBTrans["DB Transaction: Simpan Pengajuan<br/>status: menunggu, nomor_surat unik, token QR acak 64 char"]
     
-    SaveDB --> TriggerWA["Cari Guru Piket yang Bertugas Hari Ini"]
-    TriggerWA --> SendWANotif["Kirim Pesan WhatsApp Otomatis ke Guru Piket"]
-    SendWANotif --> StudentSuccess["Tampilkan Konfirmasi: Pengajuan Berhasil Terkirim"]
-    StudentSuccess --> EndSiswa(["Siswa Menunggu Verifikasi Guru Piket"])
+    DBTrans --> ShowSuccess["Pengajuan Berhasil Disimpan"]
+    ShowSuccess --> PopupHubungi["Buka Halaman Detail Dispensasi<br/>(Tersedia Tombol: Hubungi Guru Piket via WhatsApp selama 3 Menit Pertama)"]
+    PopupHubungi --> EndSiswa(["Siswa Menemui Guru Piket di Ruang Piket"])
 ```
 
 ---
 
 ## Flowchart 3: Verifikasi, Persetujuan, & Cetak Struk Guru Piket
 
-Alur kerja Guru Piket dalam memproses antrean pengajuan dispensasi siswa dan pencetakan bukti fisik perizinan.
+Alur kerja Guru Piket dalam memproses antrean pengajuan dispensasi siswa, persetujuan/penolakan, pembuatan dispensasi manual di ruang piket, serta pencetakan bukti fisik struk 58mm.
 
 ```mermaid
 flowchart TD
-    StartPiket(["Guru Piket Buka Menu Daftar Pengajuan"]) --> ViewQueue["Tampilkan Antrean Status: menunggu"]
-    ViewQueue --> SelectItem["Pilih Salah Satu Pengajuan Siswa"]
-    SelectItem --> ReviewDetail["Review Alasan, Waktu Izin, dan Foto Bukti Surat"]
+    StartPiket(["Guru Piket Membuka Menu Daftar Pengajuan"]) --> ChoicePiket{"Pilih Alur"}
+
+    %% ALUR MANUAL DI RUANG PIKET
+    ChoicePiket -- "Siswa Datang Langsung (Darurat)" --> FormManual["Menu: Buat Pengajuan Manual Guru"]
+    FormManual --> SearchSiswa["Cari Siswa via AJAX Select2 (NIS / Nama)"]
+    SearchSiswa --> InputManualData["Isi Alasan, Tujuan, Kategori, Jam Keluar & Kembali"]
+    InputManualData --> SaveManual["Simpan Pengajuan Langsung: status disetujui<br/>dibuat_manual_oleh_guru: true"]
+    SaveManual --> PrintDirect["Langsung Siap Cetak Struk"]
+
+    %% ALUR VERIFIKASI ONLINE
+    ChoicePiket -- "Verifikasi Antrean Online" --> ViewQueue["Tampilkan Antrean Status: menunggu"]
+    ViewQueue --> SelectItem["Pilih Permohonan Siswa"]
+    SelectItem --> ReviewDetail["Review Alasan, Foto Selfie Siswa, Jam Keluar, & Batas Jam Kembali"]
     
     ReviewDetail --> Decision{"Keputusan Guru Piket"}
     
     %% SKENARIO DITOLAK
     Decision -- "Tolak" --> InputReason["Wajib Isi Alasan Penolakan pada Catatan Admin"]
     InputReason --> SaveReject["Update status: ditolak dan catat waktu rejected_at"]
-    SaveReject --> SendWAReject["Kirim Pesan WhatsApp Info Penolakan ke Siswa"]
-    SendWAReject --> EndReject(["Selesai: Dispensasi Ditolak"])
+    SaveReject --> LinkWAReject["Sistem Generate Template WhatsApp Penolakan"]
+    LinkWAReject --> EndReject(["Selesai: Dispensasi Ditolak"])
 
     %% SKENARIO DISETUJUI
-    Decision -- "Setujui" --> CalcDeadline["Hitung batas_waktu_kembali dari jam_kembali"]
-    CalcDeadline --> GenerateQRImage["Render Gambar QR Code Berisi Token"]
+    Decision -- "Setujui" --> CalcApprove["Hitung Ulang batas_waktu_kembali Presisi"]
+    CalcApprove --> GenerateQRImage["Render Gambar QR Code Berisi Token JSON"]
     GenerateQRImage --> SaveApprove["Update status: disetujui dan catat waktu approved_at"]
-    SaveApprove --> SendWAApprove["Kirim Pesan WhatsApp ke Siswa Beserta Link QR"]
+    SaveApprove --> PrintDirect
+
+    %% CETAK STRUK
+    PrintDirect --> PrintOption{"Pilihan Cetak Struk Perizinan"}
+    PrintOption -- "Printer Thermal Bluetooth 58mm" --> PrintESC["Kirim Raw Data ESC/POS via Web Bluetooth API"]
+    PrintOption -- "Cetak / Unduh PDF" --> RenderPDF["Render Template Blade Struk Format 58mm via Dompdf"]
     
-    SendWAApprove --> PrintOption{"Pilihan Cetak Struk"}
-    PrintOption -- "Printer Thermal 58mm" --> PrintESC["Kirim Raw Data ESC/POS ke Printer Bluetooth atau USB"]
-    PrintOption -- "Unduh File PDF" --> RenderPDF["Render Template Blade Struk 58mm via Dompdf"]
-    
-    PrintESC --> IncCounter["Increment print_count dan teacher_print_count"]
+    PrintESC --> IncCounter["Increment print_count & teacher_print_count (Maks 3 Kali)"]
     RenderPDF --> IncCounter
     IncCounter --> StrukFisik["Struk Fisik Ber-QR Code Diserahkan ke Siswa"]
     StrukFisik --> EndApprove(["Siswa Siap Menuju Pos Gerbang Satpam"])
@@ -152,63 +166,75 @@ flowchart TD
 
 ## Flowchart 4: Pemindaian QR Code Pos Satpam & Deteksi Overdue
 
-Alur pemeriksaan perizinan 2 arah di gerbang sekolah oleh petugas Satpam (saat keluar dan kembali).
+Alur pemeriksaan perizinan 2 arah di gerbang sekolah oleh petugas Satpam (saat keluar dan kembali) dengan pencocokan identitas foto selfie verifikasi siswa di layar scanner.
 
 ```mermaid
 flowchart TD
-    StartSatpam(["Satpam Buka Portal Scanner Kamera Pos Gerbang"]) --> SiswaArrive["Siswa Tiba di Pos Memperlihatkan QR Code"]
+    StartSatpam(["Satpam Membuka Kamera Scanner di Gerbang"]) --> SiswaArrive["Siswa Menunjukkan QR Code (Struk Thermal / Layar HP)"]
     SiswaArrive --> ScanQR["Kamera Satpam Memindai QR Code"]
-    ScanQR --> QueryToken{"Cari Dispensasi Berdasarkan qr_token"}
+    ScanQR --> QueryToken{"Cari Data Dispensasi Berdasarkan qr_token"}
     
-    QueryToken -- "Token Tidak Ditemukan" --> InvalidQR["Tampilkan Layar Merah: QR Code Tidak Dikenal"]
+    QueryToken -- "Token Tidak Ditemukan" --> InvalidQR["Tampilkan Layar Peringatan: QR Code Tidak Terdaftar"]
     InvalidQR --> EndGateFail(["Akses Gerbang Ditolak"])
 
     QueryToken -- "Token Ditemukan" --> CheckStatusCurrent{"Periksa Status Saat Ini"}
 
-    %% KONDISI 1: SISWA HENDAK KELUAR
-    CheckStatusCurrent -- "Status: disetujui" --> ShowValidOut["Tampilkan Identitas, Foto Profil, dan Batas Jam Kembali"]
-    ShowValidOut --> SnapPhoto["Satpam Ambil Foto Fisik Siswa di Pos Gerbang"]
-    SnapPhoto --> ClickConfirmOut["Klik Tombol Konfirmasi Keluar"]
-    ClickConfirmOut --> UpdateKeluar["Update status: keluar, waktu_keluar_aktual, dan satpam_keluar_id"]
-    UpdateKeluar --> PlayBeepOut["Bunyikan Audio Beep Sukses"]
-    PlayBeepOut --> AllowExit(["Satpam Membuka Gerbang: Siswa Diizinkan Keluar"])
+    %% KONDISI STATUS TIDAK DAPAT DIPROSES
+    CheckStatusCurrent -- "Status: menunggu / ditolak / selesai / dibatalkan / kadaluarsa" --> BlockAction["Tampilkan Status Izin Tidak Aktif dan Blokir Gerbang"]
+    BlockAction --> EndGateFail
 
-    %% KONDISI 2: SISWA KEMBALI KE SEKOLAH
+    %% KONDISI 1: SISWA KELUAR
+    CheckStatusCurrent -- "Status: disetujui" --> PreviewKeluar["Modal Preview: Tampilkan Foto Selfie Verifikasi, Nama, NIS, Kelas, & Batas Jam Kembali"]
+    PreviewKeluar --> VerifyFace{"Satpam Mencocokkan Wajah Siswa Asli dengan Foto Selfie di Layar"}
+    
+    VerifyFace -- "Wajah Tidak Cocok (Joki Izin)" --> RejectFace["Tahan Siswa dan Laporkan ke Guru Piket"]
+    RejectFace --> EndGateFail
+
+    VerifyFace -- "Wajah Cocok" --> ClickConfirmOut["Satpam Klik Tombol Konfirmasi Keluar"]
+    ClickConfirmOut --> UpdateKeluar["Update DB: status: keluar<br/>Catat waktu_keluar_aktual & satpam_keluar_id"]
+    UpdateKeluar --> PlayBeepOut["Bunyikan Audio Beep Sukses Keluar"]
+    PlayBeepOut --> AllowExit(["Satpam Buka Gerbang: Siswa Diizinkan Keluar"])
+    AllowExit --> SiswaUploadBukti["(Opsional: Siswa Dapat Unggah foto_bukti Kegiatan Saat di Luar)"]
+
+    %% KONDISI 2: SISWA KEMBALI
     CheckStatusCurrent -- "Status: keluar" --> EvaluateTime{"Cek Waktu Aktual vs Batas Waktu Kembali"}
     
-    EvaluateTime -- "Kembali Tepat Waktu" --> ShowOnTime["Tampilkan Status Hijau: Kembali Tepat Waktu"]
-    ShowOnTime --> ClickConfirmIn["Klik Tombol Konfirmasi Masuk atau Selesai"]
-    ClickConfirmIn --> UpdateSelesai["Update status: selesai, waktu_kembali_aktual, dan satpam_kembali_id"]
-    UpdateSelesai --> SendWAComplete["Kirim Pesan WhatsApp: Siswa Telah Tiba di Sekolah"]
-    SendWAComplete --> AllowEnter(["Siswa Diizinkan Masuk Kembali ke Kelas"])
+    EvaluateTime -- "Kembali Tepat Waktu" --> ShowOnTime["Layar Hijau: Tepat Waktu<br/>Satpam Klik Konfirmasi Kembali"]
+    ShowOnTime --> UpdateSelesai["Update DB: status: selesai<br/>Catat waktu_kembali_aktual & satpam_kembali_id"]
+    UpdateSelesai --> AllowEnter(["Siswa Diizinkan Masuk Kembali ke Kelas"])
 
-    EvaluateTime -- "Melewati Batas Waktu" --> ShowOverdue["Tampilkan Peringatan Merah: SISWA TERLAMBAT ATAU OVERDUE"]
-    ShowOverdue --> NoteOverdue["Sistem Menghitung Menit Keterlambatan"]
-    NoteOverdue --> ClickConfirmInOverdue["Klik Konfirmasi Masuk dengan Tanda Overdue"]
-    ClickConfirmInOverdue --> UpdateOverdue["Update status: selesai, is_warned: true, dan warned_at"]
-    UpdateOverdue --> SendWAOverdue["Kirim Alert WhatsApp ke Guru Piket: Siswa Terlambat Kembali"]
-    SendWAOverdue --> AllowEnter
+    EvaluateTime -- "Melewati Batas Waktu (Overdue)" --> ShowOverdue["Layar Merah: SISWA TERLAMBAT / OVERDUE<br/>Tampilkan Jumlah Menit Keterlambatan"]
+    ShowOverdue --> ConfirmOverdue["Satpam Klik Konfirmasi Kembali (Terlambat)"]
+    ConfirmOverdue --> UpdateOverdue["Update DB: status: selesai, waktu_kembali_aktual<br/>Tandai is_warned: true, warned_at: now()"]
+    UpdateOverdue --> LinkWAOverdue["Generate Tombol WhatsApp Peringatan Keterlambatan ke Siswa/Wali"]
+    LinkWAOverdue --> AllowEnter
 ```
 
 ---
 
-## Flowchart 5: Pencatatan Keberadaan Guru (Guru Checklog)
+## Flowchart 5: Pencatatan Keberadaan Guru (Guru Checklog Dinas Luar)
 
-Pencatatan mobilitas guru yang sedang bertugas keluar/dinas luar lingkungan sekolah.
+Pencatatan mobilitas guru yang sedang bertugas keluar atau dinas luar lingkungan sekolah beserta waktu tiba kembali.
 
 ```mermaid
 flowchart TD
     StartGuru(["Guru Buka Menu Checklog Keberadaan"]) --> ActionChoice{"Pilih Aksi"}
     
-    ActionChoice -- "Guru Hendak Keluar Dinas" --> FillChecklog["Isi Form: Keperluan Dinas, Tujuan, dan Estimasi Jam Kembali"]
-    FillChecklog --> SaveOut["Simpan ke tabel guru_checklog dengan status: keluar"]
-    SaveOut --> UpdateStatusGuru["Status Guru di Dashboard Berubah: Sedang Keluar Dinas"]
+    ActionChoice -- "Guru Hendak Keluar Dinas" --> CheckActiveLog{"Apakah Masih Memiliki Log Keluar Aktif?"}
+    CheckActiveLog -- "Ya" --> AlertFinish["Wajib Selesaikan Check-in Log Sebelumnya Terlebih Dahulu"]
+    AlertFinish --> StartGuru
+
+    CheckActiveLog -- "Tidak Ada" --> FillChecklog["Isi Form: Keperluan / Alasan Dinas, Tujuan, dan Lokasi"]
+    FillChecklog --> SaveOut["Simpan ke tabel guru_checklog:<br/>jam_keluar: waktu otomatis tombol ditekan, status: keluar"]
+    SaveOut --> AuditOut["Catat Jejak Audit: guru_check_out"]
+    AuditOut --> UpdateStatusGuru["Status Guru di Dashboard: Sedang Keluar Dinas"]
     UpdateStatusGuru --> EndCheckOut(["Guru Berangkat Tugas Luar"])
 
-    ActionChoice -- "Guru Tiba Kembali" --> OpenHistory["Buka Riwayat Checklog Hari Ini"]
+    ActionChoice -- "Guru Tiba Kembali di Sekolah" --> OpenHistory["Buka Menu Checklog Keberadaan"]
     OpenHistory --> ClickKembali["Klik Tombol Konfirmasi Tiba di Sekolah"]
-    ClickKembali --> SaveIn["Update guru_checklog dengan status: kembali"]
-    SaveIn --> ResetStatusGuru["Status Guru di Dashboard Berubah: Tersedia atau Standby"]
+    ClickKembali --> SaveIn["Update guru_checklog:<br/>jam_kembali: now(), status: selesai"]
+    SaveIn --> AuditIn["Catat Jejak Audit: guru_check_in"]
+    AuditIn --> ResetStatusGuru["Status Guru di Dashboard: Tersedia / Standby di Sekolah"]
     ResetStatusGuru --> EndCheckIn(["Guru Siap Mengajar Kembali"])
 ```
 
@@ -216,48 +242,55 @@ flowchart TD
 
 ## Flowchart 6: Manajemen & Pertukaran Jadwal Guru Piket
 
-Alur pengajuan dan persetujuan pergantian jadwal jaga piket antar-guru.
+Alur pengajuan, pembatalan mandiri, dan persetujuan pergantian jadwal jaga piket antar-guru.
 
 ```mermaid
 flowchart TD
-    StartPiketSchedule(["Guru Berhalangan Piket"]) --> OpenPiketMenu["Buka Menu Jadwal dan Tukar Piket"]
-    OpenPiketMenu --> SelectDate["Pilih Hari Tugas yang Ingin Digantikan"]
-    SelectDate --> PickSubstitute["Pilih Guru Pengganti dan Tuliskan Alasan"]
-    PickSubstitute --> SendSwapReq["Simpan ke tabel pertukaran_jadwal_piket dengan status: menunggu"]
+    StartPiketSchedule(["Guru Berhalangan Piket"]) --> OpenPiketMenu["Buka Menu Jadwal & Tukar Piket"]
+    OpenPiketMenu --> SelectDate["Pilih Hari Tugas Piket yang Ingin Digantikan"]
+    SelectDate --> PickSubstitute["Pilih Guru Pengganti Aktif dan Masukkan Alasan"]
+    PickSubstitute --> SendSwapReq["Simpan ke tabel pertukaran_jadwal_piket<br/>status: menunggu, is_active: false"]
     
-    SendSwapReq --> NotifySubTeacher["Kirim Notifikasi ke Guru Pengganti"]
-    NotifySubTeacher --> SubDecision{"Keputusan Guru Pengganti"}
-    
-    SubDecision -- "Tolak" --> UpdateSwapReject["Update status pertukaran: ditolak"]
-    UpdateSwapReject --> NotifyAsalReject["Kirim Pesan: Permintaan Tukar Ditolak"]
-    NotifyAsalReject --> EndSwapFail(["Jadwal Tetap Seperti Semula"])
+    SendSwapReq --> GuruAsalOption{"Aksi Tambahan Guru Asal"}
+    GuruAsalOption -- "Ingin Membatalkan Permohonan" --> CancelSwap["Guru Asal Klik Batalkan: status menjadi dibatalkan"]
+    CancelSwap --> EndSwapCanceled(["Permohonan Dibatalkan"])
 
-    SubDecision -- "Setujui" --> UpdateSwapApprove["Update status pertukaran: disetujui"]
-    UpdateSwapApprove --> SwapActiveSchedule["Jadwal Piket Hari Terkait Diperbarui dengan Guru Pengganti"]
-    SwapActiveSchedule --> NotifyAdminPiket["Notifikasi Konfirmasi Terkirim ke Koordinator Piket"]
-    NotifyAdminPiket --> EndSwapSuccess(["Pertukaran Jadwal Resmi Aktif"])
+    GuruAsalOption -- "Menunggu Respon" --> NotifySubTeacher["Notifikasi / Link WhatsApp Terkirim ke Rekan Guru Pengganti"]
+    NotifySubTeacher --> SubDecision{"Keputusan Rekan Guru Pengganti"}
+    
+    SubDecision -- "Tolak" --> UpdateSwapReject["Update status pertukaran: ditolak<br/>catat diproses_at & diproses_oleh"]
+    UpdateSwapReject --> EndSwapFail(["Permohonan Ditolak, Jadwal Tetap"])
+
+    SubDecision -- "Setujui" --> UpdateSwapApprove["Update status pertukaran: disetujui<br/>is_active: true (pada tanggal terkait)"]
+    UpdateSwapApprove --> SwapActiveSchedule["Sistem Menetapkan Guru Pengganti Bertugas pada Tanggal Tersebut"]
+    SwapActiveSchedule --> EndSwapSuccess(["Pertukaran Jadwal Resmi Aktif"])
 ```
 
 ---
 
-## Flowchart 7: State Machine Siklus Status Dispensasi
+## Flowchart 7: State Machine Siklus 7 Status Dispensasi & Auto-Complete KBM
 
-Diagram transisi status (*Lifecycle State Machine*) satu berkas dispensasi siswa dari awal hingga selesai.
+Diagram transisi status (*Lifecycle State Machine*) lengkap 7 status sesuai implementasi database enum dan scheduled task console command `dispensasi:auto-complete`.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> menunggu : Siswa Mengirimkan Pengajuan (PB-01)
+    [*] --> menunggu : Siswa Mengirimkan Pengajuan Mandiri (PB-01)
+    [*] --> disetujui : Guru Piket Membuat Izin Manual di Ruang Piket (PB-02)
     
-    menunggu --> ditolak : Ditolak Guru Piket (disertai alasan penolakan)
-    menunggu --> disetujui : Disetujui Guru Piket (QR Token terbit)
-    
-    disetujui --> keluar : Satpam Scan QR di Gerbang (waktu keluar tercatat)
+    menunggu --> ditolak : Ditolak Guru Piket (disertai alasan penolakan pada catatan_admin)
+    menunggu --> disetujui : Disetujui Guru Piket (QR Token 64-char & Batas Waktu Terbit)
+    menunggu --> kadaluarsa : Auto-Kadaluarsa via Cron saat Jam KBM Hari Itu Usai Tanpa Approval
+
+    disetujui --> keluar : Satpam Scan QR di Gerbang Pos Satpam (waktu_keluar_aktual tercatat)
+    disetujui --> dibatalkan : Siswa Membatalkan Mandiri (batalKeluar) Sebelum Scan Gerbang
+    disetujui --> dibatalkan : Auto-Batal via Cron jika Jam KBM Usai Siswa Tidak Pernah Scan Keluar
     
     keluar --> selesai : Satpam Scan QR Kembali (Tepat Waktu)
-    keluar --> selesai : Satpam Scan QR Kembali (Overdue atau Terlambat)
+    keluar --> selesai : Satpam Scan QR Kembali (Overdue / Terlambat, ditandai is_warned: true)
+    keluar --> selesai : Auto-Closed via Cron saat KBM Berakhir Tanpa Scan Masuk (Status: Selesai Tidak Kembali)
     
-    keluar --> selesai : Auto-Complete Otomatis (Cron Schedule pkl 16:00 WIB)
-    
-    ditolak --> [*] : Izin Dibatalkan
-    selesai --> [*] : Berkas Masuk Rekapitulasi dan Arsip Laporan
+    ditolak --> [*] : Berkas Izin Ditolak
+    kadaluarsa --> [*] : Berkas Kadaluarsa
+    dibatalkan --> [*] : Izin Batal Keluar
+    selesai --> [*] : Berkas Masuk Rekapitulasi & Arsip Laporan (PDF/Excel)
 ```

@@ -59,28 +59,24 @@ flowchart TD
     DashSiswa --> ActionSiswa{Pilih Aksi}
 
     %% Pengajuan Baru
-    ActionSiswa -- "Buat Pengajuan Baru" --> FormPengajuan["Isi Formulir Pengajuan Dispensasi"]
-    FormPengajuan --> InputDetail["Pilih Kategori (Pribadi / Sakit / Dinas / Lomba)<br/>Isi Alasan, Tujuan, Jam Keluar & Estimasi Jam Kembali"]
-    InputDetail --> UploadBukti["Unggah Foto Surat Permohonan / Bukti Kegiatan"]
-    UploadBukti --> CheckRombongan{"Jenis Pengajuan?"}
+    ActionSiswa -- "Buat Pengajuan Baru" --> FormPengajuan["Isi Formulir Pengajuan Berbasis Jadwal KBM"]
+    FormPengajuan --> InputDetail["Pilih Kategori (Sakit / Izin / Keperluan Sekolah / Lainnya)<br/>Isi Alasan min 10 karakter, Tujuan, Jam Keluar & Kembali"]
+    InputDetail --> SnapSelfie["Ambil Foto Selfie Verifikasi Wajah via Kamera Perangkat"]
+    SnapSelfie --> SubmitIzin["Klik Tombol Kirim Pengajuan"]
     
-    CheckRombongan -- "Rombongan" --> SearchSiswa["Cari & Tambah Anggota Rombongan via NIS/Nama"]
-    SearchSiswa --> SubmitIzin["Klik Tombol Kirim Pengajuan"]
-    CheckRombongan -- "Individu" --> SubmitIzin
-    
-    SubmitIzin --> ValidasiForm{"Validasi Data & Jam KBM"}
-    ValidasiForm -- "Tidak Valid" --> ShowError["Tampilkan Peringatan Validasi Form"]
+    SubmitIzin --> ValidasiForm{"Validasi Concurrency & Jam KBM"}
+    ValidasiForm -- "Tidak Valid / Ada Izin Aktif" --> ShowError["Tampilkan Peringatan Validasi Form"]
     ShowError --> FormPengajuan
     ValidasiForm -- "Valid" --> SimpanDB["Simpan ke Database (status: 'menunggu')<br/>Generate Nomor Surat Unik & Token QR 64-karakter"]
-    SimpanDB --> WANotifGuru["Kirim Notifikasi WhatsApp Otomatis ke Guru Piket Aktif"]
+    SimpanDB --> TombolWA["Buka Detail Izin & Tombol Cepat Hubungi Guru Piket via WhatsApp (3 Mnt)"]
     
     %% Riwayat & QR
-    WANotifGuru --> MonitorStatus["Siswa Memantau Status di Menu Riwayat"]
+    TombolWA --> MonitorStatus["Siswa Menemui Guru Piket di Ruang Piket"]
     ActionSiswa -- "Lihat Riwayat & QR" --> MonitorStatus
     
     MonitorStatus --> CekStatus{"Status Pengajuan"}
     CekStatus -- "Ditolak" --> BacaAlasan["Baca Catatan Alasan Penolakan Guru Piket"]
-    BacaAlasan --> SelesaiDitolak(["Pengajuan Selesai / Dibatalkan"])
+    BacaAlasan --> SelesaiDitolak(["Pengajuan Selesai / Ditolak"])
     
     CekStatus -- "Disetujui" --> BukaQR["Akses Tiket Dispensasi & QR Code Dinamis"]
     BukaQR --> KeGerbang["Siswa Menuju Pos Gerbang Menunjukkan QR ke Satpam"]
@@ -96,18 +92,18 @@ flowchart TD
 
     %% Modul Approval
     MenuGuru -- "Verifikasi Pengajuan Siswa" --> AntreanIzin["Buka Antrean Dispensasi (status: 'menunggu')"]
-    AntreanIzin --> DetailIzin["Periksa Detail: Alasan, Waktu Keluar, Bukti Surat & Rombongan"]
+    AntreanIzin --> DetailIzin["Periksa Detail: Alasan, Waktu Keluar, & Foto Selfie Siswa"]
     DetailIzin --> Keputusan{"Keputusan Guru Piket"}
     
-    Keputusan -- "Tolak" --> IsiAlasanTolak["Wajib Input Alasan Penolakan"]
+    Keputusan -- "Tolak" --> IsiAlasanTolak["Wajib Input Alasan Penolakan pada Catatan Admin"]
     IsiAlasanTolak --> SimpanTolak["Update status: 'ditolak' & Kirim Notif WhatsApp ke Siswa"]
     SimpanTolak --> EndTolak(["Selesai: Izin Ditolak"])
     
     Keputusan -- "Setujui" --> SimpanSetuju["Update status: 'disetujui' & Generate Gambar QR Token"]
-    SimpanSetuju --> KirimWASetuju["Kirim Notifikasi WhatsApp Persetujuan ke Siswa"]
+    SimpanSetuju --> KirimWASetuju["Generate Tautan WhatsApp Persetujuan ke Siswa"]
     KirimWASetuju --> OpsiCetak{"Opsi Pencetakan Bukti Fisik"}
     
-    OpsiCetak -- "Printer Bluetooth ESC/POS" --> CetakThermal["Kirim Byte ESC/POS ke Printer Kasir 58mm"]
+    OpsiCetak -- "Printer Bluetooth ESC/POS" --> CetakThermal["Kirim Byte ESC/POS via Web Bluetooth API"]
     OpsiCetak -- "Struk PDF Resmi" --> UnduhPDF["Generate & Download File Struk PDF 58mm"]
     OpsiCetak -- "Digital Saja" --> StrukDigital["Siswa Menggunakan QR Digital di HP"]
     CetakThermal --> SerahkanStruk["Serahkan Bukti Struk ke Siswa untuk Pos Gerbang"]
@@ -290,23 +286,22 @@ Akses panel siswa dirancang ramah ponsel (*mobile-first*), memudahkan pengajuan 
    - Pada halaman Dashboard, tekan tombol **"+ Ajukan Dispensasi"**.
    - **Kategori Izin**: Pilih kategori yang sesuai:
      - 🩺 *Sakit*: Memerlukan istirahat di UKS atau pulang berobat.
-     - 🏠 *Izin Pribadi*: Keperluan mendesak keluarga.
-     - 🏢 *Tugas / Dinas Sekolah*: Tugas kepengurusan OSIS, administrasi sekolah, dll.
-     - 🏆 *Lomba / Kegiatan Luar*: Mewakili sekolah dalam kompetisi atau seminar.
-   - **Form Waktu**: Tentukan jam mulai keluar dan perkiraan jam kembali ke sekolah.
-   - **Alasan & Lokasi Tujuan**: Tuliskan alasan dispensasi secara jelas serta alamat/tujuan lokasi.
-   - **Bukti Surat / Foto**: Ambil foto surat izin orang tua / surat tugas sekolah melalui kamera ponsel atau galeri.
-   - **Pengajuan Rombongan**: Jika dispensasi diikuti oleh lebih dari 1 siswa, centang opsi rombongan, lalu cari nama/NIS rekan Anda untuk ditambahkan ke dalam berkas yang sama.
+        - 🏆 *Lomba / Kegiatan Luar*: Mewakili sekolah dalam kompetisi atau seminar.
+   - **Form Waktu**: Tentukan jam mulai keluar dan perkiraan jam kembali ke sekolah (pilihan jam pelajaran sekolah atau format jam-menit HH:MM WIB).
+   - **Alasan & Lokasi Tujuan**: Tuliskan alasan dispensasi secara jelas (min 10 karakter) serta alamat/tujuan lokasi.
+   - **Foto Selfie Verifikasi Wajah**: Ambil foto selfie wajah terkini via kamera perangkat untuk verifikasi fisik di pos gerbang oleh Satpam (mencegah joki perizinan).
    - Tekan **"Kirim Pengajuan"**.
 3. **Memantau Status & Menghubungi Guru Piket**:
-   - Pengajuan akan berstatus **"Menunggu"** (badge kuning). Sistem secara otomatis mengirimkan notifikasi WhatsApp kepada Guru Piket yang sedang bertugas.
-   - Tersedia tombol cepat **"Hubungi Guru Piket"** via WhatsApp di Dashboard dengan pesan terformat otomatis jika Anda memerlukan verifikasi darurat di ruang piket.
+   - Pengajuan akan berstatus **"Menunggu"** (badge kuning). Siswa menemui Guru Piket di ruang piket.
+   - Tersedia tombol cepat **"Hubungi Guru Piket"** via WhatsApp di Dashboard/Detail Pengajuan (selama 3 menit pertama) jika memerlukan verifikasi cepat di ruang piket.
 4. **Pengambilan Tiket QR Code**:
    - Segera setelah Guru Piket menyetujui, status akan berubah menjadi **"Disetujui"** (badge hijau).
    - Buka menu **"Riwayat Pengajuan"** $\rightarrow$ klik **"Lihat Tiket / QR Code"**.
    - Tiket memuat token 64-karakter dalam bentuk QR Code, batas jam kembali, dan nomor surat resmi.
 5. **Proses di Pos Gerbang Satpam**:
-   - Tunjukkan QR Code pada layar ponsel kepada petugas Satpam di gerbang sekolah saat keluar.
+   - Tunjukkan QR Code pada layar ponsel atau struk thermal kepada petugas Satpam di gerbang sekolah saat keluar.
+   - Satpam mencocokkan wajah siswa fisik dengan foto selfie verifikasi di layar scanner.
+   - Saat berada di luar sekolah, siswa dapat mengunggah **Foto Bukti Kegiatan** di lokasi tujuan.
    - Saat kembali ke sekolah, kembali hampiri petugas Satpam untuk memindai QR Code masuk guna menandai izin telah **"Selesai"**.
 
 ---
