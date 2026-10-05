@@ -30,13 +30,6 @@ class DashboardController extends Controller
         // <i class="fas fa-check-circle"></i> 2. TAMBAHKAN INI: Baca parameter filter dari URL (default: 'semua')
         $filter = $request->get('filter', 'semua');
 
-        $stats = [
-            'total' => Dispensasi::whereDate('created_at', $today)->count(),
-            'menunggu_keluar' => Dispensasi::where('status', 'disetujui')->whereDate('created_at', $today)->count(),
-            'keluar' => Dispensasi::where('status', 'keluar')->whereDate('created_at', $today)->count(),
-            'selesai' => Dispensasi::where('status', 'selesai')->whereDate('created_at', $today)->count(),
-        ];
-
         $menungguKeluar = Dispensasi::with(['siswa.kelas.jurusan', 'guru'])
             ->where('status', 'disetujui')
             ->whereDate('created_at', $today)
@@ -50,10 +43,17 @@ class DashboardController extends Controller
             ->get();
 
         $selesai = Dispensasi::with(['siswa.kelas.jurusan', 'guru'])
-            ->where('status', 'selesai') // <i class="fas fa-check-circle"></i> Query ini sudah benar, hanya ambil status 'selesai'
+            ->where('status', 'selesai')
             ->whereDate('created_at', $today)
             ->latest()
             ->get();
+
+        $stats = [
+            'total' => $menungguKeluar->count() + $siswaKeluar->count() + $selesai->count(),
+            'menunggu_keluar' => $menungguKeluar->count(),
+            'keluar' => $siswaKeluar->count(),
+            'selesai' => $selesai->count(),
+        ];
 
       $dihubungi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
                 ->where('is_warned', true)
@@ -70,19 +70,23 @@ class DashboardController extends Controller
     /**
      * <i class="fas fa-check-circle"></i> PENCARIAN MANUAL DISPENSASI (Untuk Verifikasi Satpam)
      */
+    /**
+     * <i class="fas fa-check-circle"></i> PENCARIAN MANUAL DISPENSASI (Untuk Verifikasi Satpam)
+     */
     public function searchDispensasi(Request $request)
     {
         try {
             $request->validate([
-                'query' => 'required|string|min:2|max:255'
+                'query' => 'required|string|min:1|max:255'
             ]);
 
-            $query = $request->input('query');
+            $query = trim($request->input('query'));
 
-            $dispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas'])
-                ->whereDate('created_at', now()->toDateString())
+            $dispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
+                ->whereIn('status', ['disetujui', 'keluar', 'selesai'])
                 ->where(function($q) use ($query) {
                     $q->where('nomor_surat', 'like', "%{$query}%")
+                      ->orWhere('id', $query)
                       ->orWhereHas('siswa', function($q2) use ($query) {
                           $q2->where('nama_lengkap', 'like', "%{$query}%")
                              ->orWhereHas('user', function($q3) use ($query) {
@@ -91,13 +95,13 @@ class DashboardController extends Controller
                       });
                 })
                 ->latest()
-                ->limit(5)
+                ->limit(10)
                 ->get();
 
             if ($dispensasi->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dispensasi tidak ditemukan'
+                    'message' => 'Dispensasi tidak ditemukan. Pastikan No. Surat, NIS, atau Nama benar.'
                 ], 404);
             }
 
@@ -109,8 +113,11 @@ class DashboardController extends Controller
                     'siswa_nama' => $d->siswa?->nama_lengkap ?? 'Tidak Diketahui',
                     'siswa_nis' => $d->siswa?->user?->nis_nip ?? '-',
                     'siswa_kelas' => $d->siswa?->kelas?->nama_kelas ?? '-',
+                    'siswa_jurusan' => $d->siswa?->kelas?->jurusan?->nama_jurusan ?? '-',
                     'jam_keluar' => $d->jam_keluar,
                     'jam_kembali' => $d->jam_kembali,
+                    'alasan' => $d->alasan,
+                    'tujuan' => $d->tujuan,
                 ];
             });
 
@@ -121,7 +128,6 @@ class DashboardController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Search Dispensasi Error: ' . $e->getMessage());
-            \Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
 
             return response()->json([
                 'success' => false,
@@ -135,18 +141,26 @@ class DashboardController extends Controller
      */
     public function konfirmasiKeluar(Dispensasi $dispensasi, QRScanService $scanService)
     {
-        $result = $scanService->processKeluar($dispensasi, (int) auth()->id());
-        $message = $result['message'];
+        try {
+            $result = $scanService->processKeluar($dispensasi, (int) auth()->id());
+            $message = $result['message'];
 
-        if (! $result['success']) {
+            if (! $result['success']) {
+                return request()->wantsJson()
+                    ? response()->json($result, $result['status_code'] ?? 400)
+                    : redirect()->back()->with('error', $message);
+            }
+
             return request()->wantsJson()
-                ? response()->json($result, $result['status_code'] ?? 400)
-                : redirect()->back()->with('error', $message);
+                ? response()->json($result)
+                : redirect()->back()->with('success', $message);
+        } catch (\Throwable $e) {
+            Log::error('Konfirmasi keluar manual error: ' . $e->getMessage(), ['exception' => $e]);
+            $msg = 'Terjadi kesalahan sistem saat konfirmasi keluar: ' . $e->getMessage();
+            return request()->wantsJson()
+                ? response()->json(['success' => false, 'message' => $msg], 500)
+                : redirect()->back()->with('error', $msg);
         }
-
-        return request()->wantsJson()
-            ? response()->json($result)
-            : redirect()->back()->with('success', $message);
     }
 
     /**
@@ -157,20 +171,21 @@ class DashboardController extends Controller
         if ($dispensasi->status !== 'keluar') {
             $message = 'Dispensasi harus dalam status keluar untuk dikonfirmasi kembali.';
             return request()->wantsJson()
-                ? response()->json(['success' => false, 'message' => $message])
+                ? response()->json(['success' => false, 'message' => $message], 400)
                 : redirect()->back()->with('error', $message);
         }
 
         try {
             $dispensasiService->konfirmasiKembali($dispensasi, (int) auth()->id());
         } catch (\Throwable $e) {
+            Log::error('Konfirmasi kembali manual error: ' . $e->getMessage(), ['exception' => $e]);
             $message = $e->getMessage() ?: 'Gagal memproses kembali dispensasi.';
             return request()->wantsJson()
-                ? response()->json(['success' => false, 'message' => $message])
+                ? response()->json(['success' => false, 'message' => $message], 500)
                 : redirect()->back()->with('error', $message);
         }
 
-        $message = "Siswa {$dispensasi->siswa->nama_lengkap} berhasil dikonfirmasi KEMBALI.";
+        $message = "Siswa " . ($dispensasi->siswa?->nama_lengkap ?? 'Siswa') . " berhasil dikonfirmasi KEMBALI.";
 
         return request()->wantsJson()
             ? response()->json(['success' => true, 'message' => $message])

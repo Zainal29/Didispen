@@ -483,46 +483,39 @@ class PengajuanController extends Controller
 
         $processed = DB::transaction(function () use ($dispensasi, $guru, $validated) {
             $locked = Dispensasi::whereKey($dispensasi->id)->lockForUpdate()->first();
-            if (! $locked || $locked->status !== 'menunggu') {
+            if (! $locked || (! in_array($locked->status, ['menunggu', 'disetujui']) || ! empty($locked->waktu_keluar_aktual))) {
                 return false;
             }
 
             // 1. Ambil path foto_verifikasi sebelum field dikosongkan
             $fotoPath = $locked->foto_verifikasi;
+            $newStatus = ($locked->status === 'disetujui') ? 'dibatalkan' : 'ditolak';
 
-            // 2. Update status ke ditolak, isi rejected_at, kosongkan foto_verifikasi
+            // 2. Update status ke ditolak/dibatalkan, isi rejected_at, kosongkan foto_verifikasi
             $locked->update([
-                'status'          => 'ditolak',
+                'status'          => $newStatus,
                 'guru_id'         => $guru->id,
                 'rejected_at'     => now(),
-                'approved_at'     => null,
                 'catatan_admin'   => $validated['catatan_admin'],
                 'foto_verifikasi' => null,
             ]);
 
-            // 3. Hapus file fisik dari storage public secara aman (tidak membuat transaksi gagal)
-            if (! empty($fotoPath)) {
-                try {
-                    if (Storage::disk('public')->exists($fotoPath)) {
-                        Storage::disk('public')->delete($fotoPath);
-                    }
-                } catch (\Throwable $e) {
-                    Log::warning("Gagal menghapus file foto_verifikasi {$fotoPath} saat reject: " . $e->getMessage());
-                }
-            }
+            // 3. Hapus file fisik (foto verifikasi & QR Code jika ada)
+            \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($locked);
 
             return $locked;
         });
 
         if (! $processed) {
-            return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
+            return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya atau siswa sudah keluar.');
         }
 
         // Kirim Notifikasi ke Siswa
         $alasan = $validated['catatan_admin'];
+        $statusLabel = $processed->status === 'dibatalkan' ? 'DIBATALKAN' : 'DITOLAK';
         $this->notifikasiService->send(
             $processed->siswa->user_id,
-            "Pengajuan dispensasi Anda ({$processed->nomor_surat}) DITOLAK oleh Guru Piket. Alasan: {$alasan}",
+            "Pengajuan dispensasi Anda ({$processed->nomor_surat}) {$statusLabel} oleh Guru Piket. Alasan: {$alasan}",
             route('siswa.pengajuan.show', $processed->id)
         );
 
