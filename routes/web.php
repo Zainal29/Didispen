@@ -156,10 +156,16 @@ Route::middleware(['auth'])->group(function () {
             ->name('warning.send');
 
             // Scan QR Backup - Rate Limiting diperbarui agar tidak terkendala saat check & confirm
-                    Route::get('scan', [\App\Http\Controllers\Guru\ScanController::class, 'index'])->name('scan');
-                    Route::post('scan/verify', [\App\Http\Controllers\Guru\ScanController::class, 'verify'])
-              ->middleware('throttle:60,1')
+            Route::get('scan', [\App\Http\Controllers\Guru\ScanController::class, 'index'])->name('scan');
+            Route::post('scan/verify', [\App\Http\Controllers\Guru\ScanController::class, 'verify'])
+                ->middleware('throttle:60,1')
                 ->name('scan.verify');
+            Route::post('search-dispensasi', [\App\Http\Controllers\Guru\ScanController::class, 'searchDispensasi'])
+                ->name('search-dispensasi');
+            Route::post('konfirmasi/{dispensasi}/keluar', [\App\Http\Controllers\Guru\ScanController::class, 'konfirmasiKeluar'])
+                ->name('konfirmasi.keluar');
+            Route::post('konfirmasi/{dispensasi}/kembali', [\App\Http\Controllers\Guru\ScanController::class, 'konfirmasiKembali'])
+                ->name('konfirmasi.kembali');
 
           // ✅ TAMBAHKAN INI: Route untuk tandai sudah dihubungi via WA
          Route::post('dispensasi/{dispensasi}/wa-contacted', [\App\Http\Controllers\Guru\DashboardController::class, 'markWaContacted'])
@@ -192,15 +198,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead'])->name('notifikasi.read');
         Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.readAll');
 
-        // ✅ TAMBAHKAN 2 ROUTE INI:
         Route::post('pengajuan/{dispensasi}/upload-foto-bukti', [\App\Http\Controllers\Siswa\PengajuanController::class, 'uploadFotoBukti'])->name('pengajuan.upload-foto-bukti');
         Route::delete('pengajuan/{dispensasi}/hapus-foto-bukti', [\App\Http\Controllers\Siswa\PengajuanController::class, 'hapusFotoBukti'])->name('pengajuan.hapus-foto-bukti');
+        Route::post('pengajuan/{dispensasi}/batal', [\App\Http\Controllers\Siswa\PengajuanController::class, 'batalKeluar'])->name('pengajuan.batal');
     
-   Route::get(
-    'pengajuan/{dispensasi}/hubungi-guru-piket',
-    [PengajuanController::class, 'hubungiGuruPiket']
-)->name('pengajuan.hubungi-guru-piket');
-       });
+        Route::get(
+            'pengajuan/{dispensasi}/hubungi-guru-piket',
+            [PengajuanController::class, 'hubungiGuruPiket']
+        )->name('pengajuan.hubungi-guru-piket');
+    });
 
     // ==========================================
     // SATPAM ROUTES
