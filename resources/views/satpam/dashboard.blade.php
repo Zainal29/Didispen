@@ -51,37 +51,49 @@
 </div>
 
 {{-- ============ GURU PIKET HARI INI ============ --}}
-<div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-xs">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 pb-3 mb-3">
-        <div>
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-sm">
+<div class="bg-white border border-gray-200 rounded-xl p-3.5 sm:p-4 mb-4 shadow-xs">
+    <div class="border-b border-gray-100 pb-3 mb-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+            <div class="flex items-start gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5 sm:mt-0">
                     <i class="fas fa-user-shield"></i>
                 </div>
-                <h3 class="text-sm font-bold text-gray-900">Guru Piket Hari Ini</h3>
-                @if(!empty($infoPiket['jadwal']))
-                    <span class="text-xs text-gray-400 font-normal hidden sm:inline">•</span>
-                    <span class="text-xs text-gray-600 font-medium">
-                        {{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} – {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }}
-                    </span>
+                <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <h3 class="text-sm font-bold text-gray-900 whitespace-nowrap">Guru Piket Hari Ini</h3>
+                        @if(!empty($infoPiket['jadwal']))
+                            @if(!empty($infoPiket['jadwal']->nama_sesi))
+                                <span class="text-[10px] sm:text-[11px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-100 whitespace-nowrap">
+                                    {{ $infoPiket['jadwal']->nama_sesi }}
+                                </span>
+                            @endif
+                            <span class="text-[11px] sm:text-xs font-mono font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded whitespace-nowrap">
+                                <i class="far fa-clock text-[10px] text-gray-400 mr-1"></i>{{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} – {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-gray-500 mt-0.5 sm:mt-1">Daftar Bapak/Ibu Guru yang bertugas piket pada sesi ini untuk koordinasi gerbang.</p>
+                </div>
+            </div>
+            @if(!empty($infoPiket['jadwal']))
+                <div class="flex items-center sm:self-center self-start pl-10 sm:pl-0 flex-shrink-0">
                     @if($infoPiket['status_sesi'] === 'Berlangsung')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
                             Sedang Berlangsung
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Akan Datang')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200">
-                            <i class="far fa-clock mr-1 text-[10px]"></i>
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 shadow-2xs whitespace-nowrap">
+                            <i class="far fa-clock mr-1.5 text-[10px]"></i>
                             Akan Datang
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Sesi Selesai')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap">
                             Sesi Selesai
                         </span>
                     @endif
-                @endif
-            </div>
-            <p class="text-xs text-gray-500 mt-1">Daftar Bapak/Ibu Guru yang bertugas piket pada sesi ini untuk koordinasi gerbang.</p>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -104,7 +116,7 @@
         @if(empty($infoPiket['petugas']))
             <p class="text-xs text-gray-500 italic">Belum ada petugas piket yang ditentukan untuk sesi ini.</p>
         @else
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 @foreach($infoPiket['petugas'] as $p)
                     @php
                         $statusClass = match($p['status']) {
@@ -121,36 +133,63 @@
                             'Akan Bertugas'   => 'bg-indigo-500',
                             default           => 'bg-gray-400',
                         };
+                        $initials = collect(explode(' ', $p['guru']->nama_lengkap ?? 'G'))
+                            ->filter()
+                            ->take(2)
+                            ->map(fn($part) => strtoupper(substr($part, 0, 1)))
+                            ->join('');
+                        $rawPhone = preg_replace('/[^0-9]/', '', $p['guru']->no_telepon ?? '');
+                        $waPhone = str_starts_with($rawPhone, '0') ? '62' . substr($rawPhone, 1) : $rawPhone;
                     @endphp
-                    <div class="p-3.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-all flex flex-col justify-between gap-2">
-                        <div class="min-w-0">
-                            <p class="font-bold text-sm text-gray-900 truncate">{{ $p['guru']->nama_lengkap }}</p>
-                            @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
-                                <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
-                                    <i class="fas fa-exchange-alt text-[10px]"></i>
-                                    <span class="truncate">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
-                                </p>
-                            @endif
+                    <div class="p-3 sm:p-3.5 rounded-xl border border-gray-200 bg-white hover:border-red-200 hover:shadow-xs transition-all flex flex-col justify-between gap-2.5">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                <div class="w-9 h-9 rounded-full bg-red-50 border border-red-100 text-red-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                    {{ $initials ?: 'GP' }}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-bold text-sm text-gray-900 truncate" title="{{ $p['guru']->nama_lengkap }}">
+                                        {{ $p['guru']->nama_lengkap }}
+                                    </p>
+                                    @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
+                                        <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
+                                            <i class="fas fa-exchange-alt text-[10px]"></i>
+                                            <span class="truncate">Gantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- @if(!empty($p['guru']->no_telepon))
+                                <div class="flex items-center gap-1 flex-shrink-0">
+                                    <a href="https://wa.me/{{ $waPhone }}?text={{ urlencode('Halo Bapak/Ibu Guru Piket, ada koordinasi terkait perizinan siswa dari Pos Satpam SMKN 1 Bangsri.') }}" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer" 
+                                       title="Chat WhatsApp" 
+                                       class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 border border-emerald-100 transition-colors text-xs active:scale-95">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </a>
+                                    <a href="tel:{{ $p['guru']->no_telepon }}" 
+                                       title="Telepon Guru" 
+                                       class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800 border border-gray-200 transition-colors text-xs active:scale-95">
+                                        <i class="fas fa-phone-alt text-[10px]"></i>
+                                    </a>
+                                </div>
+                            @endif -->
                         </div>
-                    	<div class="pt-1">
-    <div class="flex flex-col items-start gap-1">
 
-        {{-- Status utama --}}
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border {{ $statusClass }}">
-            <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }}"></span>
-            {{ $p['status'] }}
-        </span>
+                        <div class="pt-2 border-t border-gray-100 flex flex-wrap items-center gap-1.5">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border {{ $statusClass }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} {{ $p['status'] === 'Sedang Bertugas' ? 'animate-pulse' : '' }}"></span>
+                                {{ $p['status'] }}
+                            </span>
 
-   {{-- Setelah kembali, guru kembali menjalankan tugas --}}
-@if($p['status'] === 'Sudah Kembali' && ($infoPiket['status_sesi'] ?? null) === 'Berlangsung')
-    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-emerald-50 text-emerald-800 border-emerald-200">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-        Sedang Bertugas
-    </span>
-@endif
-
-    </div>
-
+                            @if($p['status'] === 'Sudah Kembali' && ($infoPiket['status_sesi'] ?? null) === 'Berlangsung')
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-emerald-50 text-emerald-800 border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Sedang Bertugas
+                                </span>
+                            @endif
                         </div>
                     </div>
                 @endforeach
