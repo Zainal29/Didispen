@@ -15,7 +15,9 @@
 @section('page-title', 'Profil Saya')
 
 @section('content')
-<!-- @include('components.alert') -->
+@if($user->role === 'admin')
+    @include('components.alert')
+@endif
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
