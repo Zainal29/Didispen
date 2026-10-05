@@ -5,7 +5,7 @@
 @section('title', 'Buat Pengajuan Dispensasi')
 @section('content')
 
-<div class="max-w-3xl mx-auto pb-24 sm:pb-8">
+<div class="max-w-3xl mx-auto pb-6 sm:pb-8">
     {{-- Header halaman --}}
     <div class="mb-5 sm:mb-6">
         <div class="flex items-start gap-3">
@@ -577,8 +577,14 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
 /* Custom styling agar Select2 serasi dengan desain modern Tailwind */
+/* Terapkan width 100% pada container inline di dalam form */
 .select2-container {
     width: 100% !important;
+    max-width: 100% !important;
+}
+.select2-container--open {
+    max-width: calc(100vw - 32px) !important;
+    box-sizing: border-box !important;
 }
 .select2-container--default .select2-selection--single {
     height: 46px !important;
@@ -589,6 +595,7 @@
     align-items: center !important;
     background-color: rgba(249, 250, 251, 0.6) !important;
     transition: all 0.2s ease-in-out !important;
+    box-sizing: border-box !important;
 }
 .select2-container--default.select2-container--focus .select2-selection--single,
 .select2-container--default.select2-container--open .select2-selection--single {
@@ -616,17 +623,23 @@
     box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
     overflow: hidden !important;
     z-index: 70 !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
 }
 .select2-search--dropdown {
-    padding: 10px !important;
+    padding: 8px 10px !important;
     background-color: #f9fafb !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
 }
 .select2-search--dropdown .select2-search__field {
     border: 1px solid #d1d5db !important;
     border-radius: 0.625rem !important;
-    padding: 8px 12px !important;
-    font-size: 0.875rem !important;
+    padding: 9px 12px !important;
+    font-size: 16px !important; /* 16px mencegah auto-zoom browser HP saat fokus */
     outline: none !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
 }
 .select2-search--dropdown .select2-search__field:focus {
     border-color: #3b82f6 !important;

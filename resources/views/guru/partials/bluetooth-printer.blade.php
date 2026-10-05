@@ -387,7 +387,7 @@
         'dicetak' => now()->format('d/m/Y H:i'),
         'qr_token' => $dispensasi->qr_token ?? '',
 
-        'logo_url' => asset('images/logo-didispen.png'),
+        'logo_url' => asset('images/logo-didispen1.png'),
         'print_enabled' => in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']),
     ];
 @endphp

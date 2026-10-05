@@ -7,416 +7,459 @@
         default => 'siswa.layouts.app',
     };
 
-    // Simplified color mapping for consistency
-    $theme = match($role) {
-        'satpam' => 'red',
-        'guru' => 'indigo',
-        'admin' => 'blue',
-        default => 'blue',
-    };
+    // Ambil video dari database sesuai role aktif
+    $video = \App\Models\TutorialVideo::where('role', $role)->where('is_active', true)->first();
 @endphp
 
-@php
-    // Ambil video dari database
-    $videoSiswa = \App\Models\TutorialVideo::where('role', 'siswa')->where('is_active', true)->first();
-    $videoGuru = \App\Models\TutorialVideo::where('role', 'guru')->where('is_active', true)->first();
-    $videoSatpam = \App\Models\TutorialVideo::where('role', 'satpam')->where('is_active', true)->first();
-    $videoAdmin = \App\Models\TutorialVideo::where('role', 'admin')->where('is_active', true)->first();
-@endphp
 @extends($layout)
 
 @section('title', 'Panduan Penggunaan')
-@section('page-title', 'Panduan Penggunaan Sistem')
+@section('page-title', 'Panduan Penggunaan')
 
 @section('content')
-<div class="max-w-6xl mx-auto space-y-6">
+<div class="max-w-5xl mx-auto space-y-5" x-data="{ openFaq: null }">
 
-    {{-- HERO HEADER --}}
-    <div class="relative overflow-hidden rounded-xl bg-{{ $theme }}-600 p-6 sm:p-8 text-white shadow-sm">
-        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    {{-- HEADER BERSIH & FORMAL (TANPA GRADIENT) --}}
+    <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start gap-3.5">
+            <div class="w-11 h-11 rounded-xl bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center flex-shrink-0 text-lg">
+                @if($role === 'siswa')
+                    <i class="fas fa-user-graduate text-blue-600"></i>
+                @elseif($role === 'guru')
+                    <i class="fas fa-user-shield text-indigo-600"></i>
+                @elseif($role === 'satpam')
+                    <i class="fas fa-shield-alt text-red-600"></i>
+                @else
+                    <i class="fas fa-user-cog text-slate-800"></i>
+                @endif
+            </div>
             <div>
-                <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-white/10 border border-white/20 text-xs font-semibold uppercase tracking-wider text-white mb-2">
-                    <i class="fas fa-book-open mr-1.5"></i>Pusat Bantuan & Panduan
-                </span>
-                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
+                <h1 class="text-base sm:text-xl font-bold text-gray-900">
                     @if($role === 'siswa')
                         Panduan Penggunaan Siswa
                     @elseif($role === 'guru')
                         Panduan Penggunaan Guru Piket
                     @elseif($role === 'satpam')
-                        Panduan Penggunaan Satpam
+                        Panduan Penggunaan Satpam (Pos Gerbang)
                     @else
                         Panduan Penggunaan Administrator
                     @endif
                 </h1>
-                <p class="text-sm text-white/90 mt-2 max-w-xl leading-relaxed">
-                    Petunjuk langkah demi langkah penggunaan sistem dispensasi digital SMKN 1 Bangsri.
+                <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
+                    Petunjuk langkah demi langkah pengelolaan dispensasi digital di SMKN 1 Bangsri.
                 </p>
             </div>
-            <div class="flex-shrink-0">
-                <a href="#tanya-jawab" class="inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-semibold text-white transition-colors">
-                    <i class="fas fa-question-circle mr-2"></i>Pertanyaan Umum
-                </a>
-            </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            @if($video)
+            <button type="button" onclick="openVideoModal('{{ $video->youtube_url }}', '{{ $video->title }}')"
+               class="inline-flex items-center justify-center px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors active:scale-95 shadow-xs">
+                <i class="fab fa-youtube mr-1.5 text-sm"></i> Video Tutorial
+            </button>
+            @endif
+            <a href="#tanya-jawab" class="inline-flex items-center justify-center px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition-colors">
+                <i class="fas fa-question-circle mr-1.5 text-gray-500"></i> FAQ
+            </a>
         </div>
     </div>
 
-    {{-- ========================================== --}}
-    {{-- PANDUAN KHUSUS SISWA (Hanya muncul jika role = siswa) --}}
-    {{-- ========================================== --}}
+    {{-- ======================================================== --}}
+    {{-- 1. PANDUAN KHUSUS ROLE: SISWA                            --}}
+    {{-- ======================================================== --}}
     @if($role === 'siswa')
-    <div class="space-y-4">
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-start gap-4">
-            <div class="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-info-circle"></i>
+        {{-- Ringkasan Alur --}}
+        <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
+                <i class="fas fa-route"></i>
             </div>
-            <div class="min-w-0 flex-1">
-                <h3 class="text-sm font-bold text-blue-900">Alur Dispensasi Siswa</h3>
-                <p class="text-xs text-blue-700 mt-1 leading-relaxed">
-                    Isi Form (termasuk Foto Verifikasi) &rarr; Diverifikasi Guru Piket &rarr; QR Code terbit &rarr; Di-scan Satpam saat keluar &rarr; Dikonfirmasi Satpam saat kembali.
-                </p>
-                {{-- Ganti bagian link YouTube yang lama dengan ini --}}
-                @if($videoSiswa)
-                <button type="button" onclick="openVideoModal('{{ $videoSiswa->youtube_url }}', '{{ $videoSiswa->title }}')"
-                   class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
-                    <i class="fab fa-youtube mr-1.5 text-sm"></i> {{ $videoSiswa->title }}
-                </button>
-                @endif
+            <div class="text-xs text-blue-900 leading-relaxed">
+                <span class="font-bold">Alur Pengajuan Siswa:</span>
+                <span class="text-blue-800">1. Isi Form Pengajuan (Foto Bukti) &rarr; 2. Verifikasi Guru Piket &rarr; 3. QR Code Terbit &rarr; 4. Satpam Scan Keluar & Ambil Foto di Pos Gerbang &rarr; 5. Satpam Scan Masuk saat Siswa Kembali (Selesai).</span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between space-y-4 hover:border-blue-300 transition-colors">
+        {{-- Kartu Langkah-langkah --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{-- Langkah 1 --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center">1</span>
-                        <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-xs font-semibold">Status: Menunggu</span>
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                        <span class="w-7 h-7 rounded-lg bg-gray-100 text-gray-800 font-bold text-xs flex items-center justify-center">1</span>
+                        <span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">Status: Menunggu</span>
                     </div>
-                    <h4 class="font-bold text-gray-900 text-sm">Buat Pengajuan</h4>
-                    <p class="text-xs text-gray-600 leading-relaxed">Klik tombol <strong>"Buat Pengajuan"</strong>. Isi alasan, tujuan, dan <strong>wajib upload Foto Verifikasi</strong>.</p>
+                    <h3 class="font-bold text-gray-900 text-sm">Buat Pengajuan Dispensasi</h3>
+                    <ul class="text-xs text-gray-600 space-y-1.5 leading-relaxed">
+                        <li>• Pilih Kategori: <strong>Sakit, Izin Pribadi, Tugas Dinas, atau Lomba</strong>.</li>
+                        <li>• Tentukan <strong>Jam Keluar</strong> dan perkiraan <strong>Jam Kembali</strong>.</li>
+                        <li>• Tuliskan alasan dispensasi dan lokasi tujuan secara jelas.</li>
+                        <li>• <strong>Unggah Foto Bukti</strong> (surat izin orang tua / surat tugas sekolah).</li>
+                        <li>• Untuk izin bersama lebih dari 1 siswa, gunakan opsi <strong>Rombongan</strong>.</li>
+                    </ul>
                 </div>
-                <a href="{{ route('siswa.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors">
-                    Buat Pengajuan Sekarang <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                <a href="{{ route('siswa.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors shadow-xs">
+                    Buat Pengajuan <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between space-y-4 hover:border-blue-300 transition-colors">
+            {{-- Langkah 2 --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center">2</span>
-                        <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-semibold">Status: Disetujui</span>
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                        <span class="w-7 h-7 rounded-lg bg-gray-100 text-gray-800 font-bold text-xs flex items-center justify-center">2</span>
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">Status: Disetujui</span>
                     </div>
-                    <h4 class="font-bold text-gray-900 text-sm">Dapatkan QR Code</h4>
-                    <p class="text-xs text-gray-600 leading-relaxed">Setelah disetujui, buka menu <strong>"Riwayat"</strong> untuk menampilkan <strong>Kode QR Aktif</strong>.</p>
+                    <h3 class="font-bold text-gray-900 text-sm">Pantau Status & Ambil QR Code</h3>
+                    <ul class="text-xs text-gray-600 space-y-1.5 leading-relaxed">
+                        <li>• Guru Piket yang sedang bertugas hari ini akan memvalidasi pengajuan.</li>
+                        <li>• Jika mendesak, gunakan tombol <strong>"Hubungi Guru Piket via WhatsApp"</strong> di Dashboard.</li>
+                        <li>• Jika disetujui, buka menu <strong>Riwayat</strong> & klik <strong>"Lihat Tiket / QR Code"</strong>.</li>
+                        <li>• Jika ditolak, Anda dapat membaca <strong>Catatan Alasan Penolakan</strong> dari guru piket.</li>
+                    </ul>
                 </div>
-                <a href="{{ route('siswa.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors">
+                <a href="{{ route('siswa.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
                     Lihat Riwayat & QR <i class="fas fa-qrcode ml-1.5 text-[10px]"></i>
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between space-y-4 hover:border-blue-300 transition-colors md:col-span-2 lg:col-span-1">
+            {{-- Langkah 3 --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center">3</span>
-                        <span class="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 text-xs font-semibold">Status: Keluar & Selesai</span>
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                        <span class="w-7 h-7 rounded-lg bg-gray-100 text-gray-800 font-bold text-xs flex items-center justify-center">3</span>
+                        <span class="px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 text-[10px] font-bold">Status: Keluar & Selesai</span>
                     </div>
-                    <h4 class="font-bold text-gray-900 text-sm">Verifikasi di Pos Satpam</h4>
-                    <p class="text-xs text-gray-600 leading-relaxed">Tunjukkan QR Code ke Satpam. Scan pertama = Keluar, Scan kedua = Kembali (Selesai).</p>
+                    <h3 class="font-bold text-gray-900 text-sm">Validasi di Pos Gerbang Satpam</h3>
+                    <ul class="text-xs text-gray-600 space-y-1.5 leading-relaxed">
+                        <li>• <strong>Saat Keluar</strong>: Tunjukkan QR Code di layar HP ke Satpam. Satpam akan mengambil foto verifikasi di pos gerbang.</li>
+                        <li>• <strong>Saat Kembali</strong>: Pindai kembali QR Code ke Satpam agar status ditandai <em>Selesai</em>.</li>
+                        <li>• ⚠️ Harap kembali tepat waktu agar tidak terdeteksi <strong>Overdue (Terlambat)</strong> oleh sistem.</li>
+                    </ul>
                 </div>
-                <div class="p-3 bg-gray-50 rounded-lg text-xs text-gray-600 font-medium text-center border border-gray-200">
-                    <i class="fas fa-shield-alt text-amber-500 mr-1"></i>QR hanya dapat di-scan 1x untuk keluar
+                <div class="p-2.5 bg-gray-50 rounded-xl text-[11px] text-gray-600 font-medium border border-gray-200 text-center">
+                    <i class="fas fa-shield-alt text-amber-600 mr-1"></i>QR Code hanya berlaku untuk 1x sesi izin
                 </div>
             </div>
         </div>
-    </div>
     @endif
 
-    {{-- ========================================== --}}
-    {{-- PANDUAN KHUSUS GURU PIKET (Hanya muncul jika role = guru) --}}
-    {{-- ========================================== --}}
+    {{-- ======================================================== --}}
+    {{-- 2. PANDUAN KHUSUS ROLE: GURU PIKET                       --}}
+    {{-- ======================================================== --}}
     @if($role === 'guru')
-    <div class="space-y-4">
-        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-start gap-4">
-            <div class="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center flex-shrink-0">
+        {{-- Ringkasan Alur --}}
+        <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
                 <i class="fas fa-user-shield"></i>
             </div>
-            <div class="min-w-0 flex-1">
-                <h3 class="text-sm font-bold text-indigo-900">Tugas Guru Piket</h3>
-                <p class="text-xs text-indigo-700 mt-1 leading-relaxed">
-                    Memverifikasi permohonan, membuat dispensasi manual untuk keadaan darurat, serta memantau status siswa secara real-time.
-                </p>
-                {{-- Ganti bagian link YouTube yang lama dengan ini --}}
-                @if($videoGuru)
-                <button type="button" onclick="openVideoModal('{{ $videoGuru->youtube_url }}', '{{ $videoGuru->title }}')"
-                   class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
-                    <i class="fab fa-youtube mr-1.5 text-sm"></i> {{ $videoGuru->title }}
-                </button>
-                @endif
+            <div class="text-xs text-indigo-900 leading-relaxed">
+                <span class="font-bold">Alur Kerja Guru Piket:</span>
+                <span class="text-indigo-800">1. Review Antrean Izin &rarr; 2. Setujui atau Tolak Berargumen &rarr; 3. Opsi Cetak Struk Bluetooth 58mm / PDF &rarr; 4. Guru Checklog Tugas Luar &rarr; 5. Tukar Jadwal Piket (Shift Swap).</span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+        {{-- Kartu Langkah-langkah Guru --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {{-- 1. Verifikasi --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm"><i class="fas fa-file-signature"></i></div>
-                        <h4 class="font-bold text-gray-900 text-sm">1. Verifikasi Pengajuan</h4>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-file-signature"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">1. Verifikasi Izin</h3>
                     </div>
-                    <ol class="space-y-2 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
-                        <li>Buka menu <strong>"Verifikasi"</strong> di Dashboard.</li>
-                        <li>Periksa alasan, jam, dan tujuan siswa.</li>
-                        <li>Klik <strong>"Setujui"</strong> atau <strong>"Tolak"</strong> dengan alasan yang jelas.</li>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Buka menu <strong>"Verifikasi"</strong> di antrean status <em>Menunggu</em>.</li>
+                        <li>Periksa alasan, jam KBM, dan foto surat pendukung.</li>
+                        <li>Klik <strong>"Setujui"</strong> (sistem otomatis menerbitkan QR token & notif WA) atau <strong>"Tolak"</strong> (wajib isi alasan).</li>
                     </ol>
                 </div>
-                <a href="{{ route('guru.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">
-                    Buka Menu Verifikasi <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                <a href="{{ route('guru.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors shadow-xs">
+                    Menu Verifikasi <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+            {{-- 2. Cetak Struk --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm"><i class="fas fa-plus-circle"></i></div>
-                        <h4 class="font-bold text-gray-900 text-sm">2. Buat Dispensasi Manual</h4>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-print"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">2. Cetak Struk 58mm</h3>
                     </div>
-                    <ol class="space-y-2 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
-                        <li>Gunakan jika siswa <strong>tidak punya HP</strong> atau darurat.</li>
-                        <li>Cari siswa via NIS/Nama, isi data, dan <strong>upload foto</strong>.</li>
-                        <li>Sistem akan <strong>langsung menyetujui</strong> dan menerbitkan QR.</li>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Untuk siswa tanpa HP atau arsip meja pos gerbang.</li>
+                        <li><strong>Cetak Bluetooth (BLE)</strong>: Kirim data ESC/POS langsung ke printer thermal portable.</li>
+                        <li><strong>Unduh PDF</strong>: Berformat 58mm untuk dicetak via komputer.</li>
                     </ol>
                 </div>
-                <a href="{{ route('guru.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition-colors">
-                    Buat Pengajuan Manual <i class="fas fa-plus ml-1.5 text-[10px]"></i>
+                <div class="p-2.5 bg-gray-50 rounded-xl text-[11px] text-gray-600 font-medium text-center border border-gray-200">
+                    <i class="fab fa-bluetooth-b mr-1 text-blue-600"></i>Mendukung Mini Printer Kasir 58mm
+                </div>
+            </div>
+
+            {{-- 3. Dispensasi Mandiri --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-plus-circle"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">3. Dispensasi Mandiri</h3>
+                    </div>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Digunakan jika guru membawa siswa keluar untuk tugas dinas mendadak.</li>
+                        <li>Cari siswa via NIS/Nama, tentukan alasan dan jam izin.</li>
+                        <li>Pengajuan <strong>langsung Disetujui</strong> otomatis dan siap di-scan Satpam.</li>
+                    </ol>
+                </div>
+                <a href="{{ route('guru.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
+                    Buat Mandiri <i class="fas fa-plus ml-1.5 text-[10px]"></i>
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+            {{-- 4. Checklog & Tukar Jadwal --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm"><i class="fas fa-qrcode"></i></div>
-                        <h4 class="font-bold text-gray-900 text-sm">3. Scan Backup & Pantau</h4>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-exchange-alt"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">4. Checklog & Tukar Jadwal</h3>
                     </div>
-                    <ol class="space-y-2 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
-                        <li>Gunakan menu <strong>"Scan QR"</strong> jika Satpam berhalangan.</li>
-                        <li>Gunakan <strong>Filter Dashboard</strong> untuk memantau siswa.</li>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li><strong>Guru Checklog</strong>: Catat saat keluar tugas luar & konfirmasi kembali standby.</li>
+                        <li><strong>Tukar Jadwal Piket</strong>: Ajukan swap jadwal ke guru pengganti jika berhalangan piket.</li>
                     </ol>
                 </div>
-                <a href="{{ route('guru.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
-                    Buka Scanner QR <i class="fas fa-camera ml-1.5 text-[10px]"></i>
-                </a>
+                <div class="flex gap-2">
+                    <a href="{{ route('guru.checklog.index') }}" class="flex-1 inline-flex items-center justify-center px-2 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-colors">Checklog</a>
+                    <a href="{{ route('guru.piket.swap.create') }}" class="flex-1 inline-flex items-center justify-center px-2 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-colors">Tukar Piket</a>
+                </div>
             </div>
         </div>
-    </div>
     @endif
 
-    {{-- ========================================== --}}
-    {{-- PANDUAN KHUSUS SATPAM (Hanya muncul jika role = satpam) --}}
-    {{-- ========================================== --}}
+    {{-- ======================================================== --}}
+    {{-- 3. PANDUAN KHUSUS ROLE: SATPAM (POS GERBANG)              --}}
+    {{-- ======================================================== --}}
     @if($role === 'satpam')
-    <div class="space-y-4">
-        <div class="bg-red-50 border border-red-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-start gap-4">
-            <div class="w-10 h-10 rounded-lg bg-red-600 text-white flex items-center justify-center flex-shrink-0">
+        {{-- Ringkasan Alur --}}
+        <div class="bg-red-50/70 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-red-100 text-red-700 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <div class="min-w-0 flex-1">
-                <h3 class="text-sm font-bold text-red-900">Tugas Satpam / Pos Gerbang</h3>
-                <p class="text-xs text-red-700 mt-1 leading-relaxed">
-                    Memindai QR Code, melakukan verifikasi manual, mencocokkan foto wajah siswa, dan mengonfirmasi kepulangan siswa secara akurat.
-                </p>
-                {{-- Ganti bagian link YouTube yang lama dengan ini --}}
-                @if($videoSatpam)
-                <button type="button" onclick="openVideoModal('{{ $videoSatpam->youtube_url }}', '{{ $videoSatpam->title }}')"
-                   class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
-                    <i class="fab fa-youtube mr-1.5 text-sm"></i> {{ $videoSatpam->title }}
-                </button>
-                @endif
+            <div class="text-xs text-red-900 leading-relaxed">
+                <span class="font-bold">Alur Pemeriksaan Pos Gerbang:</span>
+                <span class="text-red-800">1. Pindai QR Siswa Keluar &rarr; 2. Ambil Foto Verifikasi Gerbang &rarr; 3. Konfirmasi Keluar &rarr; 4. Pindai QR Kembali saat Siswa Tiba &rarr; 5. Deteksi Otomatis Keterlambatan (Overdue).</span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+        {{-- Kartu Langkah-langkah Satpam --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{-- 1. Scan Keluar & Foto --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-bold text-sm"><i class="fas fa-qrcode"></i></div>
-                        <h4 class="font-bold text-gray-900 text-sm">1. Scan QR Code</h4>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-qrcode"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">1. Scan Keluar & Foto Gerbang</h3>
                     </div>
-                    <ol class="space-y-2 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
-                        <li>Buka menu <strong>"Scan QR"</strong> di perangkat.</li>
-                        <li>Arahkan kamera ke QR Code pada HP siswa.</li>
-                        <li><strong>Penting:</strong> Cocokkan wajah siswa dengan <em>Foto Verifikasi</em>.</li>
-                        <li>Scan pertama = <strong>Keluar</strong>. Scan kedua = <strong>Kembali</strong>.</li>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Buka menu <strong>"Scan QR"</strong> (pastikan izin kamera aktif).</li>
+                        <li>Arahkan kamera ke QR Code di HP siswa atau struk thermal.</li>
+                        <li>Periksa data siswa dan batas jam kembali.</li>
+                        <li><strong>Ambil Foto Siswa di Pos</strong> sebagai bukti otentik keberangkatan.</li>
+                        <li>Klik <strong>"Konfirmasi Keluar"</strong> & izinkan siswa lewat gerbang.</li>
                     </ol>
                 </div>
-                <a href="{{ route('satpam.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition-colors">
+                <a href="{{ route('satpam.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors shadow-xs">
                     Buka Scanner QR <i class="fas fa-camera ml-1.5 text-[10px]"></i>
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+            {{-- 2. Scan Kembali & Overdue --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm"><i class="fas fa-search"></i></div>
-                        <h4 class="font-bold text-gray-900 text-sm">2. Verifikasi Manual</h4>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-history"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">2. Scan Kembali & Cek Overdue</h3>
                     </div>
-                    <ol class="space-y-2 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
-                        <li>Jika QR tidak bisa discan, gunakan kolom <strong>"Verifikasi Manual"</strong>.</li>
-                        <li>Ketik <strong>Nomor Surat, NIS, atau Nama Siswa</strong>.</li>
-                        <li>Klik tombol <strong>"Konfirmasi Keluar"</strong> atau <strong>"Kembali"</strong>.</li>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Saat siswa kembali ke sekolah, pindai kembali QR Code siswa.</li>
+                        <li><strong>Tepat Waktu</strong>: Layar hijau &rarr; klik <em>"Konfirmasi Masuk"</em> (status selesai).</li>
+                        <li><strong>Terlambat (Overdue)</strong>: Layar merah/kuning &rarr; sistem menghitung menit telat & otomatis mengirim alert WhatsApp ke Guru Piket.</li>
                     </ol>
                 </div>
-                <a href="{{ route('satpam.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors">
-                    Coba Verifikasi Manual <i class="fas fa-search ml-1.5 text-[10px]"></i>
+                <a href="{{ route('satpam.dashboard') }}#tab-keluar" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
+                    Pantau Siswa Sedang Keluar <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                 </a>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+            {{-- 3. Verifikasi Manual & Guru Piket --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-sm"><i class="fas fa-bell"></i></div>
-                        <h4 class="font-bold text-gray-900 text-sm">3. Kontak & Auto-Selesai</h4>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-search"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">3. Verifikasi Manual & Kontak</h3>
                     </div>
-                    <ol class="space-y-2 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
-                        <li>Gunakan tombol <strong>WhatsApp</strong> untuk menghubungi siswa terlambat.</li>
-                        <li>Sistem akan <strong>otomatis menyelesaikan</strong> dispensasi "Sampai Pulang" setelah jam pulang.</li>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Jika kamera bermasalah atau HP siswa habis baterai, gunakan tab <strong>"Verifikasi Manual"</strong> (cari via Nomor Surat / NIS / Nama).</li>
+                        <li>Gunakan kartu <strong>"Guru Piket Hari Ini"</strong> di Dashboard untuk melihat petugas piket sesi aktif guna koordinasi gerbang.</li>
                     </ol>
                 </div>
-                <a href="{{ route('satpam.dashboard') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-lg bg-gray-800 text-white text-xs font-semibold hover:bg-gray-900 transition-colors">
-                    Dashboard Satpam <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
-                </a>
+                <div class="p-2.5 bg-gray-50 rounded-xl text-[11px] text-gray-600 font-medium border border-gray-200 text-center">
+                    <i class="fas fa-user-shield text-gray-500 mr-1"></i>Koordinasi Meja Piket & Pos Gerbang
+                </div>
             </div>
         </div>
-    </div>
     @endif
 
-    {{-- ========================================== --}}
-    {{-- PANDUAN KHUSUS ADMINISTRATOR (Hanya muncul jika role = admin) --}}
-    {{-- ========================================== --}}
+    {{-- ======================================================== --}}
+    {{-- 4. PANDUAN KHUSUS ROLE: ADMINISTRATOR                    --}}
+    {{-- ======================================================== --}}
     @if($role === 'admin')
-    <div class="space-y-4">
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-start gap-4">
-            <div class="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
+        {{-- Ringkasan Alur --}}
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-slate-800 text-white flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
                 <i class="fas fa-user-cog"></i>
             </div>
-            <div class="min-w-0 flex-1">
-                <h3 class="text-sm font-bold text-blue-900">Tugas Administrator</h3>
-                <p class="text-xs text-blue-700 mt-1 leading-relaxed">
-                    Mengelola data master (Siswa, Guru, Satpam), mengatur kebijakan sistem (jam dispensasi), mengelola template WhatsApp, dan memantau keamanan melalui Audit Log.
-                </p>
-                {{-- Ganti bagian link YouTube yang lama dengan ini --}}
-                @if($videoAdmin)
-                <button type="button" onclick="openVideoModal('{{ $videoAdmin->youtube_url }}', '{{ $videoAdmin->title }}')"
-                   class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors border border-red-200 mt-3">
-                    <i class="fab fa-youtube mr-1.5 text-sm"></i> {{ $videoAdmin->title }}
-                </button>
-                @endif
+            <div class="text-xs text-slate-800 leading-relaxed">
+                <span class="font-bold">Ruang Lingkup Administrator:</span>
+                <span class="text-slate-700">1. Master Data & Penjadwalan Sesi Piket &rarr; 2. Sinkronisasi SiPintu Gateway &rarr; 3. WhatsApp Gateway & Template Pesan &rarr; 4. Audit Trail Keamanan & Ekspor Laporan.</span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {{-- Master Data --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+        {{-- Kartu Langkah-langkah Admin --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {{-- 1. Master Data --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm"><i class="fas fa-database"></i></div>
-                        <h4 class="font-bold text-gray-900 text-sm">1. Kelola Master Data</h4>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-database"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">1. Master Data & Sesi</h3>
                     </div>
-                    <ol class="space-y-2 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
-                        <li>Tambah, edit, atau hapus data <strong>Siswa, Guru, dan Satpam</strong>.</li>
-                        <li>Gunakan fitur <strong>Sinkronisasi SiPintu</strong> untuk memperbarui data secara otomatis dari sistem pusat.</li>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Kelola akun <strong>Siswa, Guru, Satpam, Kelas, & Jurusan</strong>.</li>
+                        <li>Atur <strong>Jadwal Guru Piket</strong> mingguan (Senin-Jumat) beserta sesi jam tugas & guru koordinator.</li>
                     </ol>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <a href="{{ route('admin.siswa.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-colors">Data Siswa</a>
-                    <a href="{{ route('admin.guru.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition-colors">Data Guru</a>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.siswa.index') }}" class="flex-1 inline-flex items-center justify-center px-2 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">Siswa</a>
+                    <a href="{{ route('admin.guru.index') }}" class="flex-1 inline-flex items-center justify-center px-2 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">Guru</a>
                 </div>
             </div>
 
-            {{-- Pengaturan & Template --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+            {{-- 2. SiPintu --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm"><i class="fas fa-sliders-h"></i></div>
-                        <h4 class="font-bold text-gray-900 text-sm">2. Pengaturan & Template</h4>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-cloud-arrow-down"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">2. SiPintu Gateway</h3>
                     </div>
-                    <ol class="space-y-2 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
-                        <li>Atur <strong>Jam Operasional</strong> pengajuan dispensasi (Senin-Jumat).</li>
-                        <li>Ubah kata-kata notifikasi <strong>Template WhatsApp</strong> sesuai kebutuhan sekolah tanpa coding.</li>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Sistem terintegrasi secara <strong>SSO Hybrid</strong> dengan SiPintu SMKN 1 Bangsri.</li>
+                        <li>Gunakan menu sinkronisasi untuk menarik data siswa dan guru terbaru secara otomatis.</li>
                     </ol>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <a href="{{ route('admin.settings.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-colors">Pengaturan</a>
-                    <a href="{{ route('admin.whatsapp-templates.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-colors">Template WA</a>
-                </div>
+                <a href="{{ route('admin.settings.index') }}" class="w-full inline-flex items-center justify-center px-3 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
+                    Pengaturan SiPintu <i class="fas fa-cog ml-1.5 text-[10px]"></i>
+                </a>
             </div>
 
-            {{-- Monitoring & Audit --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+            {{-- 3. WhatsApp Template --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm"><i class="fas fa-chart-line"></i></div>
-                        <h4 class="font-bold text-gray-900 text-sm">3. Monitoring & Audit</h4>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fab fa-whatsapp"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">3. WhatsApp Template</h3>
                     </div>
-                    <ol class="space-y-2 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
-                        <li>Pantau <strong>Semua Pengajuan</strong> dispensasi di seluruh sekolah.</li>
-                        <li>Cek <strong>Audit Log</strong> untuk melihat riwayat aktivitas login dan perubahan data.</li>
-                        <li>Unduh <strong>Laporan</strong> dalam format PDF atau Excel.</li>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Konfigurasi token Fonnte WhatsApp Gateway.</li>
+                        <li>Kustomisasi template pesan otomatis: <em>Terlambat</em>, <em>Disetujui</em>, <em>Ditolak</em>, dan <em>Keluar</em>.</li>
                     </ol>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <a href="{{ route('admin.semua.pengajuan') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold transition-colors">Semua Pengajuan</a>
-                    <a href="{{ route('admin.audit.index') }}" class="flex-1 inline-flex items-center justify-center px-3 py-2.5 min-h-[44px] rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold transition-colors">Audit Log</a>
+                <a href="{{ route('admin.whatsapp-templates.index') }}" class="w-full inline-flex items-center justify-center px-3 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
+                    Template WhatsApp <i class="fab fa-whatsapp ml-1.5 text-xs"></i>
+                </a>
+            </div>
+
+            {{-- 4. Audit & Laporan --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-shield-halved"></i></div>
+                        <h3 class="font-bold text-gray-900 text-sm">4. Audit Log & Rekap</h3>
+                    </div>
+                    <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
+                        <li>Pantau rekam jejak aktivitas, IP address & proteksi gagal login brute force.</li>
+                        <li>Ekspor data rekapitulasi dispensasi ke format <strong>Excel (.xlsx)</strong> atau <strong>PDF</strong>.</li>
+                    </ol>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.semua.pengajuan') }}" class="flex-1 inline-flex items-center justify-center px-2 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">Laporan</a>
+                    <a href="{{ route('admin.audit.index') }}" class="flex-1 inline-flex items-center justify-center px-2 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">Audit</a>
                 </div>
             </div>
         </div>
-    </div>
     @endif
 
-    {{-- ========================================== --}}
-    {{-- PERTANYAAN UMUM (FAQ) --}}
-    {{-- ========================================== --}}
-    <div id="tanya-jawab" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-        <h3 class="text-base font-bold text-gray-900 flex items-center">
-            <i class="fas fa-question-circle text-blue-600 mr-2"></i>Pertanyaan Umum (FAQ)
-        </h3>
+    {{-- ======================================================== --}}
+    {{-- PERTANYAAN UMUM (FAQ) — BERSIH TANPA GRADIENT            --}}
+    {{-- ======================================================== --}}
+    <div id="tanya-jawab" class="bg-white rounded-2xl border border-gray-200 shadow-xs p-5 sm:p-6 space-y-3">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+            <h3 class="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
+                <i class="fas fa-question-circle text-gray-500"></i>Pertanyaan Umum (FAQ)
+            </h3>
+            <span class="text-[11px] text-gray-400 font-medium">Bantuan Cepat</span>
+        </div>
 
-        <div class="space-y-3 text-xs" x-data="{ openFaq: null }">
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <button type="button" @click="openFaq = openFaq === 1 ? null : 1" class="w-full p-4 min-h-[44px] text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <span>Apakah Kode QR bisa digunakan dua kali?</span>
-                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 1 ? 'rotate-180' : ''"></i>
+        <div class="space-y-2 text-xs">
+            {{-- Q1 --}}
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+                <button type="button" @click="openFaq = openFaq === 1 ? null : 1" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
+                    <span>Apakah Kode QR dispensasi bisa digunakan berulang kali?</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 1 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
-                <div x-show="openFaq === 1" class="p-4 bg-white border-t border-gray-200 text-gray-600 leading-relaxed">
-                    Ya, tapi untuk tujuan berbeda. Scan <strong>pertama</strong> akan mencatat status <em>Keluar</em>. Scan <strong>kedua</strong> saat siswa kembali akan mencatat status <em>Selesai</em>. Setelah itu, QR tidak bisa digunakan lagi.
+                <div x-show="openFaq === 1" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
+                    Tidak bisa. Kode QR didesain dengan prinsip <strong>Single-Use Lifecycle</strong>. Scan pertama di pos Satpam mencatat status <em>Keluar</em>. Scan kedua saat siswa tiba kembali mencatat status <em>Selesai</em>. Setelah berstatus selesai, kode QR tidak dapat digunakan lagi.
                 </div>
             </div>
 
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <button type="button" @click="openFaq = openFaq === 2 ? null : 2" class="w-full p-4 min-h-[44px] text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <span>Bagaimana jika HP siswa mati/kehabisan baterai saat di pintu gerbang?</span>
-                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 2 ? 'rotate-180' : ''"></i>
+            {{-- Q2 --}}
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+                <button type="button" @click="openFaq = openFaq === 2 ? null : 2" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
+                    <span>Bagaimana jika HP siswa mati / baterai habis saat di pos gerbang Satpam?</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 2 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
-                <div x-show="openFaq === 2" class="p-4 bg-white border-t border-gray-200 text-gray-600 leading-relaxed">
-                    Siswa dapat menyebutkan Nomor Surat Dispensasi, NIS, atau Nama Lengkap kepada Satpam. Satpam akan menggunakan fitur <strong>"Verifikasi Manual"</strong> di halaman Scan untuk mencari data dan mengonfirmasi keluar/masuk secara manual.
+                <div x-show="openFaq === 2" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
+                    Siswa cukup menyebutkan <strong>Nomor Surat Dispensasi, NIS, atau Nama Lengkap</strong> kepada petugas Satpam. Satpam memiliki fitur <strong>"Verifikasi Manual"</strong> di menu scan untuk mencari berkas izin dan mengonfirmasi keluar/kembali secara langsung. Selain itu, siswa juga bisa membawa struk thermal 58mm yang dicetak oleh Guru Piket.
                 </div>
             </div>
 
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <button type="button" @click="openFaq = openFaq === 3 ? null : 3" class="w-full p-4 min-h-[44px] text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <span>Mengapa siswa wajib upload Foto Verifikasi saat mengajukan?</span>
-                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 3 ? 'rotate-180' : ''"></i>
+            {{-- Q3 --}}
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+                <button type="button" @click="openFaq = openFaq === 3 ? null : 3" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
+                    <span>Mengapa Satpam mengambil foto siswa di pos gerbang saat keluar?</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 3 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
-                <div x-show="openFaq === 3" class="p-4 bg-white border-t border-gray-200 text-gray-600 leading-relaxed">
-                    Untuk memastikan keamanan dan mencegah penyalahgunaan dispensasi oleh orang yang tidak berhak. Satpam akan mencocokkan wajah siswa dengan foto tersebut. <strong>Foto akan dihapus otomatis</strong> dari server setelah siswa dikonfirmasi kembali.
+                <div x-show="openFaq === 3" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
+                    Pengambilan foto fisik di pos gerbang berfungsi sebagai validasi keamanan otentik (<em>anti-fraud</em>). Foto ini membuktikan bahwa siswa yang keluar benar-benar pemilik izin dengan atribut seragam lengkap, sekaligus mencegah peminjaman tiket QR oleh orang lain.
                 </div>
             </div>
 
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <button type="button" @click="openFaq = openFaq === 4 ? null : 4" class="w-full p-4 min-h-[44px] text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <span>Apa yang terjadi jika siswa tidak kembali sebelum jam pulang sekolah?</span>
-                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 4 ? 'rotate-180' : ''"></i>
+            {{-- Q4 --}}
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+                <button type="button" @click="openFaq = openFaq === 4 ? null : 4" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
+                    <span>Bagaimana sistem mendeteksi siswa yang terlambat kembali (Overdue)?</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 4 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
-                <div x-show="openFaq === 4" class="p-4 bg-white border-t border-gray-200 text-gray-600 leading-relaxed">
-                    Untuk dispensasi yang berlaku "Sampai Pulang", sistem memiliki fitur <strong>Auto-Complete</strong>. Sistem akan otomatis mengubah status menjadi <em>Selesai</em> setelah jam pulang sekolah agar data tidak menumpuk, namun siswa tetap diwajibkan melapor ke Satpam saat tiba di sekolah.
+                <div x-show="openFaq === 4" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
+                    Sistem secara otomatis menghitung selisih waktu antara batas waktu kembali dengan jam aktual scan di gerbang. Jika melewati batas waktu, layar scanner Satpam menampilkan warna merah dengan rincian total menit keterlambatan, menandai dispensasi sebagai *terlambat*, dan mengirimkan notifikasi peringatan via WhatsApp.
+                </div>
+            </div>
+
+            {{-- Q5 --}}
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+                <button type="button" @click="openFaq = openFaq === 5 ? null : 5" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
+                    <span>Bagaimana cara mencetak bukti izin ke Printer Bluetooth Thermal 58mm?</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 5 ? 'rotate-180 text-gray-700' : ''"></i>
+                </button>
+                <div x-show="openFaq === 5" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
+                    Guru Piket cukup membuka permohonan yang telah disetujui, menyalakan Bluetooth di laptop/HP, lalu mengklik tombol <strong>"Cetak Bluetooth"</strong>. Browser Chrome/Edge akan memindai printer thermal kasir (ESC/POS 58mm) dan mencetak struk fisik lengkap dengan barcode/QR dalam hitungan detik tanpa perlu instalasi driver tambahan.
                 </div>
             </div>
         </div>
@@ -424,7 +467,7 @@
 
 </div>
 
-{{-- Tambahkan Modal Video di bagian bawah file (sebelum @endsection) --}}
+{{-- MODAL VIDEO TUTORIAL --}}
 <div id="videoModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="video-modal-title" role="dialog" aria-modal="true">
     <div class="flex items-center justify-center min-h-screen p-4 text-center sm:block sm:p-0">
         {{-- Overlay --}}
@@ -437,7 +480,7 @@
             {{-- Header --}}
             <div class="bg-gray-50 px-4 py-3 flex items-center justify-between border-b border-gray-200">
                 <h3 class="text-base font-bold text-gray-900" id="videoModalTitle">Video Tutorial</h3>
-                <button type="button" onclick="closeVideoModal()" class="w-11 h-11 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Tutup Modal">
+                <button type="button" onclick="closeVideoModal()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors" aria-label="Tutup Modal">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
@@ -455,6 +498,7 @@
     </div>
 </div>
 @endsection
+
 @push('scripts')
 <script>
 function openVideoModal(youtubeUrl, title) {
@@ -462,21 +506,15 @@ function openVideoModal(youtubeUrl, title) {
     const frame = document.getElementById('videoFrame');
     const titleEl = document.getElementById('videoModalTitle');
 
-    // Extract video ID dari URL YouTube
     const videoId = extractVideoId(youtubeUrl);
 
     if (videoId) {
-        // Set judul
         titleEl.textContent = title;
-
-        // Set src iframe dengan autoplay
         frame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-
-        // Tampilkan modal
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     } else {
-        alert('Link video tidak valid');
+        alert('Link video YouTube tidak valid');
     }
 }
 
@@ -484,10 +522,7 @@ function closeVideoModal() {
     const modal = document.getElementById('videoModal');
     const frame = document.getElementById('videoFrame');
 
-    // Hentikan video
     frame.src = '';
-
-    // Sembunyikan modal
     modal.classList.add('hidden');
     document.body.style.overflow = '';
 }
@@ -497,7 +532,6 @@ function extractVideoId(url) {
     return match ? match[1] : null;
 }
 
-// Tutup modal dengan tombol ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeVideoModal();
