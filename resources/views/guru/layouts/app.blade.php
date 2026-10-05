@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=overlays-content, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#1d4ed8">
     <meta name="mobile-web-app-capable" content="yes">
@@ -19,7 +19,18 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @include('components.sweetalert-theme')
-    <style>[x-cloak] { display: none !important; }</style>
+    <style>
+        [x-cloak] { display: none !important; }
+        /* Sembunyikan bottom bar saat keyboard virtual HP terbuka agar tidak ikut keangkat */
+        body.keyboard-open .mobile-bottom-nav,
+        body.keyboard-open #mobileBottomNav,
+        body.keyboard-open #btnLihatJadwal {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(120%) !important;
+            transition: transform 0.2s ease, opacity 0.2s ease !important;
+        }
+    </style>
 
 </head>
 <body class="bg-gray-100">
@@ -185,7 +196,7 @@
     {{-- ================================================== --}}
     {{-- BOTTOM NAV — MOBILE (GRID SYSTEM like Satpam)      --}}
     {{-- ================================================== --}}
-    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style="padding-bottom: env(safe-area-inset-bottom);">
+    <nav id="mobileBottomNav" class="mobile-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 transition-all duration-200" style="padding-bottom: env(safe-area-inset-bottom);">
         <div class="grid grid-cols-5 h-16 w-full">
             {{-- 1. Beranda --}}
             <a href="{{ route('guru.dashboard') }}"
@@ -355,9 +366,49 @@
         </div>
     </div>
 </div>
+</div>
+
+<script>
+(function() {
+    function handleViewportResize() {
+        if (!window.visualViewport) return;
+        const isKeyboard = (window.innerHeight - window.visualViewport.height) > 150;
+        if (isKeyboard) {
+            document.body.classList.add('keyboard-open');
+        } else {
+            const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            if (!['input', 'textarea', 'select'].includes(activeTag)) {
+                document.body.classList.remove('keyboard-open');
+            }
+        }
+    }
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportResize);
+        window.visualViewport.addEventListener('scroll', handleViewportResize);
+    }
+
+    document.addEventListener('focusin', function(e) {
+        const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+        if (['input', 'textarea', 'select'].includes(tag) && window.innerWidth < 1024) {
+            document.body.classList.add('keyboard-open');
+        }
+    });
+
+    document.addEventListener('focusout', function(e) {
+        setTimeout(function() {
+            const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            if (!['input', 'textarea', 'select'].includes(activeTag) && window.innerWidth < 1024) {
+                if (!window.visualViewport || (window.innerHeight - window.visualViewport.height) <= 150) {
+                    document.body.classList.remove('keyboard-open');
+                }
+            }
+        }, 150);
+    });
+})();
+</script>
+
 @stack('scripts')
-
-
 
 </body>
 </html>
