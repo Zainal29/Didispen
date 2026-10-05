@@ -337,7 +337,7 @@
             </h3>
             <div class="space-y-3">
                 @if($dispensasi->status === 'disetujui')
-                    <a href="{{ route('satpam.scan', ['dispensasi' => $dispensasi->id]) }}" class="w-full inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+                    <a href="{{ route('satpam.scan') }}" class="w-full inline-flex justify-center items-center px-5 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
                         <i class="fas fa-camera mr-2 text-base"></i>Scan QR Code untuk Keluar
                     </a>
                     <p class="text-xs text-gray-500 text-center font-medium"><i class="fas fa-info-circle mr-1"></i>Arahkan kamera ke QR Code siswa</p>

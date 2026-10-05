@@ -25,20 +25,28 @@
 @endphp
 
 {{-- ============ HERO SECTION ============ --}}
-<div class="bg-red-600 rounded-xl p-4 sm:p-6 mb-4 text-white">
-    <div class="flex items-center justify-between gap-3">
-        <div class="min-w-0">
-            <p class="text-red-100 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider">
-                {{ now()->isoFormat('dddd, D MMMM Y') }} • Pos Gerbang
-            </p>
-            <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight mt-0.5 truncate">
-                Halo, {{ auth()->user()->name }} <i class="fas fa-hand-sparkles text-yellow-300 ml-1"></i>
-            </h2>
-            <p class="text-red-100 text-[11px] mt-1 hidden sm:block">Pantau keluar-masuk siswa dispensasi hari ini dengan mudah.</p>
+<div class="relative overflow-hidden bg-gradient-to-br from-red-600 via-red-600 to-rose-700 rounded-2xl p-4 sm:p-6 mb-5 shadow-lg shadow-red-500/15 text-white">
+    <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="absolute right-12 top-2 w-24 h-24 bg-rose-400/20 rounded-full blur-xl pointer-events-none"></div>
+    
+    <div class="relative z-10">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-semibold text-red-100 uppercase tracking-wide mb-2">
+            <i class="far fa-calendar-alt text-red-200"></i>
+            {{ now()->isoFormat('dddd, D MMMM Y') }} • Pos Gerbang
         </div>
-        <a href="{{ route('satpam.scan') }}" class="hidden sm:inline-flex items-center px-4 py-2.5 rounded-lg bg-white text-red-700 text-sm font-semibold hover:bg-red-50 transition-colors flex-shrink-0">
-            <i class="fas fa-qrcode mr-2"></i> Scan QR
-        </a>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
+                    Halo, {{ auth()->user()->name }}!
+                </h2>
+                <p class="text-xs sm:text-sm text-red-100/90 mt-1 max-w-xl">
+                    Pos Keamanan Gerbang SMKN 1 Bangsri. Verifikasi barcode keluar-masuk siswa dispensasi hari ini.
+                </p>
+            </div>
+            <a href="{{ route('satpam.scan') }}" class="inline-flex items-center px-4 py-2 rounded-xl bg-white text-red-700 text-xs font-bold hover:bg-red-50 shadow-sm active:scale-95 transition-all self-start sm:self-center flex-shrink-0">
+                <i class="fas fa-qrcode mr-1.5"></i> Scan QR Dispensasi
+            </a>
+        </div>
     </div>
 </div>
 
@@ -47,7 +55,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 pb-3 mb-3">
         <div>
             <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-xs">
+                <div class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-sm">
                     <i class="fas fa-user-shield"></i>
                 </div>
                 <h3 class="text-sm font-bold text-gray-900">Guru Piket Hari Ini</h3>
@@ -154,7 +162,7 @@
 {{-- STATISTIK SEBAGAI FILTER UTAMA --}}
 @php
 $cards = [
-    'menunggu'  => ['Menunggu', $menungguKeluar->count(), 'fa-clock', 'amber'],
+    'menunggu'  => ['Menunggu Scan', $menungguKeluar->count(), 'fa-clock', 'amber'],
     'keluar'    => ['Sedang Keluar', $siswaKeluar->count(), 'fa-person-walking', 'sky'],
     'terlambat' => ['Terlambat', $terlambatCount, 'fa-exclamation-triangle', 'red'],
     'selesai'   => ['Selesai', $stats['selesai'] ?? 0, 'fa-check-double', 'emerald'],
@@ -169,18 +177,18 @@ $cards = [
         <button type="button"
                 onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
                 data-filter="{{ $key }}"
-                class="stat-card-btn text-left rounded-xl border p-3 sm:p-4 min-h-[44px] transition-all w-full
+                class="stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[44px] transition-all w-full
                 {{ $isActive
                     ? 'active bg-white border-' . $color . '-500 ring-2 ring-' . $color . '-500/20 shadow-sm'
-                    : 'bg-white border-gray-200 hover:border-gray-300' }}">
+                    : 'bg-white border-gray-200/90 shadow-xs hover:border-gray-300 hover:shadow-md' }}">
             <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors
                     {{ $isActive ? 'bg-' . $color . '-500 text-white' : 'bg-' . $color . '-100 text-' . $color . '-600' }}">
                     <i class="fas {{ $card[2] }} text-sm"></i>
                 </div>
-                <span class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $card[1] }}</span>
+                <span class="text-2xl sm:text-3xl font-black text-gray-900">{{ $card[1] }}</span>
             </div>
-            <p class="text-[11px] sm:text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ $card[0] }}</p>
+            <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $card[0] }}</p>
         </button>
     @endforeach
 </div>
@@ -212,7 +220,7 @@ $cards = [
 
     {{-- SECTION: MENUNGGU --}}
     <div id="section-menunggu" class="space-y-3 {{ $currentFilter !== 'menunggu' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-clock text-amber-500 mr-1.5"></i>Menunggu Konfirmasi Keluar</h3>
+        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-clock text-amber-500 mr-1.5"></i>Menunggu Scan Keluar</h3>
         @if($menungguKeluar->count() > 0)
             @foreach($menungguKeluar as $dispensasi)
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
@@ -220,8 +228,8 @@ $cards = [
         @else
             <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
                 <div class="w-14 h-14 mx-auto rounded-lg bg-amber-50 text-amber-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-clock"></i></div>
-                <p class="text-gray-700 text-sm font-semibold">Belum ada siswa yang menunggu konfirmasi keluar hari ini</p>
-                <p class="text-gray-500 text-xs mt-1">Siswa yang sudah disetujui guru akan muncul di sini</p>
+                <p class="text-gray-700 text-sm font-semibold">Belum ada siswa yang menunggu scan keluar hari ini</p>
+                <p class="text-gray-500 text-xs mt-1">Dispensasi yang telah disetujui Guru Piket akan muncul di sini untuk verifikasi gerbang</p>
             </div>
         @endif
     </div>
