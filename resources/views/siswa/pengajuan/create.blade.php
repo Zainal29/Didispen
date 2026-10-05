@@ -55,15 +55,17 @@
                 </div>
             </div>
 
-            {{-- Informasi penting --}}
-            <div class="mb-6 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+            {{-- Informasi penting & Aturan Konfirmasi --}}
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 shrink-0 rounded-xl bg-white border border-blue-100 text-blue-600 flex items-center justify-center">
-                        <i class="fas fa-circle-info text-sm"></i>
+                    <div class="w-8 h-8 shrink-0 rounded-xl bg-white border border-amber-200 text-amber-600 flex items-center justify-center shadow-xs">
+                        <i class="fas fa-triangle-exclamation text-sm"></i>
                     </div>
-                    <div>
-                        <p class="text-sm font-bold text-blue-900">Perlu persetujuan Guru Piket</p>
-                        <p class="mt-0.5 text-xs text-blue-700 leading-relaxed">Anda hanya dapat meninggalkan area sekolah setelah pengajuan disetujui.</p>
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-amber-900">Perhatian Sebelum Mengajukan</p>
+                        <p class="mt-1 text-xs text-amber-800 leading-relaxed">
+                            Setelah formulir dikirim, permohonan <strong>tidak dapat dibatalkan sendiri</strong>. Anda <strong>wajib langsung menemui Guru Piket</strong> di ruang piket untuk verifikasi. Permohonan tanpa konfirmasi hingga akhir KBM akan otomatis <strong>Kadaluarsa</strong>.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -436,89 +438,97 @@
         class="absolute inset-0 bg-slate-950/55 backdrop-blur-sm opacity-0 transition-opacity duration-200 ease-out">
     </div>
 
-    <div class="relative z-10 flex min-h-full items-center justify-center p-3 sm:p-5">
+    <div class="relative z-10 flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
         <div id="modalJadwalContent"
-            class="w-full max-w-md max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-40px)]
-                   bg-white rounded-2xl border border-gray-200 shadow-2xl
+            class="w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh]
+                   bg-white rounded-t-2xl sm:rounded-2xl border border-gray-200 shadow-2xl
                    overflow-hidden flex flex-col
                    opacity-0 scale-95 translate-y-2
                    transition-all duration-200 ease-out">
 
             {{-- Header --}}
-            <div class="flex-shrink-0 px-4 sm:px-5 py-4 border-b border-gray-200 bg-white">
-                <div class="flex items-start justify-between gap-4">
+            <div class="flex-shrink-0 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-gray-200 bg-white">
+                <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
-                            <i class="fas fa-calendar-check"></i>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-xs">
+                            <i class="fas fa-calendar-check text-base"></i>
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-2">
-                                <h2 id="modalJadwalTitle" class="text-sm sm:text-base font-bold text-gray-900">Jadwal Pelajaran & Istirahat</h2>
-                                <span class="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700">
+                                <h2 id="modalJadwalTitle" class="text-sm sm:text-base font-bold text-gray-900 truncate">Jadwal Pelajaran & Istirahat</h2>
+                                <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 shrink-0">
                                     <i class="fas fa-circle text-[5px]"></i> HARI INI
                                 </span>
                             </div>
-                            <p id="modalJadwalHari" class="text-xs sm:text-sm text-gray-500 mt-0.5">Memuat hari...</p>
+                            <p id="modalJadwalHari" class="text-xs text-gray-500 mt-0.5 truncate">Memuat hari...</p>
                         </div>
                     </div>
                     <button type="button" id="btnTutupJadwal"
-                        class="w-9 h-9 shrink-0 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all duration-150"
+                        class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all duration-150"
                         aria-label="Tutup jadwal">
-                        <i class="fas fa-xmark"></i>
+                        <i class="fas fa-xmark text-sm"></i>
                     </button>
                 </div>
             </div>
 
             {{-- List Jadwal & Istirahat --}}
             <div id="jadwalList"
-                class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4 space-y-2"
+                class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-2"
                 style="-webkit-overflow-scrolling: touch;">
                 @foreach($semuaSlotHariIni ?? [] as $slot)
                     @php
-                        $sDot = str_replace(':', '.', $slot['start'] ?? '');
-                        $eDot = str_replace(':', '.', $slot['end'] ?? '');
                         $isIstirahat = ($slot['type'] ?? '') === 'istirahat';
                         $isPembiasaan = ($slot['type'] ?? '') === 'pembiasaan';
                     @endphp
                     @if($isIstirahat)
-                        <div class="p-3 bg-amber-50/80 hover:bg-amber-100/80 rounded-xl border border-amber-200 transition-colors flex items-center justify-between">
-                            <span class="text-xs font-bold text-amber-800 flex items-center gap-1.5">
-                                <i class="fas fa-mug-hot text-amber-600"></i>
-                                {{ $slot['label'] }} ({{ $sDot }} - {{ $eDot }})
-                            </span>
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-200/70 px-2 py-0.5 rounded-full">Istirahat</span>
-                                <span class="text-[11px] text-amber-900 font-mono font-semibold">{{ $slot['start'] }} - {{ $slot['end'] }} WIB</span>
+                        <div class="p-3 bg-amber-50/80 hover:bg-amber-100/80 rounded-xl border border-amber-200/90 transition-colors flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-xs">
+                                    <i class="fas fa-mug-hot"></i>
+                                </div>
+                                <span class="text-xs font-bold text-amber-900 truncate">{{ $slot['label'] }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-200/70 px-2 py-0.5 rounded-full hidden xs:inline">Istirahat</span>
+                                <span class="text-xs text-amber-950 font-mono font-bold">{{ $slot['start'] }} - {{ $slot['end'] }}</span>
                             </div>
                         </div>
                     @elseif($isPembiasaan)
-                        <div class="p-3 bg-indigo-50/80 hover:bg-indigo-100/80 rounded-xl border border-indigo-200 transition-colors flex items-center justify-between">
-                            <span class="text-xs font-bold text-indigo-800 flex items-center gap-1.5">
-                                <i class="fas fa-book-reader text-indigo-600"></i>
-                                {{ $slot['label'] }} ({{ $sDot }} - {{ $eDot }})
-                            </span>
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-200/70 px-2 py-0.5 rounded-full">Pembiasaan</span>
-                                <span class="text-[11px] text-indigo-900 font-mono font-semibold">{{ $slot['start'] }} - {{ $slot['end'] }} WIB</span>
+                        <div class="p-3 bg-indigo-50/80 hover:bg-indigo-100/80 rounded-xl border border-indigo-200/90 transition-colors flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 text-xs">
+                                    <i class="fas fa-book-reader"></i>
+                                </div>
+                                <span class="text-xs font-bold text-indigo-900 truncate">{{ $slot['label'] }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-200/70 px-2 py-0.5 rounded-full hidden xs:inline">Pembiasaan</span>
+                                <span class="text-xs text-indigo-950 font-mono font-bold">{{ $slot['start'] }} - {{ $slot['end'] }}</span>
                             </div>
                         </div>
                     @else
-                        <div class="p-3 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-100 transition-colors flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-800">{{ $slot['label'] }} ({{ $sDot }} - {{ $eDot }})</span>
-                            <span class="text-[11px] text-gray-500 font-mono">{{ $slot['start'] }} - {{ $slot['end'] }} WIB</span>
+                        <div class="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/70 transition-colors flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-blue-600 flex items-center justify-center shrink-0 text-xs">
+                                    <i class="fas fa-graduation-cap text-[11px]"></i>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-800 truncate">{{ $slot['label'] }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full hidden xs:inline">KBM</span>
+                                <span class="text-xs text-slate-700 font-mono font-semibold">{{ $slot['start'] }} - {{ $slot['end'] }}</span>
+                            </div>
                         </div>
                     @endif
                 @endforeach
             </div>
 
             {{-- Footer --}}
-            <div class="flex-shrink-0 px-4 sm:px-5 py-3 border-t border-gray-200 bg-gray-50">
-                <div class="flex items-start gap-2.5">
-                    <div class="w-7 h-7 shrink-0 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center">
-                        <i class="fas fa-circle-info text-xs"></i>
-                    </div>
-                    <p class="text-xs text-gray-500 leading-relaxed">
-                        Jam pengajuan dispensasi mengikuti jadwal pelajaran & jam istirahat yang telah diatur oleh Admin.
+            <div class="flex-shrink-0 px-4 sm:px-5 py-3 border-t border-gray-200 bg-gray-50/80">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-circle-info text-blue-600 text-xs shrink-0"></i>
+                    <p class="text-[11px] sm:text-xs text-gray-500 leading-tight">
+                        Waktu pengajuan dispensasi disesuaikan dengan jadwal KBM yang aktif.
                     </p>
                 </div>
             </div>
@@ -1169,6 +1179,49 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     if (selfieStandbyBox) {
                         selfieStandbyBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+                return;
+            }
+
+            // Konfirmasi Sebelum Pengajuan (Kasus 1: Siswa Mengerti Aturan Guru Piket)
+            if (formDispensasi.dataset.confirmed !== 'true') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                resetLoadingState();
+
+                Swal.fire({
+                    title: 'Ajukan Dispensasi Sekarang?',
+                    html: `
+                        <div class="text-left text-xs sm:text-sm text-gray-600 space-y-3">
+                            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
+                                <p class="font-bold mb-1 flex items-center gap-1.5 text-amber-800">
+                                    <i class="fas fa-triangle-exclamation text-amber-600"></i> PERHATIKAN ATURAN BERIKUT:
+                                </p>
+                                <ul class="list-disc list-inside space-y-1 text-amber-800 mt-1">
+                                    <li>Setelah diajukan, permohonan <b>tidak dapat dibatalkan sendiri</b> oleh siswa.</li>
+                                    <li>Anda <b>wajib segera menemui Guru Piket</b> di ruang piket untuk persetujuan.</li>
+                                    <li>Pengajuan yang ditinggalkan tanpa konfirmasi akan otomatis <b>kadaluarsa</b> saat KBM berakhir.</li>
+                                </ul>
+                            </div>
+                            <p class="text-gray-700">Pastikan seluruh data dan foto selfie yang Anda sertakan sudah benar dan sesuai.</p>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    showDenyButton: false,
+                    confirmButtonColor: '#2563eb',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: '<i class="fas fa-paper-plane mr-1.5"></i> Ya, Ajukan Dispensasi',
+                    cancelButtonText: 'Periksa Kembali',
+                    reverseButtons: true
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        formDispensasi.dataset.confirmed = 'true';
+                        formDispensasi.requestSubmit();
+                    } else {
+                        delete formDispensasi.dataset.confirmed;
+                        resetLoadingState();
                     }
                 });
                 return;

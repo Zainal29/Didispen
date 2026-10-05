@@ -16,19 +16,12 @@
                     Diajukan: {{ $dispensasi->created_at->isoFormat('dddd, D MMMM Y, HH:mm') }} WIB
                 </p>
             </div>
-            <div>
                 @php
-                    $statusBadges = [
-                        'menunggu'  => ['bg-amber-100', 'text-amber-700', 'Menunggu Persetujuan'],
-                        'disetujui' => ['bg-emerald-100', 'text-emerald-700', 'Disetujui'],
-                        'ditolak'   => ['bg-red-100', 'text-red-700', 'Ditolak'],
-                        'keluar'    => ['bg-sky-100', 'text-sky-700', 'Sedang Keluar'],
-                        'selesai'   => ['bg-gray-100', 'text-gray-700', 'Selesai'],
-                    ];
-                    $badge = $statusBadges[$dispensasi->status] ?? $statusBadges['menunggu'];
+                    $badge = $dispensasi->status_badge;
                 @endphp
-                <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold {{ $badge[0] }} {{ $badge[1] }}">
-                    {{ $badge[2] }}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border {{ $badge['class'] }}">
+                    <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                    {{ $badge['text'] }}
                 </span>
             </div>
         </div>
@@ -98,18 +91,10 @@
 </div>
 @endif
 
-    {{-- PERINGATAN TERLAMBAT --}}
+    {{-- STATUS NOTIFICATION BANNERS --}}
     @php
         $isTerlambatDetail = $dispensasi->status === 'keluar' && $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
-        $terlambatJam = 0;
-        $terlambatMenit = 0;
-        $terlambatText = '0 menit';
-        if ($isTerlambatDetail) {
-            $totalMenit = \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($dispensasi->batas_waktu_kembali);
-            $terlambatJam = floor($totalMenit / 60);
-            $terlambatMenit = $totalMenit % 60;
-            $terlambatText = $terlambatJam > 0 ? "{$terlambatJam} jam {$terlambatMenit} menit" : "{$terlambatMenit} menit";
-        }
+        $terlambatText = $dispensasi->getLateDurationText();
     @endphp
 
     @if($isTerlambatDetail)
@@ -146,20 +131,74 @@
                 </div>
             </div>
         </div>
-    @else
-        @if($dispensasi->status === 'keluar' && $dispensasi->batas_waktu_kembali)
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-clock text-amber-600 text-lg"></i>
+    @elseif($dispensasi->status === 'keluar' && $dispensasi->batas_waktu_kembali)
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-clock text-amber-600 text-lg"></i>
+            </div>
+            <div class="flex-1">
+                <p class="text-amber-900 font-semibold text-sm">Sedang Keluar - Harap Kembali Tepat Waktu</p>
+                <p class="text-amber-700 text-xs">
+                    Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') }} WIB</strong>
+                </p>
+            </div>
+        </div>
+    @elseif($dispensasi->isNotReturned())
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-5">
+            <div class="flex items-start gap-3 sm:gap-4">
+                <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-user-xmark text-lg"></i>
                 </div>
-                <div class="flex-1">
-                    <p class="text-amber-900 font-semibold text-sm">Sedang Keluar - Harap Kembali Tepat Waktu</p>
-                    <p class="text-amber-700 text-xs">
-                        Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') }} WIB</strong>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-bold text-red-900">Dispensasi Ditutup: Tidak Kembali ke Sekolah</h3>
+                    <p class="text-xs text-red-700 mt-1 leading-relaxed">
+                        Anda tercatat keluar dari sekolah namun <strong>tidak melakukan scan kembali di pos gerbang Satpam</strong> hingga kegiatan belajar mengajar berakhir. Status ditutup otomatis dengan catatan peringatan.
                     </p>
                 </div>
             </div>
-        @endif
+        </div>
+    @elseif($dispensasi->isReturnedLate())
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-5">
+            <div class="flex items-start gap-3 sm:gap-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-clock-rotate-left text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-bold text-amber-900">Dispensasi Selesai (Kembali Terlambat)</h3>
+                    <p class="text-xs text-amber-800 mt-1 leading-relaxed">
+                        Dispensasi telah selesai, namun Anda kembali melewati batas waktu yang ditentukan selama <strong>{{ $dispensasi->getLateDurationText() }}</strong> (Kembali pukul {{ $dispensasi->waktu_kembali_aktual?->format('H:i') }} WIB, Batas waktu: {{ $dispensasi->batas_waktu_kembali?->format('H:i') }} WIB).
+                    </p>
+                </div>
+            </div>
+        </div>
+    @elseif($dispensasi->status === 'dibatalkan')
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-5">
+            <div class="flex items-start gap-3 sm:gap-4">
+                <div class="w-10 h-10 rounded-xl bg-gray-200 text-gray-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-ban text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-bold text-gray-900">Dispensasi Dibatalkan</h3>
+                    <p class="text-xs text-gray-600 mt-1 leading-relaxed">
+                        Permohonan dispensasi ini telah dibatalkan (siswa tidak jadi keluar sekolah) dan QR Code dinonaktifkan.
+                    </p>
+                </div>
+            </div>
+        </div>
+    @elseif($dispensasi->status === 'kadaluarsa')
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 sm:p-5">
+            <div class="flex items-start gap-3 sm:gap-4">
+                <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-calendar-xmark text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-bold text-orange-900">Dispensasi Kadaluarsa</h3>
+                    <p class="text-xs text-orange-800 mt-1 leading-relaxed">
+                        Permohonan ini kadaluarsa secara otomatis karena tidak dikonfirmasikan ke Guru Piket hingga jam pelajaran sekolah hari tersebut berakhir.
+                    </p>
+                </div>
+            </div>
+        </div>
     @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -214,6 +253,14 @@
                     <div class="mt-4 bg-violet-50 border border-violet-200 rounded-lg p-3">
                         <p class="text-violet-700 text-[10px] font-bold uppercase mb-1"><i class="fas fa-user-tie mr-1"></i>Dibuat Manual oleh Guru Piket</p>
                         <p class="text-violet-900 text-sm font-medium">Pengajuan dispensasi ini dibuat langsung oleh {{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }} untuk Anda.</p>
+                    </div>
+                @endif
+                @if($dispensasi->catatan_admin)
+                    <div class="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3.5">
+                        <p class="text-amber-800 text-[10px] font-bold uppercase mb-1 flex items-center gap-1.5">
+                            <i class="fas fa-comment-dots text-amber-600"></i> Catatan Guru Piket / Keterangan Sistem
+                        </p>
+                        <p class="text-amber-950 text-xs sm:text-sm font-medium leading-relaxed">{{ $dispensasi->catatan_admin }}</p>
                     </div>
                 @endif
             </div>
@@ -298,6 +345,16 @@
                                 <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code" class="w-40 h-40 object-contain">
                             </div>
                             <p class="text-[10px] text-gray-500 mt-3 font-mono">{{ $dispensasi->nomor_surat }}</p>
+
+                            @if(empty($dispensasi->waktu_keluar_aktual))
+                            <div class="mt-4 pt-3 border-t border-emerald-200/60 text-center">
+                                <p class="text-[11px] text-gray-500 mb-2">Tidak jadi izin keluar?</p>
+                                <button type="button" onclick="confirmBatalKeluar('{{ route('siswa.pengajuan.batal', $dispensasi) }}')"
+                                        class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-xs font-semibold text-rose-600 bg-white hover:bg-rose-50 border border-rose-200 transition-colors gap-1.5">
+                                    <i class="fas fa-ban"></i> Batalkan Dispensasi Ini
+                                </button>
+                            </div>
+                            @endif
                         </div>
                     @else
                         <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg text-center">
@@ -328,7 +385,31 @@
                             <i class="fas fa-check-double text-xl"></i>
                         </div>
                         <p class="text-gray-900 font-bold text-sm mb-1">QR Code Tidak Aktif</p>
-                        <p class="text-gray-600 text-xs">Dispensasi ini sudah selesai di-scan oleh Satpam.</p>
+                        <p class="text-gray-600 text-xs">Dispensasi ini sudah selesai diproses.</p>
+                    </div>
+                @elseif($dispensasi->status === 'dibatalkan')
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-gray-200 text-gray-600 flex items-center justify-center mb-3">
+                            <i class="fas fa-ban text-xl"></i>
+                        </div>
+                        <p class="text-gray-900 font-bold text-sm mb-1">Dispensasi Dibatalkan</p>
+                        <p class="text-gray-600 text-xs">Permohonan dispensasi ini telah dibatalkan.</p>
+                    </div>
+                @elseif($dispensasi->status === 'kadaluarsa')
+                    <div class="p-4 bg-orange-50 border border-orange-200 rounded-lg text-center">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-3">
+                            <i class="fas fa-calendar-xmark text-xl"></i>
+                        </div>
+                        <p class="text-orange-900 font-bold text-sm mb-1">Dispensasi Kadaluarsa</p>
+                        <p class="text-orange-700 text-xs">Permohonan ini kadaluarsa karena tidak dikonfirmasikan ke Guru Piket.</p>
+                    </div>
+                @elseif($dispensasi->status === 'ditolak')
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-3">
+                            <i class="fas fa-times text-xl"></i>
+                        </div>
+                        <p class="text-red-900 font-bold text-sm mb-1">Pengajuan Ditolak</p>
+                        <p class="text-red-700 text-xs">Pengajuan telah ditolak oleh Guru Piket.</p>
                     </div>
                 @else
                     <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg text-center">
@@ -336,7 +417,7 @@
                             <i class="fas fa-clock text-xl"></i>
                         </div>
                         <p class="text-amber-900 font-bold text-sm mb-1">Menunggu Persetujuan</p>
-                        <p class="text-amber-700 text-xs">QR Code akan tersedia setelah disetujui guru piket.</p>
+                        <p class="text-amber-700 text-xs">QR Code akan tersedia setelah disetujui Guru Piket.</p>
                     </div>
                 @endif
 
@@ -886,6 +967,38 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 @endif
+
+function confirmBatalKeluar(url) {
+    Swal.fire({
+        title: 'Batalkan Dispensasi?',
+        text: 'Apakah Anda yakin tidak jadi keluar sekolah? Status dispensasi akan diubah menjadi Dibatalkan dan QR Code tidak lagi dapat digunakan.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="fas fa-ban mr-1.5"></i> Ya, Batalkan Dispensasi',
+        cancelButtonText: 'Tidak Jadi',
+        reverseButtons: true,
+        customClass: {
+            popup: 'rounded-2xl shadow-xl border border-gray-100',
+            confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5',
+            cancelButton: 'rounded-xl text-xs font-semibold px-4 py-2.5'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
 </script>
 @endpush
 @endsection

@@ -16,11 +16,13 @@
             <form method="GET" class="flex-1 sm:flex-none">
                 <select name="status" onchange="this.form.submit()" class="w-full sm:w-auto h-10 px-3 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
                     <option value="">Semua Status</option>
-                    <option value="menunggu"  {{ request('status') == 'menunggu'  ? 'selected' : '' }}>Menunggu</option>
-                    <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
-                    <option value="ditolak"   {{ request('status') == 'ditolak'   ? 'selected' : '' }}>Ditolak</option>
-                    <option value="keluar"    {{ request('status') == 'keluar'    ? 'selected' : '' }}>Sedang Keluar</option>
-                    <option value="selesai"   {{ request('status') == 'selesai'   ? 'selected' : '' }}>Selesai</option>
+                    <option value="menunggu"   {{ request('status') == 'menunggu'   ? 'selected' : '' }}>Menunggu</option>
+                    <option value="disetujui"  {{ request('status') == 'disetujui'  ? 'selected' : '' }}>Disetujui</option>
+                    <option value="keluar"     {{ request('status') == 'keluar'     ? 'selected' : '' }}>Sedang Keluar</option>
+                    <option value="selesai"    {{ request('status') == 'selesai'    ? 'selected' : '' }}>Selesai</option>
+                    <option value="ditolak"    {{ request('status') == 'ditolak'    ? 'selected' : '' }}>Ditolak</option>
+                    <option value="dibatalkan" {{ request('status') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+                    <option value="kadaluarsa" {{ request('status') == 'kadaluarsa' ? 'selected' : '' }}>Kadaluarsa</option>
                 </select>
             </form>
             <a href="{{ route('siswa.pengajuan.create') }}" class="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 flex-shrink-0 transition-colors">
@@ -33,19 +35,14 @@
     <div class="md:hidden divide-y divide-gray-100">
         @forelse($pengajuan as $p)
             @php
-                $badges = [
-                    'menunggu'  => 'bg-amber-100 text-amber-700',
-                    'disetujui' => 'bg-emerald-100 text-emerald-700',
-                    'ditolak'   => 'bg-red-100 text-red-700',
-                    'keluar'    => 'bg-sky-100 text-sky-700',
-                    'selesai'   => 'bg-gray-100 text-gray-700',
-                ];
+                $badge = $p->status_badge;
             @endphp
             <div class="p-4 hover:bg-gray-50 transition-colors">
                 <div class="flex justify-between items-start gap-2 mb-1.5">
                     <p class="font-mono font-semibold text-gray-900 text-xs">{{ $p->nomor_surat }}</p>
-                    <span class="px-2.5 py-1 rounded-md text-[10px] font-bold flex-shrink-0 {{ $badges[$p->status] ?? 'bg-gray-100 text-gray-700' }}">
-                        {{ ucfirst($p->status) }}
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold flex-shrink-0 border {{ $badge['class'] }}">
+                        <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                        {{ $badge['text'] }}
                     </span>
                 </div>
                 <p class="text-xs text-gray-500">{{ $p->created_at->format('d/m/Y') }} • <span class="capitalize">{{ str_replace('_', ' ', $p->kategori) }}</span></p>
@@ -92,13 +89,7 @@
             <tbody class="divide-y divide-gray-100">
                 @forelse($pengajuan as $p)
                     @php
-                        $badges = [
-                            'menunggu'  => 'bg-amber-100 text-amber-700',
-                            'disetujui' => 'bg-emerald-100 text-emerald-700',
-                            'ditolak'   => 'bg-red-100 text-red-700',
-                            'keluar'    => 'bg-sky-100 text-sky-700',
-                            'selesai'   => 'bg-gray-100 text-gray-700',
-                        ];
+                        $badge = $p->status_badge;
                     @endphp
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="p-4 font-mono font-semibold text-gray-900 text-xs">{{ $p->nomor_surat }}</td>
@@ -107,8 +98,9 @@
                         <td class="p-4 text-gray-700 text-xs">{{ $p->tujuan }}</td>
                         <td class="p-4 text-gray-600 text-xs">{{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_keluar, $p->created_at?->dayOfWeek) }} – {{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_kembali, $p->created_at?->dayOfWeek) }}</td>
                         <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-md text-[11px] font-bold {{ $badges[$p->status] ?? 'bg-gray-100 text-gray-700' }}">
-                                {{ ucfirst($p->status) }}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border {{ $badge['class'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                                {{ $badge['text'] }}
                             </span>
                         </td>
                         <td class="p-4 text-center">
