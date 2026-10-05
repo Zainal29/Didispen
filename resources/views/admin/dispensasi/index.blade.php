@@ -32,7 +32,7 @@
         <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <select name="status" class="w-full h-11 border border-gray-300 rounded-lg px-3.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="">Semua Status</option>
-                @foreach(['menunggu','disetujui','ditolak','keluar','selesai'] as $s)
+                @foreach(['menunggu','disetujui','ditolak','keluar','selesai','dibatalkan','kadaluarsa'] as $s)
                     <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
                 @endforeach
             </select>
@@ -79,16 +79,11 @@
                     <td class="p-3.5 text-sm text-gray-600">{{ Str::limit($d->tujuan, 30) }}</td>
                     <td class="p-3.5">
                         @php
-                            $colors = [
-                                'menunggu' => 'bg-yellow-100 text-yellow-800',
-                                'disetujui' => 'bg-green-100 text-green-800',
-                                'ditolak' => 'bg-red-100 text-red-800',
-                                'keluar' => 'bg-indigo-100 text-indigo-800',
-                                'selesai' => 'bg-gray-100 text-gray-800',
-                            ];
+                            $badge = $d->status_badge;
                         @endphp
-                        <span class="px-2.5 py-0.5 rounded text-xs font-semibold {{ $colors[$d->status] ?? 'bg-gray-100' }}">
-                            {{ ucfirst($d->status) }}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-semibold border {{ $badge['class'] }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                            {{ $badge['text'] }}
                         </span>
                     </td>
                     <td class="p-3.5 text-sm text-gray-600">{{ $d->guru?->nama_lengkap ?? '-' }}</td>

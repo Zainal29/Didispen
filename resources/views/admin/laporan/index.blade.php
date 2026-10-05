@@ -9,7 +9,7 @@
         <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <select name="status" class="w-full h-11 border border-gray-300 rounded-lg px-3.5 text-base sm:text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="">Semua Status</option>
-                @foreach(['menunggu','disetujui','ditolak','keluar','selesai'] as $s)
+                @foreach(['menunggu','disetujui','ditolak','keluar','selesai','dibatalkan','kadaluarsa'] as $s)
                     <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
                 @endforeach
             </select>
@@ -66,7 +66,13 @@
                     <td class="p-3 text-sm">{{ $d->siswa?->kelas?->nama_kelas ?? '-' }}</td>
                     <td class="p-3 text-sm capitalize">{{ str_replace('_', ' ', $d->kategori) }}</td>
                     <td class="p-3 text-sm">{{ Str::limit($d->tujuan, 30) }}</td>
-                    <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold bg-gray-100">{{ ucfirst($d->status) }}</span></td>
+                    <td class="p-3">
+                        @php $badge = $d->status_badge; @endphp
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold border {{ $badge['class'] }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                            {{ $badge['text'] }}
+                        </span>
+                    </td>
                 </tr>
                 @empty
                 <tr><td colspan="7" class="p-5 text-center text-gray-500">Tidak ada data.</td></tr>
