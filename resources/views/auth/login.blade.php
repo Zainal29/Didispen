@@ -48,7 +48,7 @@
 
     <!-- BACKGROUND IMAGE TANPA HEAVY BLUR AGAR RINGAN DI HP -->
     <div class="fixed inset-0 z-0 pointer-events-none">
-        <img src="{{ asset('images/foto-smk.png') }}" alt="Background" class="w-full h-full object-cover opacity-30" decoding="async">
+        <img src="{{ asset('images/foto-smk.png') }}" alt="Background" class="w-full h-full object-cover opacity-80" decoding="async">
         <div class="absolute inset-0 bg-slate-950/80"></div>
     </div>
 
