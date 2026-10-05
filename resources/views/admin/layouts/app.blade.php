@@ -20,16 +20,20 @@
 
         /* ===== RESPONSIVE SIDEBAR ===== */
         #sidebar {
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         @media (max-width: 1023px) {
             #sidebar {
                 position: fixed;
-                inset: 0 auto 0 0;
+                top: 0;
+                bottom: 0;
+                left: 0;
                 z-index: 50;
-                transform: translateX(-100%);
+                width: 16rem;
                 height: 100vh;
-                overflow-y: auto;
+                height: 100dvh;
+                max-height: 100dvh;
+                transform: translateX(-100%);
             }
             #sidebar.sidebar-open {
                 transform: translateX(0);
@@ -44,8 +48,10 @@
                 position: sticky;
                 top: 0;
                 height: 100vh;
+                height: 100dvh;
+                max-height: 100vh;
+                max-height: 100dvh;
                 flex-shrink: 0;
-                overflow-y: auto;
             }
         }
         #sidebar-overlay {
@@ -53,6 +59,28 @@
         }
         #sidebar-overlay.overlay-open {
             display: block;
+        }
+
+        /* ===== CUSTOM SLEEK SCROLLBAR UNTUK MENU SIDEBAR ===== */
+        .sidebar-nav {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
+        }
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8;
         }
     </style>
 </head>
@@ -63,10 +91,11 @@
         <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 z-40 lg:hidden"></div>
 
         {{-- SIDEBAR --}}
-        <aside id="sidebar" class="w-64 bg-white shadow-lg flex flex-col overflow-y-auto">
-            <div class="p-5 border-b flex items-center justify-between">
+        <aside id="sidebar" class="w-64 bg-white shadow-lg flex flex-col h-screen h-[100dvh] max-h-screen overflow-hidden">
+            {{-- Header (Fixed Top) --}}
+            <div class="p-5 border-b flex items-center justify-between shrink-0 bg-white">
                 <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-14 h-14 rounded-xl bg-[#fbfcf6] shadow-md overflow-hidden flex items-center justify-center flex-shrink-0">
+                    <div class="w-12 h-12 rounded-xl bg-[#fbfcf6] shadow-sm border border-slate-100 overflow-hidden flex items-center justify-center flex-shrink-0">
                         @if(file_exists(public_path('images/logo-didispen.png')))
                             <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
                         @else
@@ -74,17 +103,18 @@
                         @endif
                     </div>
                     <div class="min-w-0">
-                        <h1 class="text-xl font-bold text-blue-800 truncate">DIDISPEN</h1>
-                        <p class="text-xs text-gray-500 mt-1 truncate">Panel Administrator</p>
+                        <h1 class="text-lg font-bold text-blue-800 truncate">DIDISPEN</h1>
+                        <p class="text-[11px] text-gray-500 truncate">Panel Administrator</p>
                     </div>
                 </div>
                 {{-- Tombol close sidebar (mobile only) --}}
-                <button onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-gray-700 p-1 flex-shrink-0">
+                <button onclick="toggleSidebar()" class="lg:hidden text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0" aria-label="Tutup menu">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
 
-            <nav class="flex-1 p-3 space-y-1">
+            {{-- Nav Links (Scrollable Middle Section) --}}
+            <nav class="sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-1 pb-6">
                 <a href="{{ route('admin.dashboard') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt w-5 mr-3"></i> Dashboard
@@ -146,14 +176,14 @@
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.tutorial-videos.*') ? 'active' : '' }}">
                     <i class="fas fa-video w-5 mr-3"></i> Video Tutorial
                 </a>
-
             </nav>
 
-            <div class="p-3 border-t">
+            {{-- Footer: Logout Pinned At Bottom --}}
+            <div class="p-3 border-t shrink-0 bg-white">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="w-full flex items-center px-3 py-2 rounded text-red-600 hover:bg-red-50">
-                        <i class="fas fa-sign-out-alt w-5 mr-3"></i> Logout
+                    <button type="submit" class="w-full flex items-center px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 font-medium transition-colors">
+                        <i class="fas fa-sign-out-alt w-5 mr-3 text-red-500"></i> Logout
                     </button>
                 </form>
             </div>
@@ -168,12 +198,19 @@
                 </div>
                 <div class="flex items-center gap-3 flex-shrink-0">
                     <span class="text-sm text-gray-600 hidden sm:inline-flex items-center">
-                        <i class="fas fa-user-circle mr-1"></i>
+                        <i class="fas fa-user-circle mr-1 text-slate-400"></i>
                         {{ auth()->user()->name }}
                     </span>
                     <span class="text-sm text-gray-600 sm:hidden">
-                        <i class="fas fa-user-circle"></i>
+                        <i class="fas fa-user-circle text-slate-400"></i>
                     </span>
+                    {{-- Quick Logout button in topbar --}}
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="text-slate-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition" title="Logout">
+                            <i class="fas fa-sign-out-alt text-base"></i>
+                        </button>
+                    </form>
                     {{-- Tombol hamburger di KANAN (mobile only) --}}
                     <button id="hamburger-btn" onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition flex-shrink-0" aria-label="Buka menu">
                         <i class="fas fa-bars text-xl"></i>
@@ -197,6 +234,16 @@
             // Cegah scroll halaman utama saat sidebar terbuka
             document.body.classList.toggle('sidebar-active', isOpen);
         }
+
+        // Tutup sidebar saat tekan tombol Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && sidebar.classList.contains('sidebar-open')) {
+                    toggleSidebar();
+                }
+            }
+        });
     </script>
 
     @stack('scripts')
