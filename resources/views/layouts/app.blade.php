@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'DIDISPEN') - Sistem Informasi Dispensasi</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/icon-192.png') }}?v=1">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/icon-192.png') }}?v=1">
-    <link rel="apple-touch-icon" href="{{ asset('images/icon-192.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
     <link rel="manifest" href="/manifest.json">
 
     {{-- Tailwind CSS & Font Awesome --}}
