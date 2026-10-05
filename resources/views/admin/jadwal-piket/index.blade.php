@@ -89,20 +89,27 @@
             </div>
         </div>
 
-        @if(($viewMode ?? '') === 'matriks')
+      @if(($viewMode ?? '') === 'matriks')
+            {{-- HINT GESER UNTUK MOBILE --}}
+            <div class="px-4 pt-3 text-xs text-blue-600 sm:hidden flex items-center gap-1.5 font-medium">
+                <i class="fas fa-arrows-left-right text-blue-500 animate-pulse"></i>
+                <span>Geser ke samping untuk melihat seluruh kolom tabel</span>
+            </div>
+
             {{-- TAMPILAN MATRIKS SEKOLAH PERSIS DOKUMEN RESMI --}}
-            <div class="p-4 sm:p-6 overflow-x-auto">
-                <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-2xs">
-                    <table class="w-full text-left text-xs text-gray-800 border-collapse">
+            <div class="p-4 sm:p-6">
+                <div class="w-full overflow-x-auto border border-gray-300 rounded-lg bg-white shadow-2xs touch-pan-x">
+                    {{-- Tambahkan min-w-[960px] agar tabel tidak menyusut dan pasti bisa di-scroll horizontal --}}
+                    <table class="w-full min-w-[960px] text-left text-xs text-gray-800 border-collapse">
                         <thead>
                             <tr class="bg-gray-100 text-gray-700 font-bold uppercase tracking-wider text-[11px] border-b border-gray-300">
-                                <th class="py-3 px-3 border-r border-gray-300 w-12 text-center">No.</th>
-                                <th class="py-3 px-3 border-r border-gray-300 w-24">Hari</th>
-                                <th class="py-3 px-4 border-r border-gray-300 w-64">Koordinator Guru Piket</th>
-                                <th class="py-3 px-4 border-r border-gray-300 w-60">Pengaturan Sesi Piket</th>
-                                <th class="py-3 px-4 border-r border-gray-300">Guru Piket</th>
-                                <th class="py-3 px-4 border-r border-gray-300 w-48">No.. HP</th>
-                                <th class="py-3 px-3 text-center w-24">Aksi</th>
+                                <th class="py-3 px-3 border-r border-gray-300 w-12 text-center whitespace-nowrap">No.</th>
+                                <th class="py-3 px-3 border-r border-gray-300 w-24 whitespace-nowrap">Hari</th>
+                                <th class="py-3 px-4 border-r border-gray-300 w-64 whitespace-nowrap">Koordinator Guru Piket</th>
+                                <th class="py-3 px-4 border-r border-gray-300 w-60 whitespace-nowrap">Pengaturan Sesi Piket</th>
+                                <th class="py-3 px-4 border-r border-gray-300 min-w-[200px]">Guru Piket</th>
+                                <th class="py-3 px-4 border-r border-gray-300 w-48 whitespace-nowrap">No. HP</th>
+                                <th class="py-3 px-3 text-center w-24 whitespace-nowrap sticky right-0 bg-gray-100 z-10 border-l border-gray-300">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
@@ -123,15 +130,15 @@
                                     <tr class="hover:bg-blue-50/20 transition-colors {{ $idx === 0 ? 'border-t-2 border-gray-300' : '' }}">
                                         {{-- No. (Rowspan) --}}
                                         @if($idx === 0)
-                                            <td rowspan="{{ $totalSesi }}" class="py-3 px-3 border-r border-gray-300 text-center font-bold align-top bg-gray-50/30">
+                                            <td rowspan="{{ $totalSesi }}" class="py-3 px-3 border-r border-gray-300 text-center font-bold align-top bg-gray-50/50 whitespace-nowrap">
                                                 {{ $hariCounter++ }}
                                             </td>
                                             {{-- Hari (Rowspan) --}}
-                                            <td rowspan="{{ $totalSesi }}" class="py-3 px-3 border-r border-gray-300 font-bold text-gray-900 align-top bg-gray-50/30">
+                                            <td rowspan="{{ $totalSesi }}" class="py-3 px-3 border-r border-gray-300 font-bold text-gray-900 align-top bg-gray-50/50 whitespace-nowrap">
                                                 {{ $hariNames[$hariNum] ?? 'Hari '.$hariNum }}
                                             </td>
                                             {{-- Koordinator (Rowspan) --}}
-                                            <td rowspan="{{ $totalSesi }}" class="py-3 px-4 border-r border-gray-300 align-top bg-gray-50/30">
+                                            <td rowspan="{{ $totalSesi }}" class="py-3 px-4 border-r border-gray-300 align-top bg-gray-50/50">
                                                 @if($koordinator)
                                                     <div class="font-bold text-gray-900">{{ $koordinator->nama_lengkap }}</div>
                                                     @php
@@ -139,14 +146,14 @@
                                                     @endphp
                                                     @if($koorWaLink)
                                                         <a href="{{ $koorWaLink }}" target="_blank" rel="noopener noreferrer"
-                                                           class="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-950 font-mono mt-1 px-2 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group shadow-2xs"
+                                                           class="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-950 font-mono mt-1 px-2 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group shadow-2xs whitespace-nowrap"
                                                            title="Klik untuk kirim pesan WhatsApp pengingat ke Koordinator">
                                                             <i class="fab fa-whatsapp text-emerald-600 group-hover:scale-110 transition-transform"></i>
                                                             <span class="font-semibold">{{ $koordinator->no_telepon }}</span>
                                                             <i class="fas fa-paper-plane text-[9px] text-emerald-500 opacity-70 group-hover:opacity-100"></i>
                                                         </a>
                                                     @else
-                                                        <div class="text-[11px] text-gray-400 font-mono mt-0.5 flex items-center">
+                                                        <div class="text-[11px] text-gray-400 font-mono mt-0.5 flex items-center whitespace-nowrap">
                                                             <i class="fab fa-whatsapp text-gray-300 mr-1 text-xs"></i> {{ $koordinator->no_telepon ?? '-' }}
                                                         </div>
                                                     @endif
@@ -158,7 +165,7 @@
 
                                         {{-- Pengaturan Sesi Piket --}}
                                         <td class="py-2.5 px-4 border-r border-gray-300 font-medium">
-                                            <div class="flex items-center gap-1.5">
+                                            <div class="flex items-center gap-1.5 whitespace-nowrap">
                                                 <span class="font-bold text-blue-800">{{ $sesi->nama_sesi ?? 'Sesi' }}</span>
                                                 <span class="text-[11px] text-gray-500 font-mono">({{ substr($sesi->jam_mulai, 0, 5) }} - {{ substr($sesi->jam_selesai, 0, 5) }})</span>
                                             </div>
@@ -182,7 +189,7 @@
                                             @else
                                                 <ul class="space-y-1">
                                                     @foreach($sesi->guru as $g)
-                                                        <li class="font-semibold text-gray-900 flex items-center gap-1.5">
+                                                        <li class="font-semibold text-gray-900 flex items-center gap-1.5 whitespace-nowrap">
                                                             <i class="fas fa-user-check text-blue-500 text-[10px]"></i>
                                                             <span>{{ $g->nama_lengkap }}</span>
                                                         </li>
@@ -191,7 +198,7 @@
                                             @endif
                                         </td>
 
-                                        {{-- No.. HP Guru Piket --}}
+                                        {{-- No. HP Guru Piket --}}
                                         <td class="py-2.5 px-4 border-r border-gray-300 font-mono text-[11px]">
                                             @if($sesi->guru->isEmpty())
                                                 <span class="text-gray-400">-</span>
@@ -204,14 +211,14 @@
                                                         <li>
                                                             @if($gWaLink)
                                                                 <a href="{{ $gWaLink }}" target="_blank" rel="noopener noreferrer"
-                                                                   class="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-950 px-2 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group shadow-2xs"
+                                                                   class="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-950 px-2 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group shadow-2xs whitespace-nowrap"
                                                                    title="Kirim pesan WhatsApp pengingat jadwal piket ke {{ $g->nama_lengkap }}">
                                                                     <i class="fab fa-whatsapp text-emerald-600 text-xs group-hover:scale-110 transition-transform"></i>
                                                                     <span class="font-semibold">{{ $g->no_telepon }}</span>
                                                                     <i class="fas fa-paper-plane text-[9px] text-emerald-500 opacity-70 group-hover:opacity-100"></i>
                                                                 </a>
                                                             @else
-                                                                <span class="inline-flex items-center gap-1 text-gray-400 py-0.5 px-1">
+                                                                <span class="inline-flex items-center gap-1 text-gray-400 py-0.5 px-1 whitespace-nowrap">
                                                                     <i class="fab fa-whatsapp text-gray-300 text-xs"></i>
                                                                     <span>{{ $g->no_telepon ?? '-' }}</span>
                                                                 </span>
@@ -222,8 +229,8 @@
                                             @endif
                                         </td>
 
-                                        {{-- Aksi --}}
-                                        <td class="py-2.5 px-3 text-center">
+                                        {{-- Aksi (Sticky Right agar tetap terlihat saat digeser) --}}
+                                        <td class="py-2.5 px-3 text-center sticky right-0 bg-white/95 backdrop-blur-xs shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] border-l border-gray-300">
                                             <div class="inline-flex items-center gap-1">
                                                 <a href="{{ route('admin.jadwal-piket.show', $sesi) }}" class="p-1.5 text-gray-500 hover:text-blue-600 rounded" title="Lihat">
                                                     <i class="fas fa-eye text-xs"></i>

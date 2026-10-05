@@ -1031,7 +1031,8 @@
         parts.push(
             textBytes('--------------------------------\n'),
             textBytes('Dicetak: ' + receiptData.dicetak + ' WIB\n'),
-            textBytes('STRUK INI SAH JIKA DITANDATANGANI\n'),
+            textBytes('STRUK INI SAH JIKA \n'),
+            textBytes('DITANDATANGANI \n'),
             textBytes('OLEH GURU PIKET.\n'),
             bold(true),
             textBytes('- TERIMA KASIH -\n'),
