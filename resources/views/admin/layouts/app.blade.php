@@ -13,6 +13,7 @@
     <link rel="manifest" href="/manifest.json">
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @include('components.sweetalert-theme')
     <style>
         .sidebar-link.active { background-color: #1e40af; color: white; }
         .sidebar-link:hover:not(.active) { background-color: #e0e7ff; }

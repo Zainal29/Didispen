@@ -8,7 +8,7 @@
      x-transition:leave-start="opacity-100 transform scale-100"
      x-transition:leave-end="opacity-0 transform -translate-y-2 scale-95"
      class="mb-3.5 p-3.5 bg-emerald-50/95 backdrop-blur-xs border border-emerald-200 rounded-xl flex items-start gap-3 shadow-xs animate-slide-in">
-    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+    <div class="w-8 h-8 rounded-lg  text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
         <i class="fas fa-check-circle text-base"></i>
     </div>
     <div class="flex-1 min-w-0 pt-0.5">
