@@ -83,28 +83,39 @@
     line-height: 3.5rem !important;
 }
 
-/* Success (Nonaktifkan animasi & topeng berputar agar centang tampil bersih & statis tanpa bug) */
+/* Success — gunakan Font Awesome checkmark, sembunyikan seluruh SVG bawaan SweetAlert */
 .swal2-icon.swal2-success {
     border-color: #a7f3d0 !important;
     background-color: #ecfdf5 !important;
     color: #059669 !important;
     animation: none !important;
+    position: relative !important;
+    overflow: hidden !important;
 }
+
+/* Sembunyikan semua elemen SVG bawaan success agar tidak tabrakan */
 .swal2-icon.swal2-success .swal2-success-circular-line-left,
 .swal2-icon.swal2-success .swal2-success-circular-line-right,
-.swal2-icon.swal2-success .swal2-success-fix {
-    display: none !important;
-    background: transparent !important;
-}
-.swal2-icon.swal2-success [class^='swal2-success-line'] {
-    background-color: #059669 !important;
-    animation: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-}
+.swal2-icon.swal2-success .swal2-success-fix,
+.swal2-icon.swal2-success [class^='swal2-success-line'],
 .swal2-icon.swal2-success .swal2-success-ring {
-    border-color: rgba(5, 150, 105, 0.35) !important;
-    animation: none !important;
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Tampilkan centang bersih via Font Awesome */
+.swal2-icon.swal2-success::before {
+    content: "\f00c" !important; /* fa-check */
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", FontAwesome !important;
+    font-weight: 900 !important;
+    font-size: 1.6rem !important;
+    color: #059669 !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    line-height: 1 !important;
 }
 
 /* Error / Danger */
