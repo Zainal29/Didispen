@@ -55,15 +55,25 @@
                 </a>
 
                 @if($status === 'menunggu')
-                    <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-amber-100 text-amber-700">Menunggu</span>
+                    <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-amber-100 text-amber-700">Menunggu Scan</span>
                 @elseif($status === 'keluar')
                     <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-sky-100 text-sky-700">Keluar</span>
                 @elseif($status === 'terlambat')
                     <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-red-100 text-red-700">Terlambat</span>
                 @elseif($status === 'selesai')
-                    <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-emerald-100 text-emerald-700">Selesai</span>
+                    @if($dispensasi->isNotReturned())
+                        <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-red-100 text-red-700">Tidak Kembali</span>
+                    @elseif($dispensasi->isReturnedLate())
+                        <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-amber-100 text-amber-800">Selesai (Terlambat)</span>
+                    @else
+                        <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-emerald-100 text-emerald-700">Selesai</span>
+                    @endif
                 @elseif($status === 'dihubungi')
                     <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-purple-100 text-purple-700">Dihubungi</span>
+                @elseif($status === 'dibatalkan' || $dispensasi->status === 'dibatalkan')
+                    <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-gray-100 text-gray-700">Dibatalkan</span>
+                @elseif($status === 'kadaluarsa' || $dispensasi->status === 'kadaluarsa')
+                    <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-orange-100 text-orange-700">Kadaluarsa</span>
                 @endif
 
                 @if($deadlineStr && in_array($status, ['keluar', 'terlambat']))

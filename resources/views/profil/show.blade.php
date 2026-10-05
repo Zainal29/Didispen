@@ -209,9 +209,16 @@
                             <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
                                 Password Saat Ini <span class="text-red-500">*</span>
                             </label>
-                            <input type="password" name="current_password" required
-                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-base sm:text-sm @error('current_password') border-red-500 bg-red-50 @enderror"
-                                   placeholder="Masukkan password lama Anda">
+                            <div class="relative">
+                                <input type="password" id="input_admin_current_pw" name="current_password" required
+                                       class="w-full pl-4 pr-11 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-base sm:text-sm @error('current_password') border-red-500 bg-red-50 @enderror"
+                                       placeholder="Masukkan password lama Anda">
+                                <button type="button" onclick="togglePasswordVisibility('input_admin_current_pw', this)"
+                                        class="absolute inset-y-0 right-0 px-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                        title="Tampilkan / Sembunyikan Password">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                            </div>
                             @error('current_password')
                                 <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
                                     <i class="fas fa-exclamation-circle"></i> {{ $message }}
@@ -223,9 +230,16 @@
                             <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
                                 Password Baru <span class="text-red-500">*</span>
                             </label>
-                            <input type="password" name="new_password" required minlength="8"
-                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-base sm:text-sm @error('new_password') border-red-500 bg-red-50 @enderror"
-                                   placeholder="Minimal 8 karakter">
+                            <div class="relative">
+                                <input type="password" id="input_admin_new_pw" name="new_password" required minlength="8"
+                                       class="w-full pl-4 pr-11 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-base sm:text-sm @error('new_password') border-red-500 bg-red-50 @enderror"
+                                       placeholder="Minimal 8 karakter">
+                                <button type="button" onclick="togglePasswordVisibility('input_admin_new_pw', this)"
+                                        class="absolute inset-y-0 right-0 px-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                        title="Tampilkan / Sembunyikan Password">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                            </div>
                             @error('new_password')
                                 <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
                                     <i class="fas fa-exclamation-circle"></i> {{ $message }}
@@ -237,9 +251,16 @@
                             <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
                                 Konfirmasi Password Baru <span class="text-red-500">*</span>
                             </label>
-                            <input type="password" name="new_password_confirmation" required minlength="8"
-                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-base sm:text-sm"
-                                   placeholder="Ulangi password baru">
+                            <div class="relative">
+                                <input type="password" id="input_admin_confirm_pw" name="new_password_confirmation" required minlength="8"
+                                       class="w-full pl-4 pr-11 py-2.5 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-base sm:text-sm"
+                                       placeholder="Ulangi password baru">
+                                <button type="button" onclick="togglePasswordVisibility('input_admin_confirm_pw', this)"
+                                        class="absolute inset-y-0 right-0 px-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                        title="Tampilkan / Sembunyikan Password">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -287,9 +308,16 @@
                         <label class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
                             Konfirmasi Password Saat Ini <span class="text-red-500">*</span>
                         </label>
-                        <input type="password" name="current_password" required
-                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none text-base sm:text-sm @error('current_password') border-red-500 bg-red-50 @enderror"
-                               placeholder="Masukkan password Anda untuk mengonfirmasi">
+                        <div class="relative">
+                            <input type="password" id="input_logout_password" name="current_password" required
+                                   class="w-full pl-4 pr-11 py-2.5 border border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600/20 outline-none text-base sm:text-sm @error('current_password') border-red-500 bg-red-50 @enderror"
+                                   placeholder="Masukkan password Anda untuk mengonfirmasi">
+                            <button type="button" onclick="togglePasswordVisibility('input_logout_password', this)"
+                                    class="absolute inset-y-0 right-0 px-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                    title="Tampilkan / Sembunyikan Password">
+                                <i class="fas fa-eye text-sm"></i>
+                            </button>
+                        </div>
                         @error('current_password')
                             <p class="text-red-500 text-xs mt-1.5 flex items-center gap-1">
                                 <i class="fas fa-exclamation-circle"></i> {{ $message }}
@@ -564,6 +592,25 @@ if (phoneInput) {
         }
         e.target.value = value;
     });
+}
+
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        }
+    } else {
+        input.type = 'password';
+        if (icon) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
 }
 </script>
 @endpush

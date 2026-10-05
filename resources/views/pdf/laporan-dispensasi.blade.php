@@ -71,7 +71,7 @@
                 <td class="text-center">{{ ucfirst(str_replace('_', ' ', $d->kategori)) }}</td>
                 <td>{{ Str::limit($d->tujuan, 20) }}</td>
                 <td class="text-center">{{ \App\Helpers\TimeHelper::getWaktuAktual($d->jam_keluar, $d->created_at?->dayOfWeek) }}</td>
-                <td class="text-center">{{ ucfirst($d->status) }}</td>
+                <td class="text-center">{{ $d->status_badge['text'] }}</td>
             </tr>
             @empty
             <tr>
