@@ -83,44 +83,60 @@ class ScanController extends Controller
         }
 
         // MODE EKSEKUSI (Konfirmasi Keluar / Kembali)
-        if ($dispensasi->status === 'disetujui') {
-            $result = $scanService->processKeluar(
-                $dispensasi,
-                auth()->id()
-            );
+        try {
+            if ($dispensasi->status === 'disetujui') {
+                $result = $scanService->processKeluar(
+                    $dispensasi,
+                    auth()->id()
+                );
 
-            return response()->json(
-                $result,
-                $result['status_code'] ?? 200
-            );
-        }
-
-        if ($dispensasi->status === 'keluar') {
-            $result = $scanService->processKembali(
-                $dispensasi,
-                auth()->id()
-            );
-
-            if ($result['success'] ?? false) {
-                $this->notifikasiService->send(
-                    $dispensasi->siswa->user_id,
-                    "Dispensasi Anda ({$dispensasi->nomor_surat}) telah SELESAI. Anda telah kembali ke sekolah dengan selamat.",
-                    route('siswa.pengajuan.show', $dispensasi->id)
+                return response()->json(
+                    $result,
+                    $result['status_code'] ?? 200
                 );
             }
 
-            return response()->json(
-                $result,
-                $result['status_code'] ?? 200
-            );
-        }
+            if ($dispensasi->status === 'keluar') {
+                $result = $scanService->processKembali(
+                    $dispensasi,
+                    auth()->id()
+                );
 
-        return response()->json([
-            'success' => false,
-            'message' => 'QR Code ini sudah selesai diproses atau status tidak valid (Status: '
-                . ucfirst($dispensasi->status)
-                . ').',
-            'data' => $dispensasi,
-        ], 400);
+                if (($result['success'] ?? false) && $dispensasi->siswa?->user_id) {
+                    try {
+                        $this->notifikasiService->send(
+                            $dispensasi->siswa->user_id,
+                            "Dispensasi Anda ({$dispensasi->nomor_surat}) telah SELESAI. Anda telah kembali ke sekolah dengan selamat.",
+                            route('siswa.pengajuan.show', $dispensasi->id)
+                        );
+                    } catch (\Throwable $ne) {
+                        \Illuminate\Support\Facades\Log::warning('Gagal kirim notifikasi scan selesai: ' . $ne->getMessage());
+                    }
+                }
+
+                return response()->json(
+                    $result,
+                    $result['status_code'] ?? 200
+                );
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'QR Code ini sudah selesai diproses atau status tidak valid (Status: '
+                    . ucfirst($dispensasi->status)
+                    . ').',
+                'data' => $dispensasi,
+            ], 400);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Satpam ScanController verify error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'dispensasi_id' => $dispensasi->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem saat memproses: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

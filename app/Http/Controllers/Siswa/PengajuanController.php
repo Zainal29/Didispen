@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Siswa;
     use App\Http\Controllers\Controller;
     use App\Models\Dispensasi;
     use App\Models\Setting;
+    use App\Services\AuditLogService;
+    use App\Services\DispensasiService;
     use Carbon\Carbon;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Log;
@@ -236,7 +238,7 @@ namespace App\Http\Controllers\Siswa;
                 if ($pendingDispensasi) {
                     $errorMessage = match ($pendingDispensasi->status) {
                         'menunggu' => 'Pengajuan dispensasi Anda sebelumnya masih menunggu persetujuan Guru Piket.',
-                        'disetujui' => 'Pengajuan dispensasi Anda sudah disetujui. Tunjukkan QR Code ke Satpam sebelum membuat pengajuan baru.',
+                        'disetujui' => 'Pengajuan dispensasi Anda sudah disetujui. Tunjukkan QR Code ke Satpam atau batalkan permohonan jika tidak jadi keluar sebelum membuat pengajuan baru.',
                         'keluar' => 'Anda masih memiliki dispensasi yang sedang berlangsung. Selesaikan pengajuan terlebih dahulu sebelum membuat pengajuan baru.',
                         default => 'Anda masih memiliki pengajuan dispensasi yang aktif.',
                     };
@@ -316,7 +318,7 @@ namespace App\Http\Controllers\Siswa;
     if ($dispensasi->status === 'menunggu') {
         $expiredAt = $dispensasi->created_at
         ->copy()
-        ->addMinutes(3);
+        ->addMinutes(6);
 
     $now = now('Asia/Jakarta');
 
@@ -419,7 +421,7 @@ namespace App\Http\Controllers\Siswa;
             if (! $hubungiGuru) {
                 $fallbackGuruId = \App\Models\Setting::get(
                     'fallback_guru_piket_id'
-                );
+                ) ?? \App\Models\Setting::get('guru_piket_fallback_id');
 
                 if ($fallbackGuruId) {
                     $hubungiGuru = \App\Models\Guru::query()
@@ -427,6 +429,25 @@ namespace App\Http\Controllers\Siswa;
                         ->where('status_aktif', true)
                         ->first();
                 }
+            }
+
+            // 4. Fallback Guru Piket yang memiliki jadwal hari ini
+            if (! $hubungiGuru) {
+                try {
+                    $jadwalHariIni = $guruPiketService->getJadwalUntukTanggal();
+                    $petugasHariIni = $jadwalHariIni->first(fn($j) => $j->guru && $j->guru->status_aktif && !empty($j->guru->no_telepon));
+                    if ($petugasHariIni) {
+                        $hubungiGuru = $petugasHariIni->guru;
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            // 5. Fallback Guru aktif manapun yang memiliki nomor telepon
+            if (! $hubungiGuru) {
+                $hubungiGuru = \App\Models\Guru::where('status_aktif', true)
+                    ->whereNotNull('no_telepon')
+                    ->where('no_telepon', '!=', '')
+                    ->first();
             }
 
             if (! $hubungiGuru) {
@@ -462,7 +483,7 @@ public function hubungiGuruPiket(Dispensasi $dispensasi)
 
     $expiredAt = $dispensasi->created_at
         ->copy()
-        ->addMinutes(3);
+        ->addMinutes(6);
 
     if (! now('Asia/Jakarta')->lt($expiredAt)) {
         return redirect()
@@ -535,7 +556,7 @@ public function hubungiGuruPiket(Dispensasi $dispensasi)
     if (! $hubungiGuru) {
         $fallbackGuruId = \App\Models\Setting::get(
             'fallback_guru_piket_id'
-        );
+        ) ?? \App\Models\Setting::get('guru_piket_fallback_id');
 
         if ($fallbackGuruId) {
             $hubungiGuru = \App\Models\Guru::query()
@@ -543,6 +564,26 @@ public function hubungiGuruPiket(Dispensasi $dispensasi)
                 ->where('status_aktif', true)
                 ->first();
         }
+    }
+
+    // 4. Fallback Guru Piket yang memiliki jadwal hari ini
+    if (! $hubungiGuru) {
+        try {
+            $guruPiketService = app(\App\Services\GuruPiketService::class);
+            $jadwalHariIni = $guruPiketService->getJadwalUntukTanggal();
+            $petugasHariIni = $jadwalHariIni->first(fn($j) => $j->guru && $j->guru->status_aktif && !empty($j->guru->no_telepon));
+            if ($petugasHariIni) {
+                $hubungiGuru = $petugasHariIni->guru;
+            }
+        } catch (\Throwable $e) {}
+    }
+
+    // 5. Fallback Guru aktif manapun yang memiliki nomor telepon
+    if (! $hubungiGuru) {
+        $hubungiGuru = \App\Models\Guru::where('status_aktif', true)
+            ->whereNotNull('no_telepon')
+            ->where('no_telepon', '!=', '')
+            ->first();
     }
 
     if (! $hubungiGuru) {
@@ -700,4 +741,58 @@ public function hubungiGuruPiket(Dispensasi $dispensasi)
 
             return response()->json(['success' => true, 'message' => 'Foto bukti berhasil dihapus']);
         }
+
+        /**
+         * Siswa membatalkan dispensasi yang sudah disetujui (sebelum scan keluar di gerbang satpam)
+         */
+        public function batalKeluar(Request $request, Dispensasi $dispensasi)
+        {
+            $siswa = auth()->user()->siswa;
+            if (! $siswa || $dispensasi->siswa_id !== $siswa->id) {
+                abort(403, 'Akses ditolak.');
+            }
+
+            if ($dispensasi->status !== 'disetujui' || ! empty($dispensasi->waktu_keluar_aktual)) {
+                return back()->with('error', 'Dispensasi tidak dapat dibatalkan karena sudah discan keluar oleh satpam atau status telah berubah.');
+            }
+
+            $validated = $request->validate([
+                'alasan_batal' => 'nullable|string|max:255',
+            ]);
+
+            $alasan = $validated['alasan_batal'] ?? 'Siswa tidak jadi keluar / membatalkan izin.';
+
+            \Illuminate\Support\Facades\DB::transaction(function () use ($dispensasi, $alasan) {
+                $locked = Dispensasi::whereKey($dispensasi->id)
+                    ->where('status', 'disetujui')
+                    ->whereNull('waktu_keluar_aktual')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $locked) {
+                    throw new \RuntimeException('Dispensasi tidak dapat dibatalkan atau sudah diproses.');
+                }
+
+                $locked->update([
+                    'status' => 'dibatalkan',
+                    'catatan_admin' => 'Dibatalkan oleh siswa: ' . $alasan,
+                ]);
+
+                DispensasiService::cleanupCompletedDispensasiFiles($locked);
+            });
+
+            // Audit Log
+            app(AuditLogService::class)->log(
+                auth()->id(),
+                'batal_keluar_siswa',
+                'dispensasi',
+                $dispensasi->id,
+                ['status' => 'disetujui'],
+                ['status' => 'dibatalkan', 'alasan' => $alasan]
+            );
+
+            return redirect()->route('siswa.pengajuan.index')
+                ->with('success', 'Dispensasi berhasil dibatalkan. Anda tercatat tidak jadi keluar sekolah.');
+        }
     }
+

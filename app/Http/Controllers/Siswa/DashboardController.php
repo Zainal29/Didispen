@@ -89,6 +89,96 @@ class DashboardController extends Controller
             ->where('is_read', false)
             ->count();
 
+        // Fitur: Hubungi Guru Piket jika ada pengajuan berstatus 'menunggu' (Tersedia selama 6 menit)
+        $dispensasiMenunggu = Dispensasi::with(['guru', 'siswa.kelas.jurusan'])
+            ->where('siswa_id', $siswa->id)
+            ->where('status', 'menunggu')
+            ->latest()
+            ->first();
+
+        $piketEligible = false;
+        $popupSecondsLeft = 0;
+        $hubungiGuru = null;
+        $hubungiError = null;
+
+        if ($dispensasiMenunggu) {
+            $expiredAt = $dispensasiMenunggu->created_at->copy()->addMinutes(6);
+            $now = now('Asia/Jakarta');
+
+            if ($now->lt($expiredAt)) {
+                $piketEligible = true;
+                $popupSecondsLeft = max(0, $expiredAt->timestamp - $now->timestamp);
+
+                // 1. Guru yang tersimpan pada dispensasi
+                if ($dispensasiMenunggu->guru && $dispensasiMenunggu->guru->status_aktif && !empty($dispensasiMenunggu->guru->no_telepon)) {
+                    $hubungiGuru = $dispensasiMenunggu->guru;
+                }
+
+                // 2. Info sesi piket saat ini (otomatis menghitung pertukaran shift)
+                if (! $hubungiGuru) {
+                    try {
+                        if (! ($infoPiket['conflict'] ?? false) && ! empty($infoPiket['petugas'])) {
+                            $petugas = collect($infoPiket['petugas']);
+                            $guruAktif = $petugas->first(function ($p) {
+                                return isset($p['guru'])
+                                    && $p['guru']
+                                    && $p['guru']->status_aktif
+                                    && !empty($p['guru']->no_telepon)
+                                    && ($p['status'] ?? null) === 'Sedang Bertugas';
+                            }) ?? $petugas->first(function ($p) {
+                                return isset($p['guru'])
+                                    && $p['guru']
+                                    && $p['guru']->status_aktif
+                                    && !empty($p['guru']->no_telepon);
+                            });
+
+                            if ($guruAktif) {
+                                $hubungiGuru = $guruAktif['guru'];
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        \Log::warning('Dashboard Siswa GuruPiketService error: ' . $e->getMessage());
+                    }
+                }
+
+                // 3. Fallback Guru Piket dari Setting Admin
+                if (! $hubungiGuru) {
+                    $guruIdFallback = \App\Models\Setting::get('fallback_guru_piket_id')
+                        ?? \App\Models\Setting::get('guru_piket_fallback_id');
+                    if ($guruIdFallback) {
+                        $hubungiGuru = \App\Models\Guru::where('id', $guruIdFallback)
+                            ->where('status_aktif', true)
+                            ->first();
+                    }
+                }
+
+                // 4. Fallback Guru Piket yang memiliki jadwal hari ini
+                if (! $hubungiGuru) {
+                    try {
+                        $jadwalHariIni = $guruPiketService->getJadwalUntukTanggal();
+                        $petugasHariIni = $jadwalHariIni->first(fn($j) => $j->guru && $j->guru->status_aktif && !empty($j->guru->no_telepon));
+                        if ($petugasHariIni) {
+                            $hubungiGuru = $petugasHariIni->guru;
+                        }
+                    } catch (\Throwable $e) {}
+                }
+
+                // 5. Fallback Guru aktif manapun yang memiliki nomor telepon
+                if (! $hubungiGuru) {
+                    $hubungiGuru = \App\Models\Guru::where('status_aktif', true)
+                        ->whereNotNull('no_telepon')
+                        ->where('no_telepon', '!=', '')
+                        ->first();
+                }
+
+                if (! $hubungiGuru) {
+                    $hubungiError = 'Belum ada kontak Guru Piket yang dapat dihubungi saat ini.';
+                } elseif (! $hubungiGuru->no_telepon) {
+                    $hubungiError = 'Nomor WhatsApp Guru Piket belum tersedia di sistem.';
+                }
+            }
+        }
+
         return view('siswa.dashboard', compact(
             'stats',
             'pengajuanTerbaru',
@@ -98,7 +188,12 @@ class DashboardController extends Controller
             'terlambatJam',
             'terlambatMenit',
             'infoPiket',
-            'adaJadwalHariIni'
+            'adaJadwalHariIni',
+            'dispensasiMenunggu',
+            'piketEligible',
+            'popupSecondsLeft',
+            'hubungiGuru',
+            'hubungiError'
         ));
     }
 }
