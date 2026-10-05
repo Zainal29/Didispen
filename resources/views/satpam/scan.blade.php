@@ -179,25 +179,32 @@ function checkQrData(code) {
         },
         body: JSON.stringify({ qr_data: code, action: 'check' })
     })
-    .then(r => {
+    .then(async r => {
+        const data = await r.json().catch(() => null);
         if (r.status === 429) {
             return {
                 success: false,
                 message: 'Terlalu banyak permintaan scan. Mohon tunggu beberapa detik.'
             };
         }
-        return r.json();
+        if (!r.ok) {
+            return {
+                success: false,
+                message: (data && data.message) ? data.message : `QR Code tidak ditemukan atau server error (${r.status}).`
+            };
+        }
+        return data;
     })
     .then(data => {
-        if (data.success && data.mode === 'preview') {
+        if (data && data.success && data.mode === 'preview') {
             renderScanDetail(data.data);
         } else {
-            renderScanError(data.message || 'QR Code tidak valid atau dispensasi tidak ditemukan.');
+            renderScanError((data && data.message) ? data.message : 'QR Code tidak valid atau dispensasi tidak ditemukan.');
         }
     })
     .catch(err => {
         console.error('Fetch error:', err);
-        renderScanError('Terjadi kesalahan jaringan saat memverifikasi QR Code.');
+        renderScanError(err.message || 'Terjadi kesalahan jaringan saat memverifikasi QR Code.');
     });
 }
 
@@ -429,13 +436,19 @@ function submitConfirmation(action) {
         },
         body: JSON.stringify({ qr_data: currentScannedQr, action: action })
     })
-    .then(r => r.json())
+    .then(async r => {
+        const data = await r.json().catch(() => null);
+        if (!r.ok) {
+            throw new Error((data && data.message) ? data.message : `Terjadi kesalahan pada server (${r.status})`);
+        }
+        return data;
+    })
     .then(data => {
-        if (data.success) {
+        if (data && data.success) {
             if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
             renderSuccessState(data);
         } else {
-            Swal.fire('Gagal', data.message || 'Terjadi kesalahan saat konfirmasi.', 'error');
+            Swal.fire('Gagal', (data && data.message) ? data.message : 'Terjadi kesalahan saat konfirmasi.', 'error');
             btn.disabled = false;
             btn.innerHTML = action === 'keluar' ? '<i class="fas fa-door-open"></i> Ya, Setujui KELUAR' : '<i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI';
             btn.classList.remove('opacity-75', 'cursor-not-allowed');
@@ -443,7 +456,7 @@ function submitConfirmation(action) {
     })
     .catch(err => {
         console.error('Submit error:', err);
-        Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
+        Swal.fire('Gagal', err.message || 'Terjadi kesalahan jaringan.', 'error');
         btn.disabled = false;
         btn.innerHTML = action === 'keluar' ? '<i class="fas fa-door-open"></i> Ya, Setujui KELUAR' : '<i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI';
         btn.classList.remove('opacity-75', 'cursor-not-allowed');
@@ -635,19 +648,25 @@ function quickAction(action, dispensasiId) {
                     'Accept': 'application/json'
                 }
             })
-            .then(r => r.json())
+            .then(async r => {
+                const data = await r.json().catch(() => null);
+                if (!r.ok) {
+                    throw new Error((data && data.message) ? data.message : `HTTP Error ${r.status}`);
+                }
+                return data;
+            })
             .then(data => {
-                if (data.success) {
+                if (data && data.success) {
                     Swal.fire('Berhasil!', data.message, 'success').then(() => {
                         location.reload();
                     });
                 } else {
-                    Swal.fire('Gagal', data.message, 'error');
+                    Swal.fire('Gagal', (data && data.message) ? data.message : 'Gagal memproses konfirmasi.', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
+                Swal.fire('Error', error.message || 'Terjadi kesalahan koneksi', 'error');
             });
         }
     });

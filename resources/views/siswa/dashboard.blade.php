@@ -33,6 +33,135 @@
     </div>
 </div>
 
+{{-- ============ BANNER HUBUNGI GURU PIKET (6 MENIT) ============ --}}
+@if(!empty($piketEligible) && isset($dispensasiMenunggu))
+<div id="piketDashboardBanner" class="bg-gradient-to-r from-amber-50 via-amber-50 to-orange-50/40 border-2 border-amber-200/90 rounded-2xl p-4 sm:p-5 mb-5 shadow-xs transition-all">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start gap-3.5">
+            <div class="w-11 h-11 rounded-xl bg-amber-100/90 border border-amber-200 text-amber-700 flex items-center justify-center flex-shrink-0 text-base shadow-xs">
+                <i class="fas fa-user-clock text-lg"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <h3 class="text-sm sm:text-base font-bold text-gray-900">
+                        Guru Piket Belum Merespons
+                    </h3>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold border border-amber-200">
+                        <i class="fas fa-clock text-[10px]"></i>
+                        <span id="dashboardCountdownDisplay" class="font-mono">
+                            @php
+                                $mins = intdiv($popupSecondsLeft ?? 0, 60);
+                                $secs = ($popupSecondsLeft ?? 0) % 60;
+                            @endphp
+                            {{ sprintf('%02d:%02d', $mins, $secs) }}
+                        </span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-600 leading-relaxed">
+                    Pengajuan <span class="font-mono font-semibold text-gray-800">#{{ $dispensasiMenunggu->nomor_surat }}</span> Anda sedang menunggu persetujuan. Anda dapat menghubungi Guru Piket melalui WhatsApp.
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 self-stretch sm:self-center flex-shrink-0">
+            <button type="button"
+                    onclick="openPiketDashboardModal()"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 active:scale-95 transition-all">
+                <i class="fab fa-whatsapp text-sm"></i>
+                <span>Hubungi Guru Piket</span>
+            </button>
+            <a href="{{ route('siswa.pengajuan.show', $dispensasiMenunggu) }}"
+               class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-xs"
+               title="Lihat Detail Pengajuan">
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL HUBUNGI GURU PIKET DI DASHBOARD --}}
+<div id="piketDashboardModal"
+     class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200/90 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150">
+        {{-- Header Modal --}}
+        <div class="px-5 py-4 bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-gray-900">Hubungi Guru Piket</h3>
+                    <p class="text-[11px] text-gray-500">Konfirmasi Dispensasi via WhatsApp</p>
+                </div>
+            </div>
+            <button type="button" onclick="closePiketDashboardModal()" class="w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+
+        {{-- Body Modal --}}
+        <div class="p-5 space-y-4">
+            @if(!empty($hubungiGuru))
+            <div class="flex items-center gap-3.5 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                <div class="w-11 h-11 rounded-xl bg-blue-100/70 text-blue-700 flex items-center justify-center text-base flex-shrink-0 font-bold">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Petugas Guru Piket</p>
+                    <p class="text-sm font-bold text-gray-900 truncate">{{ $hubungiGuru->nama_lengkap }}</p>
+                    @if($hubungiGuru->no_telepon)
+                        <p class="text-xs text-gray-500 font-mono mt-0.5">{{ $hubungiGuru->no_telepon }}</p>
+                    @endif
+                </div>
+            </div>
+            @endif
+
+            <div class="p-3.5 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2.5">
+                <i class="fas fa-info-circle text-blue-600 mt-0.5 text-sm flex-shrink-0"></i>
+                <div class="text-xs text-blue-900 leading-relaxed">
+                    <p class="font-semibold">Format pesan WhatsApp sudah disiapkan sistem.</p>
+                    <p class="mt-0.5 text-blue-700">Silakan kirim pesan tersebut kepada Guru Piket untuk mempercepat verifikasi pengajuan dispensasi Anda.</p>
+                </div>
+            </div>
+
+            @if(!empty($hubungiError))
+            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5">
+                <i class="fas fa-exclamation-circle text-amber-600 mt-0.5 text-sm flex-shrink-0"></i>
+                <p class="text-xs text-amber-800 leading-relaxed">{{ $hubungiError }}</p>
+            </div>
+            @endif
+
+            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200/80 text-xs">
+                <span class="text-gray-500 font-medium"><i class="fas fa-hourglass-half mr-1.5 text-amber-500"></i>Waktu Hubungi Tersisa:</span>
+                <span id="modalDashboardCountdownDisplay" class="font-mono font-bold text-amber-700">--:--</span>
+            </div>
+        </div>
+
+        {{-- Footer Modal --}}
+        <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row gap-2">
+            <button type="button" onclick="closePiketDashboardModal()" class="flex-1 py-2.5 px-4 rounded-xl bg-white border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-100 transition-colors">
+                Tutup
+            </button>
+
+            @if(!empty($hubungiGuru) && empty($hubungiError))
+                <a href="{{ route('siswa.pengajuan.hubungi-guru-piket', $dispensasiMenunggu) }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   onclick="setTimeout(closePiketDashboardModal, 500)"
+                   class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors">
+                    <i class="fab fa-whatsapp text-sm"></i>
+                    Buka WhatsApp
+                </a>
+            @else
+                <button type="button" disabled class="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 text-gray-400 text-xs font-semibold cursor-not-allowed">
+                    WhatsApp Tidak Tersedia
+                </button>
+            @endif
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- ✅ TAMBAHKAN INI: Banner Terlambat (Hanya muncul jika terlambat) --}}
 @if($isTerlambat) {{-- ✅ BENAR: Sesuai dengan variabel di DashboardController --}}
 <div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 sm:p-5 mb-4">
@@ -109,6 +238,16 @@
             </a>
             @endif
         </div>
+
+        @if(empty($dispensasiAktif->waktu_keluar_aktual))
+        <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-[11px] text-gray-500">Tidak jadi izin keluar?</span>
+            <button type="button" onclick="confirmBatalKeluar('{{ route('siswa.pengajuan.batal', $dispensasiAktif) }}')"
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-colors">
+                <i class="fas fa-ban text-[11px]"></i> Batalkan Dispensasi
+            </button>
+        </div>
+        @endif
     </div>
     @endif
 
@@ -381,13 +520,7 @@ $cards = [
         <div class="divide-y divide-gray-100">
             @foreach($pengajuanTerbaru as $pengajuan)
                 @php
-                    $badges = [
-                        'menunggu'  => 'bg-amber-100 text-amber-700',
-                        'disetujui' => 'bg-emerald-100 text-emerald-700',
-                        'ditolak'   => 'bg-red-100 text-red-700',
-                        'keluar'    => 'bg-sky-100 text-sky-700',
-                        'selesai'   => 'bg-gray-100 text-gray-700',
-                    ];
+                    $badge = $pengajuan->status_badge;
                     $maxPrint = \App\Helpers\PrintHelper::maxStudentLimit();
                     $studentPrintCount = $pengajuan->student_print_count ?? 0;
                     $currentTime = \App\Helpers\PrintHelper::currentTime();
@@ -409,8 +542,9 @@ $cards = [
                                 <span class="font-medium text-gray-700">Tujuan:</span> {{ $pengajuan->tujuan }}
                             </p>
                         </div>
-                        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold flex-shrink-0 {{ $badges[$pengajuan->status] ?? 'bg-gray-100 text-gray-700' }}">
-                            {{ ucfirst($pengajuan->status) }}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold flex-shrink-0 border {{ $badge['class'] }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                            {{ $badge['text'] }}
                         </span>
                     </div>
                     <div class="mt-3 flex gap-2">
@@ -717,6 +851,100 @@ function showPreview(url, nomorSurat) {
         window.open(url, '_blank');
     }
 }
+
+function confirmBatalKeluar(url) {
+    Swal.fire({
+        title: 'Batalkan Dispensasi?',
+        text: 'Apakah Anda yakin tidak jadi keluar sekolah? Status dispensasi akan diubah menjadi Dibatalkan dan QR Code tidak lagi dapat digunakan.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="fas fa-ban mr-1.5"></i> Ya, Batalkan Dispensasi',
+        cancelButtonText: 'Tidak Jadi',
+        reverseButtons: true,
+        customClass: {
+            popup: 'rounded-2xl shadow-xl border border-gray-100',
+            confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5',
+            cancelButton: 'rounded-xl text-xs font-semibold px-4 py-2.5'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+@if(!empty($piketEligible) && isset($dispensasiMenunggu))
+let _dashboardPiketSecondsLeft = Math.max(0, Math.floor({{ $popupSecondsLeft ?? 0 }}));
+let _dashboardPiketTimer = null;
+
+function _formatDashboardTime(seconds) {
+    seconds = Math.max(0, Math.floor(seconds));
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+}
+
+function _updateDashboardCountdown() {
+    const formatted = _formatDashboardTime(_dashboardPiketSecondsLeft);
+    const display = document.getElementById('dashboardCountdownDisplay');
+    const modalDisplay = document.getElementById('modalDashboardCountdownDisplay');
+    if (display) display.textContent = formatted;
+    if (modalDisplay) modalDisplay.textContent = formatted;
+}
+
+function _tickDashboardPiket() {
+    _dashboardPiketSecondsLeft--;
+    if (_dashboardPiketSecondsLeft <= 0) {
+        _dashboardPiketSecondsLeft = 0;
+        clearInterval(_dashboardPiketTimer);
+        _dashboardPiketTimer = null;
+        const banner = document.getElementById('piketDashboardBanner');
+        const modal = document.getElementById('piketDashboardModal');
+        if (banner) banner.remove();
+        if (modal) modal.remove();
+        return;
+    }
+    _updateDashboardCountdown();
+}
+
+function openPiketDashboardModal() {
+    if (_dashboardPiketSecondsLeft <= 0) return;
+    const modal = document.getElementById('piketDashboardModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        _updateDashboardCountdown();
+    }
+}
+
+function closePiketDashboardModal() {
+    const modal = document.getElementById('piketDashboardModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    _updateDashboardCountdown();
+    if (_dashboardPiketSecondsLeft > 0) {
+        _dashboardPiketTimer = setInterval(_tickDashboardPiket, 1000);
+    }
+    const modal = document.getElementById('piketDashboardModal');
+    if (modal) {
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closePiketDashboardModal();
+        });
+    }
+});
+@endif
 </script>
 @endpush
 

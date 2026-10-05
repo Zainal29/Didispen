@@ -27,6 +27,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @include('components.sweetalert-theme')
     <style>
         [x-cloak] {
             display: none !important;
@@ -187,63 +188,57 @@
     </div>
 
     {{-- ================================================== --}}
-    {{-- BOTTOM NAVIGATION BAR — KHUSUS MOBILE (MODERN & RESPONSIVE) --}}
+    {{-- BOTTOM NAVIGATION BAR — KHUSUS MOBILE (SAMA PERSIS DENGAN GURU) --}}
     {{-- ================================================== --}}
-    <nav
-        class="lg:hidden fixed left-0 right-0 bottom-0 z-50 w-full bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
-        style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);">             
-        <div class="grid grid-cols-5 h-16 w-full items-center">               
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style="padding-bottom: env(safe-area-inset-bottom);">
+        <div class="grid grid-cols-5 h-16 w-full">
             
             {{-- 1. Beranda --}}
             <a href="{{ route('siswa.dashboard') }}"
-               class="flex flex-col items-center justify-center gap-0.5 transition-all duration-150 {{ request()->routeIs('siswa.dashboard') ? 'text-blue-600 font-semibold scale-105' : 'text-gray-400 hover:text-gray-600 font-medium' }}">
+               class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('siswa.dashboard') ? $mobOn : $mobOff }}">
                 <i class="fas fa-home text-lg"></i>
-                <span class="text-[10px] tracking-tight">Beranda</span>
+                <span class="text-[9px] font-semibold leading-tight">Beranda</span>
             </a>
 
             {{-- 2. Riwayat --}}
             <a href="{{ route('siswa.pengajuan.index') }}"
-               class="flex flex-col items-center justify-center gap-0.5 transition-all duration-150 {{ request()->routeIs('siswa.pengajuan.index') ? 'text-blue-600 font-semibold scale-105' : 'text-gray-400 hover:text-gray-600 font-medium' }}">
+               class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('siswa.pengajuan.*') ? $mobOn : $mobOff }}">
                 <i class="fas fa-history text-lg"></i>
-                <span class="text-[10px] tracking-tight">Riwayat</span>
+                <span class="text-[9px] font-semibold leading-tight">Riwayat</span>
             </a>
 
-            {{-- 3. FAB: Buat Pengajuan (Tombol Utama Elevated) --}}
-            <div class="relative flex flex-col items-center justify-end h-full pb-1">
+            {{-- 3. FAB: Buat Pengajuan (Elevated Center Button) --}}
+            <div class="relative flex flex-col items-center justify-end pb-1">
                 <a href="{{ route('siswa.pengajuan.create') }}"
                    aria-label="Buat Pengajuan Dispensasi"
-                   class="absolute -top-5 w-12 h-12 rounded-full bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 text-white text-lg flex items-center justify-center shadow-lg shadow-blue-500/35 border-[3px] border-white active:scale-90 transition-transform">
+                   class="absolute -top-5 w-12 h-12 rounded-full bg-blue-600 text-white text-lg flex items-center justify-center shadow-md border-4 border-gray-50 active:scale-95 transition-transform">
                     <i class="fas fa-plus"></i>
                 </a>
-                <span class="text-[10px] font-bold tracking-tight text-blue-700 mt-auto">Buat</span>
+                <span class="text-[9px] font-semibold leading-tight text-gray-700">Buat</span>
             </div>
 
             {{-- 4. Notifikasi (+badge) --}}
             <a href="{{ route('siswa.notifikasi.index') }}"
-               class="flex flex-col items-center justify-center gap-0.5 transition-all duration-150 relative {{ request()->routeIs('siswa.notifikasi.*') ? 'text-blue-600 font-semibold scale-105' : 'text-gray-400 hover:text-gray-600 font-medium' }}">
+               class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('siswa.notifikasi.*') ? $mobOn : $mobOff }}">
                 <div class="relative">
                     <i class="fas fa-bell text-lg"></i>
                     @if($notif > 0)
-                        <span class="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white">
+                        <span class="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white">
                             {{ $notif > 99 ? '99+' : $notif }}
                         </span>
                     @endif
                 </div>
-                <span class="text-[10px] tracking-tight">Notifikasi</span>
+                <span class="text-[9px] font-semibold leading-tight">Notifikasi</span>
             </a>
 
             {{-- 5. Akun --}}
-            <button
-                type="button"
-                onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
-                class="flex flex-col items-center justify-center gap-0.5 transition-all duration-150 {{ request()->routeIs('profil.*') ? 'text-blue-600 font-semibold' : 'text-gray-400 hover:text-gray-600 font-medium' }}"
-            >
-                <div class="w-6 h-6 rounded-full {{ request()->routeIs('profil.*') ? 'bg-blue-600 text-white ring-2 ring-blue-300' : 'bg-gray-200 text-gray-700' }} flex items-center justify-center transition-colors">
-                    <span class="text-[10px] font-bold">
-                        {{ strtoupper(substr($user->name, 0, 1)) }}
-                    </span>
+            <button type="button"
+                    onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
+                    class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('profil.*') ? $mobOn : $mobOff }}">
+                <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                    <span class="text-[9px] font-bold text-gray-700">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                 </div>
-                <span class="text-[10px] tracking-tight">Akun</span>
+                <span class="text-[9px] font-semibold leading-tight">Akun</span>
             </button>
         </div>
     </nav>
