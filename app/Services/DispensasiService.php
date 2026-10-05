@@ -159,8 +159,8 @@ class DispensasiService
      */
     public static function cleanupCompletedDispensasiFiles(Dispensasi $dispensasi): void
     {
-        // Guard: Jangan pernah menghapus file jika status bukan 'selesai'
-        if ($dispensasi->status !== 'selesai') {
+        // Guard: Jangan pernah menghapus file jika status bukan 'selesai', 'dibatalkan', 'kadaluarsa', atau 'ditolak'
+        if (! in_array($dispensasi->status, ['selesai', 'dibatalkan', 'kadaluarsa', 'ditolak'])) {
             return;
         }
 

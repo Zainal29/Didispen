@@ -35,159 +35,103 @@ class QRScanService
 
         /*
          * 1. JSON
-         *
          * Contoh:
          * {"token":"xxxxxxxx"}
+         * {"id":16}
+         * {"nomor_surat":"DISP/..."}
          */
         if (json_validate($input)) {
             $qrData = json_decode($input, true);
 
-            if (
-                is_array($qrData)
-                && isset($qrData['token'])
-                && is_string($qrData['token'])
-                && trim($qrData['token']) !== ''
-            ) {
-                return $this->findByToken(trim($qrData['token']));
+            if (is_array($qrData)) {
+                if (!empty($qrData['token']) && is_string($qrData['token'])) {
+                    $d = $this->findByToken(trim($qrData['token']));
+                    if ($d) return $d;
+                }
+                if (!empty($qrData['id']) && is_numeric($qrData['id'])) {
+                    $d = Dispensasi::with(['siswa.kelas.jurusan'])->find((int) $qrData['id']);
+                    if ($d) return $d;
+                }
+                if (!empty($qrData['nomor_surat']) && is_string($qrData['nomor_surat'])) {
+                    $d = Dispensasi::with(['siswa.kelas.jurusan'])->where('nomor_surat', trim($qrData['nomor_surat']))->first();
+                    if ($d) return $d;
+                }
             }
         }
 
         /*
-         * 2. URL
-         *
+         * 2. URL (dengan scheme atau tanpa scheme)
          * Contoh:
          * https://domain.com/verifikasi/123?token=abcdef
          * https://domain.com/verify-qr/123
+         * /satpam/scan?dispensasi=16
          */
-        if (filter_var($input, FILTER_VALIDATE_URL)) {
-            $url = parse_url($input);
+        $urlToParse = $input;
+        if (!preg_match('~^[a-zA-Z]+://~', $urlToParse) && (str_contains($urlToParse, '/') || str_contains($urlToParse, '?'))) {
+            $urlToParse = 'http://localhost/' . ltrim($urlToParse, '/');
+        }
 
-            $path = $url['path'] ?? '';
+        if (filter_var($urlToParse, FILTER_VALIDATE_URL)) {
+            $url = parse_url($urlToParse);
             $query = [];
-
             if (isset($url['query'])) {
                 parse_str($url['query'], $query);
             }
 
-            /*
-             * Jika URL memiliki token, prioritaskan token.
-             * Ini lebih aman daripada hanya menggunakan ID.
-             */
-            if (
-                isset($query['token'])
-                && is_string($query['token'])
-                && trim($query['token']) !== ''
-            ) {
+            // A. Prioritaskan query parameter 'token'
+            if (!empty($query['token']) && is_string($query['token'])) {
                 $dispensasi = $this->findByToken(trim($query['token']));
-
                 if ($dispensasi) {
                     return $dispensasi;
                 }
             }
 
-            /*
-             * Fallback berdasarkan ID pada URL.
-             *
-             * /verify-qr/123
-             * /verifikasi/123
-             */
-            if (filter_var($input, FILTER_VALIDATE_URL)) {
-                $url = parse_url($input);
-
-                $path = $url['path'] ?? '';
-                $query = [];
-
-                if (isset($url['query'])) {
-                    parse_str($url['query'], $query);
+            // B. Query parameter 'dispensasi' (misal: ?dispensasi=16)
+            if (!empty($query['dispensasi']) && is_numeric($query['dispensasi'])) {
+                $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->find((int) $query['dispensasi']);
+                if ($dispensasi) {
+                    return $dispensasi;
                 }
+            }
 
-                if (
-                    isset($query['token'])
-                    && is_string($query['token'])
-                    && trim($query['token']) !== ''
-                ) {
-                    return $this->findByToken(trim($query['token']));
+            // C. Path URL dengan ID (misal: /verifikasi/16, /verify-qr/16)
+            $path = $url['path'] ?? '';
+            if (preg_match('~/(?:verify-qr|verifikasi|dispensasi)/(\d+)~i', $path, $matches)) {
+                $dispensasi = Dispensasi::with(['siswa.kelas.jurusan'])->find((int) $matches[1]);
+                if ($dispensasi) {
+                    return $dispensasi;
                 }
-
-                return null;
             }
         }
 
         /*
-         * 3. URL/path tanpa scheme
-         *
-         * Contoh:
-         * /verifikasi/123?token=abcdef
-         * /verify-qr/123
+         * 3. Token langsung (Alfanumerik, UUID, dengan dash/underscore, 16 - 64 karakter)
          */
-        // if (preg_match(
-        //  '~/(?:verify-qr|verifikasi)/(\d+)(?:/)?(?:\?([^#]*))?$~i',
-        //     $input,
-        //     $matches
-        // )) {
-        //     $id = (int) $matches[1];
-
-        //     if (! empty($matches[2])) {
-        //         $query = [];
-
-        //         parse_str($matches[2], $query);
-
-        //         if (
-        //             isset($query['token'])
-        //             && is_string($query['token'])
-        //             && trim($query['token']) !== ''
-        //         ) {
-        //             $dispensasi = $this->findByToken(trim($query['token']));
-
-        //             if ($dispensasi) {
-        //                 return $dispensasi;
-        //             }
-        //         }
-        //     }
-
-        //     return Dispensasi::with(['siswa.kelas.jurusan'])
-        //         ->find($id);
-        // }
-
-        /*
-         * 3. URL/path tanpa scheme
-         *
-         * Contoh yang valid:
-         * /verifikasi/123?token=abcdef
-         * /verify-qr/123?token=abcdef
-         *
-         * ID hanya digunakan sebagai bagian dari URL.
-         * Verifikasi tetap wajib menggunakan token.
-         */
-        if (preg_match(
-            '~/(?:verify-qr|verifikasi)/(\d+)(?:/)?(?:\?([^#]*))?$~i',
-            $input,
-            $matches
-        )) {
-            if (!empty($matches[2])) {
-                $query = [];
-
-                parse_str($matches[2], $query);
-
-                if (
-                    isset($query['token'])
-                    && is_string($query['token'])
-                    && trim($query['token']) !== ''
-                ) {
-                    return $this->findByToken(trim($query['token']));
-                }
+        if (preg_match('/^[A-Za-z0-9\-_]{16,64}$/', $input)) {
+            $dispensasi = $this->findByToken($input);
+            if ($dispensasi) {
+                return $dispensasi;
             }
-
-            return null;
         }
 
         /*
-         * 4. Token langsung
-         *
-         * Token QR project dapat berupa string alfanumerik.
+         * 4. Nomor surat langsung (misal: DISP/20261004/FFF5C5)
          */
-        if (preg_match('/^[A-Za-z0-9]{32,64}$/', $input)) {
-            return $this->findByToken($input);
+        $byNomorSurat = Dispensasi::with(['siswa.kelas.jurusan'])
+            ->where('nomor_surat', $input)
+            ->first();
+        if ($byNomorSurat) {
+            return $byNomorSurat;
+        }
+
+        /*
+         * 5. ID angka langsung
+         */
+        if (is_numeric($input)) {
+            $byId = Dispensasi::with(['siswa.kelas.jurusan'])->find((int) $input);
+            if ($byId) {
+                return $byId;
+            }
         }
 
         return null;
@@ -262,7 +206,7 @@ class QRScanService
         $waktuAktual = \App\Helpers\TimeHelper::getWaktuAktual(
             $dispensasi->jam_kembali
         );
-        $batasWaktu = $this->resolveBatasWaktu($waktuAktual);
+        $batasWaktu = $this->resolveBatasWaktu($dispensasi->jam_kembali, $waktuAktual);
 
         $updated = DB::transaction(function () use ($dispensasi, $batasWaktu, $userId) {
             return Dispensasi::whereKey($dispensasi->id)
@@ -406,27 +350,47 @@ class QRScanService
     }
 
     /**
-     * Mengubah hasil TimeHelper:
-     *
-     * "07:00 - 07:45"
-     *
-     * menjadi timestamp batas waktu kembali.
+     * Menentukan batas waktu kembali dengan berbagai format waktu yang fleksibel.
+     * Mencegah uncaught exception dan menangani format direct time, range, "pulang", maupun periode.
      */
-    private function resolveBatasWaktu(string $waktuAktual): Carbon
+    public function resolveBatasWaktu(?string $jamKembali, ?string $waktuAktual = null): Carbon
     {
-        if ($waktuAktual !== '-' && str_contains($waktuAktual, '-')) {
-            $parts = array_map(
-                'trim',
-                explode('-', $waktuAktual, 2)
-            );
+        $jamKembali = trim((string) $jamKembali);
+        $waktuAktual = trim((string) $waktuAktual);
 
-            if (isset($parts[1]) && preg_match('/^\d{2}:\d{2}$/', $parts[1])) {
-                return now()->setTimeFromTimeString($parts[1]);
+        // 1. Dispensasi sampai pulang -> batas waktu hingga akhir KBM hari ini
+        if (stripos($jamKembali, 'pulang') !== false || stripos($waktuAktual, 'pulang') !== false) {
+            return \App\Helpers\TimeHelper::getWaktuSelesaiKbmTerakhir() ?? now()->setTime(15, 30);
+        }
+
+        // 2. Format rentang waktu 'HH:MM - HH:MM' atau 'HH.MM - HH.MM'
+        foreach ([$waktuAktual, $jamKembali] as $str) {
+            if ($str !== '' && $str !== '-') {
+                if (preg_match('/(\d{1,2})[:.](\d{2})\s*-\s*(\d{1,2})[:.](\d{2})/', $str, $m)) {
+                    return now()->setTime((int) $m[3], (int) $m[4], 0);
+                }
             }
         }
 
-        throw new \InvalidArgumentException(
-            'Jadwal jam kembali tidak ditemukan sehingga batas waktu tidak dapat ditentukan.'
-        );
+        // 3. Format waktu langsung tunggal 'HH:MM' atau 'HH.MM' (misal: "08:28")
+        foreach ([$jamKembali, $waktuAktual] as $str) {
+            if ($str !== '' && $str !== '-') {
+                if (preg_match('/^(\d{1,2})[:.](\d{2})(:00)?$/', $str, $m)) {
+                    return now()->setTime((int) $m[1], (int) $m[2], 0);
+                }
+            }
+        }
+
+        // 4. Jam pelajaran ke-X via TimeHelper::getBatasWaktuKembali
+        if ($jamKembali !== '') {
+            $parsed = \App\Helpers\TimeHelper::getBatasWaktuKembali($jamKembali);
+            if ($parsed instanceof Carbon) {
+                return $parsed;
+            }
+        }
+
+        // 5. Fallback aman jika semua deteksi di atas tidak cocok
+        Log::warning("Batas waktu kembali tidak dapat diparsing sempurna: jamKembali='{$jamKembali}', waktuAktual='{$waktuAktual}'. Menggunakan fallback akhir KBM.");
+        return \App\Helpers\TimeHelper::getWaktuSelesaiKbmTerakhir() ?? now()->addHours(2);
     }
 }
