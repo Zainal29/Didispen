@@ -53,42 +53,50 @@ class AutoCompleteDispensasi extends Command
                     return;
                 }
 
-                $updateData = [
-                    'status' => 'selesai',
-                ];
+                $notifMessage = null;
 
-                // Jika statusnya keluar dan batas waktu kembali terlewati, catat status keterlambatan
-                $isLate = false;
-                if ($locked->status === 'keluar' && $locked->batas_waktu_kembali) {
-                    $batasKembali = $locked->batas_waktu_kembali->copy()->setTimezone('Asia/Jakarta');
-                    if ($now->greaterThan($batasKembali)) {
-                        $isLate = true;
-                        $updateData['is_warned'] = true;
-                        if (! $locked->warned_at) {
-                            $updateData['warned_at'] = $now;
-                        }
-                    }
+                // 1. KASUS MENUNGGU: Siswa iseng / tidak pernah ke guru piket
+                if ($locked->status === 'menunggu') {
+                    $locked->update([
+                        'status' => 'kadaluarsa',
+                        'catatan_admin' => 'Kadaluarsa otomatis: Siswa tidak melakukan konfirmasi ke Guru Piket hingga KBM berakhir.',
+                    ]);
+                    $count++;
+                    return;
                 }
 
-                // Kontrak timestamp:
-                // - waktu_kembali_aktual TIDAK BOLEH diisi
-                // - waktu_keluar_aktual tetap ada jika sebelumnya keluar, null jika belum keluar
-                // - approved_at tetap ada jika sebelumnya disetujui, null jika menunggu
-                // - rejected_at tetap null
-                // - foto_verifikasi TIDAK dihapus saat auto-complete
-                $locked->update($updateData);
-                $count++;
+                // 2. KASUS DISETUJUI TAPI TIDAK KELUAR: Siswa tidak pernah scan ke Satpam
+                if ($locked->status === 'disetujui' && empty($locked->waktu_keluar_aktual)) {
+                    $locked->update([
+                        'status' => 'dibatalkan',
+                        'catatan_admin' => 'Batal otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga KBM berakhir.',
+                    ]);
+                    \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($locked);
+                    $count++;
+                    return;
+                }
 
-                // Notifikasi keterlambatan jika siswa keluar dan terlambat
-                if ($isLate && $this->notifikasiService && $locked->siswa?->user_id) {
-                    try {
-                        $this->notifikasiService->send(
-                            $locked->siswa->user_id,
-                            "PERINGATAN: Dispensasi Anda ({$locked->nomor_surat}) telah diselesaikan otomatis karena jam KBM telah berakhir. Anda tercatat TERLAMBAT kembali.",
-                            route('siswa.pengajuan.show', $locked->id)
-                        );
-                    } catch (\Throwable $e) {
-                        Log::warning("Gagal mengirim notifikasi auto-complete terlambat: " . $e->getMessage());
+                // 3. KASUS KELUAR TAPI TIDAK KEMBALI: Siswa scan keluar tapi tidak pernah scan masuk
+                if ($locked->status === 'keluar') {
+                    $locked->update([
+                        'status' => 'selesai',
+                        'is_warned' => true,
+                        'warned_at' => $now,
+                        'catatan_admin' => 'Ditutup otomatis: Siswa tidak melakukan scan kembali hingga KBM berakhir (Tidak Kembali).',
+                    ]);
+                    \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($locked);
+                    $count++;
+
+                    if ($this->notifikasiService && $locked->siswa?->user_id) {
+                        try {
+                            $this->notifikasiService->send(
+                                $locked->siswa->user_id,
+                                "PERINGATAN: Dispensasi Anda ({$locked->nomor_surat}) telah ditutup otomatis. Anda tercatat TIDAK KEMBALI / TANPA SCAN MASUK ke sekolah.",
+                                route('siswa.pengajuan.show', $locked->id)
+                            );
+                        } catch (\Throwable $e) {
+                            Log::warning("Gagal mengirim notifikasi auto-complete tidak kembali: " . $e->getMessage());
+                        }
                     }
                 }
             });

@@ -155,7 +155,7 @@ class LaporanController extends Controller
                 echo '<td class="text-center">' . htmlspecialchars($row->jam_keluar) . '</td>';
                 echo '<td class="text-center">' . htmlspecialchars($row->jam_kembali) . '</td>';
 
-                echo '<td class="text-center">' . htmlspecialchars(ucfirst($row->status)) . '</td>';
+                echo '<td class="text-center">' . htmlspecialchars($row->status_badge['text']) . '</td>';
                 echo '<td>' . htmlspecialchars($row->guru->nama_lengkap ?? '-') . '</td>';
                 echo '</tr>';
             }

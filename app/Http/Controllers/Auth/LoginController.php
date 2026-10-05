@@ -68,14 +68,27 @@
         | - Email sekolah (NIP@smkn1bangsri.sch.id / NIP@smkn!bangsri.sch.id)
         |
         */
+        $roleSelected = $credentials['role'] ?? 'siswa';
+        $credentialLabel = match ($roleSelected) {
+            'guru', 'satpam' => 'NIP/Email',
+            'admin' => 'Email/Username',
+            default => 'NIS/Email',
+        };
+        $authErrorMessage = "{$credentialLabel} atau password salah.";
+
         $userQuery = User::where(function ($query) use ($loginInput, $nipFromSchoolEmail) {
             // Email akun (bisa email sekolah atau email terdaftar)
             $query->where('email', $loginInput)
                 // NIP / NIS
                 ->orWhere('nis_nip', $loginInput)
-                // Email asli guru dari SiPintu (Google / akun lain)
+                // Email atau NIP guru
                 ->orWhereHas('guru', function ($guruQuery) use ($loginInput) {
-                    $guruQuery->where('email', $loginInput);
+                    $guruQuery->where('email', $loginInput)
+                        ->orWhere('nip', $loginInput);
+                })
+                // NIS siswa
+                ->orWhereHas('siswa', function ($siswaQuery) use ($loginInput) {
+                    $siswaQuery->where('nis_nip', $loginInput);
                 });
 
             // Jika input berupa email sekolah (NIP@smkn1bangsri.sch.id), cek juga berdasarkan NIP langsung
@@ -162,7 +175,7 @@
         if (! $user) {
             return back()
                 ->withErrors([
-                    'email' => 'NIS/Email atau password salah.',
+                    'email' => $authErrorMessage,
                 ])
                 ->withInput();
         }
@@ -215,7 +228,7 @@
         if (! $isRoleValid) {
             return back()
                 ->withErrors([
-                    'email' => 'NIS/Email atau password salah.',
+                    'email' => $authErrorMessage,
                 ])
                 ->withInput();
         }
@@ -234,7 +247,7 @@
         ) {
             return back()
                 ->withErrors([
-                    'email' => 'NIS/Email atau password salah.',
+                    'email' => $authErrorMessage,
                 ])
                 ->withInput();
         }
@@ -251,7 +264,7 @@
         ) {
             return back()
                 ->withErrors([
-                    'email' => 'NIS/Email atau password salah.',
+                    'email' => $authErrorMessage,
                 ])
                 ->withInput();
         }
@@ -328,7 +341,7 @@
 
             return back()
                 ->withErrors([
-                    'email' => 'NIS/Email atau password salah.',
+                    'email' => $authErrorMessage,
                 ])
                 ->withInput();
         }
