@@ -137,7 +137,7 @@
     </div>
 
     <div class="footer">
-        <p>Struk ini sah dan ditandatangani secara elektronik.</p>
+        <p>Struk ini sah dan ditandatangani oleh Guru Piket.</p>
         <p>Dicetak: {{ now()->format('d/m/Y H:i') }} WIB</p>
     </div>
 

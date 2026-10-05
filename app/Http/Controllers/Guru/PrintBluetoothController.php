@@ -96,7 +96,7 @@ class PrintBluetoothController extends Controller
 
             // ===== 7. FOOTER =====
             $printer->text(str_repeat("=", 32) . "\n");
-            $printer->text("Struk ini sah dan ditandatangani\nsecara elektronik\n");
+            $printer->text("Struk ini sah dan ditandatangani\noleh Guru Piket.\n");
             $printer->text("Dicetak: " . now()->format('d/m/Y H:i:s') . " WIB\n");
             $printer->text("SMK N 1 Bangsri - Jepara\n");
 
