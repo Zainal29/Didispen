@@ -46,24 +46,24 @@
 </head>
 <body class="bg-slate-900 font-sans antialiased text-slate-800 min-h-screen flex flex-col justify-between" x-data="loginForm()" x-init="initPwa()">
 
-    <!-- BACKGROUND IMAGE DENGAN EFEK GELAP TIPIS AGAR FOTO SEKOLAH TETAP ESEM PILIHANNYA KELIHATAN -->
+    <!-- BACKGROUND IMAGE TANPA HEAVY BLUR AGAR RINGAN DI HP -->
     <div class="fixed inset-0 z-0 pointer-events-none">
-        <img src="{{ asset('images/foto-smk.png') }}" alt="Background" class="w-full h-full object-cover opacity-40" decoding="async">
-        <div class="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]"></div>
+        <img src="{{ asset('images/foto-smk.png') }}" alt="Background" class="w-full h-full object-cover opacity-30" decoding="async">
+        <div class="absolute inset-0 bg-slate-950/80"></div>
     </div>
 
     <!-- MAIN CONTAINER -->
     <div class="relative z-10 flex-1 flex flex-col items-center justify-center p-3 sm:p-6 min-h-screen">
 
         <!-- TAGLINE BANNER -->
-        <div class="w-full max-w-md mb-3 sm:mb-5 flex justify-center px-2">
-            <div class="bg-white/95 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-3 rounded-xl shadow-lg border border-white/20 flex justify-center items-center">
-                <img src="{{ asset('images/tagline.png') }}" alt="Banner SMK" class="h-8 sm:h-12 lg:h-14 w-auto object-contain" decoding="async">
+        <div class="w-full max-w-md mb-3 sm:mb-4 flex justify-center px-2">
+            <div class="bg-white px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl shadow-md border border-slate-100 flex justify-center items-center">
+                <img src="{{ asset('images/tagline.png') }}" alt="Banner SMK" class="h-8 sm:h-11 lg:h-12 w-auto object-contain" decoding="async">
             </div>
         </div>
 
-        <!-- LOGIN CARD (Diberi rounded-2xl dan max-w agar background atas/bawah/samping tetap kelihatan cantik) -->
-        <div class="w-full max-w-3xl bg-white/95 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl overflow-hidden flex flex-col lg:flex-row">
+        <!-- LOGIN CARD -->
+        <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col lg:flex-row border border-slate-100">
 
             <!-- LEFT PANEL: BRANDING -->
             <div class="bg-blue-600 px-6 py-6 sm:px-8 sm:py-8 flex flex-col items-center justify-center text-center lg:w-5/12 relative overflow-hidden">
@@ -241,20 +241,20 @@
                         <button type="button" 
                                 @click="handleInstallClick()" 
                                 id="btn-install-shortcut"
-                                class="w-full flex items-center justify-between p-2.5 rounded-xl border border-blue-100 bg-blue-50/60 hover:bg-blue-100/80 transition-colors text-left group">
-                            <div class="flex items-center gap-2.5">
+                                class="w-full flex items-center justify-between p-2.5 rounded-xl border border-blue-100 bg-blue-50/60 hover:bg-blue-100/80 transition-colors text-left group gap-2">
+                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
                                 <div class="w-9 h-9 rounded-lg bg-white border border-blue-100 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden p-1">
                                     <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo SMK" class="w-full h-full object-contain" decoding="async">
                                 </div>
-                                <div>
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-xs font-bold text-slate-800" x-text="isInstalled ? 'Aplikasi Sudah Terpasang' : 'Pasang Pintasan Aplikasi'"></span>
-                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-600 text-white rounded tracking-wide" x-show="!isInstalled">SHORTCUT</span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-xs font-bold text-slate-800 truncate" x-text="isInstalled ? 'Aplikasi Sudah Terpasang' : 'Pasang Pintasan Aplikasi'"></span>
+                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-600 text-white rounded tracking-wide shrink-0" x-show="!isInstalled">SHORTCUT</span>
                                     </div>
-                                    <p class="text-[11px] text-slate-500 mt-0.5" x-text="isInstalled ? 'DIDISPEN berjalan sebagai aplikasi' : 'Akses cepat dari Layar Utama HP / PC'"></p>
+                                    <p class="text-[11px] text-slate-500 mt-0.5 truncate" x-text="isInstalled ? 'DIDISPEN berjalan sebagai aplikasi' : 'Akses cepat dari Layar Utama HP / PC'"></p>
                                 </div>
                             </div>
-                            <div class="text-xs font-semibold text-blue-600 pr-1 flex items-center gap-1 flex-shrink-0">
+                            <div class="text-xs font-semibold text-blue-600 pl-2 pr-1 flex items-center gap-1 shrink-0">
                                 <span x-text="isInstalled ? 'Buka' : 'Pasang'"></span>
                                 <i class="fas fa-chevron-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i>
                             </div>

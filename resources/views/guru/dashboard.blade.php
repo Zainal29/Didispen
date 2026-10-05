@@ -24,15 +24,34 @@
 }
 </style>
 
-{{-- HERO SECTION - Format layout sama persis seperti siswa tanpa notifikasi --}}
-<div class="bg-blue-600 rounded-xl p-4 sm:p-6 mb-4">
-    <p class="text-blue-100 text-xs font-medium uppercase tracking-wide">{{ now()->isoFormat('dddd, D MMMM Y') }}</p>
-    <h2 class="text-lg sm:text-xl font-bold text-white mt-1">Halo, {{ auth()->user()->name }}!</h2>
-    <div class="mt-3 flex flex-wrap items-center gap-2">
-        <a href="{{ route('guru.pengajuan.create') }}"
-           class="inline-flex items-center px-3.5 py-1.5 rounded-lg bg-white text-blue-700 text-xs font-semibold hover:bg-blue-50 transition-colors shadow-sm">
-            <i class="fas fa-plus mr-1.5"></i>Buat Dispensasi
-        </a>
+{{-- HERO SECTION - Format modern, responsive seperti siswa --}}
+<div class="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-4 sm:p-6 mb-5 shadow-lg shadow-blue-500/15 text-white">
+    <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="absolute right-12 top-2 w-24 h-24 bg-indigo-400/20 rounded-full blur-xl pointer-events-none"></div>
+    
+    <div class="relative z-10">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-semibold text-blue-100 uppercase tracking-wide mb-2">
+            <i class="far fa-calendar-alt text-blue-200"></i>
+            {{ now()->isoFormat('dddd, D MMMM Y') }}
+        </div>
+        <h2 class="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
+            Halo, {{ auth()->user()->name }}!
+        </h2>
+        <p class="text-xs sm:text-sm text-blue-100/90 mt-1 max-w-xl">
+            Panel Guru Piket DIDISPEN. Verifikasi permohonan dispensasi dan pantau aktivitas izin siswa hari ini secara real-time.
+        </p>
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+            <a href="{{ route('guru.pengajuan.create') }}"
+               class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-sm active:scale-95 transition-all">
+                <i class="fas fa-plus mr-1.5"></i>Buat Dispensasi
+            </a>
+            @if(!empty($incomingSwapCount) && $incomingSwapCount > 0)
+                <a href="{{ route('guru.piket.swap.incoming') }}"
+                   class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-xs font-semibold border border-white/20 transition-all">
+                    <i class="fas fa-inbox mr-1.5 text-yellow-300"></i>{{ $incomingSwapCount }} Permintaan Tukar
+                </a>
+            @endif
+        </div>
     </div>
 </div>
 
@@ -222,18 +241,18 @@ $cards = [
         <button type="button"
                 onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
                 data-filter="{{ $key }}"
-                class="stat-card-btn text-left rounded-xl border p-3 sm:p-4 min-h-[44px] transition-all w-full
+                class="stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[44px] transition-all w-full
                 {{ $isActive
                     ? 'active bg-white border-' . $color . '-500 ring-2 ring-' . $color . '-500/20 shadow-sm'
-                    : 'bg-white border-gray-200 hover:border-gray-300' }}">
+                    : 'bg-white border-gray-200/90 shadow-xs hover:border-gray-300 hover:shadow-md' }}">
             <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors
                     {{ $isActive ? 'bg-' . $color . '-500 text-white' : 'bg-' . $color . '-100 text-' . $color . '-600' }}">
                     <i class="fas {{ $card[2] }} text-sm"></i>
                 </div>
-                <span class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $card[1] }}</span>
+                <span class="text-2xl sm:text-3xl font-black text-gray-900">{{ $card[1] }}</span>
             </div>
-            <p class="text-[11px] sm:text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ $card[0] }}</p>
+            <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $card[0] }}</p>
         </button>
     @endforeach
 </div>
@@ -311,22 +330,12 @@ $cards = [
                         <div class="flex items-center gap-2 mb-1 flex-wrap">
                             <span class="font-mono text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{{ $item->nomor_surat }}</span>
                             @php
-                                $badgeClass = match($item->status) {
-                                    'menunggu' => 'bg-amber-100 text-amber-800 border-amber-200',
-                                    'disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                                    'keluar' => 'bg-sky-100 text-sky-800 border-sky-200',
-                                    'selesai' => 'bg-gray-200 text-gray-800 border-gray-300',
-                                    default => 'bg-gray-100 text-gray-800 border-gray-200'
-                                };
+                                $badge = $item->status_badge;
                             @endphp
-                            <span class="px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide {{ $badgeClass }}">
-                                {{ $item->status }}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide {{ $badge['class'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                                {{ $badge['text'] }}
                             </span>
-                            @if($isLate)
-                                <span class="px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide bg-red-100 text-red-800 border-red-300">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i>Terlambat {{ $lateText }}
-                                </span>
-                            @endif
                             @if($item->is_warned)
                                 <span class="warned-badge px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide bg-purple-100 text-purple-800 border-purple-200">
                                     <i class="fas fa-phone-alt mr-1"></i>Sudah Dihubungi
@@ -387,16 +396,7 @@ $cards = [
                                     title="Tolak">
                                 <i class="fas fa-times mr-1.5"></i>Tolak
                             </button>
-                        @else
-                            @if(in_array($item->status, ['disetujui']))
-                                <a href="{{ route('guru.cetak-pdf', [$item, 'format' => 'thermal']) }}"
-                                   target="_blank"
-                                   class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-lg transition-colors border border-emerald-300"
-                                   title="Cetak Struk">
-                                    <i class="fas fa-print mr-1.5"></i>Struk
-                                </a>
-                            @endif
-                        @endif
+                       @endif
                     </div>
                 </div>
             </div>
@@ -460,83 +460,32 @@ function escapeAlertHtml(value) {
 }
 
 let currentFilter = '{{ $filter }}';
+let isFilterFetching = false;
 
-// function switchFilter(filterKey, color, event) {
-//     if (event) event.preventDefault();
-//     if (filterKey === currentFilter) return;
-
-//     document.querySelectorAll('.stat-card-btn').forEach(card => {
-//         card.classList.remove('active', 'ring-2', 'shadow-sm');
-//         card.classList.add('border-gray-200');
-//         card.className = card.className.replace(/border-\w+-500/g, '');
-//         card.className = card.className.replace(/ring-\w+-500\/20/g, '');
-//         const iconContainer = card.querySelector('div > div');
-//         if (iconContainer) iconContainer.className = iconContainer.className.replace(/bg-\w+-500 text-white/g, '');
-//     });
-
-//     document.querySelectorAll('.filter-btn').forEach(btn => {
-//         btn.classList.remove('active', 'bg-blue-600', 'bg-red-600', 'text-white', 'shadow-sm', 'border-transparent');
-//         btn.classList.add('bg-white', 'border-gray-200');
-//     });
-
-//     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
-//     if (activeStatCard) {
-//         activeStatCard.classList.add('active', `border-${color}-500`, `ring-2`, `ring-${color}-500/20`, 'shadow-sm');
-//         const iconContainer = activeStatCard.querySelector('div > div');
-//         if (iconContainer) iconContainer.classList.add(`bg-${color}-500`, 'text-white');
-//     }
-
-//     const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
-//     if (activeBtn) activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-sm', 'border-transparent');
-
-//     const contentArea = document.getElementById('content-area');
-//     const loading = document.getElementById('loading-overlay');
-//     contentArea.classList.remove('fade-in');
-//     contentArea.classList.add('fade-out');
-//     loading.classList.remove('hidden');
-
-//     fetch(`{{ url()->current() }}?filter=${filterKey}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
-//     .then(response => response.text())
-//     .then(html => {
-//         const parser = new DOMParser();
-//         const newContent = parser.parseFromString(html, 'text/html').getElementById('content-area');
-//         if (newContent) {
-//             setTimeout(() => {
-//                 contentArea.innerHTML = newContent.innerHTML;
-//                 contentArea.classList.remove('fade-out');
-//                 contentArea.classList.add('fade-in');
-//                 loading.classList.add('hidden');
-//                 currentFilter = filterKey;
-//                 const newUrl = new URL(window.location);
-//                 newUrl.searchParams.set('filter', filterKey);
-//                 window.history.pushState({ filter: filterKey }, '', newUrl);
-//             }, 200);
-//         }
-//     })
-//     .catch(error => {
-//         console.error('Error:', error);
-//         loading.classList.add('hidden');
-//         window.location.href = `{{ url()->current() }}?filter=${filterKey}`;
-//     });
-// }
+const statCardColors = {
+    'menunggu': 'amber',
+    'disetujui': 'emerald',
+    'keluar': 'sky',
+    'selesai': 'gray'
+};
 
 function switchFilter(filterKey, color, event) {
     if (event) event.preventDefault();
-    if (filterKey === currentFilter) return;
+    if (filterKey === currentFilter || isFilterFetching) return;
 
-    // ✅ RESET SEMUA TOMBOL FILTER - bersihkan semua class background, hover, dan teks
+    isFilterFetching = true;
+
+    // Reset tombol secondary filter
     const filterColorClasses = [
         'active', 'text-white', 'shadow-sm', 'border-transparent',
         'bg-blue-600', 'bg-red-600', 'bg-purple-600', 'bg-amber-600', 'bg-emerald-600', 'bg-sky-600', 'bg-gray-600',
-        'hover:bg-blue-700', 'hover:bg-red-700', 'hover:bg-purple-700', 'hover:bg-amber-700', 'hover:bg-emerald-700', 'hover:bg-sky-700', 'hover:bg-gray-700',
-        'text-red-600', 'text-purple-600', 'hover:bg-red-50', 'hover:bg-purple-50', 'hover:text-red-700', 'hover:text-purple-700'
+        'hover:bg-blue-700', 'hover:bg-red-700', 'hover:bg-purple-700', 'hover:bg-amber-700', 'hover:bg-emerald-700', 'hover:bg-sky-700', 'hover:bg-gray-700'
     ];
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove(...filterColorClasses);
         btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
 
-        // Reset warna ikon saat tidak aktif
         const icon = btn.querySelector('i');
         if (icon) {
             icon.classList.remove('text-white');
@@ -547,17 +496,19 @@ function switchFilter(filterKey, color, event) {
         }
     });
 
-    // Reset stat cards
+    // Reset kartu statistik
     document.querySelectorAll('.stat-card-btn').forEach(card => {
-        card.classList.remove('active', 'ring-2', 'shadow-sm');
-        card.classList.add('border-gray-200');
-        card.className = card.className.replace(/border-\w+-500/g, '');
-        card.className = card.className.replace(/ring-\w+-500\/20/g, '');
+        const key = card.getAttribute('data-filter');
+        const c = statCardColors[key] || 'gray';
+        card.classList.remove('active', 'border-amber-500', 'border-emerald-500', 'border-sky-500', 'border-gray-500', 'ring-2', 'ring-amber-500/20', 'ring-emerald-500/20', 'ring-sky-500/20', 'ring-gray-500/20', 'shadow-sm');
+        card.classList.add('bg-white', 'border-gray-200', 'hover:border-gray-300');
         const iconContainer = card.querySelector('div > div');
-        if (iconContainer) iconContainer.className = iconContainer.className.replace(/bg-\w+-500 text-white/g, '');
+        if (iconContainer) {
+            iconContainer.className = `w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-${c}-100 text-${c}-600`;
+        }
     });
 
-    // ✅ SET TOMBOL AKTIF - tambahkan background dan teks putih
+    // Aktifkan secondary filter jika ada
     const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
     if (activeBtn) {
         activeBtn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
@@ -569,41 +520,65 @@ function switchFilter(filterKey, color, event) {
         }
     }
 
+    // Aktifkan kartu statistik jika ada
     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
-    if (activeStatCard) {
-        activeStatCard.classList.add('active', `border-${color}-500`, `ring-2`, `ring-${color}-500/20`, 'shadow-sm');
+    if (activeStatCard && statCardColors[filterKey]) {
+        const c = statCardColors[filterKey];
+        activeStatCard.classList.remove('border-gray-200', 'hover:border-gray-300');
+        activeStatCard.classList.add('active', `border-${c}-500`, 'ring-2', `ring-${c}-500/20`, 'shadow-sm');
         const iconContainer = activeStatCard.querySelector('div > div');
-        if (iconContainer) iconContainer.classList.add(`bg-${color}-500`, 'text-white');
+        if (iconContainer) {
+            iconContainer.className = `w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-${c}-500 text-white`;
+        }
     }
 
     const contentArea = document.getElementById('content-area');
     const loading = document.getElementById('loading-overlay');
-    contentArea.classList.remove('fade-in');
-    contentArea.classList.add('fade-out');
-    loading.classList.remove('hidden');
+    if (contentArea) {
+        contentArea.classList.remove('fade-in');
+        contentArea.classList.add('fade-out');
+    }
+    if (loading) {
+        loading.classList.remove('hidden');
+    }
 
-    fetch(`{{ url()->current() }}?filter=${filterKey}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
-    .then(response => response.text())
+    const targetUrl = new URL(window.location.href);
+    targetUrl.searchParams.set('filter', filterKey);
+
+    fetch(targetUrl.toString(), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'text/html'
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.text();
+    })
     .then(html => {
         const parser = new DOMParser();
-        const newContent = parser.parseFromString(html, 'text/html').getElementById('content-area');
-        if (newContent) {
+        const doc = parser.parseFromString(html, 'text/html');
+        const newContent = doc.getElementById('content-area');
+        if (newContent && contentArea) {
             setTimeout(() => {
                 contentArea.innerHTML = newContent.innerHTML;
                 contentArea.classList.remove('fade-out');
                 contentArea.classList.add('fade-in');
-                loading.classList.add('hidden');
+                if (loading) loading.classList.add('hidden');
                 currentFilter = filterKey;
-                const newUrl = new URL(window.location);
-                newUrl.searchParams.set('filter', filterKey);
-                window.history.pushState({ filter: filterKey }, '', newUrl);
-            }, 200);
+                isFilterFetching = false;
+                window.history.pushState({ filter: filterKey }, '', targetUrl.toString());
+            }, 150);
+        } else {
+            isFilterFetching = false;
+            window.location.href = targetUrl.toString();
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        loading.classList.add('hidden');
-        window.location.href = `{{ url()->current() }}?filter=${filterKey}`;
+        console.error('Error switching filter:', error);
+        if (loading) loading.classList.add('hidden');
+        isFilterFetching = false;
+        window.location.href = targetUrl.toString();
     });
 }
 

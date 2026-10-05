@@ -44,9 +44,12 @@
             <select name="status"
                     class="w-full h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-base sm:text-sm text-gray-900 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
                 <option value="">Semua Status</option>
-                <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
-                <option value="ditolak"   {{ request('status') == 'ditolak'   ? 'selected' : '' }}>Ditolak</option>
-                <option value="selesai"   {{ request('status') == 'selesai'   ? 'selected' : '' }}>Selesai</option>
+                <option value="disetujui"  {{ request('status') == 'disetujui'  ? 'selected' : '' }}>Disetujui</option>
+                <option value="keluar"     {{ request('status') == 'keluar'     ? 'selected' : '' }}>Sedang Keluar</option>
+                <option value="selesai"    {{ request('status') == 'selesai'    ? 'selected' : '' }}>Selesai</option>
+                <option value="ditolak"    {{ request('status') == 'ditolak'    ? 'selected' : '' }}>Ditolak</option>
+                <option value="dibatalkan" {{ request('status') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+                <option value="kadaluarsa" {{ request('status') == 'kadaluarsa' ? 'selected' : '' }}>Kadaluarsa</option>
             </select>
         </div>
         <div class="flex items-end">
@@ -85,11 +88,7 @@
     <div class="md:hidden divide-y divide-gray-100">
         @forelse($dispensasi as $d)
             @php
-                $badges = [
-                    'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                    'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
-                    'selesai'   => 'bg-blue-100 text-blue-700 border-blue-200',
-                ];
+                $badge = $d->status_badge;
             @endphp
             <div class="p-4">
                 <div class="flex justify-between items-start gap-2 mb-1.5">
@@ -97,8 +96,9 @@
                         <p class="font-mono font-semibold text-gray-700 text-xs">{{ $d->nomor_surat }}</p>
                         <p class="font-bold text-gray-900 text-sm truncate">{{ $d->siswa->nama_lengkap }}</p>
                     </div>
-                    <span class="px-2.5 py-1 rounded-md text-[10px] font-semibold border flex-shrink-0 {{ $badges[$d->status] ?? 'bg-gray-100 text-gray-600 border-gray-200' }}">
-                        {{ ucfirst($d->status) }}
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border flex-shrink-0 {{ $badge['class'] }}">
+                        <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                        {{ $badge['text'] }}
                     </span>
                 </div>
                 <p class="text-xs text-gray-500">
@@ -129,11 +129,7 @@
             <tbody class="divide-y divide-gray-100">
                 @forelse($dispensasi as $d)
                     @php
-                        $badges = [
-                            'disetujui' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                            'ditolak'   => 'bg-red-100 text-red-700 border-red-200',
-                            'selesai'   => 'bg-blue-100 text-blue-700 border-blue-200',
-                        ];
+                        $badge = $d->status_badge;
                     @endphp
                     <tr class="hover:bg-gray-50/50 transition-colors">
                         <td class="p-4 font-mono font-semibold text-gray-700 text-xs">{{ $d->nomor_surat }}</td>
@@ -142,8 +138,9 @@
                         <td class="p-4 text-xs text-gray-500">{{ $d->siswa->kelas?->nama_kelas }}</td>
                         <td class="p-4 font-medium text-gray-700">{{ \App\Helpers\TimeHelper::getWaktuAktual($d->jam_keluar, $d->created_at?->dayOfWeek) }}</td>
                         <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold border {{ $badges[$d->status] ?? 'bg-gray-100 text-gray-600 border-gray-200' }}">
-                                {{ ucfirst($d->status) }}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border {{ $badge['class'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                                {{ $badge['text'] }}
                             </span>
                         </td>
                     </tr>
