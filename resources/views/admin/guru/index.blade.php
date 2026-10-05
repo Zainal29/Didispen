@@ -274,9 +274,9 @@
                     <button type="button" onclick="closeModal()" class="min-h-[44px] px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" class="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-all flex items-center gap-2">
+                    <!-- <button type="submit" class="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm transition-all flex items-center gap-2">
                         <i class="fas fa-save"></i> Simpan Data
-                    </button>
+                    </button> -->
                 </div>
             </form>
         </div>

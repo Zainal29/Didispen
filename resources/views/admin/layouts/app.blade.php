@@ -29,9 +29,14 @@
                 z-index: 50;
                 transform: translateX(-100%);
                 height: 100vh;
+                overflow-y: auto;
             }
             #sidebar.sidebar-open {
                 transform: translateX(0);
+            }
+            /* Cegah body scroll saat sidebar terbuka */
+            body.sidebar-active {
+                overflow: hidden;
             }
         }
         @media (min-width: 1024px) {
@@ -40,6 +45,7 @@
                 top: 0;
                 height: 100vh;
                 flex-shrink: 0;
+                overflow-y: auto;
             }
         }
         #sidebar-overlay {
@@ -158,13 +164,9 @@
             {{-- TOPBAR --}}
             <header class="bg-white shadow-sm px-4 sm:px-6 py-3 flex justify-between items-center gap-3 sticky top-0 z-30">
                 <div class="flex items-center gap-3 min-w-0">
-                    {{-- Tombol hamburger (mobile only) --}}
-                    <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-gray-800 p-1 flex-shrink-0">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
                     <h2 class="text-base sm:text-lg font-semibold text-gray-800 truncate">@yield('page-title', 'Dashboard')</h2>
                 </div>
-                <div class="flex items-center space-x-4 flex-shrink-0">
+                <div class="flex items-center gap-3 flex-shrink-0">
                     <span class="text-sm text-gray-600 hidden sm:inline-flex items-center">
                         <i class="fas fa-user-circle mr-1"></i>
                         {{ auth()->user()->name }}
@@ -172,6 +174,10 @@
                     <span class="text-sm text-gray-600 sm:hidden">
                         <i class="fas fa-user-circle"></i>
                     </span>
+                    {{-- Tombol hamburger di KANAN (mobile only) --}}
+                    <button id="hamburger-btn" onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition flex-shrink-0" aria-label="Buka menu">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
                 </div>
             </header>
 
@@ -184,8 +190,12 @@
 
     <script>
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('sidebar-open');
-            document.getElementById('sidebar-overlay').classList.toggle('overlay-open');
+            const sidebar  = document.getElementById('sidebar');
+            const overlay  = document.getElementById('sidebar-overlay');
+            const isOpen   = sidebar.classList.toggle('sidebar-open');
+            overlay.classList.toggle('overlay-open', isOpen);
+            // Cegah scroll halaman utama saat sidebar terbuka
+            document.body.classList.toggle('sidebar-active', isOpen);
         }
     </script>
 
