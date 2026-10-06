@@ -266,7 +266,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         {{-- TOTAL SISWA --}}
-        <a
+        <!-- <a
             href="{{ route('admin.siswa.index') }}"
             class="group relative overflow-hidden bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
@@ -293,10 +293,10 @@
                     Kelola <i class="fas fa-chevron-right text-[9px]"></i>
                 </span>
             </div>
-        </a>
+        </a> -->
 
         {{-- TOTAL GURU --}}
-        <a
+        <!-- <a
             href="{{ route('admin.guru.index') }}"
             class="group relative overflow-hidden bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
@@ -323,10 +323,10 @@
                     Kelola <i class="fas fa-chevron-right text-[9px]"></i>
                 </span>
             </div>
-        </a>
+        </a> -->
 
         {{-- TOTAL SATPAM --}}
-        <a
+        <!-- <a
             href="{{ route('admin.satpam.index') }}"
             class="group relative overflow-hidden bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
@@ -353,7 +353,7 @@
                     Kelola <i class="fas fa-chevron-right text-[9px]"></i>
                 </span>
             </div>
-        </a>
+        </a> -->
     </div>
 
 
