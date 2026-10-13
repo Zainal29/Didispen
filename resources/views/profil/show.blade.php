@@ -403,7 +403,7 @@
         {{-- LOG AKTIVITAS (DIPERBAIKI: Dengan Badge Metode Login) --}}
         {{-- ========================================================= --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 overflow-hidden">
-            <div class="flex items-center justify-between gap-4 mb-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
                         <i class="fas fa-history"></i>
@@ -413,9 +413,20 @@
                         <p class="text-xs text-gray-500">Riwayat login akun Anda.</p>
                     </div>
                 </div>
-                <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-50 border border-gray-200 text-[11px] font-semibold text-gray-600">
-                    <i class="fas fa-shield-alt text-indigo-600"></i> Terpantau Aman
-                </span>
+                <div class="flex items-center gap-2">
+                    @if(isset($loginActivities) && $loginActivities->count() > 0)
+                        <button type="button"
+                                onclick="confirmClearAllLoginHistory()"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-semibold transition-colors shadow-xs"
+                                title="Bersihkan seluruh riwayat login agar tidak menumpuk">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                            <span>Bersihkan Riwayat</span>
+                        </button>
+                    @endif
+                    <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-50 border border-gray-200 text-[11px] font-semibold text-gray-600">
+                        <i class="fas fa-shield-alt text-indigo-600"></i> Terpantau Aman
+                    </span>
+                </div>
             </div>
 
             @if(isset($loginActivities) && $loginActivities->count() > 0)
@@ -520,8 +531,15 @@
                                                     <i class="fas fa-key"></i> Manual
                                                 </span>
                                             @endif
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[11px] text-gray-400 whitespace-nowrap">{{ $loginTime?->diffForHumans() }}</span>
+                                            <button type="button"
+                                                    onclick="confirmDeleteSingleLogin({{ $login->id }})"
+                                                    class="w-6 h-6 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-600 inline-flex items-center justify-center transition-colors text-xs"
+                                                    title="Hapus riwayat login ini">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
                                         </div>
-                                        <span class="text-[11px] text-gray-400 whitespace-nowrap">{{ $loginTime?->diffForHumans() }}</span>
                                     </div>
 
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 pt-2 border-t border-gray-100">
@@ -613,6 +631,71 @@ function togglePasswordVisibility(inputId, btn) {
             icon.classList.add('fa-eye');
         }
     }
+}
+
+function confirmClearAllLoginHistory() {
+    Swal.fire({
+        title: 'Bersihkan Riwayat Login?',
+        text: 'Semua catatan riwayat login Anda akan dihapus permanen agar tidak menumpuk dan menjaga performa sistem tetap lancar.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="fas fa-trash-alt mr-1"></i> Ya, Bersihkan Semua',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitProfileDeleteForm('{{ route('profil.clear-login-history') }}');
+        }
+    });
+}
+
+function confirmDeleteSingleLogin(id) {
+    Swal.fire({
+        title: 'Hapus Catatan Login?',
+        text: 'Catatan login ini akan dihapus dari riwayat aktivitas Anda.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitProfileDeleteForm(`/profil/riwayat-login/${id}`);
+        }
+    });
+}
+
+function submitProfileDeleteForm(url) {
+    Swal.fire({
+        title: 'Menghapus...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = document.querySelector('meta[name="csrf-token"]').content;
+
+    const methodInput = document.createElement('input');
+    methodInput.type = 'hidden';
+    methodInput.name = '_method';
+    methodInput.value = 'DELETE';
+
+    form.appendChild(csrfInput);
+    form.appendChild(methodInput);
+    document.body.appendChild(form);
+    form.submit();
 }
 </script>
 @endpush

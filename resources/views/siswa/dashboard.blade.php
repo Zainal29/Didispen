@@ -7,10 +7,8 @@
 <div class="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-4 sm:p-6 mb-5 shadow-lg shadow-blue-500/15 text-white">
     {{-- Subtle decorative elements --}}
     <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-    <div class="absolute right-12 top-2 w-24 h-24 bg-indigo-400/20 rounded-full blur-xl pointer-events-none"></div>
-    
     <div class="relative z-10">
-        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-semibold text-blue-100 uppercase tracking-wide mb-2">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 text-[11px] font-semibold text-blue-100 uppercase tracking-wide mb-2">
             <i class="far fa-calendar-alt text-blue-200"></i>
             {{ now()->isoFormat('dddd, D MMMM Y') }}
         </div>
@@ -22,7 +20,7 @@
         </p>
         <div class="mt-4 flex flex-wrap items-center gap-2">
             <a href="{{ route('siswa.notifikasi.index') }}"
-               class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-xs font-semibold border border-white/20 transition-all">
+               class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-semibold border border-white/20 transition-colors">
                 <i class="fas fa-bell mr-1.5 text-yellow-300"></i>{{ $notifikasiBelumDibaca ?? 0 }} Notifikasi Baru
             </a>
             <a href="{{ route('siswa.pengajuan.create') }}"
@@ -81,8 +79,8 @@
 
 {{-- MODAL HUBUNGI GURU PIKET DI DASHBOARD --}}
 <div id="piketDashboardModal"
-     class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200/90 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150">
+     class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 flex items-center justify-center p-4">
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-200/90 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150">
         {{-- Header Modal --}}
         <div class="px-5 py-4 bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
@@ -91,7 +89,7 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-bold text-gray-900">Hubungi Guru Piket</h3>
-                    <p class="text-[11px] text-gray-500">Konfirmasi Dispensasi via WhatsApp</p>
+                    <p class="text-[11px] text-gray-500">Daftar Guru Piket yang sedang bertugas pada sesi ini</p>
                 </div>
             </div>
             <button type="button" onclick="closePiketDashboardModal()" class="w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
@@ -101,26 +99,92 @@
 
         {{-- Body Modal --}}
         <div class="p-5 space-y-4">
-            @if(!empty($hubungiGuru))
-            <div class="flex items-center gap-3.5 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-                <div class="w-11 h-11 rounded-xl bg-blue-100/70 text-blue-700 flex items-center justify-center text-base flex-shrink-0 font-bold">
-                    <i class="fas fa-user-tie"></i>
+            @if(!empty($daftarGuruPiket) && $daftarGuruPiket->isNotEmpty())
+                <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                    @foreach($daftarGuruPiket as $item)
+                        @php
+                            $guru = $item['guru'];
+                            $status = $item['status'] ?? 'Sedang Bertugas';
+                            $hasPhone = !empty($guru->no_telepon);
+                            $badgeClass = match($status) {
+                                'Sedang Bertugas' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                'Sedang Keluar' => 'bg-amber-100 text-amber-800 border-amber-200',
+                                'Sudah Kembali' => 'bg-blue-100 text-blue-800 border-blue-200',
+                                default => 'bg-gray-100 text-gray-700 border-gray-200',
+                            };
+                        @endphp
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-colors">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl bg-blue-100/70 text-blue-700 flex items-center justify-center text-sm flex-shrink-0 font-bold">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <p class="text-xs sm:text-sm font-bold text-gray-900 truncate">{{ $guru->nama_lengkap }}</p>
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $badgeClass }}">
+                                            {{ $status }}
+                                        </span>
+                                    </div>
+                                    @if($hasPhone)
+                                        <p class="text-[11px] text-gray-500 font-mono mt-0.5">
+                                            <i class="fab fa-whatsapp text-emerald-600 mr-1"></i>{{ $guru->no_telepon }}
+                                        </p>
+                                    @else
+                                        <p class="text-[11px] text-gray-400 italic mt-0.5">Nomor WA belum diatur</p>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                                @if($hasPhone)
+                                    <a href="{{ route('siswa.pengajuan.hubungi-guru-piket', ['dispensasi' => $dispensasiMenunggu, 'guru_id' => $guru->id]) }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                                       title="Hubungi {{ $guru->nama_lengkap }} via WhatsApp">
+                                        <i class="fab fa-whatsapp text-sm"></i>
+                                        <span>Hubungi WA</span>
+                                    </a>
+                                @else
+                                    <button type="button" disabled class="px-3 py-2 rounded-xl bg-gray-200 text-gray-400 text-xs font-semibold cursor-not-allowed">
+                                        WA Belum Ada
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Petugas Guru Piket</p>
-                    <p class="text-sm font-bold text-gray-900 truncate">{{ $hubungiGuru->nama_lengkap }}</p>
+            @elseif(!empty($hubungiGuru))
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <div class="w-11 h-11 rounded-xl bg-blue-100/70 text-blue-700 flex items-center justify-center text-base flex-shrink-0 font-bold">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Petugas Guru Piket</p>
+                            <p class="text-sm font-bold text-gray-900 truncate">{{ $hubungiGuru->nama_lengkap }}</p>
+                            @if($hubungiGuru->no_telepon)
+                                <p class="text-xs text-gray-500 font-mono mt-0.5">{{ $hubungiGuru->no_telepon }}</p>
+                            @endif
+                        </div>
+                    </div>
                     @if($hubungiGuru->no_telepon)
-                        <p class="text-xs text-gray-500 font-mono mt-0.5">{{ $hubungiGuru->no_telepon }}</p>
+                        <a href="{{ route('siswa.pengajuan.hubungi-guru-piket', ['dispensasi' => $dispensasiMenunggu, 'guru_id' => $hubungiGuru->id]) }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all">
+                            <i class="fab fa-whatsapp text-sm"></i>
+                            <span>Hubungi WA</span>
+                        </a>
                     @endif
                 </div>
-            </div>
             @endif
 
             <div class="p-3.5 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2.5">
                 <i class="fas fa-info-circle text-blue-600 mt-0.5 text-sm flex-shrink-0"></i>
                 <div class="text-xs text-blue-900 leading-relaxed">
                     <p class="font-semibold">Format pesan WhatsApp sudah disiapkan sistem.</p>
-                    <p class="mt-0.5 text-blue-700">Silakan kirim pesan tersebut kepada Guru Piket untuk mempercepat verifikasi pengajuan dispensasi Anda.</p>
+                    <p class="mt-0.5 text-blue-700">Silakan kirim pesan tersebut kepada salah satu Guru Piket di atas untuk mempercepat verifikasi pengajuan dispensasi Anda.</p>
                 </div>
             </div>
 
@@ -138,25 +202,10 @@
         </div>
 
         {{-- Footer Modal --}}
-        <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row gap-2">
-            <button type="button" onclick="closePiketDashboardModal()" class="flex-1 py-2.5 px-4 rounded-xl bg-white border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-100 transition-colors">
+        <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+            <button type="button" onclick="closePiketDashboardModal()" class="w-full sm:w-auto py-2.5 px-5 rounded-xl bg-white border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-100 transition-colors">
                 Tutup
             </button>
-
-            @if(!empty($hubungiGuru) && empty($hubungiError))
-                <a href="{{ route('siswa.pengajuan.hubungi-guru-piket', $dispensasiMenunggu) }}"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   onclick="setTimeout(closePiketDashboardModal, 500)"
-                   class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors">
-                    <i class="fab fa-whatsapp text-sm"></i>
-                    Buka WhatsApp
-                </a>
-            @else
-                <button type="button" disabled class="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 text-gray-400 text-xs font-semibold cursor-not-allowed">
-                    WhatsApp Tidak Tersedia
-                </button>
-            @endif
         </div>
     </div>
 </div>
@@ -202,13 +251,28 @@
     @if($dispensasiAktif->status === 'disetujui')
     <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4">
         <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
                 <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-700">
                     Aktif
                 </span>
                 <h3 class="text-sm font-semibold text-gray-900">
                     <i class="fas fa-check-circle text-emerald-600 mr-1.5"></i>Dispensasi Disetujui
                 </h3>
+                @if($dispensasiAktif->isOrganisasi())
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        <i class="fas fa-users mr-1"></i>{{ $dispensasiAktif->nama_organisasi }}
+                    </span>
+                    @if(auth()->user()->siswa && auth()->user()->siswa->id !== $dispensasiAktif->siswa_id)
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                            Anggota Rombongan
+                        </span>
+                    @endif
+                @endif
+                @if($dispensasiAktif->tanggal_izin && $dispensasiAktif->tanggal_izin->isFuture())
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        <i class="fas fa-calendar-day mr-1"></i>Jadwal {{ $dispensasiAktif->tanggal_izin->translatedFormat('d M Y') }}
+                    </span>
+                @endif
             </div>
         </div>
         <div class="space-y-2 text-xs">
@@ -218,7 +282,14 @@
             </div>
             <div class="bg-gray-50 rounded-lg px-3 py-2">
                 <p class="text-xs font-medium text-gray-500 uppercase mb-0.5">Waktu</p>
-                <p class="font-semibold text-gray-900">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_keluar, $dispensasiAktif->created_at?->dayOfWeek) }} – {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali, $dispensasiAktif->created_at?->dayOfWeek) }}</p>
+                <p class="font-semibold text-gray-900">
+                    {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_keluar, $dispensasiAktif->created_at?->dayOfWeek) }} – 
+                    @if($dispensasiAktif->isSampaiPulang())
+                        <span class="text-emerald-700 font-bold">Sampai Pulang Sekolah</span>
+                    @else
+                        {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali, $dispensasiAktif->created_at?->dayOfWeek) }}
+                    @endif
+                </p>
             </div>
         </div>
         <div class="mt-3 flex gap-2">
@@ -239,7 +310,7 @@
             @endif
         </div>
 
-        @if(empty($dispensasiAktif->waktu_keluar_aktual))
+        @if(empty($dispensasiAktif->waktu_keluar_aktual) && (!auth()->user()->siswa || auth()->user()->siswa->id === $dispensasiAktif->siswa_id))
         <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between">
             <span class="text-[11px] text-gray-500">Tidak jadi izin keluar?</span>
             <button type="button" onclick="confirmBatalKeluar('{{ route('siswa.pengajuan.batal', $dispensasiAktif) }}')"
@@ -259,13 +330,27 @@
                 <i class="fas fa-walking text-sky-600 text-lg"></i>
             </div>
             <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-sky-900 text-sm">Anda Sedang di Luar Sekolah</h3>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="font-semibold text-sky-900 text-sm">Anda Sedang di Luar Sekolah</h3>
+                    @if($dispensasiAktif->isOrganisasi())
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                            <i class="fas fa-users mr-1"></i>{{ $dispensasiAktif->nama_organisasi }}
+                        </span>
+                    @endif
+                </div>
                 <p class="text-sm text-sky-700 mt-1">
                     Keluar pukul: {{ $dispensasiAktif->waktu_keluar_aktual ? \Carbon\Carbon::parse($dispensasiAktif->waktu_keluar_aktual)->format('H:i') : '-' }} WIB
                 </p>
-                <p class="text-xs text-sky-600 mt-1">
-                    <i class="fas fa-info-circle mr-1"></i>Harap kembali sebelum pukul {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali) }}
-                </p>
+                @if($dispensasiAktif->isSampaiPulang())
+                    <p class="text-xs text-emerald-700 font-semibold mt-1 flex items-center gap-1">
+                        <i class="fas fa-circle-check text-emerald-600"></i>
+                        Izin sampai jam pulang sekolah (Tidak perlu scan kembali & bebas peringatan terlambat).
+                    </p>
+                @else
+                    <p class="text-xs text-sky-600 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>Harap kembali sebelum pukul {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali) }}
+                    </p>
+                @endif
             </div>
         </div>
 
@@ -448,7 +533,7 @@
                                 @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
                                     <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
                                         <i class="fas fa-exchange-alt text-[10px]"></i>
-                                        <span class="truncate">Gantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
+                                        <span class="truncate">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
                                     </p>
                                 @endif
                             </div>
@@ -589,7 +674,7 @@ $cards = [
 {{-- ========================================== --}}
 {{-- MODAL AMBIL FOTO BUKTI LANGSUNG KAMERA    --}}
 {{-- ========================================== --}}
-<div id="uploadModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+<div id="uploadModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
         <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
             <div class="flex items-center gap-2.5">

@@ -138,30 +138,93 @@
                     <p class="font-semibold text-gray-900 capitalize">{{ str_replace('_', ' ', $dispensasi->kategori) }}</p>
                 </div>
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <p class="text-gray-500 text-[10px] font-semibold uppercase mb-0.5">Lokasi</p>
-                    <p class="font-semibold text-gray-900 truncate">{{ $dispensasi->lokasi ?? '-' }}</p>
+                    <p class="text-gray-500 text-[10px] font-semibold uppercase mb-0.5">Tanggal Pelaksanaan</p>
+                    <p class="font-semibold text-gray-900">
+                        {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('d M Y') }}
+                        @if($dispensasi->tanggal_izin && $dispensasi->tanggal_izin->isTomorrow())
+                            <span class="ml-1 text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">Besok</span>
+                        @endif
+                    </p>
                 </div>
             </div>
+
+            @if($dispensasi->tipe_pengajuan === 'organisasi')
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="font-bold text-sm text-purple-900 flex items-center gap-2">
+                            <i class="fas fa-users text-purple-600"></i>
+                            Dispensasi Organisasi: {{ $dispensasi->nama_organisasi }}
+                        </span>
+                        <span class="text-xs bg-purple-200 text-purple-800 font-bold px-2 py-0.5 rounded-full">
+                            Total: {{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa
+                        </span>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <p class="text-[11px] font-bold uppercase text-purple-800">Daftar Anggota Rombongan:</p>
+                        <div class="bg-white rounded-lg border border-purple-100 divide-y divide-purple-50 max-h-48 overflow-y-auto">
+                            <div class="p-2 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="font-bold text-gray-900">1. {{ $dispensasi->siswa->nama_lengkap }}</span>
+                                    <span class="text-[10px] text-gray-400 font-mono ml-1">({{ $dispensasi->siswa->user->nis_nip ?? '-' }})</span>
+                                </div>
+                                <span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded">Ketua</span>
+                            </div>
+                            @foreach($dispensasi->anggotaSiswa as $idx => $ang)
+                            <div class="p-2 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="font-medium text-gray-800">{{ $idx + 2 }}. {{ $ang->nama_lengkap }}</span>
+                                    <span class="text-[10px] text-gray-400 font-mono ml-1">({{ $ang->user->nis_nip ?? $ang->nis_nip ?? '-' }})</span>
+                                </div>
+                                <span class="text-[11px] text-gray-500">{{ $ang->kelas?->nama_kelas ?? '-' }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @if($dispensasi->gurus && $dispensasi->gurus->count() > 0)
+                    <div class="space-y-1.5 pt-3 border-t border-purple-200/60 mt-3">
+                        <p class="text-[11px] font-bold uppercase text-purple-800">Guru Pembina Ekstrakurikuler / Organisasi ({{ $dispensasi->gurus->count() }} Guru):</p>
+                        <div class="bg-white rounded-lg border border-purple-100 divide-y divide-purple-50 max-h-36 overflow-y-auto">
+                            @foreach($dispensasi->gurus as $guruIdx => $guruPembina)
+                            <div class="p-2 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="font-bold text-gray-900">{{ $guruIdx + 1 }}. {{ $guruPembina->nama_lengkap }}</span>
+                                    <span class="text-[10px] text-gray-400 font-mono ml-1">({{ $guruPembina->nip ?? '-' }})</span>
+                                </div>
+                                <span class="text-[11px] text-purple-700 font-medium bg-purple-50 px-2 py-0.5 rounded">{{ $guruPembina->mata_pelajaran ?? '-' }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            @endif
 
             <div>
                 <p class="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-1">Alasan</p>
                 <p class="text-sm text-gray-800 font-medium leading-relaxed">{{ $dispensasi->alasan }}</p>
             </div>
 
-            <div>
-                <p class="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-1">Tujuan</p>
-                <p class="text-sm text-gray-800 font-medium">{{ $dispensasi->tujuan }}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <p class="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-1">Tujuan</p>
+                    <p class="text-sm text-gray-800 font-medium">{{ $dispensasi->tujuan }}</p>
+                </div>
+                @if($dispensasi->lokasi)
+                <div>
+                    <p class="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-1">Lokasi</p>
+                    <p class="text-sm text-gray-800 font-medium">{{ $dispensasi->lokasi }}</p>
+                </div>
+                @endif
             </div>
 
-         
-
-            {{-- Jam Keluar & Jam Kembali --}}
             {{-- Jam Keluar & Jam Kembali --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Jam Keluar</p>
                     @php
-                        $waktuKeluar = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->created_at?->dayOfWeek);
+                        $waktuKeluar = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->tanggal_izin?->dayOfWeek ?? $dispensasi->created_at?->dayOfWeek);
                     @endphp
                     <p class="text-sm font-bold text-gray-900">
                         {{ $waktuKeluar !== '-' ? $waktuKeluar . ' WIB' : $dispensasi->jam_keluar }}
@@ -174,16 +237,25 @@
                 </div>
                 <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Jam Kembali</p>
-                    @php
-                        $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek);
-                    @endphp
-                    <p class="text-sm font-bold text-gray-900">
-                        {{ $waktuKembali !== '-' ? $waktuKembali . ' WIB' : $dispensasi->jam_kembali }}
-                    </p>
-                    @if(str_contains((string)$dispensasi->jam_kembali, 'Jam Pelajaran'))
-                        <p class="text-xs text-blue-600 mt-1 font-medium">
-                            <i class="far fa-clock mr-1"></i>{{ $dispensasi->jam_kembali }}
+                    @if($dispensasi->sampai_pulang)
+                        <p class="text-sm font-bold text-purple-900">
+                            Sampai Pulang Sekolah
                         </p>
+                        <p class="text-xs text-purple-600 mt-1 font-medium">
+                            <i class="fas fa-check-circle mr-1"></i>Izin sampai selesai KBM (tidak perlu scan kembali)
+                        </p>
+                    @else
+                        @php
+                            $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->tanggal_izin?->dayOfWeek ?? $dispensasi->created_at?->dayOfWeek);
+                        @endphp
+                        <p class="text-sm font-bold text-gray-900">
+                            {{ $waktuKembali !== '-' ? $waktuKembali . ' WIB' : $dispensasi->jam_kembali }}
+                        </p>
+                        @if(str_contains((string)$dispensasi->jam_kembali, 'Jam Pelajaran'))
+                            <p class="text-xs text-blue-600 mt-1 font-medium">
+                                <i class="far fa-clock mr-1"></i>{{ $dispensasi->jam_kembali }}
+                            </p>
+                        @endif
                     @endif
                 </div>
             </div>

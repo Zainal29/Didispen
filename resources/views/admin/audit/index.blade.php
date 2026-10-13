@@ -15,13 +15,20 @@
                 <p class="text-sm text-gray-500 mt-1">Catatan semua aktivitas pengguna dan sinkronisasi.</p>
             </div>
 
-            {{-- Tombol Test Koneksi --}}
-            <form method="POST" action="{{ route('admin.sipintu.test-sync') }}" class="w-full xl:w-auto">
-                @csrf
-                <button type="submit" class="w-full xl:w-auto min-h-[44px] bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
-                    <i class="fas fa-plug"></i> Test Koneksi SiPintu
+            <div class="flex items-center gap-2 w-full xl:w-auto flex-wrap">
+                {{-- Tombol Test Koneksi --}}
+                <form method="POST" action="{{ route('admin.sipintu.test-sync') }}">
+                    @csrf
+                    <button type="submit" class="min-h-[44px] bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fas fa-plug"></i> Test Koneksi SiPintu
+                    </button>
+                </form>
+
+                {{-- Tombol Bersihkan Log --}}
+                <button type="button" onclick="openClearLogsModal()" class="min-h-[44px] bg-red-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                    <i class="fas fa-trash-alt"></i> Bersihkan Log
                 </button>
-            </form>
+            </div>
 
             <form method="GET" class="flex flex-wrap gap-2 w-full xl:w-auto">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari User / IP..."
@@ -123,6 +130,7 @@
                         <th class="p-4 text-center">Record ID</th>
                         <th class="p-4 text-left">IP</th>
                         <th class="p-4 text-left">Status</th>
+                        <th class="p-4 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -204,12 +212,20 @@
                                 <span class="text-xs text-gray-400">-</span>
                             @endif
                         </td>
+                        <td class="p-4 text-center whitespace-nowrap">
+                            <button type="button"
+                                    onclick="confirmDeleteSingleLog({{ $log->id }})"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors shadow-xs"
+                                    title="Hapus log ini">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </td>
                     </tr>
 
                     {{-- DETAIL ROW UNTUK SYNC --}}
                     @if(str_contains($log->action, 'sync') && ($log->new_value || $log->old_value))
                     <tr class="bg-gray-50/50">
-                        <td colspan="8" class="p-0">
+                        <td colspan="9" class="p-0">
                             <details class="group">
                                 <summary class="cursor-pointer px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors flex items-center gap-2">
                                     <i class="fas fa-chevron-right group-open:rotate-90 transition-transform"></i>
@@ -267,7 +283,7 @@
                     @endif
                     @empty
                     <tr>
-                        <td colspan="8" class="p-10 text-center">
+                        <td colspan="9" class="p-10 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-400">
                                 <i class="fas fa-clipboard-list text-4xl mb-3 opacity-50"></i>
                                 <p class="text-sm font-medium text-gray-600">Belum ada log aktivitas.</p>
@@ -288,3 +304,151 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function confirmDeleteSingleLog(id) {
+    Swal.fire({
+        title: 'Hapus Log Ini?',
+        text: 'Catatan log aktivitas ini akan dihapus permanen dari sistem.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="fas fa-trash-alt mr-1"></i> Ya, Hapus',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitFormAction(`/admin/audit-log/${id}`, 'DELETE', 'Menghapus log...');
+        }
+    });
+}
+
+function openClearLogsModal() {
+    Swal.fire({
+        title: 'Bersihkan Log Aktivitas',
+        html: `
+            <div class="text-left text-sm space-y-3">
+                <p class="text-gray-600">Pilih opsi pembersihan log untuk mengoptimalkan penyimpanan & performa database:</p>
+                <div class="space-y-2 mt-2">
+                    <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                        <input type="radio" name="swal_clear_type" value="login_only" checked class="mt-1 text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <p class="font-bold text-gray-800 text-xs sm:text-sm">Hapus Riwayat Login & Logout Saja</p>
+                            <p class="text-[11px] text-gray-500">Rekomendasi utama agar sistem tidak lambat. Hanya menghapus log sesi masuk/keluar.</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                        <input type="radio" name="swal_clear_type" value="older_30_days" class="mt-1 text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <p class="font-bold text-gray-800 text-xs sm:text-sm">Hapus Log Lebih dari 30 Hari</p>
+                            <p class="text-[11px] text-gray-500">Menghapus seluruh log aktivitas yang berumur lebih dari 1 bulan.</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                        <input type="radio" name="swal_clear_type" value="older_7_days" class="mt-1 text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <p class="font-bold text-gray-800 text-xs sm:text-sm">Hapus Log Lebih dari 7 Hari</p>
+                            <p class="text-[11px] text-gray-500">Menghapus seluruh log aktivitas yang berumur lebih dari 1 minggu.</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-2.5 p-2.5 rounded-lg border border-red-200 bg-red-50/50 hover:bg-red-50 cursor-pointer">
+                        <input type="radio" name="swal_clear_type" value="all" class="mt-1 text-red-600 focus:ring-red-500">
+                        <div>
+                            <p class="font-bold text-red-800 text-xs sm:text-sm">Kosongkan Seluruh Log Sistem</p>
+                            <p class="text-[11px] text-red-600 font-medium">Hapus total semua catatan riwayat sistem (Reset bersih).</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="fas fa-trash-alt mr-1"></i> Bersihkan Sekarang',
+        cancelButtonText: 'Batal',
+        reverseButtons: true,
+        preConfirm: () => {
+            const selected = document.querySelector('input[name="swal_clear_type"]:checked');
+            return selected ? selected.value : 'login_only';
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const selectedType = result.value;
+            submitClearLogs(selectedType);
+        }
+    });
+}
+
+function submitClearLogs(type) {
+    Swal.fire({
+        title: 'Membersihkan...',
+        text: 'Mohon tunggu sebentar',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ route('admin.audit.clear') }}';
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = document.querySelector('meta[name="csrf-token"]').content;
+
+    const methodInput = document.createElement('input');
+    methodInput.type = 'hidden';
+    methodInput.name = '_method';
+    methodInput.value = 'DELETE';
+
+    const typeInput = document.createElement('input');
+    typeInput.type = 'hidden';
+    typeInput.name = 'type';
+    typeInput.value = type;
+
+    form.appendChild(csrfInput);
+    form.appendChild(methodInput);
+    form.appendChild(typeInput);
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function submitFormAction(url, method, loadingText) {
+    Swal.fire({
+        title: loadingText || 'Memproses...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = document.querySelector('meta[name="csrf-token"]').content;
+
+    const methodInput = document.createElement('input');
+    methodInput.type = 'hidden';
+    methodInput.name = '_method';
+    methodInput.value = method;
+
+    form.appendChild(csrfInput);
+    form.appendChild(methodInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+@endpush

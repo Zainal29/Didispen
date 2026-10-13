@@ -4,18 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage; // ✅ TAMBAHKAN INI
 use Illuminate\Support\Str;
 
 class Dispensasi extends Model
 {
-
+    use SoftDeletes;
 
     protected $table = 'dispensasi';
 
     protected $fillable = [
-        'siswa_id', 'guru_id', 'nomor_surat', 'kategori', 'alasan', 'tujuan', 'lokasi',
-        'jam_keluar', 'jam_kembali', 'batas_waktu_kembali', 'status', 'catatan_admin',
+        'siswa_id', 'guru_id', 'nomor_surat', 'tipe_pengajuan', 'nama_organisasi',
+        'kategori', 'alasan', 'tujuan', 'lokasi', 'tanggal_izin',
+        'jam_keluar', 'jam_kembali', 'sampai_pulang', 'batas_waktu_kembali', 'status', 'catatan_admin',
         'approved_at', 'rejected_at',
         'qr_code', 'qr_token', 'print_count', 'max_print_limit', 'printed_at',
         'student_print_count', 'teacher_print_count', 'waktu_keluar_aktual', 'waktu_kembali_aktual',
@@ -26,6 +29,8 @@ class Dispensasi extends Model
 
 
     protected $casts = [
+        'tanggal_izin' => 'date',
+        'sampai_pulang' => 'boolean',
         'batas_waktu_kembali' => 'datetime',
         'waktu_keluar_aktual' => 'datetime',
         'waktu_kembali_aktual' => 'datetime',
@@ -35,6 +40,7 @@ class Dispensasi extends Model
         'dibuat_manual_oleh_guru' => 'boolean',
         'warned_at' => 'datetime',
         'foto_bukti_uploaded_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -44,6 +50,11 @@ class Dispensasi extends Model
         });
 
         static::deleted(function (Dispensasi $dispensasi) {
+            // Hanya hapus file jika dihapus secara permanen (force delete)
+            if (method_exists($dispensasi, 'isForceDeleting') && ! $dispensasi->isForceDeleting()) {
+                return;
+            }
+
             $files = array_filter([
                 $dispensasi->qr_code,
                 $dispensasi->foto_verifikasi,
@@ -69,10 +80,54 @@ class Dispensasi extends Model
     }
 
     /**
+     * Anggota rombongan untuk dispensasi organisasi
+     */
+    public function anggotaSiswa(): BelongsToMany
+    {
+        return $this->belongsToMany(Siswa::class, 'dispensasi_anggota', 'dispensasi_id', 'siswa_id')->withTimestamps();
+    }
+
+    /**
+     * Guru Pembina Ekstra / Organisasi yang dipilih untuk dispensasi rombongan
+     */
+    public function gurus(): BelongsToMany
+    {
+        return $this->belongsToMany(Guru::class, 'dispensasi_guru', 'dispensasi_id', 'guru_id')->withTimestamps();
+    }
+
+    /**
+     * Cek apakah tipe pengajuan adalah organisasi / rombongan
+     */
+    public function isOrganisasi(): bool
+    {
+        return $this->tipe_pengajuan === 'organisasi';
+    }
+
+    /**
+     * Cek apakah tipe pengajuan adalah individu / mandiri
+     */
+    public function isIndividu(): bool
+    {
+        return $this->tipe_pengajuan === 'individu' || empty($this->tipe_pengajuan);
+    }
+
+    /**
+     * Cek apakah dispensasi berstatus izin sampai jam pulang sekolah
+     */
+    public function isSampaiPulang(): bool
+    {
+        return (bool) $this->sampai_pulang;
+    }
+
+    /**
      * Cek apakah saat ini sedang keluar dan melewati batas waktu (Overdue)
      */
     public function isOverdue(): bool
     {
+        if ($this->sampai_pulang) {
+            return false;
+        }
+
         return $this->status === 'keluar'
             && $this->batas_waktu_kembali !== null
             && now()->greaterThan($this->batas_waktu_kembali);
@@ -83,6 +138,10 @@ class Dispensasi extends Model
      */
     public function isReturnedLate(): bool
     {
+        if ($this->sampai_pulang) {
+            return false;
+        }
+
         return $this->status === 'selesai'
             && $this->batas_waktu_kembali !== null
             && $this->waktu_kembali_aktual !== null
@@ -95,6 +154,7 @@ class Dispensasi extends Model
     public function isNotReturned(): bool
     {
         return $this->status === 'selesai'
+            && ! $this->sampai_pulang
             && $this->waktu_keluar_aktual !== null
             && $this->waktu_kembali_aktual === null;
     }
@@ -133,17 +193,37 @@ class Dispensasi extends Model
      */
     public function getStatusBadgeAttribute(): array
     {
-        if ($this->status === 'keluar' && $this->isOverdue()) {
-            $duration = $this->getLateDurationText(true);
-            return [
-                'text' => 'Terlambat' . ($duration ? ' ' . $duration : ''),
-                'class' => 'bg-rose-100 text-rose-800 border-rose-200',
-                'dot' => 'bg-rose-500',
-                'is_late' => true,
-            ];
+        if ($this->status === 'keluar') {
+            if ($this->sampai_pulang) {
+                return [
+                    'text' => 'Keluar (Sampai Pulang)',
+                    'class' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                    'dot' => 'bg-indigo-500',
+                    'is_late' => false,
+                ];
+            }
+
+            if ($this->isOverdue()) {
+                $duration = $this->getLateDurationText(true);
+                return [
+                    'text' => 'Terlambat' . ($duration ? ' ' . $duration : ''),
+                    'class' => 'bg-rose-100 text-rose-800 border-rose-200',
+                    'dot' => 'bg-rose-500',
+                    'is_late' => true,
+                ];
+            }
         }
 
         if ($this->status === 'selesai') {
+            if ($this->sampai_pulang) {
+                return [
+                    'text' => 'Selesai (Sampai Pulang)',
+                    'class' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                    'dot' => 'bg-emerald-500',
+                    'is_late' => false,
+                ];
+            }
+
             if ($this->isNotReturned()) {
                 return [
                     'text' => 'Selesai (Tidak Kembali)',

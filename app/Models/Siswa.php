@@ -53,6 +53,11 @@ class Siswa extends Model
         return $this->hasMany(Dispensasi::class);
     }
 
+    public function dispensasiOrganisasi(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Dispensasi::class, 'dispensasi_anggota', 'siswa_id', 'dispensasi_id')->withTimestamps();
+    }
+
     public function getNamaLengkapAttribute($value): string
     {
         // ✅ CASTING STRING AGAR AMAN DARI NILAI NULL

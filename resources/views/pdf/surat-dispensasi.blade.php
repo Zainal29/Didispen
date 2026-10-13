@@ -182,6 +182,83 @@
     <div class="content">
         <p style="margin-bottom: 8px;">Yang bertanda tangan di bawah ini, Guru Piket SMK Negeri 1 Bangsri menerangkan bahwa:</p>
 
+        @if($dispensasi->tipe_pengajuan === 'organisasi')
+        <table class="table-data" style="margin-bottom: 12px;">
+            <tr>
+                <td class="label">Organisasi / Ekskul</td>
+                <td class="colon">:</td>
+                <td><strong>{{ $dispensasi->nama_organisasi ?? 'Organisasi Sekolah' }}</strong></td>
+            </tr>
+            @if($dispensasi->gurus && $dispensasi->gurus->count() > 0)
+            <tr>
+                <td class="label">Guru Pembina</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->gurus->pluck('nama_lengkap')->join(', ') }}</td>
+            </tr>
+            @endif
+            <tr>
+                <td class="label">Penanggung Jawab / Ketua</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->siswa->nama_lengkap }} ({{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }})</td>
+            </tr>
+            <tr>
+                <td class="label">Tanggal Pelaksanaan</td>
+                <td class="colon">:</td>
+                <td><strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('l, d F Y') }}</strong></td>
+            </tr>
+            <tr>
+                <td class="label">Keperluan / Alasan</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->alasan }}</td>
+            </tr>
+            <tr>
+                <td class="label">Lokasi Kegiatan</td>
+                <td class="colon">:</td>
+                <td>{{ $dispensasi->lokasi ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Waktu Dispensasi</td>
+                <td class="colon">:</td>
+                <td>
+                    {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->tanggal_izin?->dayOfWeek ?? $dispensasi->created_at?->dayOfWeek) }}
+                    &rarr;
+                    <strong>{{ $dispensasi->sampai_pulang ? 'Sampai Pulang Sekolah (Akhir KBM)' : \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->tanggal_izin?->dayOfWeek ?? $dispensasi->created_at?->dayOfWeek) }}</strong>
+                </td>
+            </tr>
+        </table>
+
+        <p style="font-weight: bold; margin: 10px 0 4px 0; font-size: 10.5pt;">Daftar Siswa Peserta Dispensasi:</p>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 10pt;" border="1" cellpadding="4">
+            <thead>
+                <tr style="background-color: #f2f2f2; text-align: center;">
+                    <th style="width: 25px;">No</th>
+                    <th style="width: 80px;">NIS</th>
+                    <th>Nama Lengkap</th>
+                    <th style="width: 110px;">Kelas / Jurusan</th>
+                    <th style="width: 70px;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: center;">1</td>
+                    <td style="text-align: center;">{{ $dispensasi->siswa->user->nis_nip ?? '-' }}</td>
+                    <td><strong>{{ $dispensasi->siswa->nama_lengkap }}</strong></td>
+                    <td style="text-align: center;">{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }}</td>
+                    <td style="text-align: center;">Ketua / Pemohon</td>
+                </tr>
+                @foreach($dispensasi->anggotaSiswa as $idx => $anggota)
+                <tr>
+                    <td style="text-align: center;">{{ $idx + 2 }}</td>
+                    <td style="text-align: center;">{{ $anggota->user->nis_nip ?? $anggota->nis_nip ?? '-' }}</td>
+                    <td>{{ $anggota->nama_lengkap }}</td>
+                    <td style="text-align: center;">{{ $anggota->kelas?->nama_kelas ?? '-' }}</td>
+                    <td style="text-align: center;">Anggota</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        @else
         <table class="table-data">
             <tr>
                 <td class="label">Nama Siswa</td>
@@ -197,6 +274,11 @@
                 <td class="label">Kelas / Jurusan</td>
                 <td class="colon">:</td>
                 <td>{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} ({{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }})</td>
+            </tr>
+            <tr>
+                <td class="label">Tanggal Izin</td>
+                <td class="colon">:</td>
+                <td><strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('l, d F Y') }}</strong></td>
             </tr>
             <tr>
                 <td class="label">Kategori Izin</td>
@@ -221,14 +303,15 @@
             <tr>
                 <td class="label">Jam Keluar</td>
                 <td class="colon">:</td>
-                <td><strong>{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->created_at?->dayOfWeek) }}</strong></td>
+                <td><strong>{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->tanggal_izin?->dayOfWeek ?? $dispensasi->created_at?->dayOfWeek) }}</strong></td>
             </tr>
             <tr>
                 <td class="label">Jam Kembali</td>
                 <td class="colon">:</td>
-                <td><strong>{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek) }}</strong></td>
+                <td><strong>{{ $dispensasi->sampai_pulang ? 'Sampai Pulang Sekolah (Akhir KBM)' : \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->tanggal_izin?->dayOfWeek ?? $dispensasi->created_at?->dayOfWeek) }}</strong></td>
             </tr>
         </table>
+        @endif
 
         @if($dispensasi->catatan_admin)
         <div class="catatan-box">

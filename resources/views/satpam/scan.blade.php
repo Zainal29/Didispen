@@ -312,11 +312,44 @@ function renderScanDetail(data) {
             </div>
         </div>
 
+        ${data.status_note ? `
+            <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-medium flex items-center gap-2.5">
+                <i class="fas fa-info-circle text-indigo-600 text-base flex-shrink-0"></i>
+                <p class="leading-relaxed">${escapeHtml(data.status_note)}</p>
+            </div>
+        ` : ''}
+
+        ${data.tipe_pengajuan === 'organisasi' ? `
+            <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-bold text-purple-900 flex items-center gap-1.5">
+                        <i class="fas fa-users text-purple-600"></i>
+                        Dispensasi Rombongan: ${escapeHtml(data.nama_organisasi || 'Organisasi')}
+                    </span>
+                    <span class="px-2 py-0.5 bg-purple-200 text-purple-800 text-[10px] font-bold rounded-full">
+                        ${data.total_rombongan} Siswa
+                    </span>
+                </div>
+                ${data.anggota && data.anggota.length > 0 ? `
+                    <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        <p class="text-[10px] font-bold text-purple-700 uppercase tracking-wide">Daftar Anggota:</p>
+                        ${data.anggota.map((ang, idx) => `
+                            <div class="flex items-center justify-between py-1 px-2 bg-white/80 rounded border border-purple-100 text-[11px]">
+                                <span class="font-medium text-gray-800">${idx + 1}. ${escapeHtml(ang.nama_lengkap)}</span>
+                                <span class="text-gray-500 font-mono text-[10px]">${escapeHtml(ang.kelas)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p class="text-[11px] text-purple-600 italic">Tidak ada anggota tambahan.</p>'}
+            </div>
+        ` : ''}
+
         {{-- Keperluan & Alasan --}}
         <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs">
             <span class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Keperluan / Alasan</span>
             <p class="text-gray-800 font-medium leading-relaxed">${escapeHtml(data.alasan || '-')}</p>
-            ${data.tujuan ? `<p class="text-[11px] text-gray-500 mt-1.5"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i>Tujuan: <strong>${escapeHtml(data.tujuan)}</strong></p>` : ''}
+            ${data.lokasi ? `<p class="text-[11px] text-gray-500 mt-1"><i class="fas fa-map-pin text-purple-500 mr-1"></i>Lokasi: <strong>${escapeHtml(data.lokasi)}</strong></p>` : ''}
+            ${data.tujuan ? `<p class="text-[11px] text-gray-500 mt-1"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i>Tujuan: <strong>${escapeHtml(data.tujuan)}</strong></p>` : ''}
         </div>
 
         {{-- Pertanyaan Konfirmasi --}}

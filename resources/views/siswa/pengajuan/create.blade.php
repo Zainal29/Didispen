@@ -6,14 +6,22 @@
 <div class="max-w-3xl mx-auto pb-24 sm:pb-8">
     {{-- Header halaman --}}
     <div class="mb-5 sm:mb-6">
-        <div class="flex items-start gap-3">
-            <div class="w-11 h-11 shrink-0 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shadow-sm">
-                <i class="fas fa-clipboard-check text-lg"></i>
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shadow-xs">
+                    <i class="fas fa-clipboard-check text-base sm:text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-base sm:text-xl font-bold tracking-tight text-gray-900">Form Pengajuan Dispensasi</h1>
+                    <p class="mt-0.5 text-xs sm:text-sm text-gray-500 leading-relaxed">Lengkapi data di bawah dengan benar sebelum mengirim pengajuan.</p>
+                </div>
             </div>
-            <div class="min-w-0">
-                <h1 class="text-lg sm:text-xl font-bold tracking-tight text-gray-900">Form Pengajuan Dispensasi</h1>
-                <p class="mt-1 text-xs sm:text-sm text-gray-500 leading-relaxed">Lengkapi data di bawah dengan benar sebelum mengirim pengajuan.</p>
-            </div>
+            <button type="button" id="btnLihatJadwalPageHeader"
+                class="sm:hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 active:scale-95 border border-emerald-200 text-emerald-700 text-xs font-bold transition-colors shrink-0 cursor-pointer"
+                aria-label="Lihat jadwal pelajaran">
+                <i class="fas fa-calendar-check text-emerald-600"></i>
+                <span>Jadwal</span>
+            </button>
         </div>
     </div>
 
@@ -70,8 +78,91 @@
                 </div>
             </div>
 
+            <script>
+                window.__DAFTAR_GURU__ = @json($daftarGuru ?? []);
+            </script>
+
             <form
-                x-data="{ loading: false }"
+                x-data="{
+                    loading: false,
+                    tipePengajuan: '{{ old('tipe_pengajuan', 'individu') }}',
+                    sampaiPulang: {{ old('sampai_pulang') ? 'true' : 'false' }},
+                    pilihanTanggal: '{{ old('pilihan_tanggal', 'hari_ini') }}',
+                    tanggalIzin: '{{ old('tanggal_izin', now('Asia/Jakarta')->toDateString()) }}',
+                    searchQuery: '',
+                    searchResults: [],
+                    selectedAnggota: @json($oldAnggotaList ?? []),
+                    isSearching: false,
+                    daftarGuru: window.__DAFTAR_GURU__ || [],
+                    searchGuruQuery: '',
+                    showGuruDropdown: false,
+                    selectedGurus: @json($oldGurusList ?? []),
+                    filteredGurus() {
+                        const q = this.searchGuruQuery.trim().toLowerCase();
+                        const selectedIds = this.selectedGurus.map(g => g.id);
+                        return this.daftarGuru.filter(g => {
+                            if (selectedIds.includes(g.id)) return false;
+                            if (!q) return true;
+                            const nama = (g.nama || '').toLowerCase();
+                            const nip = (g.nip || '').toLowerCase();
+                            const mapel = (g.mata_pelajaran || '').toLowerCase();
+                            return nama.includes(q) || nip.includes(q) || mapel.includes(q);
+                        }).slice(0, 35);
+                    },
+                    addGuru(guru) {
+                        if (!this.selectedGurus.some(g => g.id === guru.id)) {
+                            this.selectedGurus.push(guru);
+                        }
+                        this.searchGuruQuery = '';
+                        this.showGuruDropdown = false;
+                    },
+                    removeGuru(id) {
+                        this.selectedGurus = this.selectedGurus.filter(g => g.id !== id);
+                    },
+                    searchSiswa() {
+                        const q = this.searchQuery.trim();
+                        if (q.length < 2) {
+                            this.searchResults = [];
+                            return;
+                        }
+                        this.isSearching = true;
+                        fetch('{{ route('siswa.api.cari-siswa') }}?q=' + encodeURIComponent(q))
+                            .then(res => res.json())
+                            .then(data => {
+                                const currentIds = this.selectedAnggota.map(a => a.id);
+                                this.searchResults = data.filter(s => !currentIds.includes(s.id));
+                                this.isSearching = false;
+                            })
+                            .catch(() => { this.isSearching = false; });
+                    },
+                    addAnggota(siswa) {
+                        if (!this.selectedAnggota.some(a => a.id === siswa.id)) {
+                            this.selectedAnggota.push(siswa);
+                        }
+                        this.searchQuery = '';
+                        this.searchResults = [];
+                    },
+                    removeAnggota(id) {
+                        this.selectedAnggota = this.selectedAnggota.filter(a => a.id !== id);
+                    },
+                    setTanggal(pilihan) {
+                        this.pilihanTanggal = pilihan;
+                        if (pilihan === 'hari_ini') {
+                            this.tanggalIzin = '{{ now('Asia/Jakarta')->toDateString() }}';
+                        } else if (pilihan === 'besok') {
+                            this.tanggalIzin = '{{ now('Asia/Jakarta')->addDay()->toDateString() }}';
+                        }
+                    },
+                    switchTipe(tipe) {
+                        this.tipePengajuan = tipe;
+                        if (tipe === 'individu') {
+                            this.pilihanTanggal = 'hari_ini';
+                            this.tanggalIzin = '{{ now('Asia/Jakarta')->toDateString() }}';
+                            this.selectedGurus = [];
+                            this.selectedAnggota = [];
+                        }
+                    }
+                }"
                 method="POST"
                 action="{{ route('siswa.pengajuan.store') }}"
                 enctype="multipart/form-data"
@@ -79,14 +170,310 @@
                 class="space-y-4 sm:space-y-5">
                 @csrf
 
+                <input type="hidden" name="tipe_pengajuan" :value="tipePengajuan">
+                <input type="hidden" name="pilihan_tanggal" :value="pilihanTanggal">
+                <input type="hidden" name="tanggal_izin" :value="tanggalIzin">
+
                 {{-- Hidden fallback select untuk kompatibilitas test slot jadwal --}}
                 <select name="_jam_reference" class="hidden" style="display:none;" aria-hidden="true" tabindex="-1">
                     @foreach($jadwalHariIni ?? [] as $i => $slot)
                         <option value="{{ $i }}" {{ (string)old('jam_keluar') === (string)$i ? 'selected' : '' }}>
-                            Jam {{ $i }}
+                            Jam {{ $i }} ({{ str_replace(':', '.', $slot['start'] ?? '') }} - {{ str_replace(':', '.', $slot['end'] ?? '') }})
                         </option>
                     @endforeach
                 </select>
+
+                {{-- Pemilih Tipe Pengajuan: Individu vs Organisasi --}}
+                <div class="rounded-2xl border border-gray-200 bg-white p-1.5 sm:p-2 shadow-xs">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button"
+                            @click="switchTipe('individu')"
+                            :class="tipePengajuan === 'individu' ? 'bg-blue-600 text-white shadow-xs' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'"
+                            class="flex items-center justify-center gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-colors duration-150">
+                            <i class="fas fa-user text-sm" :class="tipePengajuan === 'individu' ? 'text-white' : 'text-blue-500'"></i>
+                            <span>Dispensasi Pribadi</span>
+                        </button>
+                        <button type="button"
+                            @click="switchTipe('organisasi')"
+                            :class="tipePengajuan === 'organisasi' ? 'bg-blue-600 text-white shadow-xs' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'"
+                            class="flex items-center justify-center gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-colors duration-150">
+                            <i class="fas fa-users-rectangle text-sm" :class="tipePengajuan === 'organisasi' ? 'text-white' : 'text-blue-500'"></i>
+                            <span>Dispensasi Organisasi</span>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Section Spesial Organisasi & Rombongan (Muncul jika tipe == organisasi) --}}
+                <section x-show="tipePengajuan === 'organisasi'" x-cloak
+                    class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-xs">
+                    <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <i class="fas fa-users text-sm"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-bold text-gray-900">Pengajuan Kolektif Organisasi / Rombongan</h2>
+                                <p class="text-[11px] text-gray-500">1 surat dispensasi resmi untuk seluruh rombongan.</p>
+                            </div>
+                        </div>
+                        <span class="inline-flex items-center gap-1 self-start sm:self-auto rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 text-[10px] font-bold">
+                            <i class="fas fa-infinity text-[9px]"></i> Anggota Dinamis
+                        </span>
+                    </div>
+
+                    <div class="p-4 sm:p-5 space-y-4">
+                        {{-- Nama Organisasi / Kegiatan --}}
+                        <div>
+                            <label for="nama_organisasi" class="block text-xs font-bold text-gray-800 mb-1.5">
+                                <i class="fas fa-sitemap text-blue-600 mr-1"></i>Nama Organisasi / Kegiatan / Tim <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="nama_organisasi" id="nama_organisasi"
+                                value="{{ old('nama_organisasi') }}"
+                                placeholder="Contoh: OSIS / MPK, Pramuka, PMR, Tim Basket, Paduan Suara, dll."
+                                :required="tipePengajuan === 'organisasi'"
+                                class="w-full h-11 px-3.5 rounded-xl border border-gray-200 bg-gray-50/60 text-sm font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
+                            @error('nama_organisasi') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Tanggal Pelaksanaan Izin (Hari Ini vs Besok vs Custom) --}}
+                        <div class="rounded-xl border border-gray-200 bg-gray-50/40 p-3.5">
+                            <label class="block text-xs font-bold text-gray-800 mb-2">
+                                <i class="fas fa-calendar-day text-blue-600 mr-1"></i>Tanggal Pelaksanaan Dispensasi <span class="text-red-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <button type="button"
+                                    @click="setTanggal('hari_ini')"
+                                    :class="pilihanTanggal === 'hari_ini' ? 'bg-blue-50 border-blue-500 text-blue-900 ring-2 ring-blue-500/20' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'"
+                                    class="border rounded-xl p-2.5 text-left transition-colors">
+                                    <div class="text-[10px] uppercase font-bold text-blue-600">Hari Ini</div>
+                                    <div class="text-xs font-bold mt-0.5">{{ now('Asia/Jakarta')->translatedFormat('d M Y') }}</div>
+                                    <div class="text-[10px] text-gray-500">{{ now('Asia/Jakarta')->translatedFormat('l') }}</div>
+                                </button>
+                                <button type="button"
+                                    @click="setTanggal('besok')"
+                                    :class="pilihanTanggal === 'besok' ? 'bg-blue-50 border-blue-500 text-blue-900 ring-2 ring-blue-500/20' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'"
+                                    class="border rounded-xl p-2.5 text-left transition-colors">
+                                    <div class="text-[10px] uppercase font-bold text-blue-600">Besok (H+1)</div>
+                                    <div class="text-xs font-bold mt-0.5">{{ now('Asia/Jakarta')->addDay()->translatedFormat('d M Y') }}</div>
+                                    <div class="text-[10px] text-gray-500">{{ now('Asia/Jakarta')->addDay()->translatedFormat('l') }}</div>
+                                </button>
+                                <button type="button"
+                                    @click="pilihanTanggal = 'custom'"
+                                    :class="pilihanTanggal === 'custom' ? 'bg-blue-50 border-blue-500 text-blue-900 ring-2 ring-blue-500/20' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'"
+                                    class="border rounded-xl p-2.5 text-left transition-colors">
+                                    <div class="text-[10px] uppercase font-bold text-blue-600">Pilih Tanggal</div>
+                                    <div class="text-xs font-bold mt-0.5" x-text="tanggalIzin">Tanggal Lain</div>
+                                    <div class="text-[10px] text-gray-500">Jadwal mendatang</div>
+                                </button>
+                            </div>
+                            <div x-show="pilihanTanggal === 'custom'" class="mt-2.5" x-cloak>
+                                <input type="date" x-model="tanggalIzin"
+                                    min="{{ now('Asia/Jakarta')->toDateString() }}"
+                                    class="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <p class="text-[11px] text-gray-500 mt-2 flex items-center gap-1.5">
+                                <i class="fas fa-circle-info text-blue-500"></i>
+                                Guru piket dapat menyetujui pengajuan besok sejak hari ini. QR Code akan berlaku aktif pada tanggal pelaksanaan yang dipilih.
+                            </p>
+                        </div>
+
+                        {{-- Pencarian & Anggota Rombongan (Unlimited) --}}
+                        <div class="rounded-xl border border-gray-200 bg-white p-3.5 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-800">
+                                        <i class="fas fa-user-plus text-blue-600 mr-1"></i>Tambah Anggota Rombongan
+                                    </label>
+                                    <p class="text-[11px] text-gray-500">Ketik nama siswa atau NIS teman Anda. Tidak ada batasan jumlah teman.</p>
+                                </div>
+                                <span class="inline-flex self-start sm:self-auto items-center px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[11px] font-bold text-blue-700 whitespace-nowrap"
+                                      x-text="`${selectedAnggota.length} Anggota Ditambahkan`">
+                                    0 Anggota Ditambahkan
+                                </span>
+                            </div>
+
+                            {{-- Input Pencarian Teman --}}
+                            <div class="relative">
+                                <div class="relative">
+                                    <input type="text"
+                                        x-model="searchQuery"
+                                        @input.debounce.300ms="searchSiswa()"
+                                        placeholder="Ketik minimal 2 karakter (Nama / NIS / Kelas)..."
+                                        class="w-full h-11 pl-10 pr-10 rounded-xl border border-gray-200 bg-gray-50/70 text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
+                                    <i class="fas fa-search absolute left-3.5 top-3.5 text-gray-400 text-xs"></i>
+                                    <div x-show="isSearching" class="absolute right-3.5 top-3.5" x-cloak>
+                                        <i class="fas fa-spinner fa-spin text-blue-600 text-xs"></i>
+                                    </div>
+                                </div>
+
+                                {{-- Dropdown Hasil Pencarian --}}
+                                <div x-show="searchResults.length > 0"
+                                    @click.outside="searchResults = []"
+                                    x-cloak
+                                    class="absolute left-0 right-0 top-full mt-1.5 z-30 max-h-56 overflow-y-auto bg-white rounded-xl border border-gray-200 shadow-xl divide-y divide-gray-100">
+                                    <template x-for="siswa in searchResults" :key="siswa.id">
+                                        <div class="p-2.5 hover:bg-blue-50/60 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                                            @click="addAnggota(siswa)">
+                                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0"
+                                                    x-text="siswa.nama.charAt(0)"></div>
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="text-xs font-bold text-gray-900 truncate" x-text="siswa.nama"></p>
+                                                    <p class="text-[10px] text-gray-500 truncate" x-text="`${siswa.nis ? siswa.nis + ' • ' : ''}${siswa.kelas}`"></p>
+                                                </div>
+                                            </div>
+                                            <button type="button"
+                                                class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shrink-0 flex items-center gap-1 shadow-xs">
+                                                <i class="fas fa-plus text-[10px]"></i> Tambah
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            {{-- Daftar Anggota Terpilih --}}
+                            <div class="space-y-1.5 pt-1">
+                                {{-- Card Ketua --}}
+                                <div class="p-2.5 sm:p-3 rounded-xl border border-emerald-200 bg-emerald-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                    <div class="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 sm:mt-0 shadow-xs">
+                                            <i class="fas fa-crown text-[11px]"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex flex-wrap items-center gap-1.5">
+                                                <p class="text-xs font-bold text-emerald-950 break-words">{{ $siswa->nama_lengkap }}</p>
+                                                <span class="inline-flex items-center rounded bg-emerald-200/80 text-emerald-900 text-[9px] font-bold px-1.5 py-0.5 shrink-0">Ketua (Pemohon)</span>
+                                            </div>
+                                            <p class="text-[10px] text-emerald-700 mt-0.5">{{ $siswa->user->nis_nip ?? '-' }} • {{ $siswa->kelas->nama_kelas ?? '-' }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center sm:justify-end pl-10 sm:pl-0 shrink-0">
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-full">
+                                            <i class="fas fa-check-circle text-emerald-600 text-[10px]"></i> Otomatis Terdaftar
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {{-- List Anggota Dinamis --}}
+                                <template x-for="(anggota, index) in selectedAnggota" :key="anggota.id">
+                                    <div class="p-2 sm:p-2.5 rounded-xl border border-gray-200 bg-gray-50/70 hover:bg-white flex items-center justify-between gap-2 transition-colors">
+                                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                            <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0"
+                                                x-text="index + 1"></div>
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-xs font-bold text-gray-900 truncate" x-text="anggota.nama"></p>
+                                                <p class="text-[10px] text-gray-500 truncate" x-text="`${anggota.nis ? anggota.nis + ' • ' : ''}${anggota.kelas}`"></p>
+                                            </div>
+                                        </div>
+                                        <button type="button"
+                                            @click="removeAnggota(anggota.id)"
+                                            class="w-7 h-7 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center shrink-0 transition-colors"
+                                            title="Hapus anggota">
+                                            <i class="fas fa-xmark text-xs"></i>
+                                        </button>
+                                        <input type="hidden" name="anggota_ids[]" :value="anggota.id">
+                                    </div>
+                                </template>
+                            </div>
+
+                            <p class="text-[11px] text-gray-500">
+                                <i class="fas fa-shield-halved text-blue-500 mr-1"></i>Seluruh anggota yang ditambahkan akan melihat kartu dispensasi aktif di akun masing-masing dan tercantum di surat izin resmi rombongan.
+                            </p>
+                        </div>
+
+                        {{-- Pemilihan Guru Pembina Ekstrakurikuler / Organisasi (Total 71 Guru) --}}
+                        <div class="rounded-xl border border-gray-200 bg-white p-3.5 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-800">
+                                        <i class="fas fa-chalkboard-user text-blue-600 mr-1"></i>Guru Pembina Ekstrakurikuler / Organisasi
+                                    </label>
+                                    <p class="text-[11px] text-gray-500">Cari dari 71 guru terdaftar. Anda dapat memilih lebih dari 1 guru pembina.</p>
+                                </div>
+                                <span class="inline-flex self-start sm:self-auto items-center px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[11px] font-bold text-blue-700 whitespace-nowrap"
+                                      x-text="`${selectedGurus.length} Pembina Dipilih`">
+                                    0 Pembina Dipilih
+                                </span>
+                            </div>
+
+                            {{-- Input Pencarian Guru Pembina --}}
+                            <div class="relative">
+                                <div class="relative">
+                                    <input type="text"
+                                        x-model="searchGuruQuery"
+                                        @focus="showGuruDropdown = true"
+                                        @input="showGuruDropdown = true"
+                                        placeholder="Cari nama Bapak/Ibu Guru, NIP, atau mata pelajaran..."
+                                        class="w-full h-11 pl-10 pr-10 rounded-xl border border-gray-200 bg-gray-50/70 text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
+                                    <i class="fas fa-search absolute left-3.5 top-3.5 text-gray-400 text-xs"></i>
+                                    <button type="button" x-show="searchGuruQuery.length > 0" @click="searchGuruQuery = ''" class="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-xmark text-sm"></i>
+                                    </button>
+                                </div>
+
+                                {{-- Dropdown Hasil Filter 71 Guru --}}
+                                <div x-show="showGuruDropdown && filteredGurus().length > 0"
+                                    @click.outside="showGuruDropdown = false"
+                                    x-cloak
+                                    class="absolute left-0 right-0 top-full mt-1.5 z-30 max-h-56 overflow-y-auto bg-white rounded-xl border border-gray-200 shadow-xl divide-y divide-gray-100">
+                                    <template x-for="guru in filteredGurus()" :key="guru.id">
+                                        <div class="p-2.5 hover:bg-blue-50/60 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                                            @click="addGuru(guru)">
+                                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0"
+                                                    x-text="guru.nama.charAt(0)"></div>
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="text-xs font-bold text-gray-900 truncate" x-text="guru.nama"></p>
+                                                    <p class="text-[10px] text-gray-500 truncate" x-text="`${guru.nip && guru.nip !== '-' ? guru.nip + ' • ' : ''}${guru.mata_pelajaran || 'Guru'}`"></p>
+                                                </div>
+                                            </div>
+                                            <button type="button"
+                                                class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shrink-0 flex items-center gap-1 shadow-xs">
+                                                <i class="fas fa-plus text-[10px]"></i> Pilih
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div x-show="showGuruDropdown && filteredGurus().length === 0 && searchGuruQuery.trim() !== ''"
+                                    @click.outside="showGuruDropdown = false"
+                                    x-cloak
+                                    class="absolute left-0 right-0 top-full mt-1.5 z-30 p-3 bg-white rounded-xl border border-gray-200 shadow-xl text-center text-xs text-gray-500">
+                                    Guru tidak ditemukan untuk kata kunci "<span class="font-bold text-gray-700" x-text="searchGuruQuery"></span>".
+                                </div>
+                            </div>
+
+                            {{-- Daftar Guru Pembina Terpilih --}}
+                            <div class="space-y-1.5 pt-1">
+                                <template x-for="(guru, index) in selectedGurus" :key="guru.id">
+                                    <div class="p-2 sm:p-2.5 rounded-xl border border-blue-200 bg-blue-50/40 hover:bg-white flex items-center justify-between gap-2 transition-colors">
+                                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                                                <i class="fas fa-user-check text-[11px]"></i>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex flex-wrap items-center gap-1.5">
+                                                    <p class="text-xs font-bold text-gray-900 truncate" x-text="guru.nama"></p>
+                                                    <span class="rounded bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5 shrink-0">Pembina</span>
+                                                </div>
+                                                <p class="text-[10px] text-gray-500 truncate" x-text="`${guru.nip && guru.nip !== '-' ? guru.nip + ' • ' : ''}${guru.mata_pelajaran || '-'}`"></p>
+                                            </div>
+                                        </div>
+                                        <button type="button"
+                                            @click="removeGuru(guru.id)"
+                                            class="w-7 h-7 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center shrink-0 transition-colors"
+                                            title="Hapus guru pembina">
+                                            <i class="fas fa-xmark text-xs"></i>
+                                        </button>
+                                        <input type="hidden" name="guru_ids[]" :value="guru.id">
+                                    </div>
+                                </template>
+                                <div x-show="selectedGurus.length === 0" class="p-2.5 rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-400">
+                                    <i class="fas fa-info-circle mr-1 text-gray-400"></i>Belum ada guru pembina yang dipilih. Ketik nama guru di atas untuk menambahkan.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 {{-- Data siswa --}}
                 <section class="rounded-2xl border border-gray-200 bg-gray-50/60 overflow-hidden">
@@ -95,7 +482,7 @@
                             <i class="fas fa-user-graduate text-sm"></i>
                         </div>
                         <div>
-                            <h2 class="text-sm font-bold text-gray-900">Data Siswa</h2>
+                            <h2 class="text-sm font-bold text-gray-900">Data Siswa Pemohon</h2>
                             <p class="text-[11px] text-gray-500">Data ini diambil otomatis dari akun Anda.</p>
                         </div>
                     </div>
@@ -210,18 +597,20 @@
                             </div>
                         </div>
 
-                        <input type="file" name="foto_verifikasi" id="foto_verifikasi_input" class="hidden" accept="image/*">
+                        <input type="file" name="foto_verifikasi" id="foto_verifikasi_input" class="hidden" accept="image/*" capture="user">
 
                         {{-- Standby --}}
                         <div id="selfieStandbyBox" class="rounded-2xl border border-dashed border-gray-300 bg-gray-50/70 p-6 sm:p-8 text-center transition-all">
                             <div class="w-16 h-16 mx-auto rounded-2xl bg-white border border-gray-200 text-blue-600 flex items-center justify-center text-2xl shadow-sm">
-                                <i class="fas fa-user"></i>
+                                <i class="fas fa-camera"></i>
                             </div>
                             <p class="mt-4 text-sm font-bold text-gray-900">Ambil selfie untuk verifikasi</p>
                             <p class="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed text-gray-500">Pastikan wajah terlihat jelas dan pencahayaan cukup sebelum mengambil foto.</p>
-                            <button type="button" id="btnStartSelfie" class="mt-5 inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[.98] text-white text-xs font-bold shadow-sm transition-all">
-                                <i class="fas fa-camera"></i> Buka Kamera Selfie
-                            </button>
+                            <div class="mt-5 flex justify-center">
+                                <button type="button" id="btnStartSelfie" class="inline-flex items-center justify-center gap-2.5 min-h-11 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[.98] text-white text-xs sm:text-sm font-bold shadow-sm transition-all">
+                                    <i class="fas fa-camera text-base"></i> Ambil Foto Selfie
+                                </button>
+                            </div>
                         </div>
 
                         {{-- Live camera --}}
@@ -258,7 +647,7 @@
                         {{-- Preview --}}
                         <div id="selfiePreviewBox" class="hidden">
                             <div class="relative rounded-2xl overflow-hidden border-2 border-emerald-500 aspect-[4/3] max-h-[28rem] mx-auto bg-gray-900 shadow-sm">
-                                <img id="selfiePreviewImg" class="w-full h-full object-cover" alt="Preview Selfie">
+                                <img id="selfiePreviewImg" class="w-full h-full object-contain" alt="Preview Selfie">
                                 <div class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow">
                                     <i class="fas fa-circle-check"></i> TERVERIFIKASI
                                 </div>
@@ -281,16 +670,18 @@
                             </div>
                         </div>
 
-                        {{-- Error kamera --}}
-                        <div id="selfieErrorBox" class="hidden mt-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+                        {{-- Error kamera / Info Fallback --}}
+                        <div id="selfieErrorBox" class="hidden mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
                             <div class="flex items-start gap-2.5">
-                                <i class="fas fa-triangle-exclamation text-red-600 text-base mt-0.5"></i>
-                                <div>
-                                    <p class="text-xs font-bold text-red-900">Kamera tidak dapat diakses</p>
-                                    <p class="text-[11px] text-red-600 mt-1 mb-2 leading-relaxed">Izinkan akses kamera di peramban, lalu coba lagi.</p>
-                                    <button type="button" id="btnRetrySelfie" class="min-h-8 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5">
-                                        <i class="fas fa-rotate-right"></i> Coba Lagi
-                                    </button>
+                                <i class="fas fa-triangle-exclamation text-amber-600 text-base mt-0.5"></i>
+                                <div class="space-y-2">
+                                    <p class="text-xs font-bold text-amber-950">Akses kamera live tidak tersedia pada browser ini</p>
+                                    <p class="text-[11px] text-amber-800 leading-relaxed">Jangan khawatir, Anda dapat mengambil foto selfie menggunakan kamera bawaan perangkat Anda melalui tombol di bawah:</p>
+                                    <div class="pt-1">
+                                        <button type="button" id="btnFallbackNativeCamera" class="min-h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-sm">
+                                            <i class="fas fa-camera"></i> Buka Kamera Perangkat
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -351,16 +742,50 @@
 
                 {{-- Waktu --}}
                 <section class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                    <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 bg-gray-50/70 flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-violet-50 border border-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                            <i class="fas fa-clock text-sm"></i>
+                    <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 bg-gray-50/70 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-violet-50 border border-violet-100 text-violet-600 flex items-center justify-center shrink-0">
+                                <i class="fas fa-clock text-sm"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-bold text-gray-900">Waktu Dispensasi</h2>
+                                <p class="text-[11px] text-gray-500">Tentukan jam keluar dan opsi kepulangan.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 class="text-sm font-bold text-gray-900">Waktu Dispensasi</h2>
-                            <p class="text-[11px] text-gray-500">Tentukan waktu keluar dan waktu kembali.</p>
-                        </div>
+                        <button type="button" id="btnLihatJadwalHeader"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-95 border border-emerald-200 text-emerald-700 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                            aria-label="Lihat jadwal pelajaran hari ini">
+                            <i class="fas fa-calendar-check text-emerald-600"></i>
+                            <span>Lihat Jadwal</span>
+                        </button>
                     </div>
                     <div class="p-4 sm:p-5">
+                        {{-- Toggle Sampai Pulang Sekolah --}}
+                        <div class="mb-4 rounded-xl border-2 transition-all p-3.5"
+                            :class="sampaiPulang ? 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/10' : 'border-gray-200 bg-gray-50/70'">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" name="sampai_pulang" value="1"
+                                    x-model="sampaiPulang"
+                                    class="w-5 h-5 mt-0.5 rounded-lg border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs sm:text-sm font-bold"
+                                            :class="sampaiPulang ? 'text-emerald-950' : 'text-gray-900'">
+                                            Izin Sampai Jam Pulang Sekolah
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                                            :class="sampaiPulang ? 'bg-emerald-200/80 text-emerald-900' : 'bg-gray-200 text-gray-700'">
+                                            Bebas Peringatan Terlambat
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] mt-1 leading-relaxed"
+                                        :class="sampaiPulang ? 'text-emerald-800' : 'text-gray-500'">
+                                        Siswa / Rombongan cukup melakukan <strong>scan keluar</strong> di pos satpam. Tidak perlu scan kembali saat pulang, dan <strong>tidak akan terkena peringatan/sanksi terlambat</strong> (status otomatis selesai di akhir KBM).
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3.5">
                                 <label for="jamKeluar" class="block text-xs font-bold text-gray-700 mb-2">Jam Keluar <span class="text-red-500">*</span></label>
@@ -374,23 +799,42 @@
                                     <input type="time" name="jam_keluar" id="jamKeluar" value="{{ $oldKeluar }}" required step="60"
                                         class="w-full h-12 px-3.5 rounded-xl border border-gray-200 bg-white text-base font-semibold text-gray-800 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all @error('jam_keluar') border-red-500 @enderror">
                                 </div>
+                                <div id="jamKeluarError" class="text-xs text-red-600 font-semibold mt-1.5 hidden"></div>
                                 @error('jam_keluar') <p class="text-red-600 text-xs mt-1.5"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
                             </div>
-                            <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3.5">
-                                <label for="jamKembali" class="block text-xs font-bold text-gray-700 mb-2">Jam Kembali <span class="text-red-500">*</span></label>
+                            <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3.5 relative overflow-hidden"
+                                :class="{ 'opacity-80 bg-gray-100': sampaiPulang }">
+                                <label for="jamKembali" class="block text-xs font-bold text-gray-700 mb-2">
+                                    Jam Kembali <span class="text-red-500" x-show="!sampaiPulang">*</span>
+                                </label>
                                 @php
                                     $oldKembali = old('jam_kembali');
                                     if (is_numeric($oldKembali) && isset($jadwalHariIni[$oldKembali]['end'])) {
                                         $oldKembali = $jadwalHariIni[$oldKembali]['end'];
                                     }
                                 @endphp
-                                <input type="time" name="jam_kembali" id="jamKembali" value="{{ $oldKembali }}" required step="60"
-                                    class="w-full h-12 px-3.5 rounded-xl border border-gray-200 bg-white text-base font-semibold text-gray-800 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all @error('jam_kembali') border-red-500 @enderror">
+                                <div class="relative">
+                                    <input type="time" name="jam_kembali" id="jamKembali" value="{{ $oldKembali }}"
+                                        :required="!sampaiPulang"
+                                        :disabled="sampaiPulang"
+                                        step="60"
+                                        class="w-full h-12 px-3.5 rounded-xl border border-gray-200 bg-white text-base font-semibold text-gray-800 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all @error('jam_kembali') border-red-500 @enderror">
+                                    <div x-show="sampaiPulang" class="absolute inset-0 flex items-center px-3.5 bg-emerald-50/90 border border-emerald-300 text-xs font-bold text-emerald-800 rounded-xl pointer-events-none">
+                                        <i class="fas fa-door-open mr-2 text-emerald-600 text-sm"></i> Sampai Pulang Sekolah (Bebas Check-In)
+                                    </div>
+                                </div>
+                                <div id="jamKembaliError" class="text-xs text-red-600 font-semibold mt-1.5 hidden"></div>
                                 @error('jam_kembali') <p class="text-red-600 text-xs mt-1.5"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
                             </div>
                         </div>
+
                         <div id="infoJam" class="mt-3 rounded-xl border border-violet-100 bg-violet-50/60 px-3.5 py-3 text-xs text-violet-800">
-                            <i class="fas fa-circle-info mr-1.5 text-violet-500"></i>Masukkan waktu keluar dan waktu kembali sesuai jadwal sekolah yang valid.
+                            <span x-show="!sampaiPulang">
+                                <i class="fas fa-circle-info mr-1.5 text-violet-500"></i>Pilihan jam kembali tertentu: Anda wajib melakukan scan kembali di pos satpam tepat waktu. Melewati batas waktu akan memicu peringatan keterlambatan.
+                            </span>
+                            <span x-show="sampaiPulang" class="text-emerald-800 font-medium">
+                                <i class="fas fa-circle-check mr-1.5 text-emerald-600"></i>Mode Sampai Pulang: Cukup scan keluar satu kali di pos satpam saat meninggalkan sekolah. Anda tidak perlu scan kembali saat jam pulang sekolah tiba.
+                            </span>
                         </div>
                     </div>
                 </section>
@@ -418,24 +862,24 @@
     </div>
 </div>
 
-{{-- Floating Button Jadwal --}}
+{{-- Floating Button Jadwal (Hanya Desktop agar tidak menutupi form di HP) --}}
 <button type="button" id="btnLihatJadwal"
-    class="fixed right-3 sm:right-5 bottom-24 sm:bottom-6 z-[45] flex items-center gap-2 px-3.5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-900/10 border border-emerald-500 transition-all duration-200 ease-out"
+    class="hidden sm:flex fixed right-5 bottom-6 z-40 items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-md border border-emerald-500 transition-colors duration-150 cursor-pointer"
     aria-label="Lihat jadwal pelajaran">
-    <i class="fas fa-calendar-check"></i>
+    <i class="fas fa-calendar-check text-base"></i>
     <span>Lihat Jadwal</span>
 </button>
 
 {{-- Modal Jadwal Pelajaran --}}
 <div id="modalJadwal"
-    class="fixed inset-0 z-[60] hidden opacity-0"
+    class="fixed inset-0 z-[70] hidden opacity-0 transition-opacity duration-200"
     role="dialog"
     aria-modal="true"
     aria-labelledby="modalJadwalTitle">
 
-    {{-- Overlay --}}
+    {{-- Overlay: Gunakan warna solid tanpa backdrop-blur agar lancar dan tidak lag di HP --}}
     <div id="modalJadwalOverlay"
-        class="absolute inset-0 bg-slate-950/55 backdrop-blur-sm opacity-0 transition-opacity duration-200 ease-out">
+        class="absolute inset-0 bg-slate-950/70 opacity-0 transition-opacity duration-200 ease-out cursor-pointer">
     </div>
 
     <div class="relative z-10 flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
@@ -464,7 +908,7 @@
                         </div>
                     </div>
                     <button type="button" id="btnTutupJadwal"
-                        class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all duration-150"
+                        class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all duration-150 cursor-pointer"
                         aria-label="Tutup jadwal">
                         <i class="fas fa-xmark text-sm"></i>
                     </button>
@@ -475,13 +919,13 @@
             <div id="jadwalList"
                 class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-2"
                 style="-webkit-overflow-scrolling: touch;">
-                @foreach($semuaSlotHariIni ?? [] as $slot)
+                @forelse($semuaSlotHariIni ?? [] as $slot)
                     @php
                         $isIstirahat = ($slot['type'] ?? '') === 'istirahat';
                         $isPembiasaan = ($slot['type'] ?? '') === 'pembiasaan';
                     @endphp
                     @if($isIstirahat)
-                        <div class="p-3 bg-amber-50/80 hover:bg-amber-100/80 rounded-xl border border-amber-200/90 transition-colors flex items-center justify-between gap-2">
+                        <div class="p-3 bg-amber-50/80 rounded-xl border border-amber-200/90 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-xs">
                                     <i class="fas fa-mug-hot"></i>
@@ -494,7 +938,7 @@
                             </div>
                         </div>
                     @elseif($isPembiasaan)
-                        <div class="p-3 bg-indigo-50/80 hover:bg-indigo-100/80 rounded-xl border border-indigo-200/90 transition-colors flex items-center justify-between gap-2">
+                        <div class="p-3 bg-indigo-50/80 rounded-xl border border-indigo-200/90 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 text-xs">
                                     <i class="fas fa-book-reader"></i>
@@ -507,29 +951,39 @@
                             </div>
                         </div>
                     @else
-                        <div class="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/70 transition-colors flex items-center justify-between gap-2">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/90 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-blue-600 flex items-center justify-center shrink-0 text-xs">
+                                <div class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-blue-600 flex items-center justify-center shrink-0 text-xs shadow-2xs">
                                     <i class="fas fa-graduation-cap text-[11px]"></i>
                                 </div>
-                                <span class="text-xs font-semibold text-slate-800 truncate">{{ $slot['label'] }}</span>
+                                <span class="text-xs font-bold text-slate-800 truncate">{{ $slot['label'] }}</span>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full hidden xs:inline">KBM</span>
-                                <span class="text-xs text-slate-700 font-mono font-semibold">{{ $slot['start'] }} - {{ $slot['end'] }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-200/70 px-2 py-0.5 rounded-full hidden xs:inline">KBM</span>
+                                <span class="text-xs text-slate-900 font-mono font-bold">{{ $slot['start'] }} - {{ $slot['end'] }}</span>
                             </div>
                         </div>
                     @endif
-                @endforeach
+                @empty
+                    <div class="p-6 text-center text-xs text-gray-500">
+                        <i class="fas fa-calendar-xmark text-2xl text-gray-400 mb-2 block"></i>
+                        Tidak ada jadwal KBM aktif untuk hari ini.
+                    </div>
+                @endforelse
             </div>
 
             {{-- Footer --}}
             <div class="flex-shrink-0 px-4 sm:px-5 py-3 border-t border-gray-200 bg-gray-50/80">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-circle-info text-blue-600 text-xs shrink-0"></i>
-                    <p class="text-[11px] sm:text-xs text-gray-500 leading-tight">
-                        Waktu pengajuan dispensasi disesuaikan dengan jadwal KBM yang aktif.
-                    </p>
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <i class="fas fa-circle-info text-blue-600 text-xs shrink-0"></i>
+                        <p class="text-[11px] text-gray-500 leading-tight truncate">
+                            Daftar jam pelajaran & istirahat hari ini sebagai referensi waktu pengajuan.
+                        </p>
+                    </div>
+                    <button type="button" onclick="document.getElementById('btnTutupJadwal').click()" class="text-xs font-bold text-gray-600 hover:text-gray-900 px-2 py-1 rounded-lg hover:bg-gray-100 shrink-0">
+                        Tutup
+                    </button>
                 </div>
             </div>
         </div>
@@ -537,6 +991,7 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/dispensasi-watermark.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // =========================================================
@@ -545,7 +1000,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const settings = @json($settings);
     const jadwalHariIni = @json($jadwalHariIni ?? []);
     const semuaSlotHariIni = @json($semuaSlotHariIni ?? []);
-    const JADWAL_MODAL_SESSION_KEY = 'didispen_jadwal_modal_seen';
 
     // =========================================================
     // ELEMEN DOM
@@ -562,11 +1016,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const selfiePreviewImg = document.getElementById('selfiePreviewImg');
     const selfieTimestampText = document.getElementById('selfieTimestampText');
     const btnStartSelfie = document.getElementById('btnStartSelfie');
+    const btnFallbackNativeCamera = document.getElementById('btnFallbackNativeCamera');
     const btnSnapSelfie = document.getElementById('btnSnapSelfie');
     const btnRetakeSelfie = document.getElementById('btnRetakeSelfie');
     const btnCancelSelfie = document.getElementById('btnCancelSelfie');
     const btnFlipSelfie = document.getElementById('btnFlipSelfie');
-    const btnRetrySelfie = document.getElementById('btnRetrySelfie');
 
     const jamKeluar = document.getElementById('jamKeluar');
     const jamKembali = document.getElementById('jamKembali');
@@ -584,6 +1038,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const jadwalList = document.getElementById('jadwalList');
     const btnTutupJadwal = document.getElementById('btnTutupJadwal');
     const btnLihatJadwal = document.getElementById('btnLihatJadwal');
+    const btnLihatJadwalHeader = document.getElementById('btnLihatJadwalHeader');
+    const btnLihatJadwalPageHeader = document.getElementById('btnLihatJadwalPageHeader');
 
     // =========================================================
     // TIMEZONE ASIA/JAKARTA (WIB) HELPERS
@@ -613,7 +1069,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // =========================================================
-    // JADWAL & SLOT LOGIC (AUDITED)
+    // JADWAL & SLOT LOGIC
     // =========================================================
     function getScheduleSlots() {
         const source = (Array.isArray(semuaSlotHariIni) && semuaSlotHariIni.length > 0)
@@ -638,178 +1094,511 @@ document.addEventListener('DOMContentLoaded', function () {
             .sort((a, b) => a.startMinutes - b.startMinutes);
     }
 
-    function isTimeInsideSchedule(timeValue) {
-        const minutes = timeToMinutes(timeValue);
-        if (minutes === null) return false;
-        return getScheduleSlots().some(slot => minutes >= slot.startMinutes && minutes <= slot.endMinutes);
+    function getOperatingScheduleBounds() {
+        const slots = getScheduleSlots();
+        if (slots.length > 0) {
+            return {
+                start: slots[0].start,
+                end: slots[slots.length - 1].end,
+                startMinutes: slots[0].startMinutes,
+                endMinutes: slots[slots.length - 1].endMinutes
+            };
+        }
+        return {
+            start: '07:00',
+            end: '15:15',
+            startMinutes: 420,
+            endMinutes: 915
+        };
     }
 
-    function getNextScheduleStart(minutes) {
-        const slots = getScheduleSlots();
-        for (const slot of slots) {
-            if (slot.startMinutes > minutes) {
-                return slot.start;
+    function getAlpineData() {
+        try {
+            if (window.Alpine && typeof Alpine.$data === 'function' && formDispensasi) {
+                return Alpine.$data(formDispensasi);
             }
-        }
+        } catch (e) {}
         return null;
     }
 
-    function getScheduleEnd() {
-        const slots = getScheduleSlots();
-        if (!slots.length) return null;
-        return slots[slots.length - 1].end;
+    let isAlertShown = false;
+    function showSingleAlert(config) {
+        if (isAlertShown || (typeof Swal !== 'undefined' && Swal.isVisible())) {
+            return Promise.resolve();
+        }
+        isAlertShown = true;
+        return Swal.fire(Object.assign({
+            confirmButtonColor: '#2563eb',
+            returnFocus: false,
+            allowOutsideClick: false
+        }, config)).finally(() => {
+            setTimeout(() => {
+                isAlertShown = false;
+            }, 300);
+        });
     }
 
     function updateTimeInputLimits() {
         if (!jamKeluar || !jamKembali) return;
 
+        const alpineData = getAlpineData();
+        const inputPilihanTanggal = document.querySelector('input[name="pilihan_tanggal"]');
+        const pilihanTanggal = (alpineData && alpineData.pilihanTanggal) || (inputPilihanTanggal ? inputPilihanTanggal.value : 'hari_ini');
+        const isAdvanceDate = Boolean(pilihanTanggal && pilihanTanggal !== 'hari_ini');
+
         const nowWib = getWibNow();
         const currentTime = formatTimeInput(nowWib);
         const currentMinutes = timeToMinutes(currentTime);
-        const slots = getScheduleSlots();
+        const bounds = getOperatingScheduleBounds();
 
-        if (!slots.length) return;
-
-        const scheduleStart = slots[0].startMinutes;
-        const scheduleEnd = slots[slots.length - 1].endMinutes;
-
-        let keluarMinMinutes = currentMinutes;
-        if (scheduleStart !== null && scheduleStart > keluarMinMinutes) {
-            keluarMinMinutes = scheduleStart;
-        }
-
-        // Jika sekarang sebelum jam sekolah dimulai: arahkan min jam keluar ke awal jadwal
-        if (!isTimeInsideSchedule(currentTime) && scheduleStart !== null && currentMinutes < scheduleStart) {
-            keluarMinMinutes = scheduleStart;
-        }
-
-        const keluarMinHours = Math.floor(keluarMinMinutes / 60);
-        const keluarMinMinute = keluarMinMinutes % 60;
-        jamKeluar.min = `${String(keluarMinHours).padStart(2, '0')}:${String(keluarMinMinute).padStart(2, '0')}`;
-        jamKeluar.max = slots[slots.length - 1].end;
-
-        // Batas Jam Kembali
-        if (jamKeluar.value) {
-            const kMin = timeToMinutes(jamKeluar.value);
-            if (kMin !== null) {
-                const nextMin = kMin + 1;
-                const nextH = Math.floor(nextMin / 60);
-                const nextM = nextMin % 60;
-                jamKembali.min = `${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`;
-            }
+        if (isAdvanceDate) {
+            jamKeluar.readOnly = false;
+            jamKeluar.min = bounds.start;
+            jamKeluar.max = bounds.end;
         } else {
-            jamKembali.min = jamKeluar.min;
+            // Untuk HARI INI:
+            if (currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+                // KBM hari ini sudah selesai (misal sore/malam hari)
+                jamKeluar.readOnly = true;
+                jamKeluar.min = bounds.end;
+                jamKeluar.max = bounds.end;
+            } else if (currentMinutes !== null && currentMinutes > bounds.startMinutes) {
+                // Sedang berjalan di tengah hari KBM: batas minimal adalah jam saat ini
+                jamKeluar.readOnly = false;
+                jamKeluar.min = currentTime;
+                jamKeluar.max = bounds.end;
+            } else {
+                // Sebelum KBM dimulai (pagi buta):
+                jamKeluar.readOnly = false;
+                jamKeluar.min = bounds.start;
+                jamKeluar.max = bounds.end;
+            }
         }
-        jamKembali.max = slots[slots.length - 1].end;
+
+        const isSampaiPulang = alpineData ? alpineData.sampaiPulang : false;
+        if (!isSampaiPulang) {
+            if (isAdvanceDate) {
+                jamKembali.readOnly = false;
+            } else if (currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+                jamKembali.readOnly = true;
+            } else {
+                jamKembali.readOnly = false;
+            }
+
+            if (jamKeluar.value) {
+                const kMin = timeToMinutes(jamKeluar.value);
+                if (kMin !== null) {
+                    const nextMin = kMin + 1;
+                    const nextH = Math.floor(nextMin / 60);
+                    const nextM = nextMin % 60;
+                    jamKembali.min = `${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`;
+                } else {
+                    jamKembali.min = jamKeluar.min;
+                }
+            } else {
+                jamKembali.min = jamKeluar.min;
+            }
+            jamKembali.max = bounds.end;
+        }
+    }
+
+    // =========================================================
+    // VALIDASI WAKTU KELUAR & KEMBALI
+    // =========================================================
+    function validateJamKeluar(triggerAlert = true, isSubmitting = false) {
+        if (!jamKeluar) return true;
+        const val = jamKeluar.value ? jamKeluar.value.trim() : '';
+        const errEl = document.getElementById('jamKeluarError');
+
+        if (errEl) {
+            errEl.textContent = '';
+            errEl.classList.add('hidden');
+            errEl.style.display = 'none';
+        }
+        jamKeluar.classList.remove('border-red-500', 'bg-red-50');
+
+        if (!val) {
+            if (isSubmitting) {
+                const msg = 'Jam Keluar wajib diisi.';
+                if (errEl) {
+                    errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                    errEl.classList.remove('hidden');
+                    errEl.style.display = 'block';
+                }
+                jamKeluar.classList.add('border-red-500', 'bg-red-50');
+                if (triggerAlert) {
+                    showSingleAlert({
+                        icon: 'warning',
+                        title: 'Jam Keluar Belum Diisi',
+                        text: 'Silakan tentukan jam keluar dispensasi terlebih dahulu.'
+                    });
+                }
+                return false;
+            }
+            return true;
+        }
+
+        const alpineData = getAlpineData();
+        const inputPilihanTanggal = document.querySelector('input[name="pilihan_tanggal"]');
+        const pilihanTanggal = (alpineData && alpineData.pilihanTanggal) || (inputPilihanTanggal ? inputPilihanTanggal.value : 'hari_ini');
+        const isAdvanceDate = Boolean(pilihanTanggal && pilihanTanggal !== 'hari_ini');
+        const nowWib = getWibNow();
+        const currentTime = formatTimeInput(nowWib);
+        const currentMinutes = timeToMinutes(currentTime);
+        const selMin = timeToMinutes(val);
+        const bounds = getOperatingScheduleBounds();
+
+        // 1. Cek format jam
+        if (selMin === null) {
+            const msg = 'Format jam keluar tidak valid.';
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKeluar.classList.add('border-red-500', 'bg-red-50');
+            jamKeluar.value = '';
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Format Jam Tidak Valid',
+                    text: 'Silakan masukkan format jam keluar yang benar.'
+                });
+            }
+            return false;
+        }
+
+        // 2. Cek apakah KBM hari ini sudah berakhir (misal diakses sore/malam hari)
+        if (!isAdvanceDate && currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+            const msg = `Kegiatan Belajar Mengajar (KBM) hari ini (${bounds.start} - ${bounds.end} WIB) telah berakhir.`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKeluar.classList.add('border-red-500', 'bg-red-50');
+            jamKeluar.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Jadwal Hari Ini Telah Berakhir',
+                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-gray-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.<br>Anda tidak dapat memilih jam untuk hari ini karena jam sekolah sudah berlalu. Silakan ajukan dispensasi untuk besok atau tanggal lain.</span>`,
+                    confirmButtonText: 'Mengerti'
+                });
+            }
+            updateTimeInputLimits();
+            return false;
+        }
+
+        // 3. Cek apakah jam keluar berada di luar jadwal KBM sekolah (misal 07:00 - 15:15)
+        if (selMin < bounds.startMinutes || selMin > bounds.endMinutes) {
+            const msg = `Jam Keluar (${val} WIB) berada di luar jadwal KBM sekolah (${bounds.start} - ${bounds.end} WIB).`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKeluar.classList.add('border-red-500', 'bg-red-50');
+            jamKeluar.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Di Luar Jadwal Sekolah',
+                    html: `Jam Keluar (<strong>${val} WIB</strong>) berada di luar jadwal KBM sekolah hari ini.<br><span class="text-xs text-gray-500 mt-2 block">Jam operasional KBM sekolah: <strong>${bounds.start} - ${bounds.end} WIB</strong>.<br>Silakan periksa tombol <strong>Lihat Jadwal</strong> untuk melihat slot jam aktif.</span>`,
+                    confirmButtonText: 'Pilih Jam Sesuai Jadwal'
+                });
+            }
+            updateTimeInputLimits();
+            return false;
+        }
+
+        // 4. Cek apakah jam sudah lewat dari jam saat ini (jika dispensasi untuk hari ini)
+        if (!isAdvanceDate && currentMinutes !== null && selMin < currentMinutes) {
+            const msg = `Jam Keluar (${val} WIB) sudah lewat dari waktu saat ini (${currentTime} WIB).`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKeluar.classList.add('border-red-500', 'bg-red-50');
+            jamKeluar.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Jam Tidak Valid',
+                    html: `Jam Keluar (<strong>${val} WIB</strong>) tidak dapat dipilih karena waktu tersebut sudah lewat.<br><span class="text-xs text-gray-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>. Anda tidak dapat memilih jam yang sudah berlalu.</span>`,
+                    confirmButtonText: 'Pilih Jam Lain'
+                });
+            }
+            updateTimeInputLimits();
+            return false;
+        }
+
+        updateTimeInputLimits();
+        return true;
+    }
+
+    function validateJamKembali(triggerAlert = true, isSubmitting = false) {
+        if (!jamKembali) return true;
+        const alpineData = getAlpineData();
+        const isSampaiPulang = alpineData ? alpineData.sampaiPulang : false;
+        if (isSampaiPulang) {
+            const errEl = document.getElementById('jamKembaliError');
+            if (errEl) {
+                errEl.textContent = '';
+                errEl.classList.add('hidden');
+                errEl.style.display = 'none';
+            }
+            jamKembali.classList.remove('border-red-500', 'bg-red-50');
+            return true;
+        }
+
+        const val = jamKembali.value ? jamKembali.value.trim() : '';
+        const errEl = document.getElementById('jamKembaliError');
+
+        if (errEl) {
+            errEl.textContent = '';
+            errEl.classList.add('hidden');
+            errEl.style.display = 'none';
+        }
+        jamKembali.classList.remove('border-red-500', 'bg-red-50');
+
+        if (!val) {
+            if (isSubmitting) {
+                const msg = 'Jam Kembali wajib diisi jika bukan izin sampai pulang.';
+                if (errEl) {
+                    errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                    errEl.classList.remove('hidden');
+                    errEl.style.display = 'block';
+                }
+                jamKembali.classList.add('border-red-500', 'bg-red-50');
+                if (triggerAlert) {
+                    showSingleAlert({
+                        icon: 'warning',
+                        title: 'Jam Kembali Belum Diisi',
+                        text: 'Silakan tentukan jam kembali dispensasi atau aktifkan opsi Izin Sampai Jam Pulang Sekolah.'
+                    });
+                }
+                return false;
+            }
+            return true;
+        }
+
+        const inputPilihanTanggal = document.querySelector('input[name="pilihan_tanggal"]');
+        const pilihanTanggal = (alpineData && alpineData.pilihanTanggal) || (inputPilihanTanggal ? inputPilihanTanggal.value : 'hari_ini');
+        const isAdvanceDate = Boolean(pilihanTanggal && pilihanTanggal !== 'hari_ini');
+        const nowWib = getWibNow();
+        const currentTime = formatTimeInput(nowWib);
+        const currentMinutes = timeToMinutes(currentTime);
+        const keluarVal = jamKeluar && jamKeluar.value ? jamKeluar.value.trim() : '';
+        const keluarMin = timeToMinutes(keluarVal);
+        const kembaliMin = timeToMinutes(val);
+        const bounds = getOperatingScheduleBounds();
+
+        // 1. Cek apakah KBM hari ini sudah berakhir (misal sore/malam hari)
+        if (!isAdvanceDate && currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+            const msg = `Kegiatan Belajar Mengajar (KBM) hari ini (${bounds.start} - ${bounds.end} WIB) telah berakhir.`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKembali.classList.add('border-red-500', 'bg-red-50');
+            jamKembali.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Jadwal Hari Ini Telah Berakhir',
+                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-gray-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.</span>`,
+                    confirmButtonText: 'Mengerti'
+                });
+            }
+            return false;
+        }
+
+        // 2. Pastikan Jam Keluar sudah diisi terlebih dahulu
+        if (!keluarVal || keluarMin === null) {
+            const msg = 'Silakan tentukan Jam Keluar terlebih dahulu sebelum memilih Jam Kembali.';
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKembali.classList.add('border-red-500', 'bg-red-50');
+            jamKembali.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Pilih Jam Keluar Dulu',
+                    html: 'Silakan tentukan <strong>Jam Keluar</strong> terlebih dahulu sebelum memilih Jam Kembali.'
+                });
+            }
+            return false;
+        }
+
+        // 3. Cek format jam
+        if (kembaliMin === null) {
+            const msg = 'Format jam kembali tidak valid.';
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKembali.classList.add('border-red-500', 'bg-red-50');
+            jamKembali.value = '';
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Format Jam Tidak Valid',
+                    text: 'Silakan masukkan format jam kembali yang benar.'
+                });
+            }
+            return false;
+        }
+
+        // 4. Cek apakah jam kembali berada di luar jadwal sekolah (misal 07:00 - 15:15)
+        if (kembaliMin < bounds.startMinutes || kembaliMin > bounds.endMinutes) {
+            const msg = `Jam Kembali (${val} WIB) berada di luar jadwal KBM sekolah (${bounds.start} - ${bounds.end} WIB).`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKembali.classList.add('border-red-500', 'bg-red-50');
+            jamKembali.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Di Luar Jadwal Sekolah',
+                    html: `Jam Kembali (<strong>${val} WIB</strong>) berada di luar jadwal KBM sekolah hari ini.<br><span class="text-xs text-gray-500 mt-2 block">Jam operasional KBM sekolah: <strong>${bounds.start} - ${bounds.end} WIB</strong>.<br>Jika izin hingga KBM berakhir, aktifkan opsi <strong>Izin Sampai Jam Pulang Sekolah</strong>.</span>`,
+                    confirmButtonText: 'Pilih Jam Sesuai Jadwal'
+                });
+            }
+            return false;
+        }
+
+        // 5. Cek apakah jam kembali <= jam keluar
+        if (kembaliMin <= keluarMin) {
+            const msg = `Jam Kembali (${val} WIB) harus lebih besar daripada Jam Keluar (${keluarVal} WIB).`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKembali.classList.add('border-red-500', 'bg-red-50');
+            jamKembali.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Jam Kembali Tidak Sesuai',
+                    html: `Jam Kembali (<strong>${val} WIB</strong>) harus lebih besar daripada Jam Keluar (<strong>${keluarVal} WIB</strong>).`,
+                    confirmButtonText: 'Perbaiki Jam Kembali'
+                });
+            }
+            return false;
+        }
+
+        // 6. Cek apakah jam kembali sudah lewat untuk hari ini
+        if (!isAdvanceDate && currentMinutes !== null && kembaliMin < currentMinutes) {
+            const msg = `Jam Kembali (${val} WIB) sudah lewat dari waktu saat ini (${currentTime} WIB).`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="fas fa-circle-exclamation mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+                errEl.style.display = 'block';
+            }
+            jamKembali.classList.add('border-red-500', 'bg-red-50');
+            jamKembali.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Jam Tidak Valid',
+                    html: `Jam Kembali (<strong>${val} WIB</strong>) tidak dapat dipilih karena waktu tersebut sudah lewat.<br><span class="text-xs text-gray-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.</span>`,
+                    confirmButtonText: 'Perbaiki Jam Kembali'
+                });
+            }
+            return false;
+        }
+
+        updateTimeInputLimits();
+        return true;
     }
 
     if (jamKeluar) {
-        jamKeluar.addEventListener('change', function () {
-            if (!this.value) {
-                updateTimeInputLimits();
-                return;
+        jamKeluar.addEventListener('change', () => validateJamKeluar(true));
+        jamKeluar.addEventListener('blur', () => {
+            if (jamKeluar.value) validateJamKeluar(true);
+        });
+        jamKeluar.addEventListener('input', () => {
+            if (jamKeluar.value && jamKeluar.value.length === 5) {
+                validateJamKeluar(true);
             }
-
+        });
+        jamKeluar.addEventListener('click', function () {
+            const alpineData = getAlpineData();
+            const inputPilihanTanggal = document.querySelector('input[name="pilihan_tanggal"]');
+            const pilihanTanggal = (alpineData && alpineData.pilihanTanggal) || (inputPilihanTanggal ? inputPilihanTanggal.value : 'hari_ini');
+            const isAdvanceDate = Boolean(pilihanTanggal && pilihanTanggal !== 'hari_ini');
             const nowWib = getWibNow();
+            const currentMinutes = (nowWib.getHours() * 60) + nowWib.getMinutes();
             const currentTime = formatTimeInput(nowWib);
-            const currentMinutes = timeToMinutes(currentTime);
-            const selMin = timeToMinutes(this.value);
+            const bounds = getOperatingScheduleBounds();
 
-            // 1. Cek apakah jam yang dipilih sudah lewat dari waktu saat ini
-            if (selMin !== null && selMin < currentMinutes) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Jam Tidak Valid',
-                    html: `Jam Keluar (<strong>${this.value} WIB</strong>) tidak dapat dipilih karena waktu tersebut sudah lewat.<br><span class="text-xs text-gray-500">Waktu saat ini: <strong>${currentTime} WIB</strong></span>`,
-                    confirmButtonColor: '#2563eb'
-                });
+            if (!isAdvanceDate && currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+                this.blur();
                 this.value = '';
-                updateTimeInputLimits();
-                return;
-            }
-
-            // 2. Cek apakah jam yang dipilih berada di dalam jadwal sekolah/istirahat hari ini
-            if (!isTimeInsideSchedule(this.value)) {
-                const nextStart = getNextScheduleStart(selMin);
-                let pesan = `Jam (<strong>${this.value} WIB</strong>) berada di luar jadwal sekolah yang aktif hari ini.`;
-                if (nextStart) {
-                    pesan += `<br><span class="text-xs text-blue-600">Disarankan memilih jam mulai slot berikutnya: <strong>${nextStart} WIB</strong>.</span>`;
-                } else {
-                    pesan += `<br><span class="text-xs text-gray-500">Silakan klik tombol <strong>Lihat Jadwal</strong> untuk melihat slot jam pelajaran & jam istirahat yang berlaku hari ini.</span>`;
-                }
-
-                Swal.fire({
+                showSingleAlert({
                     icon: 'warning',
-                    title: 'Di Luar Jadwal Sekolah',
-                    html: pesan,
-                    confirmButtonColor: '#2563eb'
+                    title: 'Jadwal Hari Ini Telah Berakhir',
+                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-gray-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.<br>Anda tidak dapat memilih jam untuk hari ini yang sudah lewat.</span>`,
+                    confirmButtonText: 'Mengerti'
                 });
-
-                if (nextStart) {
-                    this.value = nextStart;
-                } else {
-                    this.value = '';
-                }
-                updateTimeInputLimits();
-                return;
             }
-
-            updateTimeInputLimits();
         });
     }
 
     if (jamKembali) {
-        jamKembali.addEventListener('change', function () {
-            if (!this.value) {
-                updateTimeInputLimits();
-                return;
+        jamKembali.addEventListener('change', () => validateJamKembali(true));
+        jamKembali.addEventListener('blur', () => {
+            if (jamKembali.value) validateJamKembali(true);
+        });
+        jamKembali.addEventListener('input', () => {
+            if (jamKembali.value && jamKembali.value.length === 5) {
+                validateJamKembali(true);
             }
+        });
+        jamKembali.addEventListener('click', function () {
+            const alpineData = getAlpineData();
+            const inputPilihanTanggal = document.querySelector('input[name="pilihan_tanggal"]');
+            const pilihanTanggal = (alpineData && alpineData.pilihanTanggal) || (inputPilihanTanggal ? inputPilihanTanggal.value : 'hari_ini');
+            const isAdvanceDate = Boolean(pilihanTanggal && pilihanTanggal !== 'hari_ini');
+            const nowWib = getWibNow();
+            const currentMinutes = (nowWib.getHours() * 60) + nowWib.getMinutes();
+            const currentTime = formatTimeInput(nowWib);
+            const bounds = getOperatingScheduleBounds();
 
-            const keluarMin = timeToMinutes(jamKeluar?.value);
-            const kembaliMin = timeToMinutes(this.value);
-
-            // 1. Pastikan Jam Keluar sudah dipilih terlebih dahulu
-            if (!jamKeluar?.value || keluarMin === null) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Pilih Jam Keluar Dulu',
-                    text: 'Silakan tentukan Jam Keluar sebelum memilih Jam Kembali.',
-                    confirmButtonColor: '#2563eb'
-                });
+            if (!isAdvanceDate && currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+                this.blur();
                 this.value = '';
-                return;
-            }
-
-            // 2. Cek apakah jam kembali <= jam keluar
-            if (kembaliMin !== null && kembaliMin <= keluarMin) {
-                Swal.fire({
+                showSingleAlert({
                     icon: 'warning',
-                    title: 'Jam Kembali Tidak Valid',
-                    html: `Jam Kembali (<strong>${this.value} WIB</strong>) harus lebih besar daripada Jam Keluar (<strong>${jamKeluar.value} WIB</strong>).`,
-                    confirmButtonColor: '#2563eb'
+                    title: 'Jadwal Hari Ini Telah Berakhir',
+                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-gray-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.</span>`,
+                    confirmButtonText: 'Mengerti'
                 });
-                this.value = '';
-                return;
             }
-
-            // 3. Cek apakah jam kembali berada di luar jadwal
-            if (!isTimeInsideSchedule(this.value)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Di Luar Jadwal Sekolah',
-                    html: `Jam Kembali (<strong>${this.value} WIB</strong>) berada di luar jadwal sekolah yang aktif hari ini. Periksa kembali tombol <strong>Lihat Jadwal</strong>.`,
-                    confirmButtonColor: '#2563eb'
-                });
-                this.value = '';
-                return;
-            }
-
-            updateTimeInputLimits();
         });
     }
 
     // =========================================================
-    // KAMERA SELFIE & ANTI MEMORY LEAK
+    // KAMERA SELFIE & VERIFIKASI IDENTITAS (1 TOMBOL TERPADU)
     // =========================================================
     let selfieStream = null;
     let currentFacingModeSelfie = 'user';
@@ -845,9 +1634,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (selfieCameraBox) selfieCameraBox.classList.remove('hidden');
         if (selfieCameraLoading) selfieCameraLoading.classList.remove('hidden');
 
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const isSecureEnv = (window.isSecureContext === true) || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !isSecureEnv) {
+            console.warn('getUserMedia live kamera tidak aktif atau tidak didukung pada konteks browser ini.');
+            stopSelfieCamera();
             if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
+            if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
             if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
+            if (fotoInput) {
+                fotoInput.click();
+            }
             return;
         }
 
@@ -860,34 +1656,170 @@ document.addEventListener('DOMContentLoaded', function () {
             audio: false
         };
 
+        function attachStream(stream) {
+            selfieStream = stream;
+            if (selfieVideo) {
+                selfieVideo.srcObject = stream;
+                selfieVideo.onloadedmetadata = function () {
+                    selfieVideo.play().catch(function () {});
+                    if (selfieCameraLoading) selfieCameraLoading.classList.add('hidden');
+                };
+            }
+        }
+
         navigator.mediaDevices.getUserMedia(constraints)
-            .then(function (stream) {
-                selfieStream = stream;
-                if (selfieVideo) {
-                    selfieVideo.srcObject = stream;
-                    selfieVideo.onloadedmetadata = function () {
-                        selfieVideo.play().catch(function () {});
-                        if (selfieCameraLoading) selfieCameraLoading.classList.add('hidden');
-                    };
-                }
-            })
+            .then(attachStream)
             .catch(function (err) {
-                console.error('Kamera gagal diakses:', err);
-                stopSelfieCamera();
-                if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
-                if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
+                console.warn('Constraint ideal kamera gagal, mencoba fallback standard video:true', err);
+                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                    .then(attachStream)
+                    .catch(function (fallbackErr) {
+                        console.warn('Kamera live tidak dapat dibuka, mengalihkan ke kamera bawaan perangkat:', fallbackErr);
+                        stopSelfieCamera();
+                        if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
+                        if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
+                        if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
+
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Buka Kamera Perangkat',
+                            text: 'Live kamera tidak dapat diakses langsung pada browser ini. Silakan gunakan kamera bawaan perangkat Anda.',
+                            confirmButtonColor: '#2563eb',
+                            confirmButtonText: '<i class="fas fa-camera mr-1.5"></i> Buka Kamera'
+                        }).then(function (result) {
+                            if (result.isConfirmed && fotoInput) {
+                                fotoInput.click();
+                            }
+                        });
+                    });
             });
     }
 
-    if (btnStartSelfie) {
-        btnStartSelfie.addEventListener('click', function () {
-            startSelfieCamera(currentFacingModeSelfie);
+    async function processImageFileAndWatermark(file) {
+        if (!file) return;
+
+        Swal.fire({
+            title: 'Memproses Foto...',
+            text: 'Membubuhkan watermark verifikasi identitas resmi.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const img = new Image();
+            const objectUrl = URL.createObjectURL(file);
+
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = objectUrl;
+            });
+            URL.revokeObjectURL(objectUrl);
+
+            let maxDim = 1280;
+            let width = img.naturalWidth || img.width || 640;
+            let height = img.naturalHeight || img.height || 480;
+
+            if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                } else {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const nowWib = getWibNow();
+            const pad = n => String(n).padStart(2, '0');
+            const dateStr = `${pad(nowWib.getDate())}/${pad(nowWib.getMonth() + 1)}/${nowWib.getFullYear()}`;
+            const timeStr = `${pad(nowWib.getHours())}:${pad(nowWib.getMinutes())}:${pad(nowWib.getSeconds())} WIB`;
+            const studentName = @json($siswa->nama_lengkap);
+            const studentNis = @json($siswa->user->nis_nip ?? ($siswa->nis ?? ''));
+            const className = @json($siswa->kelas->nama_kelas ?? '');
+
+            if (typeof window.drawDispensasiWatermark === 'function') {
+                window.drawDispensasiWatermark(ctx, canvas, [
+                    'DIDISPEN VERIFIKASI',
+                    `${studentName} (${studentNis})`,
+                    `${className} • ${dateStr} ${timeStr}`,
+                ]);
+            }
+
+            canvas.toBlob(function (blob) {
+                Swal.close();
+                if (!blob) {
+                    Swal.fire('Gagal Memproses Foto', 'Gagal memproses file foto selfie.', 'error');
+                    return;
+                }
+
+                const watermarkedFile = new File([blob], `selfie_${Date.now()}.jpg`, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(watermarkedFile);
+                if (fotoInput) fotoInput.files = dataTransfer.files;
+
+                cleanupObjectUrl();
+                currentObjectUrl = URL.createObjectURL(blob);
+                if (selfiePreviewImg) selfiePreviewImg.src = currentObjectUrl;
+
+                if (selfieTimestampText) {
+                    selfieTimestampText.textContent = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB`;
+                }
+
+                if (selfieStandbyBox) selfieStandbyBox.classList.add('hidden');
+                if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
+                if (selfieErrorBox) selfieErrorBox.classList.add('hidden');
+                if (selfiePreviewBox) selfiePreviewBox.classList.remove('hidden');
+                stopSelfieCamera();
+            }, 'image/jpeg', 0.85);
+
+        } catch (err) {
+            Swal.close();
+            console.error('Error saat memproses foto selfie:', err);
+            Swal.fire('Gagal Memproses Foto', 'Terjadi kesalahan saat memproses foto. Silakan ambil foto ulang.', 'error');
+        }
+    }
+
+    if (fotoInput) {
+        fotoInput.addEventListener('change', function () {
+            if (fotoInput.files && fotoInput.files.length > 0) {
+                const file = fotoInput.files[0];
+                if (file.name.startsWith('selfie_') && file.type === 'image/jpeg') {
+                    return;
+                }
+                processImageFileAndWatermark(file);
+            }
         });
     }
 
-    if (btnRetrySelfie) {
-        btnRetrySelfie.addEventListener('click', function () {
-            startSelfieCamera(currentFacingModeSelfie);
+    // Tombol Kamera Tunggal Terpadu
+    if (btnStartSelfie) {
+        btnStartSelfie.addEventListener('click', function () {
+            const isSecureEnv = (window.isSecureContext === true) || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            const hasGetUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+            if (hasGetUserMedia && isSecureEnv) {
+                startSelfieCamera(currentFacingModeSelfie);
+            } else {
+                if (fotoInput) {
+                    fotoInput.click();
+                }
+            }
+        });
+    }
+
+    if (btnFallbackNativeCamera) {
+        btnFallbackNativeCamera.addEventListener('click', function () {
+            if (fotoInput) fotoInput.click();
         });
     }
 
@@ -926,45 +1858,25 @@ document.addEventListener('DOMContentLoaded', function () {
             // Watermark Timestamp & Identitas Resmi DIDISPEN
             ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-            const barHeight = Math.max(54, Math.round(canvas.height * 0.12));
-            const barY = canvas.height - barHeight;
-
-            // Background gradient gelap agar teks terbaca jelas
-            const gradient = ctx.createLinearGradient(0, barY, 0, canvas.height);
-            gradient.addColorStop(0, 'rgba(15, 23, 42, 0.60)');
-            gradient.addColorStop(1, 'rgba(15, 23, 42, 0.92)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, barY, canvas.width, barHeight);
-
-            // Garis aksen emerald di atas bar watermark
-            ctx.fillStyle = '#10b981';
-            ctx.fillRect(0, barY, canvas.width, 3);
-
             const nowWib = getWibNow();
             const pad = n => String(n).padStart(2, '0');
             const dateStr = `${pad(nowWib.getDate())}/${pad(nowWib.getMonth() + 1)}/${nowWib.getFullYear()}`;
             const timeStr = `${pad(nowWib.getHours())}:${pad(nowWib.getMinutes())}:${pad(nowWib.getSeconds())} WIB`;
-            const studentName = '{{ $siswa->nama_lengkap }}';
-            const studentNis = '{{ $siswa->user->nis_nip ?? ($siswa->nis ?? "") }}';
-            const className = '{{ $siswa->kelas->nama_kelas ?? "" }}';
+            const studentName = @json($siswa->nama_lengkap);
+            const studentNis = @json($siswa->user->nis_nip ?? ($siswa->nis ?? ''));
+            const className = @json($siswa->kelas->nama_kelas ?? '');
 
-            const fSize1 = Math.max(12, Math.round(barHeight * 0.28));
-            const fSize2 = Math.max(10, Math.round(barHeight * 0.22));
-
-            // Baris 1: DIDISPEN VERIFIKASI • Nama (NIS)
-            ctx.fillStyle = '#ffffff';
-            ctx.font = `bold ${fSize1}px system-ui, -apple-system, sans-serif`;
-            ctx.fillText(`DIDISPEN VERIFIKASI • ${studentName} (${studentNis})`, 16, barY + fSize1 + 8);
-
-            // Baris 2: Kelas & Timestamp WIB
-            ctx.fillStyle = '#cbd5e1';
-            ctx.font = `500 ${fSize2}px system-ui, -apple-system, sans-serif`;
-            ctx.fillText(`${className} • ${dateStr} ${timeStr}`, 16, barY + fSize1 + fSize2 + 15);
+            if (typeof window.drawDispensasiWatermark === 'function') {
+                window.drawDispensasiWatermark(ctx, canvas, [
+                    'DIDISPEN VERIFIKASI',
+                    `${studentName} (${studentNis})`,
+                    `${className} • ${dateStr} ${timeStr}`,
+                ]);
+            }
 
             canvas.toBlob(function (blob) {
                 if (!blob) return;
 
-                // Cek ukuran maksimal 2048 KB (2 MB)
                 if (blob.size > 2048 * 1024) {
                     Swal.fire('Foto Terlalu Besar', 'Ukuran foto selfie melebihi batas maksimal 2MB. Silakan ambil ulang.', 'warning');
                     return;
@@ -979,7 +1891,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 currentObjectUrl = URL.createObjectURL(blob);
                 if (selfiePreviewImg) selfiePreviewImg.src = currentObjectUrl;
 
-                const nowWib = getWibNow();
                 if (selfieTimestampText) {
                     selfieTimestampText.textContent = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB`;
                 }
@@ -997,7 +1908,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (fotoInput) fotoInput.value = '';
             if (selfiePreviewImg) selfiePreviewImg.src = '';
             if (selfiePreviewBox) selfiePreviewBox.classList.add('hidden');
-            startSelfieCamera(currentFacingModeSelfie);
+            if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
+            if (btnStartSelfie) btnStartSelfie.click();
         });
     }
 
@@ -1012,7 +1924,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // =========================================================
-    // MODAL JADWAL PELAJARAN
+    // MODAL JADWAL PELAJARAN (INTERAKTIF & RESPONSIF)
     // =========================================================
     function formatHariTanggalWib() {
         try {
@@ -1033,7 +1945,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (modalJadwalHari) modalJadwalHari.textContent = formatHariTanggalWib();
 
         modalJadwal.classList.remove('hidden');
-        if (btnLihatJadwal) btnLihatJadwal.classList.add('hidden');
         document.documentElement.classList.add('overflow-hidden');
         document.body.classList.add('overflow-hidden');
 
@@ -1059,22 +1970,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         setTimeout(function () {
             modalJadwal.classList.add('hidden');
-            if (btnLihatJadwal) {
-                btnLihatJadwal.classList.remove('hidden');
-                btnLihatJadwal.classList.add('flex');
-            }
             document.documentElement.classList.remove('overflow-hidden');
             document.body.classList.remove('overflow-hidden');
-            sessionStorage.setItem(JADWAL_MODAL_SESSION_KEY, '1');
         }, 200);
     }
 
-    if (btnLihatJadwal) {
-        btnLihatJadwal.addEventListener('click', function (e) {
-            e.preventDefault();
-            bukaModalJadwal();
-        });
-    }
+    const triggerLihatJadwalButtons = [btnLihatJadwal, btnLihatJadwalHeader, btnLihatJadwalPageHeader];
+    triggerLihatJadwalButtons.forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                bukaModalJadwal();
+            });
+        }
+    });
 
     if (btnTutupJadwal) {
         btnTutupJadwal.addEventListener('click', tutupModalJadwal);
@@ -1089,11 +1998,6 @@ document.addEventListener('DOMContentLoaded', function () {
             tutupModalJadwal();
         }
     });
-
-    const modalSeen = sessionStorage.getItem(JADWAL_MODAL_SESSION_KEY);
-    if (!modalSeen) {
-        setTimeout(bukaModalJadwal, 400);
-    }
 
     // =========================================================
     // COUNTER ALASAN (0 / 500)
@@ -1122,7 +2026,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (formDispensasi) {
         function resetLoadingState() {
             delete formDispensasi.dataset.submitting;
-            const alpineData = window.Alpine ? Alpine.$data(formDispensasi) : null;
+            const alpineData = getAlpineData();
             if (alpineData) {
                 alpineData.loading = false;
             }
@@ -1132,37 +2036,45 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         formDispensasi.addEventListener('submit', function (e) {
-            // Cek validitas bawaan form HTML5
-            if (!formDispensasi.checkValidity()) {
-                resetLoadingState();
-                return;
-            }
+            // Data Alpine untuk mode organisasi & sampai pulang
+            const alpineData = getAlpineData();
+            const isSampaiPulang = alpineData ? alpineData.sampaiPulang : false;
+            const isOrganisasi = alpineData ? alpineData.tipePengajuan === 'organisasi' : false;
 
-            // Validasi Jam Keluar
-            const nowWib = getWibNow();
-            const currentMinutes = (nowWib.getHours() * 60) + nowWib.getMinutes();
-            const keluarMinutes = timeToMinutes(jamKeluar?.value);
-            const kembaliMinutes = timeToMinutes(jamKembali?.value);
-
-            if (keluarMinutes === null || keluarMinutes < currentMinutes) {
+            // 1. Validasi Jam Keluar terlebih dahulu agar SweetAlert peringatan muncul
+            if (!validateJamKeluar(true, true)) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 resetLoadingState();
-                Swal.fire('Jam Tidak Valid', 'Jam Keluar tidak boleh menggunakan waktu yang sudah lewat.', 'warning');
-                updateTimeInputLimits();
                 return;
             }
 
-            // Validasi Jam Kembali
-            if (kembaliMinutes === null || kembaliMinutes <= keluarMinutes) {
+            // 2. Validasi Jam Kembali terlebih dahulu agar SweetAlert peringatan muncul
+            if (!isSampaiPulang && !validateJamKembali(true, true)) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 resetLoadingState();
-                Swal.fire('Jam Tidak Valid', 'Jam Kembali harus lebih besar dari Jam Keluar.', 'warning');
                 return;
             }
 
-            // Validasi File Selfie
+            // 3. Validasi Organisasi: nama organisasi wajib jika tipe organisasi
+            if (isOrganisasi) {
+                const namaOrg = document.getElementById('nama_organisasi')?.value?.trim();
+                if (!namaOrg) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    resetLoadingState();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Data Belum Lengkap',
+                        text: 'Nama Organisasi / Kegiatan / Tim wajib diisi.',
+                        confirmButtonColor: '#2563eb'
+                    });
+                    return;
+                }
+            }
+
+            // 4. Validasi File Selfie
             if (!fotoInput || !fotoInput.files || fotoInput.files.length === 0) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -1172,7 +2084,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     title: 'Foto Selfie Diperlukan',
                     text: 'Harap ambil foto selfie verifikasi langsung menggunakan kamera terlebih dahulu.',
                     confirmButtonColor: '#2563eb',
-                    confirmButtonText: 'Buka Kamera'
+                    confirmButtonText: '<i class="fas fa-camera mr-1.5"></i> Buka Kamera'
                 }).then(function () {
                     if (btnStartSelfie && !btnStartSelfie.disabled) {
                         btnStartSelfie.click();
@@ -1184,27 +2096,57 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Konfirmasi Sebelum Pengajuan (Kasus 1: Siswa Mengerti Aturan Guru Piket)
+            // 5. Cek validitas bawaan form HTML5
+            if (!formDispensasi.checkValidity()) {
+                e.preventDefault();
+                formDispensasi.reportValidity();
+                resetLoadingState();
+                return;
+            }
+
+            // Konfirmasi Sebelum Pengajuan
             if (formDispensasi.dataset.confirmed !== 'true') {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 resetLoadingState();
 
+                const pembinaCount = alpineData?.selectedGurus?.length || 0;
+                const pembinaText = pembinaCount > 0
+                    ? `<div class="mt-1 text-indigo-700">Pembina: <b>${alpineData.selectedGurus.map(g => g.nama).join(', ')}</b></div>`
+                    : '<div class="mt-1 text-gray-400 italic">Belum memilih guru pembina</div>';
+
+                const orgInfo = isOrganisasi
+                    ? `<div class="p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-900 text-xs">
+                         <span class="font-bold"><i class="fas fa-users mr-1"></i>Dispensasi Rombongan:</span> ${document.getElementById('nama_organisasi')?.value || 'Organisasi'}<br>
+                         <span class="text-indigo-700">Total Siswa: <b>${(alpineData.selectedAnggota?.length || 0) + 1} Orang</b> (1 Pemohon + ${alpineData.selectedAnggota?.length || 0} Anggota)</span>
+                         ${pembinaText}
+                       </div>`
+                    : '';
+
+                const kepulanganInfo = isSampaiPulang
+                    ? `<span class="text-emerald-700 font-bold"><i class="fas fa-door-open mr-1"></i>Sampai Pulang Sekolah (Bebas Check-In & Bebas Overdue)</span>`
+                    : `<span>Jam Kembali: <b>${jamKembali?.value || '-'} WIB</b></span>`;
+
                 Swal.fire({
                     title: 'Ajukan Dispensasi Sekarang?',
                     html: `
                         <div class="text-left text-xs sm:text-sm text-gray-600 space-y-3">
+                            ${orgInfo}
+                            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-xs">
+                                <div>Jam Keluar: <b>${jamKeluar?.value || '-'} WIB</b></div>
+                                <div>${kepulanganInfo}</div>
+                            </div>
                             <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
                                 <p class="font-bold mb-1 flex items-center gap-1.5 text-amber-800">
-                                    <i class="fas fa-triangle-exclamation text-amber-600"></i> PERHATIKAN ATURAN BERIKUT:
+                                    <i class="fas fa-triangle-exclamation text-amber-600"></i> PERHATIKAN ATURAN:
                                 </p>
                                 <ul class="list-disc list-inside space-y-1 text-amber-800 mt-1">
                                     <li>Setelah diajukan, permohonan <b>tidak dapat dibatalkan sendiri</b> oleh siswa.</li>
-                                    <li>Anda <b>wajib segera menemui Guru Piket</b> di ruang piket untuk persetujuan.</li>
-                                    <li>Pengajuan yang ditinggalkan tanpa konfirmasi akan otomatis <b>kadaluarsa</b> saat KBM berakhir.</li>
+                                    <li>Anda <b>wajib menemui Guru Piket</b> untuk verifikasi dan persetujuan.</li>
+                                    <li>QR Code hanya sah berlaku pada tanggal pelaksanaan izin yang dipilih.</li>
                                 </ul>
                             </div>
-                            <p class="text-gray-700">Pastikan seluruh data dan foto selfie yang Anda sertakan sudah benar dan sesuai.</p>
+                            <p class="text-gray-700 text-xs">Pastikan seluruh data dan foto selfie yang Anda sertakan sudah benar.</p>
                         </div>
                     `,
                     icon: 'warning',
@@ -1212,7 +2154,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     showDenyButton: false,
                     confirmButtonColor: '#2563eb',
                     cancelButtonColor: '#64748b',
-                    confirmButtonText: '<i class="fas fa-paper-plane mr-1.5"></i> Ya, Ajukan Dispensasi',
+                    confirmButtonText: '<i class="fas fa-paper-plane mr-1.5"></i> Ya, Ajukan Sekarang',
                     cancelButtonText: 'Periksa Kembali',
                     reverseButtons: true
                 }).then(function (result) {
@@ -1235,7 +2177,6 @@ document.addEventListener('DOMContentLoaded', function () {
             formDispensasi.dataset.submitting = 'true';
 
             // Aktifkan state loading Alpine
-            const alpineData = window.Alpine ? Alpine.$data(formDispensasi) : null;
             if (alpineData) {
                 alpineData.loading = true;
             }
@@ -1291,7 +2232,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     el.classList.remove('opacity-50', 'cursor-not-allowed');
                 });
             }
-            [btnStartSelfie, btnRetrySelfie, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie].forEach(function (b) {
+            [btnStartSelfie, btnFallbackNativeCamera, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie].forEach(function (b) {
                 if (b) {
                     b.disabled = false;
                     b.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -1310,7 +2251,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 el.classList.add('opacity-50', 'cursor-not-allowed');
             });
         }
-        [btnStartSelfie, btnRetrySelfie, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie].forEach(function (b) {
+        [btnStartSelfie, btnFallbackNativeCamera, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie].forEach(function (b) {
             if (b) {
                 b.disabled = true;
                 b.classList.add('opacity-50', 'cursor-not-allowed');
@@ -1321,7 +2262,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     checkDispensasiTime();
     setInterval(checkDispensasiTime, 60000);
-    setInterval(updateTimeInputLimits, 1000);
+    updateTimeInputLimits();
 });
 </script>
 @endpush

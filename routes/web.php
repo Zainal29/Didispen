@@ -65,6 +65,12 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/logout-other-devices', [ProfileController::class, 'logoutOtherDevices'])
                 ->name('logout-other-devices');
 
+            // ✅ BARU: Hapus Riwayat Login (Role: Admin, Siswa, Guru, Satpam)
+            Route::delete('/riwayat-login', [ProfileController::class, 'clearLoginHistory'])
+                ->name('clear-login-history');
+            Route::delete('/riwayat-login/{auditLog}', [ProfileController::class, 'destroyLoginHistory'])
+                ->name('destroy-login-history');
+
     });
 
             // ==========================================
@@ -81,10 +87,12 @@ Route::middleware(['auth'])->group(function () {
                 Route::resource('jadwal-piket', Admin\JadwalPiketController::class)->parameters(['jadwal-piket' => 'jadwal']);
                 Route::resource('satpam', Admin\SatpamController::class)->only(['index', 'store', 'update', 'destroy']);
 
-                // ✅ SEMUA PENGAJUAN (Dispensasi) - Termasuk Route Hapus
+                // ✅ SEMUA PENGAJUAN (Dispensasi) - Soft Delete, Restore, Force Delete
                 Route::get('semua-pengajuan', [Admin\DispensasiController::class, 'index'])->name('semua.pengajuan');
-                Route::get('semua-pengajuan/{dispensasi}', [Admin\DispensasiController::class, 'show'])->name('semua.pengajuan.show');
+                Route::get('semua-pengajuan/{id}', [Admin\DispensasiController::class, 'show'])->name('semua.pengajuan.show');
                 Route::delete('semua-pengajuan/{dispensasi}', [Admin\DispensasiController::class, 'destroy'])->name('semua.pengajuan.destroy');
+                Route::post('semua-pengajuan/{id}/restore', [Admin\DispensasiController::class, 'restore'])->name('semua.pengajuan.restore');
+                Route::delete('semua-pengajuan/{id}/force-delete', [Admin\DispensasiController::class, 'forceDelete'])->name('semua.pengajuan.force-delete');
 
                 Route::get('laporan', [Admin\LaporanController::class, 'index'])->name('laporan.index');
                 Route::get('laporan/pdf', [Admin\LaporanController::class, 'exportPdf'])->name('laporan.pdf'); // ✅ PASTIKAN ADA
@@ -93,6 +101,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('pengaturan', [Admin\SettingsController::class, 'index'])->name('settings.index');
                 Route::put('pengaturan', [Admin\SettingsController::class, 'update'])->name('settings.update');
                 Route::get('audit-log', [Admin\AuditLogController::class, 'index'])->name('audit.index');
+                Route::delete('audit-log/clear', [Admin\AuditLogController::class, 'clear'])->name('audit.clear');
+                Route::delete('audit-log/{auditLog}', [Admin\AuditLogController::class, 'destroy'])->name('audit.destroy');
                 Route::get('guru/checklog', [Admin\GuruController::class, 'checklog'])->name('guru.checklog');
 
                 // Sinkronisasi SiPintu Gateway
@@ -189,6 +199,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
         Route::get('pengajuan/buat', [PengajuanController::class, 'create'])->name('pengajuan.create');
         Route::post('pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
+        Route::get('api/cari-siswa', [PengajuanController::class, 'cariSiswa'])->name('api.cari-siswa');
+        Route::get('api/cari-guru', [PengajuanController::class, 'cariGuru'])->name('api.cari-guru');
         Route::get('pengajuan/{dispensasi}', [PengajuanController::class, 'show'])->name('pengajuan.show');
         Route::get('qr-code/{dispensasi}', [PengajuanController::class, 'getQRCode'])->name('qr-code');
 

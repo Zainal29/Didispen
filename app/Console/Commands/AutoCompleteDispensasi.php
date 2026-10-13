@@ -33,9 +33,9 @@ class AutoCompleteDispensasi extends Command
         $count = 0;
 
         foreach ($dispensasis as $dispensasi) {
-            $dispensasiDate = $dispensasi->created_at
-                ? $dispensasi->created_at->copy()->setTimezone('Asia/Jakarta')
-                : $now;
+            $dispensasiDate = $dispensasi->tanggal_izin
+                ? Carbon::parse($dispensasi->tanggal_izin, 'Asia/Jakarta')
+                : ($dispensasi->created_at ? $dispensasi->created_at->copy()->setTimezone('Asia/Jakarta') : $now);
 
             // Periksa apakah waktu sekarang sudah melewati jam KBM terakhir pada tanggal dispensasi
             if (! TimeHelper::isKbmHariSelesai($now, $dispensasiDate)) {
@@ -55,12 +55,13 @@ class AutoCompleteDispensasi extends Command
 
                 $notifMessage = null;
 
-                // 1. KASUS MENUNGGU: Siswa iseng / tidak pernah ke guru piket
+                // 1. KASUS MENUNGGU: Siswa tidak diproses / tidak ke guru piket hingga hari KBM berakhir
                 if ($locked->status === 'menunggu') {
                     $locked->update([
                         'status' => 'kadaluarsa',
-                        'catatan_admin' => 'Kadaluarsa otomatis: Siswa tidak melakukan konfirmasi ke Guru Piket hingga KBM berakhir.',
+                        'catatan_admin' => 'Kadaluarsa otomatis: Pengajuan tidak diproses hingga jam KBM berakhir / hari berganti.',
                     ]);
+                    \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($locked);
                     $count++;
                     return;
                 }
@@ -68,21 +69,33 @@ class AutoCompleteDispensasi extends Command
                 // 2. KASUS DISETUJUI TAPI TIDAK KELUAR: Siswa tidak pernah scan ke Satpam
                 if ($locked->status === 'disetujui' && empty($locked->waktu_keluar_aktual)) {
                     $locked->update([
-                        'status' => 'dibatalkan',
-                        'catatan_admin' => 'Batal otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga KBM berakhir.',
+                        'status' => 'kadaluarsa',
+                        'catatan_admin' => 'Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga KBM berakhir.',
                     ]);
                     \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($locked);
                     $count++;
                     return;
                 }
 
-                // 3. KASUS KELUAR TAPI TIDAK KEMBALI: Siswa scan keluar tapi tidak pernah scan masuk
+                // 3. KASUS KELUAR:
                 if ($locked->status === 'keluar') {
+                    // 3a. Izin Sampai Pulang: Ditutup selesai tanpa peringatan terlambat
+                    if ($locked->sampai_pulang) {
+                        $locked->update([
+                            'status' => 'selesai',
+                            'catatan_admin' => 'Selesai otomatis: Siswa izin sampai pulang sekolah.',
+                        ]);
+                        \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($locked);
+                        $count++;
+                        return;
+                    }
+
+                    // 3b. Izin Reguler tapi tidak scan kembali: Ditandai kadaluarsa / tidak kembali
                     $locked->update([
-                        'status' => 'selesai',
+                        'status' => 'kadaluarsa',
                         'is_warned' => true,
                         'warned_at' => $now,
-                        'catatan_admin' => 'Ditutup otomatis: Siswa tidak melakukan scan kembali hingga KBM berakhir (Tidak Kembali).',
+                        'catatan_admin' => 'Kadaluarsa otomatis: Siswa tidak melakukan scan kembali hingga KBM berakhir (Tidak Kembali).',
                     ]);
                     \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($locked);
                     $count++;

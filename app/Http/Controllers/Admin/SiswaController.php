@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSiswaRequest;
+use App\Models\Dispensasi;
 use App\Models\Jurusan;
 use App\Models\Kelas;
 use App\Models\Siswa;
@@ -167,6 +168,12 @@ class SiswaController extends Controller
 
     public function destroy(Siswa $siswa)
     {
+        // Cegah cascading delete jika siswa memiliki riwayat dispensasi
+        if (Dispensasi::withTrashed()->where('siswa_id', $siswa->id)->exists()) {
+            return redirect()->route('admin.siswa.index')
+                ->with('error', 'Siswa tidak dapat dihapus permanen karena memiliki riwayat dispensasi. Nonaktifkan status akun siswa sebagai gantinya untuk menjaga integritas data.');
+        }
+
         \Illuminate\Support\Facades\DB::transaction(function () use ($siswa) {
             $siswa->delete();
             $siswa->user?->delete();

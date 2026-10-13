@@ -253,6 +253,7 @@ class CetakStrukController extends Controller
          * Counter hanya bertambah jika PDF berhasil dirender.
          */
         if ($format === 'a4') {
+            $dispensasi->load(['gurus', 'anggotaSiswa', 'siswa.kelas.jurusan', 'guru']);
             $pdf = Pdf::loadView(
                 'pdf.surat-dispensasi',
                 compact('dispensasi')

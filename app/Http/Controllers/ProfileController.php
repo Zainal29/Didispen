@@ -299,4 +299,44 @@ class ProfileController extends Controller
            return back()->with('success', 'Semua perangkat lain berhasil dikeluarkan dari akun Anda.');
        }
 
+       /**
+        * Bersihkan seluruh riwayat login milik pengguna yang sedang login
+        * Berlaku untuk seluruh role: Admin, Guru, Siswa, Satpam
+        */
+       public function clearLoginHistory(Request $request)
+       {
+           $user = Auth::user();
+
+           if (! $user) {
+               abort(401);
+           }
+
+           $deletedCount = AuditLog::where('user_id', $user->id)
+               ->whereIn('action', ['login', 'login_sso_sipintu', 'sso_login', 'logout_other_devices', 'view_profile'])
+               ->delete();
+
+           return redirect()->route('profil.show')
+               ->with('success', "Riwayat login berhasil dibersihkan ({$deletedCount} riwayat dihapus).");
+       }
+
+       /**
+        * Hapus satu baris catatan riwayat login spesifik
+        */
+       public function destroyLoginHistory(AuditLog $auditLog)
+       {
+           $user = Auth::user();
+
+           if (! $user) {
+               abort(401);
+           }
+
+           if ($auditLog->user_id !== $user->id) {
+               abort(403, 'Anda tidak memiliki hak untuk menghapus riwayat ini.');
+           }
+
+           $auditLog->delete();
+
+           return redirect()->route('profil.show')
+               ->with('success', 'Catatan riwayat login berhasil dihapus.');
+       }
 }

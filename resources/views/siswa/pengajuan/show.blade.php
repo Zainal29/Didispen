@@ -206,9 +206,69 @@
         <div class="lg:col-span-2 space-y-4">
             {{-- Informasi Dispensasi --}}
             <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center border-b border-gray-100 pb-3">
-                    <i class="fas fa-file-alt text-gray-400 mr-2"></i>Informasi Dispensasi
+                <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
+                    <span class="flex items-center"><i class="fas fa-file-alt text-gray-400 mr-2"></i>Informasi Dispensasi</span>
+                    <span class="text-xs font-semibold text-gray-500 font-mono">
+                        {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('d M Y') }}
+                    </span>
                 </h3>
+
+                @if($dispensasi->tipe_pengajuan === 'organisasi')
+                <div class="mb-4 bg-purple-50 border border-purple-200 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-sm text-purple-900 flex items-center gap-2">
+                            <i class="fas fa-users text-purple-600"></i>
+                            Dispensasi Organisasi: {{ $dispensasi->nama_organisasi }}
+                        </span>
+                        @if($dispensasi->siswa_id === auth()->user()->siswa?->id)
+                            <span class="text-[10px] bg-purple-200 text-purple-900 font-bold px-2 py-0.5 rounded-full">
+                                Anda adalah Ketua / Pemohon
+                            </span>
+                        @else
+                            <span class="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">
+                                Anda Terdaftar Sebagai Anggota
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-purple-700 mb-3">
+                        Diajukan oleh: <strong>{{ $dispensasi->siswa->nama_lengkap }}</strong> ({{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }})
+                    </p>
+
+                    <div class="space-y-1.5">
+                        <p class="text-[10px] font-bold uppercase text-purple-800">Daftar Anggota Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa):</p>
+                        <div class="bg-white rounded-lg border border-purple-100 divide-y divide-purple-50 max-h-40 overflow-y-auto">
+                            <div class="p-2 flex items-center justify-between text-xs">
+                                <span class="font-bold text-gray-900">1. {{ $dispensasi->siswa->nama_lengkap }} ({{ $dispensasi->siswa->user->nis_nip ?? '-' }})</span>
+                                <span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-1.5 py-0.5 rounded">Ketua</span>
+                            </div>
+                            @foreach($dispensasi->anggotaSiswa as $idx => $ang)
+                            <div class="p-2 flex items-center justify-between text-xs">
+                                <span class="font-medium text-gray-800">{{ $idx + 2 }}. {{ $ang->nama_lengkap }} ({{ $ang->user->nis_nip ?? $ang->nis_nip ?? '-' }})</span>
+                                <span class="text-[11px] text-gray-500">{{ $ang->kelas?->nama_kelas ?? '-' }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @if($dispensasi->gurus && $dispensasi->gurus->count() > 0)
+                    <div class="space-y-1.5 pt-2">
+                        <p class="text-[10px] font-bold uppercase text-purple-800">Guru Pembina Ekstrakurikuler / Organisasi ({{ $dispensasi->gurus->count() }} Guru):</p>
+                        <div class="bg-white rounded-lg border border-purple-100 divide-y divide-purple-50 max-h-36 overflow-y-auto">
+                            @foreach($dispensasi->gurus as $guruIdx => $guruPembina)
+                            <div class="p-2 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="font-bold text-gray-900">{{ $guruIdx + 1 }}. {{ $guruPembina->nama_lengkap }}</span>
+                                    <span class="text-[10px] text-gray-500 font-mono ml-1">NIP: {{ $guruPembina->nip ?? '-' }}</span>
+                                </div>
+                                <span class="text-[11px] text-purple-700 font-medium bg-purple-50 px-2 py-0.5 rounded">{{ $guruPembina->mata_pelajaran ?? '-' }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+                </div>
+                @endif
+
                 <div class="space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="bg-gray-50 rounded-lg p-3">
@@ -235,17 +295,22 @@
                     <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
                         <p class="text-[10px] font-bold text-blue-600 uppercase mb-1">Jam Keluar</p>
                         <p class="font-bold text-blue-900 text-sm">{{ $dispensasi->jam_keluar }}</p>
-                        @php $waktuKeluar = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar); @endphp
+                        @php $waktuKeluar = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->tanggal_izin?->dayOfWeek ?? $dispensasi->created_at?->dayOfWeek); @endphp
                         @if($waktuKeluar !== '-')
                             <p class="text-blue-700 text-xs mt-1"><i class="far fa-clock mr-1"></i>{{ $waktuKeluar }}</p>
                         @endif
                     </div>
                     <div class="bg-amber-50 rounded-lg p-3 border border-amber-100">
                         <p class="text-[10px] font-bold text-amber-600 uppercase mb-1">Jam Kembali</p>
-                        <p class="font-bold text-amber-900 text-sm">{{ $dispensasi->jam_kembali }}</p>
-                        @php $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali); @endphp
-                        @if($waktuKembali !== '-')
-                            <p class="text-amber-700 text-xs mt-1"><i class="far fa-clock mr-1"></i>{{ $waktuKembali }}</p>
+                        @if($dispensasi->sampai_pulang)
+                            <p class="font-bold text-purple-900 text-sm">Sampai Pulang Sekolah</p>
+                            <p class="text-purple-700 text-xs mt-1 font-medium"><i class="fas fa-check-circle mr-1"></i>Izin sampai selesai KBM</p>
+                        @else
+                            <p class="font-bold text-amber-900 text-sm">{{ $dispensasi->jam_kembali }}</p>
+                            @php $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->tanggal_izin?->dayOfWeek ?? $dispensasi->created_at?->dayOfWeek); @endphp
+                            @if($waktuKembali !== '-')
+                                <p class="text-amber-700 text-xs mt-1"><i class="far fa-clock mr-1"></i>{{ $waktuKembali }}</p>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -640,7 +705,7 @@
         </div>
     </div>
     {{-- Modal Preview Foto --}}
-    <div id="photoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm" onclick="closePhotoModal(event)">
+    <div id="photoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-black/85" onclick="closePhotoModal(event)">
         <div class="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onclick="event.stopPropagation()">
             <div class="w-full bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
                 <h3 id="photoModalTitle" class="text-sm font-bold text-gray-900 flex items-center gap-2">
@@ -664,74 +729,135 @@
 {{-- ============================================================ --}}
 <div id="piketModal"
      class="hidden fixed inset-0 z-50 flex items-center justify-center
-            bg-black/50 backdrop-blur-sm p-4">
+            bg-black/70 p-4">
 
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl
                 border border-gray-200 overflow-hidden">
 
         {{-- Header --}}
-        <div class="px-5 py-4 border-b border-gray-100">
-            <div class="flex items-center justify-between gap-3">
-
-                <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-10 h-10 rounded-xl bg-green-50 border border-green-100
-                                flex items-center justify-center flex-shrink-0">
-                        <i class="fab fa-whatsapp text-green-600 text-xl"></i>
-                    </div>
-
-                    <div class="min-w-0">
-                        <h3 class="text-sm font-bold text-gray-900">
-                            Hubungi Guru Piket
-                        </h3>
-
-                        <p class="text-[11px] text-gray-500 mt-0.5">
-                            Kirim pesan melalui WhatsApp
-                        </p>
-                    </div>
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100
+                            flex items-center justify-center flex-shrink-0">
+                    <i class="fab fa-whatsapp text-emerald-600 text-xl"></i>
                 </div>
 
-                <button type="button"
-                        onclick="closePiketPopup()"
-                        class="w-8 h-8 rounded-lg
-                               text-gray-400 hover:text-gray-600
-                               hover:bg-gray-100
-                               flex items-center justify-center
-                               transition-colors flex-shrink-0">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
+                <div class="min-w-0">
+                    <h3 class="text-sm font-bold text-gray-900">
+                        Hubungi Guru Piket
+                    </h3>
+
+                    <p class="text-[11px] text-gray-500 mt-0.5">
+                        Pilih guru piket yang sedang bertugas untuk dihubungi
+                    </p>
+                </div>
             </div>
+
+            <button type="button"
+                    onclick="closePiketPopup()"
+                    class="w-8 h-8 rounded-lg
+                           text-gray-400 hover:text-gray-600
+                           hover:bg-gray-100
+                           flex items-center justify-center
+                           transition-colors flex-shrink-0">
+                <i class="fas fa-times text-sm"></i>
+            </button>
         </div>
 
         {{-- Body --}}
         <div class="p-5 space-y-4">
 
-            {{-- Guru --}}
-            @if($hubungiGuru)
-            <div class="flex items-center gap-3 p-3.5
-                        bg-gray-50 border border-gray-200 rounded-xl">
+            {{-- Daftar Guru Piket Sesi Ini --}}
+            @if(!empty($daftarGuruPiket) && $daftarGuruPiket->isNotEmpty())
+                <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                    @foreach($daftarGuruPiket as $item)
+                        @php
+                            $guru = $item['guru'];
+                            $status = $item['status'] ?? 'Sedang Bertugas';
+                            $hasPhone = !empty($guru->no_telepon);
+                            $badgeClass = match($status) {
+                                'Sedang Bertugas' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                'Sedang Keluar' => 'bg-amber-100 text-amber-800 border-amber-200',
+                                'Sudah Kembali' => 'bg-blue-100 text-blue-800 border-blue-200',
+                                default => 'bg-gray-100 text-gray-700 border-gray-200',
+                            };
+                        @endphp
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-colors">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl bg-blue-100/70 text-blue-700 flex items-center justify-center text-sm flex-shrink-0 font-bold">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <p class="text-xs sm:text-sm font-bold text-gray-900 truncate">{{ $guru->nama_lengkap }}</p>
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $badgeClass }}">
+                                            {{ $status }}
+                                        </span>
+                                    </div>
+                                    @if($hasPhone)
+                                        <p class="text-[11px] text-gray-500 font-mono mt-0.5">
+                                            <i class="fab fa-whatsapp text-emerald-600 mr-1"></i>{{ $guru->no_telepon }}
+                                        </p>
+                                    @else
+                                        <p class="text-[11px] text-gray-400 italic mt-0.5">Nomor WA belum diatur</p>
+                                    @endif
+                                </div>
+                            </div>
 
-                <div class="w-10 h-10 rounded-full bg-blue-50
-                            flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-user-tie text-blue-600"></i>
+                            <div class="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                                @if($hasPhone)
+                                    <a href="{{ route('siswa.pengajuan.hubungi-guru-piket', ['dispensasi' => $dispensasi, 'guru_id' => $guru->id]) }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       onclick="onWaClick()"
+                                       class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                                       title="Hubungi {{ $guru->nama_lengkap }} via WhatsApp">
+                                        <i class="fab fa-whatsapp text-sm"></i>
+                                        <span>Hubungi WA</span>
+                                    </a>
+                                @else
+                                    <button type="button" disabled class="px-3 py-2 rounded-xl bg-gray-200 text-gray-400 text-xs font-semibold cursor-not-allowed">
+                                        WA Belum Ada
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-
-                <div class="min-w-0 flex-1">
-                    <p class="text-[10px] uppercase tracking-wide
-                              font-bold text-gray-400">
-                        Guru Piket
-                    </p>
-
-                    <p class="text-sm font-bold text-gray-900 truncate">
-                        {{ $hubungiGuru->nama_lengkap }}
-                    </p>
-
-                    @if($hubungiGuru->no_telepon)
-                        <p class="text-[11px] text-gray-500 font-mono mt-0.5">
-                            {{ $hubungiGuru->no_telepon }}
-                        </p>
-                    @endif
+            @elseif(!empty($hubungiGuru))
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100/70 text-blue-700 flex items-center justify-center text-sm flex-shrink-0 font-bold">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm font-bold text-gray-900 truncate">{{ $hubungiGuru->nama_lengkap }}</p>
+                            @if(!empty($hubungiGuru->no_telepon))
+                                <p class="text-[11px] text-gray-500 font-mono mt-0.5">
+                                    <i class="fab fa-whatsapp text-emerald-600 mr-1"></i>{{ $hubungiGuru->no_telepon }}
+                                </p>
+                            @else
+                                <p class="text-[11px] text-gray-400 italic mt-0.5">Nomor WA belum diatur</p>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                        @if(!empty($hubungiGuru->no_telepon))
+                            <a href="{{ route('siswa.pengajuan.hubungi-guru-piket', ['dispensasi' => $dispensasi, 'guru_id' => $hubungiGuru->id]) }}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               onclick="onWaClick()"
+                               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all">
+                                <i class="fab fa-whatsapp text-sm"></i>
+                                <span>Hubungi WA</span>
+                            </a>
+                        @else
+                            <button type="button" disabled class="px-3 py-2 rounded-xl bg-gray-200 text-gray-400 text-xs font-semibold cursor-not-allowed">
+                                WA Belum Ada
+                            </button>
+                        @endif
+                    </div>
                 </div>
-            </div>
             @endif
 
             {{-- Information --}}
@@ -744,8 +870,7 @@
                             Pesan WhatsApp sudah disiapkan oleh sistem.
                         </p>
                         <p class="mt-0.5 text-blue-700">
-                            Anda hanya perlu membuka WhatsApp dan mengirim pesan tersebut
-                            kepada Guru Piket.
+                            Silakan klik tombol WhatsApp pada guru piket yang ingin Anda hubungi.
                         </p>
                     </div>
                 </div>
@@ -785,52 +910,16 @@
         </div>
 
         {{-- Footer --}}
-        <div class="px-5 py-4 bg-gray-50 border-t border-gray-100
-                    flex flex-col-reverse sm:flex-row gap-2">
-
+        <div class="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
             <button type="button"
                     onclick="closePiketPopup()"
-                    class="flex-1 py-2.5 px-4
-                           rounded-xl
+                    class="py-2 px-4 rounded-xl
                            bg-white border border-gray-200
                            text-gray-700 text-xs font-semibold
                            hover:bg-gray-100
                            transition-colors">
                 Tutup
             </button>
-
-            @if($hubungiGuru && !$hubungiError)
-
-                <a href="{{ route('siswa.pengajuan.hubungi-guru-piket', $dispensasi) }}"
-                   id="btnHubungiWa"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   onclick="onWaClick()"
-                   class="flex-1 py-2.5 px-4
-                          rounded-xl
-                          bg-green-600 hover:bg-green-700
-                          text-white text-xs font-bold
-                          flex items-center justify-center gap-2
-                          shadow-sm
-                          transition-colors">
-
-                    <i class="fab fa-whatsapp text-base"></i>
-                    Buka WhatsApp
-                </a>
-
-            @else
-
-                <button type="button"
-                        disabled
-                        class="flex-1 py-2.5 px-4
-                               rounded-xl
-                               bg-gray-200
-                               text-gray-400 text-xs font-semibold
-                               cursor-not-allowed">
-                    WhatsApp Tidak Tersedia
-                </button>
-
-            @endif
         </div>
     </div>
 </div>

@@ -70,4 +70,37 @@ class AuditLogController extends Controller
 
         return view('admin.audit.index', compact('logs', 'stats'));
     }
+
+    /**
+     * Hapus satu data catatan audit log
+     */
+    public function destroy(AuditLog $auditLog)
+    {
+        $auditLog->delete();
+        return redirect()->back()->with('success', 'Catatan log aktivitas berhasil dihapus.');
+    }
+
+    /**
+     * Bersihkan audit log berdasarkan tipe / umur data agar database tidak membengkak
+     */
+    public function clear(Request $request)
+    {
+        $type = $request->input('type', 'login_only');
+
+        if ($type === 'login_only') {
+            $count = AuditLog::whereIn('action', ['login', 'logout', 'login_sso_sipintu', 'sso_login', 'logout_other_devices', 'view_profile'])->delete();
+            $msg = "Berhasil menghapus {$count} catatan riwayat login & logout.";
+        } elseif ($type === 'older_30_days') {
+            $count = AuditLog::where('created_at', '<', now()->subDays(30))->delete();
+            $msg = "Berhasil menghapus {$count} catatan log yang berumur lebih dari 30 hari.";
+        } elseif ($type === 'older_7_days') {
+            $count = AuditLog::where('created_at', '<', now()->subDays(7))->delete();
+            $msg = "Berhasil menghapus {$count} catatan log yang berumur lebih dari 7 hari.";
+        } else {
+            $count = AuditLog::query()->delete();
+            $msg = "Berhasil membersihkan seluruh log aktivitas sistem ({$count} data dihapus).";
+        }
+
+        return redirect()->route('admin.audit.index')->with('success', $msg);
+    }
 }

@@ -266,4 +266,71 @@ class DispensasiService
 
         return ['allowed' => true, 'reason' => ''];
     }
+
+    /**
+     * Memperbarui secara otomatis pengajuan yang sudah lewat 1 hari menjadi kadaluarsa:
+     * 1. Status 'menunggu' yang tanggal izinnya kemarin / lewat hari -> kadaluarsa
+     * 2. Status 'disetujui' tapi tidak scan keluar sampai lewat hari -> kadaluarsa
+     * 3. Status 'keluar' tapi tidak kembali lewat hari:
+     *    - Jika sampai_pulang: ditandai selesai (sampai pulang)
+     *    - Jika regular: ditandai kadaluarsa / terlambat tidak kembali
+     */
+    public static function autoExpireOverdueDispensasi(): int
+    {
+        $today = now('Asia/Jakarta')->toDateString();
+        $affectedCount = 0;
+
+        // 1. Menunggu yang lewat hari
+        $menungguList = Dispensasi::where('status', 'menunggu')
+            ->whereRaw('DATE(COALESCE(tanggal_izin, created_at)) < ?', [$today])
+            ->get();
+
+        foreach ($menungguList as $d) {
+            $d->update([
+                'status' => 'kadaluarsa',
+                'catatan_admin' => $d->catatan_admin ?? 'Kadaluarsa otomatis karena melewati tanggal izin.',
+            ]);
+            self::cleanupCompletedDispensasiFiles($d);
+            $affectedCount++;
+        }
+
+        // 2. Disetujui tapi tidak pernah scan keluar sampai lewat hari
+        $disetujuiList = Dispensasi::where('status', 'disetujui')
+            ->whereRaw('DATE(COALESCE(tanggal_izin, created_at)) < ?', [$today])
+            ->get();
+
+        foreach ($disetujuiList as $d) {
+            $d->update([
+                'status' => 'kadaluarsa',
+                'catatan_admin' => $d->catatan_admin ?? 'Kadaluarsa otomatis karena tidak melakukan check-out pada tanggal izin.',
+            ]);
+            self::cleanupCompletedDispensasiFiles($d);
+            $affectedCount++;
+        }
+
+        // 3. Keluar tapi tidak scan kembali lewat hari
+        $keluarList = Dispensasi::where('status', 'keluar')
+            ->whereRaw('DATE(COALESCE(tanggal_izin, created_at)) < ?', [$today])
+            ->get();
+
+        foreach ($keluarList as $d) {
+            if ($d->sampai_pulang) {
+                $d->update([
+                    'status' => 'selesai',
+                    'catatan_admin' => $d->catatan_admin ?? 'Selesai otomatis (izin sampai pulang sekolah).',
+                ]);
+            } else {
+                $d->update([
+                    'status' => 'kadaluarsa',
+                    'is_warned' => true,
+                    'warned_at' => now(),
+                    'catatan_admin' => $d->catatan_admin ?? 'Kadaluarsa otomatis karena tidak kembali ke sekolah melewati batas hari.',
+                ]);
+            }
+            self::cleanupCompletedDispensasiFiles($d);
+            $affectedCount++;
+        }
+
+        return $affectedCount;
+    }
 }

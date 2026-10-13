@@ -36,32 +36,48 @@
         @forelse($pengajuan as $p)
             @php
                 $badge = $p->status_badge;
+                $isAnggota = auth()->user()->siswa && auth()->user()->siswa->id !== $p->siswa_id;
             @endphp
             <div class="p-4 hover:bg-gray-50 transition-colors">
                 <div class="flex justify-between items-start gap-2 mb-1.5">
-                    <p class="font-mono font-semibold text-gray-900 text-xs">{{ $p->nomor_surat }}</p>
+                    <div>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <p class="font-mono font-semibold text-gray-900 text-xs">{{ $p->nomor_surat }}</p>
+                            @if($p->isOrganisasi())
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    <i class="fas fa-users text-[9px]"></i> {{ $p->nama_organisasi }}
+                                </span>
+                                @if($isAnggota)
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                        Anggota
+                                    </span>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold flex-shrink-0 border {{ $badge['class'] }}">
                         <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
                         {{ $badge['text'] }}
                     </span>
                 </div>
-                <p class="text-xs text-gray-500">{{ $p->created_at->format('d/m/Y') }} • <span class="capitalize">{{ str_replace('_', ' ', $p->kategori) }}</span></p>
-                <p class="text-xs text-gray-500 mt-0.5 truncate"><i class="far fa-clock mr-1"></i>{{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_keluar, $p->created_at?->dayOfWeek) }} – {{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_kembali, $p->created_at?->dayOfWeek) }} • {{ $p->tujuan }}</p>
+                <p class="text-xs text-gray-500">
+                    {{ $p->tanggal_izin ? $p->tanggal_izin->format('d/m/Y') : $p->created_at->format('d/m/Y') }} • 
+                    <span class="capitalize">{{ str_replace('_', ' ', $p->kategori) }}</span>
+                </p>
+                <p class="text-xs text-gray-600 mt-0.5 truncate">
+                    <i class="far fa-clock mr-1 text-gray-400"></i>
+                    {{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_keluar, $p->created_at?->dayOfWeek) }} – 
+                    @if($p->isSampaiPulang())
+                        <span class="text-emerald-700 font-semibold">Sampai Pulang</span>
+                    @else
+                        {{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_kembali, $p->created_at?->dayOfWeek) }}
+                    @endif
+                    • {{ $p->tujuan }}
+                </p>
                 <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                     <a href="{{ route('siswa.pengajuan.show', $p) }}" class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                         <i class="fas fa-eye mr-1.5"></i>Detail
                     </a>
-                    <!-- @if($p->status === 'keluar')
-                        @if($p->foto_bukti)
-                            <button onclick="showPreview('{{ asset('storage/' . $p->foto_bukti) }}', '{{ $p->nomor_surat }}')" class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors flex items-center justify-center" title="Lihat Foto Bukti">
-                                <i class="fas fa-image"></i>
-                            </button>
-                        @else
-                            <button onclick="openUploadModal({{ $p->id }})" class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center justify-center" title="Ambil Foto Bukti (Kamera)">
-                                <i class="fas fa-camera"></i>
-                            </button>
-                        @endif
-                    @endif -->
                 </div>
             </div>
         @empty
@@ -78,7 +94,7 @@
             <thead class="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
                 <tr>
                     <th class="p-4 text-left font-semibold">No. Surat</th>
-                    <th class="p-4 text-left font-semibold">Tanggal</th>
+                    <th class="p-4 text-left font-semibold">Tanggal Pelaksanaan</th>
                     <th class="p-4 text-left font-semibold">Kategori</th>
                     <th class="p-4 text-left font-semibold">Tujuan</th>
                     <th class="p-4 text-left font-semibold">Waktu</th>
@@ -90,13 +106,40 @@
                 @forelse($pengajuan as $p)
                     @php
                         $badge = $p->status_badge;
+                        $isAnggota = auth()->user()->siswa && auth()->user()->siswa->id !== $p->siswa_id;
                     @endphp
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="p-4 font-mono font-semibold text-gray-900 text-xs">{{ $p->nomor_surat }}</td>
-                        <td class="p-4 text-gray-600 text-xs">{{ $p->created_at->format('d/m/Y') }}</td>
+                        <td class="p-4 text-xs">
+                            <span class="font-mono font-semibold text-gray-900">{{ $p->nomor_surat }}</span>
+                            @if($p->isOrganisasi())
+                                <div class="mt-1 flex items-center gap-1">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        <i class="fas fa-users text-[9px]"></i> {{ $p->nama_organisasi }}
+                                    </span>
+                                    @if($isAnggota)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                            Anggota
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif
+                        </td>
+                        <td class="p-4 text-gray-600 text-xs">
+                            {{ $p->tanggal_izin ? $p->tanggal_izin->format('d/m/Y') : $p->created_at->format('d/m/Y') }}
+                            @if($p->tanggal_izin && $p->tanggal_izin->isFuture())
+                                <span class="block text-[10px] text-amber-600 font-bold">Mendatang</span>
+                            @endif
+                        </td>
                         <td class="p-4 capitalize text-gray-700 text-xs">{{ str_replace('_', ' ', $p->kategori) }}</td>
                         <td class="p-4 text-gray-700 text-xs">{{ $p->tujuan }}</td>
-                        <td class="p-4 text-gray-600 text-xs">{{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_keluar, $p->created_at?->dayOfWeek) }} – {{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_kembali, $p->created_at?->dayOfWeek) }}</td>
+                        <td class="p-4 text-gray-600 text-xs">
+                            {{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_keluar, $p->created_at?->dayOfWeek) }} – 
+                            @if($p->isSampaiPulang())
+                                <span class="text-emerald-700 font-bold">Sampai Pulang</span>
+                            @else
+                                {{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_kembali, $p->created_at?->dayOfWeek) }}
+                            @endif
+                        </td>
                         <td class="p-4">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border {{ $badge['class'] }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>

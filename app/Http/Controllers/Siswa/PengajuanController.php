@@ -19,76 +19,181 @@ namespace App\Http\Controllers\Siswa;
     class PengajuanController extends Controller
     {
         public function index(Request $request)
-        {
-            $siswa = auth()->user()->siswa;
-            if (! $siswa) {
-                abort(403, 'Profil siswa tidak ditemukan.');
-            }
-
-            $query = Dispensasi::with(['guru', 'siswa.kelas.jurusan'])
-                ->where('siswa_id', $siswa->id);
-
-            if ($request->filled('status')) {
-                $query->where('status', $request->status);
-            }
-
-            $pengajuan = $query->latest()->paginate(15);
-
-            return view('siswa.pengajuan.index', compact('pengajuan'));
-        }
-
-        public function create()
-        {
-            $siswa = auth()->user()->siswa;
-            if (! $siswa) {
-                abort(403, 'Profil siswa tidak ditemukan.');
-            }
-
-            $siswa->load(['kelas.jurusan', 'user']);
-
-            $settings = [
-                'start_time' => Setting::get('dispensasi_start_time', '07:00'),
-                'end_time' => Setting::get('dispensasi_end_time', '15:00'),
-                'end_time_friday' => Setting::get('dispensasi_end_time_friday', '14:00'),
-                'allowed_days' => array_map('intval', explode(',', Setting::get('dispensasi_days', '1,2,3,4,5'))),
-            ];
-
-            $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
-            $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
-            $jadwalPelajaran = TimeHelper::getAllJadwal();
-            $jadwalHariIni = TimeHelper::getJadwalHari($dayOfWeek);
-            $istirahatHariIni = TimeHelper::getIstirahatHari($dayOfWeek);
-            $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
-
-            return view('siswa.pengajuan.create', compact('siswa', 'settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni', 'istirahatHariIni', 'semuaSlotHariIni'));
-        }
-
-    public function store(Request $request)
     {
-        $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
-
-        if (! $timeCheck['allowed']) {
-            return redirect()->route('siswa.pengajuan.index')
-                ->with('error', 'Pengajuan ditolak: ' . $timeCheck['reason']);
-        }
-
         $siswa = auth()->user()->siswa;
-
         if (! $siswa) {
             abort(403, 'Profil siswa tidak ditemukan.');
         }
 
-        $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
-        $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
-        $jadwalHariIni = TimeHelper::getJadwalHari($dayOfWeek);
+        // Jalankan auto-expire otomatis
+        \App\Services\DispensasiService::autoExpireOverdueDispensasi();
 
-        if (empty($jadwalHariIni)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'jam_keluar' => 'Jadwal pelajaran hari ini tidak tersedia.',
-            ]);
+        $query = Dispensasi::with(['guru', 'siswa.kelas.jurusan', 'anggotaSiswa.kelas.jurusan'])
+            ->where(function ($q) use ($siswa) {
+                $q->where('siswa_id', $siswa->id)
+                  ->orWhereHas('anggotaSiswa', function ($a) use ($siswa) {
+                      $a->where('siswa.id', $siswa->id);
+                  });
+            });
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
+        $pengajuan = $query->latest()->paginate(15);
+
+        return view('siswa.pengajuan.index', compact('pengajuan'));
+    }
+
+    /**
+     * API pencarian siswa teman untuk anggota dispensasi organisasi
+     */
+    public function cariSiswa(Request $request)
+    {
+        $siswa = auth()->user()->siswa;
+        $query = trim((string) $request->get('q', ''));
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $results = \App\Models\Siswa::with(['kelas.jurusan', 'user'])
+            ->where('status_aktif', true)
+            ->when($siswa, fn($q) => $q->where('id', '!=', $siswa->id))
+            ->where(function ($q) use ($query) {
+                $q->where('nama_lengkap', 'like', "%{$query}%")
+                  ->orWhere('nis_nip', 'like', "%{$query}%")
+                  ->orWhereHas('user', fn($u) => $u->where('nis_nip', 'like', "%{$query}%"))
+                  ->orWhereHas('kelas', fn($k) => $k->where('nama_kelas', 'like', "%{$query}%"));
+            })
+            ->limit(25)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'nama' => $s->nama_lengkap,
+                    'nis' => $s->nis_nip ?? $s->user?->nis_nip ?? '-',
+                    'kelas' => $s->kelas?->nama_kelas ?? '-',
+                    'jurusan' => $s->kelas?->jurusan?->nama_jurusan ?? '-',
+                ];
+            });
+
+        return response()->json($results);
+    }
+
+    /**
+     * API pencarian 71 guru pembina ekstra/organisasi untuk dispensasi rombongan
+     */
+    public function cariGuru(Request $request)
+    {
+        $query = trim((string) $request->get('q', ''));
+
+        $results = \App\Models\Guru::where('status_aktif', true)
+            ->when($query !== '', function ($q) use ($query) {
+                $q->where(function ($sub) use ($query) {
+                    $sub->where('nama_lengkap', 'like', "%{$query}%")
+                        ->orWhere('nip', 'like', "%{$query}%")
+                        ->orWhere('mata_pelajaran', 'like', "%{$query}%");
+                });
+            })
+            ->orderBy('nama_lengkap')
+            ->get(['id', 'nama_lengkap', 'nip', 'mata_pelajaran'])
+            ->map(function ($g) {
+                return [
+                    'id' => $g->id,
+                    'nama' => $g->nama_lengkap,
+                    'nip' => $g->nip ?? '-',
+                    'mata_pelajaran' => $g->mata_pelajaran ?? '-',
+                ];
+            });
+
+        return response()->json($results);
+    }
+
+    public function create()
+    {
+        $siswa = auth()->user()->siswa;
+        if (! $siswa) {
+            abort(403, 'Profil siswa tidak ditemukan.');
+        }
+
+        $siswa->load(['kelas.jurusan', 'user']);
+
+        $settings = [
+            'start_time' => Setting::get('dispensasi_start_time', '07:00'),
+            'end_time' => Setting::get('dispensasi_end_time', '15:00'),
+            'end_time_friday' => Setting::get('dispensasi_end_time_friday', '14:00'),
+            'allowed_days' => array_map('intval', explode(',', Setting::get('dispensasi_days', '1,2,3,4,5'))),
+        ];
+
+        $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
+        $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
+        $jadwalPelajaran = TimeHelper::getAllJadwal();
+        $jadwalHariIni = TimeHelper::getJadwalHari($dayOfWeek);
+        $istirahatHariIni = TimeHelper::getIstirahatHari($dayOfWeek);
+        $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
+
+        // Ambil seluruh 71 guru aktif sebagai kandidat pembina ekstra/organisasi
+        $daftarGuru = \App\Models\Guru::where('status_aktif', true)
+            ->orderBy('nama_lengkap')
+            ->get(['id', 'nama_lengkap', 'nip', 'mata_pelajaran'])
+            ->map(fn($g) => [
+                'id' => $g->id,
+                'nama' => $g->nama_lengkap,
+                'nip' => $g->nip ?? '-',
+                'mata_pelajaran' => $g->mata_pelajaran ?? '-',
+            ])->values();
+
+        // Hydrate data anggota dan guru dari input sebelumnya jika terjadi validasi error
+        $oldAnggotaIds = (array) old('anggota_ids', []);
+        $oldAnggotaList = [];
+        if (! empty($oldAnggotaIds)) {
+            $oldAnggotaList = \App\Models\Siswa::with(['kelas.jurusan', 'user'])
+                ->whereIn('id', $oldAnggotaIds)
+                ->get()
+                ->map(fn($s) => [
+                    'id' => $s->id,
+                    'nama' => $s->nama_lengkap,
+                    'nis' => $s->nis_nip ?? $s->user?->nis_nip ?? '-',
+                    'kelas' => $s->kelas?->nama_kelas ?? '-',
+                    'jurusan' => $s->kelas?->jurusan?->nama_jurusan ?? '-',
+                ])->values();
+        }
+
+        $oldGuruIds = (array) old('guru_ids', []);
+        $oldGurusList = [];
+        if (! empty($oldGuruIds)) {
+            $oldGurusList = \App\Models\Guru::whereIn('id', $oldGuruIds)
+                ->get()
+                ->map(fn($g) => [
+                    'id' => $g->id,
+                    'nama' => $g->nama_lengkap,
+                    'nip' => $g->nip ?? '-',
+                    'mata_pelajaran' => $g->mata_pelajaran ?? '-',
+                ])->values();
+        }
+
+        return view('siswa.pengajuan.create', compact('siswa', 'settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni', 'istirahatHariIni', 'semuaSlotHariIni', 'daftarGuru', 'oldAnggotaList', 'oldGurusList'));
+    }
+
+    public function store(Request $request)
+    {
+        $siswa = auth()->user()->siswa;
+        if (! $siswa) {
+            abort(403, 'Profil siswa tidak ditemukan.');
+        }
+
+        $tipePengajuan = $request->input('tipe_pengajuan', 'individu');
+        if (! in_array($tipePengajuan, ['individu', 'organisasi'], true)) {
+            $tipePengajuan = 'individu';
+        }
+
+        $isSampaiPulang = $request->boolean('sampai_pulang');
+
         $validated = $request->validate([
+            'tipe_pengajuan' => 'nullable|in:individu,organisasi',
+            'nama_organisasi' => $tipePengajuan === 'organisasi' ? 'required|string|min:2|max:100' : 'nullable|string|max:100',
+            'tanggal_izin' => 'nullable|date',
             'kategori' => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
             'alasan' => 'required|string|min:10|max:500',
             'tujuan' => 'required|string|max:255',
@@ -99,119 +204,179 @@ namespace App\Http\Controllers\Siswa;
                 'regex:/^(?:\+?620?|0)?8[0-9]{8,12}$/',
             ],
             'jam_keluar' => 'required',
-            'jam_kembali' => 'required',
-            'foto_verifikasi' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'jam_kembali' => $isSampaiPulang ? 'nullable' : 'required',
+            'foto_verifikasi' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'anggota_ids' => 'nullable|array',
+            'anggota_ids.*' => 'exists:siswa,id',
+            'guru_ids' => 'nullable|array',
+            'guru_ids.*' => 'exists:guru,id',
         ], [
+            'nama_organisasi.required' => 'Nama organisasi / kegiatan wajib diisi untuk dispensasi organisasi.',
             'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
             'alasan.max' => 'Alasan maksimal 500 karakter.',
             'jam_keluar.required' => 'Jam keluar wajib diisi.',
-            'jam_kembali.required' => 'Jam kembali wajib diisi.',
+            'jam_kembali.required' => 'Jam kembali wajib diisi jika bukan izin sampai pulang.',
             'no_telepon.regex' => 'Format nomor WhatsApp tidak valid.',
             'foto_verifikasi.required' => 'Foto verifikasi selfie wajib diambil menggunakan kamera.',
-            'foto_verifikasi.max' => 'Ukuran foto verifikasi maksimal 2048 KB (2MB).',
+            'foto_verifikasi.max' => 'Ukuran foto verifikasi maksimal 5MB (5120 KB).',
         ]);
 
+        // Resolusi Tanggal Izin
+        $targetDate = $request->filled('tanggal_izin')
+            ? Carbon::parse($request->tanggal_izin, 'Asia/Jakarta')->startOfDay()
+            : now('Asia/Jakarta')->startOfDay();
+
+        $today = now('Asia/Jakarta')->startOfDay();
+
+        if ($targetDate->lt($today)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'tanggal_izin' => 'Tanggal izin tidak boleh menggunakan tanggal yang sudah lewat.',
+            ]);
+        }
+
+        $targetDayOfWeek = $targetDate->dayOfWeek;
+        $allowedDays = array_map('intval', explode(',', Setting::get('dispensasi_days', '1,2,3,4,5')));
+
+        if (! in_array($targetDayOfWeek, $allowedDays, true)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'tanggal_izin' => 'Hari yang dipilih (' . $targetDate->isoFormat('dddd') . ') bukan hari operasional sekolah yang diizinkan.',
+            ]);
+        }
+
+        // Cek jam operasional pengajuan hanya jika mengajukan untuk hari ini
+        if ($targetDate->equalTo($today)) {
+            $timeCheck = DispensasiTimeHelper::isWithinDispensasiTime();
+            if (! $timeCheck['allowed']) {
+                return redirect()->route('siswa.pengajuan.index')
+                    ->with('error', 'Pengajuan ditolak: ' . $timeCheck['reason']);
+            }
+        }
+
+        $maxJam = TimeHelper::getMaxJamPelajaran($targetDayOfWeek);
+        $semuaSlotHari = TimeHelper::getSemuaSlotHari($targetDayOfWeek);
+        $scheduleEarliest = ! empty($semuaSlotHari) ? $semuaSlotHari[0]['start'] : '07:00';
+        $scheduleLatest = ! empty($semuaSlotHari) ? end($semuaSlotHari)['end'] : '15:15';
+        [$startH, $startM] = array_map('intval', explode(':', $scheduleEarliest));
+        [$endH, $endM] = array_map('intval', explode(':', $scheduleLatest));
+        $scheduleStartMin = ($startH * 60) + $startM;
+        $scheduleEndMin = ($endH * 60) + $endM;
+
         $rawJamKeluar = trim((string) $validated['jam_keluar']);
-        $rawJamKembali = trim((string) $validated['jam_kembali']);
+        $rawJamKembali = $isSampaiPulang ? 'pulang' : trim((string) $validated['jam_kembali']);
 
         $storedJamKeluar = null;
         $storedJamKembali = null;
         $batasWaktu = null;
 
-        // Mendukung input berupa nomor jam pelajaran (integer) maupun jam aktual format HH:MM
-        if (is_numeric($rawJamKeluar) && is_numeric($rawJamKembali)) {
-            $jamKeluarInt = (int) $rawJamKeluar;
-            $jamKembaliInt = (int) $rawJamKembali;
+        if ($isSampaiPulang) {
+            // Logika Sampai Pulang Sekolah
+            if (is_numeric($rawJamKeluar)) {
+                $jamKeluarInt = (int) $rawJamKeluar;
+                if ($jamKeluarInt < 1 || $jamKeluarInt > $maxJam) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'jam_keluar' => "Jam keluar maksimal adalah Jam ke-{$maxJam}.",
+                    ]);
+                }
+                $storedJamKeluar = 'Jam Pelajaran ke-' . $jamKeluarInt;
+            } elseif (preg_match('/^\d{2}:\d{2}$/', $rawJamKeluar)) {
+                [$jamKeluarHour, $jamKeluarMinute] = array_map('intval', explode(':', $rawJamKeluar));
+                $jamKeluarMinutes = ($jamKeluarHour * 60) + $jamKeluarMinute;
 
-            if ($jamKeluarInt < 1 || $jamKeluarInt > $maxJam) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'jam_keluar' => "Jam keluar maksimal adalah Jam ke-{$maxJam} untuk hari ini.",
-                ]);
-            }
-
-            if ($jamKembaliInt < 1 || $jamKembaliInt > $maxJam) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'jam_kembali' => "Jam kembali maksimal adalah Jam ke-{$maxJam} untuk hari ini.",
-                ]);
-            }
-
-            if ($jamKembaliInt <= $jamKeluarInt) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'jam_kembali' => 'Jam kembali harus lebih besar dari jam keluar.',
-                ]);
-            }
-
-            $storedJamKeluar = 'Jam Pelajaran ke-' . $jamKeluarInt;
-            $storedJamKembali = 'Jam Pelajaran ke-' . $jamKembaliInt;
-            $batasWaktu = TimeHelper::getBatasWaktuKembali($storedJamKembali, $dayOfWeek);
-
-        } elseif (preg_match('/^\d{2}:\d{2}$/', $rawJamKeluar) && preg_match('/^\d{2}:\d{2}$/', $rawJamKembali)) {
-            $nowWib = now('Asia/Jakarta');
-            $currentMinutes = ($nowWib->hour * 60) + $nowWib->minute;
-
-            [$jamKeluarHour, $jamKeluarMinute] = array_map('intval', explode(':', $rawJamKeluar));
-            [$jamKembaliHour, $jamKembaliMinute] = array_map('intval', explode(':', $rawJamKembali));
-
-            $jamKeluarMinutes = ($jamKeluarHour * 60) + $jamKeluarMinute;
-            $jamKembaliMinutes = ($jamKembaliHour * 60) + $jamKembaliMinute;
-
-            if ($jamKeluarMinutes < $currentMinutes) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'jam_keluar' => 'Jam keluar tidak boleh menggunakan waktu yang sudah lewat.',
-                ]);
-            }
-
-            if ($jamKembaliMinutes <= $jamKeluarMinutes) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'jam_kembali' => 'Jam kembali harus lebih besar dari jam keluar.',
-                ]);
-            }
-
-            $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
-            $waktuKeluarValid = false;
-            $waktuKembaliValid = false;
-
-            foreach ($semuaSlotHariIni as $slot) {
-                if (empty($slot['start']) || empty($slot['end'])) {
-                    continue;
+                if ($jamKeluarMinutes < $scheduleStartMin || $jamKeluarMinutes > $scheduleEndMin) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'jam_keluar' => "Jam keluar ({$rawJamKeluar} WIB) berada di luar jadwal KBM sekolah ({$scheduleEarliest} - {$scheduleLatest} WIB).",
+                    ]);
                 }
 
-                [$startHour, $startMinute] = array_map('intval', explode(':', substr($slot['start'], 0, 5)));
-                [$endHour, $endMinute] = array_map('intval', explode(':', substr($slot['end'], 0, 5)));
-
-                $slotStart = ($startHour * 60) + $startMinute;
-                $slotEnd = ($endHour * 60) + $endMinute;
-
-                if ($jamKeluarMinutes >= $slotStart && $jamKeluarMinutes <= $slotEnd) {
-                    $waktuKeluarValid = true;
+                if ($targetDate->equalTo($today)) {
+                    $nowWib = now('Asia/Jakarta');
+                    $currentMinutes = ($nowWib->hour * 60) + $nowWib->minute;
+                    if ($jamKeluarMinutes < $currentMinutes) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'jam_keluar' => 'Jam keluar tidak boleh menggunakan waktu yang sudah lewat.',
+                        ]);
+                    }
                 }
-
-                if ($jamKembaliMinutes >= $slotStart && $jamKembaliMinutes <= $slotEnd) {
-                    $waktuKembaliValid = true;
-                }
+                $storedJamKeluar = $rawJamKeluar;
+            } else {
+                $storedJamKeluar = $rawJamKeluar;
             }
 
-            if (! $waktuKeluarValid) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'jam_keluar' => 'Jam keluar harus berada dalam jadwal sekolah yang tersedia hari ini.',
-                ]);
-            }
-
-            if (! $waktuKembaliValid) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'jam_kembali' => 'Jam kembali harus berada dalam jadwal sekolah yang tersedia hari ini.',
-                ]);
-            }
-
-            $storedJamKeluar = $rawJamKeluar;
-            $storedJamKembali = $rawJamKembali;
-            $batasWaktu = TimeHelper::getBatasWaktuKembali($storedJamKembali, $dayOfWeek);
-
+            $storedJamKembali = 'Sampai Pulang Sekolah';
+            $batasWaktu = TimeHelper::getWaktuSelesaiKbmTerakhir($targetDayOfWeek)
+                ?? $targetDate->copy()->setTime($endH, $endM);
         } else {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'jam_keluar' => 'Format jam keluar tidak valid.',
-                'jam_kembali' => 'Format jam kembali tidak valid.',
-            ]);
+            // Logika Jam Kembali Biasa
+            if (is_numeric($rawJamKeluar) && is_numeric($rawJamKembali)) {
+                $jamKeluarInt = (int) $rawJamKeluar;
+                $jamKembaliInt = (int) $rawJamKembali;
+
+                if ($jamKeluarInt < 1 || $jamKeluarInt > $maxJam) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'jam_keluar' => "Jam keluar maksimal adalah Jam ke-{$maxJam}.",
+                    ]);
+                }
+
+                if ($jamKembaliInt < 1 || $jamKembaliInt > $maxJam) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'jam_kembali' => "Jam kembali maksimal adalah Jam ke-{$maxJam}.",
+                    ]);
+                }
+
+                if ($jamKembaliInt <= $jamKeluarInt) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'jam_kembali' => 'Jam kembali harus lebih besar dari jam keluar.',
+                    ]);
+                }
+
+                $storedJamKeluar = 'Jam Pelajaran ke-' . $jamKeluarInt;
+                $storedJamKembali = 'Jam Pelajaran ke-' . $jamKembaliInt;
+                $batasWaktu = TimeHelper::getBatasWaktuKembali($storedJamKembali, $targetDayOfWeek);
+
+            } elseif (preg_match('/^\d{2}:\d{2}$/', $rawJamKeluar) && preg_match('/^\d{2}:\d{2}$/', $rawJamKembali)) {
+                [$jamKeluarHour, $jamKeluarMinute] = array_map('intval', explode(':', $rawJamKeluar));
+                [$jamKembaliHour, $jamKembaliMinute] = array_map('intval', explode(':', $rawJamKembali));
+
+                $jamKeluarMinutes = ($jamKeluarHour * 60) + $jamKeluarMinute;
+                $jamKembaliMinutes = ($jamKembaliHour * 60) + $jamKembaliMinute;
+
+                if ($jamKeluarMinutes < $scheduleStartMin || $jamKeluarMinutes > $scheduleEndMin) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'jam_keluar' => "Jam keluar ({$rawJamKeluar} WIB) berada di luar jadwal KBM sekolah ({$scheduleEarliest} - {$scheduleLatest} WIB).",
+                    ]);
+                }
+
+                if ($jamKembaliMinutes < $scheduleStartMin || $jamKembaliMinutes > $scheduleEndMin) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'jam_kembali' => "Jam kembali ({$rawJamKembali} WIB) berada di luar jadwal KBM sekolah ({$scheduleEarliest} - {$scheduleLatest} WIB).",
+                    ]);
+                }
+
+                if ($targetDate->equalTo($today)) {
+                    $nowWib = now('Asia/Jakarta');
+                    $currentMinutes = ($nowWib->hour * 60) + $nowWib->minute;
+                    if ($jamKeluarMinutes < $currentMinutes) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'jam_keluar' => 'Jam keluar tidak boleh menggunakan waktu yang sudah lewat.',
+                        ]);
+                    }
+                }
+
+                if ($jamKembaliMinutes <= $jamKeluarMinutes) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'jam_kembali' => 'Jam kembali harus lebih besar dari jam keluar.',
+                    ]);
+                }
+
+                $storedJamKeluar = $rawJamKeluar;
+                $storedJamKembali = $rawJamKembali;
+                $batasWaktu = $targetDate->copy()->setTime($jamKembaliHour, $jamKembaliMinute);
+            } else {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'jam_keluar' => 'Format jam keluar tidak valid.',
+                    'jam_kembali' => 'Format jam kembali tidak valid.',
+                ]);
+            }
         }
 
         $fotoPath = null;
@@ -223,7 +388,10 @@ namespace App\Http\Controllers\Siswa;
                 &$fotoPath,
                 $storedJamKeluar,
                 $storedJamKembali,
-                $batasWaktu
+                $batasWaktu,
+                $tipePengajuan,
+                $targetDate,
+                $isSampaiPulang
             ) {
                 $siswa = auth()->user()->siswa;
                 if (! $siswa) {
@@ -232,15 +400,16 @@ namespace App\Http\Controllers\Siswa;
 
                 $pendingDispensasi = Dispensasi::where('siswa_id', $siswa->id)
                     ->whereIn('status', ['menunggu', 'disetujui', 'keluar'])
+                    ->whereRaw('DATE(COALESCE(tanggal_izin, created_at)) = ?', [$targetDate->toDateString()])
                     ->lockForUpdate()
                     ->first();
 
                 if ($pendingDispensasi) {
                     $errorMessage = match ($pendingDispensasi->status) {
-                        'menunggu' => 'Pengajuan dispensasi Anda sebelumnya masih menunggu persetujuan Guru Piket.',
-                        'disetujui' => 'Pengajuan dispensasi Anda sudah disetujui. Tunjukkan QR Code ke Satpam atau batalkan permohonan jika tidak jadi keluar sebelum membuat pengajuan baru.',
-                        'keluar' => 'Anda masih memiliki dispensasi yang sedang berlangsung. Selesaikan pengajuan terlebih dahulu sebelum membuat pengajuan baru.',
-                        default => 'Anda masih memiliki pengajuan dispensasi yang aktif.',
+                        'menunggu' => 'Pengajuan dispensasi Anda untuk tanggal tersebut masih menunggu persetujuan Guru Piket.',
+                        'disetujui' => 'Pengajuan dispensasi Anda untuk tanggal tersebut sudah disetujui.',
+                        'keluar' => 'Anda masih memiliki dispensasi yang sedang berlangsung.',
+                        default => 'Anda masih memiliki pengajuan dispensasi yang aktif untuk tanggal tersebut.',
                     };
 
                     throw \Illuminate\Validation\ValidationException::withMessages([
@@ -257,10 +426,14 @@ namespace App\Http\Controllers\Siswa;
                     $fotoPath = $foto->storeAs('foto_verifikasi', $filename, 'public');
                 }
 
-                Dispensasi::create([
+                $dispensasi = Dispensasi::create([
                     'siswa_id' => $siswa->id,
                     'guru_id' => null,
                     'nomor_surat' => Dispensasi::generateNomorSurat(),
+                    'tipe_pengajuan' => $tipePengajuan,
+                    'nama_organisasi' => $tipePengajuan === 'organisasi' ? $validated['nama_organisasi'] : null,
+                    'tanggal_izin' => $targetDate->toDateString(),
+                    'sampai_pulang' => $isSampaiPulang,
                     'status' => 'menunggu',
                     'kategori' => $validated['kategori'],
                     'alasan' => $validated['alasan'],
@@ -272,6 +445,33 @@ namespace App\Http\Controllers\Siswa;
                     'foto_verifikasi' => $fotoPath,
                     'dibuat_manual_oleh_guru' => false,
                 ]);
+
+                // Hubungkan anggota jika tipe organisasi
+                if ($tipePengajuan === 'organisasi' && ! empty($validated['anggota_ids'])) {
+                    $anggotaIds = array_diff(array_unique($validated['anggota_ids']), [$siswa->id]);
+                    $dispensasi->anggotaSiswa()->sync($anggotaIds);
+
+                    // Kirim notifikasi ke seluruh anggota
+                    $notifService = app(\App\Services\NotifikasiService::class);
+                    $anggotaSiswaList = \App\Models\Siswa::whereIn('id', $anggotaIds)->get();
+                    foreach ($anggotaSiswaList as $anggota) {
+                        if ($anggota->user_id) {
+                            try {
+                                $notifService->send(
+                                    $anggota->user_id,
+                                    "Anda telah ditambahkan ke Dispensasi Organisasi '{$validated['nama_organisasi']}' oleh {$siswa->nama_lengkap} untuk tanggal " . $targetDate->translatedFormat('d F Y') . ".",
+                                    route('siswa.pengajuan.show', $dispensasi->id)
+                                );
+                            } catch (\Throwable $e) {}
+                        }
+                    }
+                }
+
+                // Hubungkan guru pembina jika tipe organisasi
+                if ($tipePengajuan === 'organisasi' && ! empty($request->input('guru_ids'))) {
+                    $guruIds = array_unique(array_filter((array) $request->input('guru_ids')));
+                    $dispensasi->gurus()->sync($guruIds);
+                }
             });
 
             return redirect()->route('siswa.pengajuan.index')
@@ -288,30 +488,36 @@ namespace App\Http\Controllers\Siswa;
             }
             Log::error('Gagal membuat dispensasi: ' . $e->getMessage());
             return redirect()->back()->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan pengajuan.');
+                ->with('error', 'Terjadi kesalahan saat menyimpan pengajuan: ' . $e->getMessage());
         }
     }
 
-        public function show(Dispensasi $dispensasi)
-{
-    $siswa = auth()->user()->siswa;
+    public function show(Dispensasi $dispensasi)
+    {
+        $siswa = auth()->user()->siswa;
+        $isOwner = $siswa && $dispensasi->siswa_id === $siswa->id;
+        $isAnggota = $siswa && $dispensasi->anggotaSiswa()->where('siswa.id', $siswa->id)->exists();
 
-    if (! $siswa || $dispensasi->siswa_id !== $siswa->id) {
-        abort(403, 'Akses ditolak.');
-    }
+        if (! $siswa || (! $isOwner && ! $isAnggota)) {
+            abort(403, 'Akses ditolak.');
+        }
 
-    $dispensasi->load([
-        'guru',
-        'siswa.kelas.jurusan',
-        'siswa.user',
-    ]);
+        $dispensasi->load([
+            'guru',
+            'gurus',
+            'siswa.kelas.jurusan',
+            'siswa.user',
+            'anggotaSiswa.kelas.jurusan',
+            'anggotaSiswa.user',
+        ]);
 
-    // ============================================================
+        // ============================================================
     // FITUR: Hubungi Guru Piket
     // Popup hanya tersedia selama 3 menit sejak created_at
     // ============================================================
     $popupEligible = false;
     $popupSecondsLeft = 0;
+    $daftarGuruPiket = collect();
     $hubungiGuru = null;
     $hubungiError = null;
 
@@ -333,127 +539,104 @@ namespace App\Http\Controllers\Siswa;
         
 
             /*
-             * Prioritas:
-             *
-             * 1. Guru yang tersimpan pada dispensasi
-             * 2. Guru Piket aktual dari GuruPiketService
-             * 3. Guru fallback dari Settings Admin
-             *
-             * URL WhatsApp TIDAK dibuat di sini.
-             * URL akan dibuat oleh endpoint server-side setelah
-             * ownership, status, dan batas waktu divalidasi ulang.
+             * Ambil daftar guru piket yang sedang bertugas pada sesi saat ini.
+             * Sesuai jadwal yang diatur oleh admin.
              */
 
-            if ($dispensasi->guru && $dispensasi->guru->status_aktif) {
-                $hubungiGuru = $dispensasi->guru;
-            }
+            // 1. Ambil seluruh petugas dari sesi piket yang sedang berlangsung saat ini
+            try {
+                $guruPiketService = app(\App\Services\GuruPiketService::class);
+                $infoSesi = $guruPiketService->getInformasiSesi();
 
-            // --------------------------------------------------------
-            // Cari Guru Piket aktual dari sesi
-            // --------------------------------------------------------
-            if (! $hubungiGuru) {
-                try {
-                    $guruPiketService = app(
-                        \App\Services\GuruPiketService::class
-                    );
-
-                    $infoSesi = $guruPiketService->getInformasiSesi();
-
-                    /*
-                     * Jika sesi conflict, jangan memilih guru
-                     * secara sembarangan.
-                     */
-                    if (
-                        ! ($infoSesi['conflict'] ?? false)
-                        && ! empty($infoSesi['petugas'])
-                    ) {
-                        $petugas = collect($infoSesi['petugas']);
-
-                        /*
-                         * Prioritaskan guru yang benar-benar berstatus
-                         * "Sedang Bertugas".
-                         */
-                        $sedangBertugas = $petugas->first(function ($p) {
-                            return isset($p['guru'])
-                                && $p['guru']
-                                && $p['guru']->status_aktif
-                                && ($p['status'] ?? null) === 'Sedang Bertugas';
-                        });
-
-                        if ($sedangBertugas) {
-                            $hubungiGuru = $sedangBertugas['guru'];
-                        }
-
-                        /*
-                         * Jika tidak ada yang berstatus "Sedang Bertugas",
-                         * gunakan petugas aktual pertama dari service.
-                         *
-                         * Ini BUKAN Guru::first().
-                         * Guru tersebut berasal dari resolver
-                         * GuruPiketService, termasuk replacement jika ada.
-                         */
-                        if (! $hubungiGuru) {
-                            $petugasAktual = $petugas->first(function ($p) {
-                                return isset($p['guru'])
-                                    && $p['guru']
-                                    && $p['guru']->status_aktif;
-                            });
-
-                            if ($petugasAktual) {
-                                $hubungiGuru = $petugasAktual['guru'];
-                            }
+                if (! ($infoSesi['conflict'] ?? false) && ! empty($infoSesi['petugas'])) {
+                    foreach ($infoSesi['petugas'] as $p) {
+                        $guru = $p['guru'] ?? null;
+                        if ($guru && $guru->status_aktif) {
+                            $daftarGuruPiket->push([
+                                'guru' => $guru,
+                                'status' => $p['status'] ?? 'Sedang Bertugas',
+                                'is_pengganti' => $p['is_pengganti'] ?? false,
+                            ]);
                         }
                     }
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning(
-                        'Gagal resolve Guru Piket untuk fitur Hubungi Guru.',
-                        [
-                            'dispensasi_id' => $dispensasi->id,
-                            'error' => $e->getMessage(),
-                        ]
-                    );
                 }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning(
+                    'Gagal resolve Guru Piket untuk fitur Hubungi Guru.',
+                    [
+                        'dispensasi_id' => $dispensasi->id,
+                        'error' => $e->getMessage(),
+                    ]
+                );
             }
 
-            // --------------------------------------------------------
-            // Fallback Guru dari Settings Admin
-            // --------------------------------------------------------
-            if (! $hubungiGuru) {
+            // 2. Jika sesi tidak ada petugas, gunakan guru yang tersimpan di permohonan
+            if ($daftarGuruPiket->isEmpty() && $dispensasi->guru && $dispensasi->guru->status_aktif) {
+                $daftarGuruPiket->push([
+                    'guru' => $dispensasi->guru,
+                    'status' => 'Guru Terjadwal',
+                    'is_pengganti' => false,
+                ]);
+            }
+
+            // 3. Fallback Guru dari Settings Admin
+            if ($daftarGuruPiket->isEmpty()) {
                 $fallbackGuruId = \App\Models\Setting::get(
                     'fallback_guru_piket_id'
                 ) ?? \App\Models\Setting::get('guru_piket_fallback_id');
 
                 if ($fallbackGuruId) {
-                    $hubungiGuru = \App\Models\Guru::query()
+                    $fallbackGuru = \App\Models\Guru::query()
                         ->whereKey($fallbackGuruId)
                         ->where('status_aktif', true)
                         ->first();
+                    if ($fallbackGuru) {
+                        $daftarGuruPiket->push([
+                            'guru' => $fallbackGuru,
+                            'status' => 'Petugas Piket',
+                            'is_pengganti' => false,
+                        ]);
+                    }
                 }
             }
 
             // 4. Fallback Guru Piket yang memiliki jadwal hari ini
-            if (! $hubungiGuru) {
+            if ($daftarGuruPiket->isEmpty()) {
                 try {
                     $jadwalHariIni = $guruPiketService->getJadwalUntukTanggal();
-                    $petugasHariIni = $jadwalHariIni->first(fn($j) => $j->guru && $j->guru->status_aktif && !empty($j->guru->no_telepon));
-                    if ($petugasHariIni) {
-                        $hubungiGuru = $petugasHariIni->guru;
+                    foreach ($jadwalHariIni as $j) {
+                        if ($j->guru && $j->guru->status_aktif && !empty($j->guru->no_telepon)) {
+                            $daftarGuruPiket->push([
+                                'guru' => $j->guru,
+                                'status' => 'Guru Piket Hari Ini',
+                                'is_pengganti' => false,
+                            ]);
+                        }
                     }
                 } catch (\Throwable $e) {}
             }
 
             // 5. Fallback Guru aktif manapun yang memiliki nomor telepon
-            if (! $hubungiGuru) {
-                $hubungiGuru = \App\Models\Guru::where('status_aktif', true)
+            if ($daftarGuruPiket->isEmpty()) {
+                $guruAktif = \App\Models\Guru::where('status_aktif', true)
                     ->whereNotNull('no_telepon')
                     ->where('no_telepon', '!=', '')
                     ->first();
+                if ($guruAktif) {
+                    $daftarGuruPiket->push([
+                        'guru' => $guruAktif,
+                        'status' => 'Petugas Piket',
+                        'is_pengganti' => false,
+                    ]);
+                }
             }
 
-            if (! $hubungiGuru) {
+            if ($daftarGuruPiket->isNotEmpty()) {
+                $hubungiGuru = $daftarGuruPiket->first()['guru'];
+            }
+
+            if ($daftarGuruPiket->isEmpty()) {
                 $hubungiError = 'Guru Piket belum tersedia untuk pengajuan ini.';
-            } elseif (! $hubungiGuru->no_telepon) {
-                $hubungiError = 'Nomor WhatsApp Guru Piket belum tersedia.';
             }
         }
     }
@@ -462,12 +645,13 @@ namespace App\Http\Controllers\Siswa;
         'dispensasi',
         'popupEligible',
         'popupSecondsLeft',
+        'daftarGuruPiket',
         'hubungiGuru',
         'hubungiError',
     ));
 }
 
-public function hubungiGuruPiket(Dispensasi $dispensasi)
+public function hubungiGuruPiket(\Illuminate\Http\Request $request, Dispensasi $dispensasi)
 {
     $siswa = auth()->user()->siswa;
 
@@ -499,12 +683,15 @@ public function hubungiGuruPiket(Dispensasi $dispensasi)
 
     $hubungiGuru = null;
 
-    // 1. Guru yang tersimpan pada pengajuan
-    if ($dispensasi->guru && $dispensasi->guru->status_aktif) {
-        $hubungiGuru = $dispensasi->guru;
+    // 0. Cek jika spesifik guru_id dikirimkan dari modal
+    $guruId = $request->query('guru_id');
+    if ($guruId) {
+        $hubungiGuru = \App\Models\Guru::where('id', $guruId)
+            ->where('status_aktif', true)
+            ->first();
     }
 
-    // 2. Guru Piket aktif dari sesi saat ini
+    // 1. Guru Piket aktif dari sesi saat ini jika guru_id belum terpilih
     if (! $hubungiGuru) {
         try {
             $guruPiketService = app(\App\Services\GuruPiketService::class);
@@ -550,6 +737,11 @@ public function hubungiGuruPiket(Dispensasi $dispensasi)
                 ]
             );
         }
+    }
+
+    // 2. Guru yang tersimpan pada pengajuan
+    if (! $hubungiGuru && $dispensasi->guru && $dispensasi->guru->status_aktif) {
+        $hubungiGuru = $dispensasi->guru;
     }
 
     // 3. Fallback Guru Piket dari Settings Admin
@@ -614,7 +806,10 @@ public function hubungiGuruPiket(Dispensasi $dispensasi)
         public function getQRCode(Dispensasi $dispensasi)
         {
             $siswa = auth()->user()->siswa;
-            if (! $siswa || $dispensasi->siswa_id !== $siswa->id) {
+            $isOwner = $siswa && $dispensasi->siswa_id === $siswa->id;
+            $isAnggota = $siswa && $dispensasi->anggotaSiswa()->where('siswa.id', $siswa->id)->exists();
+
+            if (! $siswa || (! $isOwner && ! $isAnggota)) {
                 abort(403, 'Akses ditolak.');
             }
 

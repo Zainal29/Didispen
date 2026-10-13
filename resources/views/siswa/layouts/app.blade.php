@@ -133,7 +133,7 @@
         <div class="flex flex-col min-h-screen lg:pl-64">
 
             {{-- TOPBAR --}}
-            <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 sm:px-6 py-3">
+            <header class="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-2xs px-4 sm:px-6 py-3">
 
                 {{-- Topbar MOBILE: ringkas, muat di layar kecil --}}
                 <div class="lg:hidden flex items-center justify-between">

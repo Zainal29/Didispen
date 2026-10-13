@@ -13,10 +13,14 @@ class CetakController extends Controller
 {
     public function cetak(Dispensasi $dispensasi)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru.user']);
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru.user', 'anggotaSiswa.kelas.jurusan', 'anggotaSiswa.user']);
 
-        // 1. Pastikan dispensasi ini milik siswa yang sedang login
-        if (!$dispensasi->siswa || $dispensasi->siswa->user_id !== Auth::id()) {
+        $userSiswa = Auth::user()->siswa;
+        $isOwner = $dispensasi->siswa_id === $userSiswa?->id;
+        $isAnggota = $userSiswa && $dispensasi->anggotaSiswa()->where('siswa.id', $userSiswa->id)->exists();
+
+        // 1. Pastikan dispensasi ini milik siswa atau siswa adalah anggota rombongan
+        if (! $isOwner && ! $isAnggota) {
             abort(403, 'Akses ditolak. Anda tidak memiliki izin untuk mencetak surat ini.');
         }
 
@@ -53,6 +57,7 @@ class CetakController extends Controller
         ]);
 
         // 5. Generate dan download PDF
+        $dispensasi->load(['gurus', 'anggotaSiswa', 'siswa.kelas.jurusan', 'guru']);
         $safeNomorSurat = str_replace(['/', '\\'], '-', $dispensasi->nomor_surat);
         $pdf = Pdf::loadView('pdf.surat-dispensasi', compact('dispensasi'));
 

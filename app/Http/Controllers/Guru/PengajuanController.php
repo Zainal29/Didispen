@@ -402,7 +402,7 @@ class PengajuanController extends Controller
      */
     public function show(Dispensasi $dispensasi)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru']);
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru', 'anggotaSiswa.kelas.jurusan', 'anggotaSiswa.user']);
 
         return view('guru.pengajuan.show', compact('dispensasi'));
     }
@@ -418,24 +418,24 @@ class PengajuanController extends Controller
         }
 
         $processed = DB::transaction(function () use ($dispensasi, $guru, $request) {
-    $locked = Dispensasi::whereKey($dispensasi->id)
-        ->lockForUpdate()
-        ->first();
+            $locked = Dispensasi::whereKey($dispensasi->id)
+                ->lockForUpdate()
+                ->first();
 
-    if (! $locked || $locked->status !== 'menunggu') {
-        return false;
-    }
+            if (! $locked || $locked->status !== 'menunggu') {
+                return false;
+            }
 
-    $locked->update([
-        'status'        => 'disetujui',
-        'guru_id'       => $guru->id,
-        'approved_at'   => now(),
-        'rejected_at'   => null,
-        'catatan_admin' => $request->catatan_admin ?? null,
-    ]);
+            $locked->update([
+                'status'        => 'disetujui',
+                'guru_id'       => $guru->id,
+                'approved_at'   => now(),
+                'rejected_at'   => null,
+                'catatan_admin' => $request->catatan_admin ?? null,
+            ]);
 
-    return $locked;
-});
+            return $locked;
+        });
 
         if (! $processed) {
             return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
@@ -443,12 +443,28 @@ class PengajuanController extends Controller
 
         $this->generateQRCode($processed);
 
-        // Kirim Notifikasi ke Siswa
-        $this->notifikasiService->send(
-            $processed->siswa->user_id,
-            "Pengajuan dispensasi Anda ({$processed->nomor_surat}) telah DISETUJUI oleh Guru Piket. Silakan tunjukkan QR Code ke Satpam.",
-            route('siswa.pengajuan.show', $processed->id)
-        );
+        // Kirim Notifikasi ke Siswa Utama
+        if ($processed->siswa?->user_id) {
+            $this->notifikasiService->send(
+                $processed->siswa->user_id,
+                "Pengajuan dispensasi Anda ({$processed->nomor_surat}) telah DISETUJUI oleh Guru Piket. Silakan tunjukkan QR Code ke Satpam.",
+                route('siswa.pengajuan.show', $processed->id)
+            );
+        }
+
+        // Kirim Notifikasi ke Seluruh Anggota Rombongan jika Organisasi
+        $processed->loadMissing('anggotaSiswa');
+        foreach ($processed->anggotaSiswa as $anggota) {
+            if ($anggota->user_id) {
+                try {
+                    $this->notifikasiService->send(
+                        $anggota->user_id,
+                        "Dispensasi Rombongan ({$processed->nomor_surat} - {$processed->nama_organisasi}) telah DISETUJUI oleh Guru Piket.",
+                        route('siswa.pengajuan.show', $processed->id)
+                    );
+                } catch (\Throwable $e) {}
+            }
+        }
 
         // Audit Log
         $this->auditLogService?->log(
@@ -483,31 +499,35 @@ class PengajuanController extends Controller
 
         $processed = DB::transaction(function () use ($dispensasi, $guru, $validated) {
             $locked = Dispensasi::whereKey($dispensasi->id)->lockForUpdate()->first();
-            if (! $locked || (! in_array($locked->status, ['menunggu', 'disetujui']) || ! empty($locked->waktu_keluar_aktual))) {
+            if (! $locked || $locked->status !== 'menunggu') {
                 return false;
             }
 
             // 1. Ambil path foto_verifikasi sebelum field dikosongkan
             $fotoPath = $locked->foto_verifikasi;
-            $newStatus = ($locked->status === 'disetujui') ? 'dibatalkan' : 'ditolak';
 
-            // 2. Update status ke ditolak/dibatalkan, isi rejected_at, kosongkan foto_verifikasi
+            // Hapus file fisik foto verifikasi jika ada
+            if ($fotoPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($fotoPath)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($fotoPath);
+            }
+
+            // 2. Update status ke ditolak, isi rejected_at, kosongkan foto_verifikasi
             $locked->update([
-                'status'          => $newStatus,
+                'status'          => 'ditolak',
                 'guru_id'         => $guru->id,
                 'rejected_at'     => now(),
                 'catatan_admin'   => $validated['catatan_admin'],
                 'foto_verifikasi' => null,
             ]);
 
-            // 3. Hapus file fisik (foto verifikasi & QR Code jika ada)
+            // 3. Hapus file fisik lainnya (QR Code jika ada)
             \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($locked);
 
             return $locked;
         });
 
         if (! $processed) {
-            return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya atau siswa sudah keluar.');
+            return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
         }
 
         // Kirim Notifikasi ke Siswa

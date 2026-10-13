@@ -11,19 +11,27 @@
                 <h3 class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ $dispensasi->nomor_surat }}</h3>
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB</p>
             </div>
-            @php
-                $statusColors = [
-                    'menunggu' => 'bg-yellow-100 text-yellow-800',
-                    'disetujui' => 'bg-green-100 text-green-800',
-                    'ditolak' => 'bg-red-100 text-red-800',
-                    'keluar' => 'bg-blue-100 text-blue-800',
-                    'selesai' => 'bg-gray-100 text-gray-800',
-                ];
-            @endphp
-            <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold flex-shrink-0 {{ $statusColors[$dispensasi->status] ?? 'bg-gray-100' }}">
-                {{ ucfirst($dispensasi->status) }}
-            </span>
+            <div class="flex items-center gap-2 flex-wrap">
+                @if($dispensasi->trashed())
+                    <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                        <i class="fas fa-archive mr-1"></i> Diarsipkan
+                    </span>
+                @endif
+                <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold flex-shrink-0 {{ $statusColors[$dispensasi->status] ?? 'bg-gray-100' }}">
+                    {{ ucfirst($dispensasi->status) }}
+                </span>
+            </div>
         </div>
+
+        @if($dispensasi->trashed())
+            <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-3">
+                <i class="fas fa-info-circle text-amber-600 text-xl flex-shrink-0"></i>
+                <div class="text-xs sm:text-sm text-amber-900">
+                    <p class="font-bold">Dispensasi ini berada di arsip (Soft Deleted)</p>
+                    <p class="text-amber-700 mt-0.5">Dihapus dari daftar aktif pada: {{ $dispensasi->deleted_at?->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB. Anda dapat memulihkannya kapan saja.</p>
+                </div>
+            </div>
+        @endif
 
         <!--<div class="p-5 sm:p-6 space-y-5">-->
 
@@ -305,10 +313,34 @@
             </div>
         </div>
 
-        <div class="border-t border-gray-100 pt-4 flex space-x-3">
+        <div class="border-t border-gray-100 pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <a href="{{ route('admin.semua.pengajuan') }}" class="min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
                 <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
             </a>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                @if($dispensasi->trashed())
+                    <button type="button"
+                            onclick="confirmRestore({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}')"
+                            class="min-h-[44px] px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs">
+                        <i class="fas fa-trash-restore"></i>
+                        <span>Pulihkan Dispensasi</span>
+                    </button>
+                    <button type="button"
+                            onclick="confirmForceDelete({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}', '{{ addslashes($dispensasi->siswa?->nama_lengkap ?? '-') }}')"
+                            class="min-h-[44px] px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Hapus Permanen</span>
+                    </button>
+                @else
+                    <button type="button"
+                            onclick="confirmSoftDelete({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}', '{{ addslashes($dispensasi->siswa?->nama_lengkap ?? '-') }}')"
+                            class="min-h-[44px] px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs">
+                        <i class="fas fa-archive"></i>
+                        <span>Pindahkan ke Arsip</span>
+                    </button>
+                @endif
+            </div>
         </div>
     </div>
 </div>
@@ -323,7 +355,7 @@ function openPhotoModal(imageUrl, title) {
     image.src = imageUrl;
     titleEl.querySelector('span').textContent = title;
     modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden'; // Prevent background scroll
+    document.body.style.overflow = 'hidden';
 }
 
 function closePhotoModal(event) {
@@ -332,14 +364,117 @@ function closePhotoModal(event) {
     const modal = document.getElementById('photoModal');
     document.getElementById('photoModalImage').removeAttribute('src');
     modal.classList.add('hidden');
-    document.body.style.overflow = ''; // Restore scroll
+    document.body.style.overflow = '';
 }
 
-// Close modal dengan tombol ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closePhotoModal();
     }
 });
+
+function confirmSoftDelete(id, nomorSurat, namaSiswa) {
+    Swal.fire({
+        title: 'Arsipkan Dispensasi?',
+        html: `
+            <div class="text-left">
+                <p class="mb-2">Data dispensasi ini akan dipindahkan ke <strong>Arsip</strong> (Soft Delete).</p>
+                <div class="bg-gray-50 p-3 rounded-lg text-sm border border-gray-200">
+                    <p><strong>No. Surat:</strong> ${nomorSurat}</p>
+                    <p><strong>Siswa:</strong> ${namaSiswa}</p>
+                </div>
+                <p class="text-amber-700 text-xs mt-3">
+                    <i class="fas fa-info-circle mr-1"></i> Data tetap tersimpan aman dan dapat dipulihkan kapan saja.
+                </p>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d97706',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="fas fa-archive mr-1"></i> Ya, Arsipkan',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitFormAction(`/admin/semua-pengajuan/${id}`, 'DELETE', 'Mengarsipkan...');
+        }
+    });
+}
+
+function confirmRestore(id, nomorSurat) {
+    Swal.fire({
+        title: 'Pulihkan Dispensasi?',
+        text: `Pulihkan dispensasi #${nomorSurat} kembali ke daftar aktif?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="fas fa-trash-restore mr-1"></i> Ya, Pulihkan',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitFormAction(`/admin/semua-pengajuan/${id}/restore`, 'POST', 'Memulihkan...');
+        }
+    });
+}
+
+function confirmForceDelete(id, nomorSurat, namaSiswa) {
+    Swal.fire({
+        title: 'Hapus Permanen?',
+        html: `
+            <div class="text-left">
+                <p class="mb-2">Hapus data ini secara <strong>permanen</strong>?</p>
+                <p class="text-red-600 text-xs mt-2 font-semibold">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    File foto bukti dan QR code akan terhapus permanen dari server. Tindakan ini tidak dapat dibatalkan!
+                </p>
+            </div>
+        `,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '<i class="fas fa-trash mr-1"></i> Hapus Permanen',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitFormAction(`/admin/semua-pengajuan/${id}/force-delete`, 'DELETE', 'Menghapus permanen...');
+        }
+    });
+}
+
+function submitFormAction(url, method, loadingText) {
+    Swal.fire({
+        title: loadingText || 'Memproses...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = document.querySelector('meta[name="csrf-token"]').content;
+    form.appendChild(csrfInput);
+
+    if (method !== 'POST') {
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = method;
+        form.appendChild(methodInput);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+}
 </script>
 @endpush

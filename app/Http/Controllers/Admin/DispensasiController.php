@@ -14,7 +14,17 @@ class DispensasiController extends Controller
 {
     public function index(Request $request)
     {
+        $arsipFilter = $request->get('arsip', 'aktif');
+
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru.user']);
+
+        if ($arsipFilter === 'arsip') {
+            $query->onlyTrashed();
+        } elseif ($arsipFilter === 'semua') {
+            $query->withTrashed();
+        } else {
+            $query->withoutTrashed();
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -36,49 +46,89 @@ class DispensasiController extends Controller
             });
         }
 
-        $dispensasi = $query->latest()->paginate(15);
+        $dispensasi = $query->latest()->paginate(15)->withQueryString();
         $kelas = Kelas::all();
         $jurusans = Jurusan::all();
 
-        return view('admin.dispensasi.index', compact('dispensasi', 'kelas', 'jurusans'));
+        // Hitung total untuk badge tab
+        $countAktif = Dispensasi::withoutTrashed()->count();
+        $countArsip = Dispensasi::onlyTrashed()->count();
+        $countSemua = Dispensasi::withTrashed()->count();
+
+        return view('admin.dispensasi.index', compact(
+            'dispensasi',
+            'kelas',
+            'jurusans',
+            'arsipFilter',
+            'countAktif',
+            'countArsip',
+            'countSemua'
+        ));
     }
 
-    public function show(Dispensasi $dispensasi)
+    public function show($id)
     {
-        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru.user']);
+        $dispensasi = Dispensasi::withTrashed()
+            ->with(['siswa.user', 'siswa.kelas.jurusan', 'guru.user'])
+            ->findOrFail($id);
+
         return view('admin.dispensasi.show', compact('dispensasi'));
     }
 
     /**
-     * <i class="fas fa-check-circle"></i> BARU: Hapus data dispensasi beserta file terkait
+     * Soft delete data dispensasi (pindahkan ke arsip)
      */
-     /**
-      * Hapus data dispensasi beserta file terkait
-      */
-      public function destroy(Dispensasi $dispensasi)
-      {
-          try {
-              \Illuminate\Support\Facades\DB::transaction(function () use ($dispensasi) {
-                  $files = array_filter([
-                      $dispensasi->qr_code,
-                      $dispensasi->foto_verifikasi,
-                      $dispensasi->foto_bukti,
-                  ]);
+    public function destroy(Dispensasi $dispensasi)
+    {
+        try {
+            $nomorSurat = $dispensasi->nomor_surat;
+            $dispensasi->delete(); // Soft delete, file tetap disimpan
 
-                  foreach ($files as $file) {
-                      if (\Illuminate\Support\Facades\Storage::disk('public')->exists($file)) {
-                          \Illuminate\Support\Facades\Storage::disk('public')->delete($file);
-                      }
-                  }
-                  $dispensasi->delete();
-              });
+            return redirect()->back()
+                ->with('success', "Dispensasi #{$nomorSurat} berhasil dipindahkan ke arsip.");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengarsipkan dispensasi: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat mengarsipkan data: ' . $e->getMessage());
+        }
+    }
 
-              return redirect()->route('admin.semua.pengajuan')
-                  ->with('success', 'Data dispensasi berhasil dihapus secara permanen.');
-          } catch (\Exception $e) {
-              \Illuminate\Support\Facades\Log::error('Gagal menghapus dispensasi: ' . $e->getMessage());
-              return redirect()->route('admin.semua.pengajuan')
-                  ->with('error', 'Terjadi kesalahan saat menghapus data.');
-          }
-      }
+    /**
+     * Pulihkan data dispensasi dari arsip
+     */
+    public function restore($id)
+    {
+        try {
+            $dispensasi = Dispensasi::onlyTrashed()->findOrFail($id);
+            $dispensasi->restore();
+
+            return redirect()->back()
+                ->with('success', "Dispensasi #{$dispensasi->nomor_surat} berhasil dipulihkan.");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal memulihkan dispensasi: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat memulihkan data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus permanen data dispensasi beserta file storage terkait
+     */
+    public function forceDelete($id)
+    {
+        try {
+            $dispensasi = Dispensasi::withTrashed()->findOrFail($id);
+            $nomorSurat = $dispensasi->nomor_surat;
+
+            // forceDelete() akan otomatis memicu booted deleted event yang menghapus file karena isForceDeleting() bernilai true
+            $dispensasi->forceDelete();
+
+            return redirect()->back()
+                ->with('success', "Dispensasi #{$nomorSurat} berhasil dihapus permanen beserta filenya.");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal menghapus permanen dispensasi: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menghapus data permanen: ' . $e->getMessage());
+        }
+    }
 }

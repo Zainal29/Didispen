@@ -9,29 +9,29 @@ class CleanupDispensasiHistory extends Command
 {
     protected $signature = 'dispensasi:cleanup-history';
 
-    protected $description = 'Hapus riwayat dispensasi (selesai) yang berumur lebih dari 30 hari untuk menghemat storage';
+    protected $description = 'Pindahkan riwayat dispensasi (selesai) yang berumur lebih dari 30 hari ke arsip (soft delete)';
 
     public function handle()
     {
-        // ✅ PERBAIKAN 1: Hapus berdasarkan umur data (30 hari), bukan hanya yang di-warned
-        // ✅ PERBAIKAN 2: Pastikan hanya hapus yang statusnya sudah 'selesai'
-        $dispensasiLama = Dispensasi::where('status', 'selesai')
-            ->where('created_at', '<', now()->subDays(30)) // Simpan data selama 30 hari
+        // Pindahkan ke arsip dispensasi selesai yang lebih dari 30 hari
+        $dispensasiLama = Dispensasi::withoutTrashed()
+            ->where('status', 'selesai')
+            ->where('created_at', '<', now()->subDays(30))
             ->get();
 
         $count = $dispensasiLama->count();
 
         if ($count === 0) {
-            $this->info("Tidak ada riwayat dispensasi lama yang perlu dihapus.");
+            $this->info("Tidak ada riwayat dispensasi lama yang perlu diarsipkan.");
             return 0;
         }
 
-        // Looping untuk memastikan hook 'deleted' di Model terpanggil (File ikut terhapus)
+        // Soft delete otomatis memindahkan ke arsip tanpa menghapus permanen
         foreach ($dispensasiLama as $dispensasi) {
             $dispensasi->delete();
         }
 
-        $this->info("Berhasil menghapus {$count} riwayat dispensasi lama beserta file fotonya.");
+        $this->info("Berhasil mengarsipkan {$count} riwayat dispensasi lama.");
 
         return 0;
     }

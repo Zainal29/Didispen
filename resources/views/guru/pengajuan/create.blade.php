@@ -310,7 +310,7 @@
                         {{-- Preview State --}}
                         <div id="selfiePreviewBox" class="hidden">
                             <div class="relative rounded-2xl overflow-hidden border-2 border-emerald-500 aspect-[4/3] max-h-[28rem] mx-auto bg-gray-900 shadow-sm">
-                                <img id="selfiePreviewImg" class="w-full h-full object-cover" alt="Preview Selfie Siswa">
+                                <img id="selfiePreviewImg" class="w-full h-full object-contain" alt="Preview Selfie Siswa">
                                 <div class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow">
                                     <i class="fas fa-circle-check"></i> TERVERIFIKASI
                                 </div>
@@ -662,6 +662,7 @@
 <!-- jQuery & Select2 -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{{ asset('js/dispensasi-watermark.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -903,13 +904,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const scheduleStart = slots[0].startMinutes;
         const scheduleEnd = slots[slots.length - 1].endMinutes;
 
-        let keluarMinMinutes = currentMinutes;
-        if (scheduleStart !== null && scheduleStart > keluarMinMinutes) {
-            keluarMinMinutes = scheduleStart;
-        }
-
-        if (!isTimeInsideSchedule(currentTime) && scheduleStart !== null && currentMinutes < scheduleStart) {
-            keluarMinMinutes = scheduleStart;
+        let keluarMinMinutes = scheduleStart !== null ? scheduleStart : 0;
+        if (currentMinutes > keluarMinMinutes && currentMinutes < scheduleEnd) {
+            keluarMinMinutes = currentMinutes;
         }
 
         const keluarMinHours = Math.floor(keluarMinMinutes / 60);
@@ -1156,21 +1153,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // Reset transformasi agar tulisan watermark tidak terbalik (selalu terbaca normal)
             ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-            // Watermark Bar Desain Premium
-            const barHeight = Math.max(54, Math.round(canvas.height * 0.12));
-            const barY = canvas.height - barHeight;
-
-            // Background gradient gelap
-            const gradient = ctx.createLinearGradient(0, barY, 0, canvas.height);
-            gradient.addColorStop(0, 'rgba(15, 23, 42, 0.65)');
-            gradient.addColorStop(1, 'rgba(15, 23, 42, 0.95)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, barY, canvas.width, barHeight);
-
-            // Garis aksen emerald di atas bar
-            ctx.fillStyle = '#10b981';
-            ctx.fillRect(0, barY, canvas.width, 3);
-
             const nowWib = getWibNow();
             const pad = n => String(n).padStart(2, '0');
             const dateStr = `${pad(nowWib.getDate())}/${pad(nowWib.getMonth() + 1)}/${nowWib.getFullYear()}`;
@@ -1178,21 +1160,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const sName = selectedStudent.nama || 'SISWA DISPENSASI';
             const sNis = selectedStudent.nis ? ` (${selectedStudent.nis})` : '';
-            const sKelas = selectedStudent.kelas ? `${selectedStudent.kelas} • ` : '';
-            const guruPiketName = '{{ auth()->user()->name }}';
+            const sKelas = selectedStudent.kelas || '';
+            const guruPiketName = @json(auth()->user()->name);
 
-            const fSize1 = Math.max(12, Math.round(barHeight * 0.28));
-            const fSize2 = Math.max(10, Math.round(barHeight * 0.22));
-
-            // Baris 1: DIDISPEN VERIFIKASI • [NAMA SISWA] ([NIS])
-            ctx.fillStyle = '#ffffff';
-            ctx.font = `bold ${fSize1}px system-ui, -apple-system, sans-serif`;
-            ctx.fillText(`DIDISPEN VERIFIKASI • ${sName}${sNis}`, 16, barY + fSize1 + 8);
-
-            // Baris 2: [KELAS] • GURU PIKET: [NAMA] • [TIMESTAMP] WIB
-            ctx.fillStyle = '#cbd5e1';
-            ctx.font = `500 ${fSize2}px system-ui, -apple-system, sans-serif`;
-            ctx.fillText(`${sKelas}GURU PIKET: ${guruPiketName} • ${dateStr} ${timeStr}`, 16, barY + fSize1 + fSize2 + 15);
+            window.drawDispensasiWatermark(ctx, canvas, [
+                'DIDISPEN VERIFIKASI',
+                `${sName}${sNis}`,
+                `${sKelas} • GURU PIKET: ${guruPiketName} • ${dateStr} ${timeStr}`,
+            ]);
 
             canvas.toBlob(function (blob) {
                 if (!blob) return;
@@ -1493,7 +1468,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     checkDispensasiTime();
     setInterval(checkDispensasiTime, 60000);
-    setInterval(updateTimeInputLimits, 1000);
+    updateTimeInputLimits();
 });
 </script>
 @endpush
