@@ -193,7 +193,7 @@ class DispensasiAutoAndRejectTest extends TestCase
         $this->artisan('dispensasi:auto-complete')->assertSuccessful();
 
         $dispensasi->refresh();
-        $this->assertEquals('selesai', $dispensasi->status);
+        $this->assertEquals('kadaluarsa', $dispensasi->status);
         $this->assertNull($dispensasi->approved_at);
         $this->assertNull($dispensasi->rejected_at);
         $this->assertNull($dispensasi->waktu_keluar_aktual);
@@ -229,7 +229,7 @@ class DispensasiAutoAndRejectTest extends TestCase
         $this->artisan('dispensasi:auto-complete')->assertSuccessful();
 
         $dispensasi->refresh();
-        $this->assertEquals('selesai', $dispensasi->status);
+        $this->assertEquals('kadaluarsa', $dispensasi->status);
         $this->assertNotNull($dispensasi->approved_at);
         $this->assertEquals($approvedTime->format('Y-m-d H:i:s'), $dispensasi->approved_at->format('Y-m-d H:i:s'));
         $this->assertNull($dispensasi->waktu_keluar_aktual);
@@ -266,7 +266,7 @@ class DispensasiAutoAndRejectTest extends TestCase
         $this->artisan('dispensasi:auto-complete')->assertSuccessful();
 
         $dispensasi->refresh();
-        $this->assertEquals('selesai', $dispensasi->status);
+        $this->assertEquals('kadaluarsa', $dispensasi->status);
         // Timestamp keluar asli tetap utuh
         $this->assertNotNull($dispensasi->waktu_keluar_aktual);
         $this->assertStringContainsString('09:30', (string) $dispensasi->waktu_keluar_aktual);
@@ -397,8 +397,8 @@ class DispensasiAutoAndRejectTest extends TestCase
         $this->artisan('dispensasi:auto-complete')->assertSuccessful();
 
         $dispensasi->refresh();
-        // Sekarang status BERUBAH menjadi 'selesai'
-        $this->assertEquals('selesai', $dispensasi->status);
+        // Sekarang status BERUBAH menjadi 'kadaluarsa'
+        $this->assertEquals('kadaluarsa', $dispensasi->status);
         $this->assertNull($dispensasi->waktu_kembali_aktual);
         $this->assertTrue($dispensasi->is_warned);
     }
@@ -440,8 +440,8 @@ class DispensasiAutoAndRejectTest extends TestCase
         $this->artisan('dispensasi:auto-complete')->assertSuccessful();
 
         $dispensasi->refresh();
-        // Sekarang harus SELESAI
-        $this->assertEquals('selesai', $dispensasi->status);
+        // Sekarang harus KADALUARSA
+        $this->assertEquals('kadaluarsa', $dispensasi->status);
     }
 
     /**
@@ -470,7 +470,7 @@ class DispensasiAutoAndRejectTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-10-02 14:05:00', 'Asia/Jakarta'));
         $this->artisan('dispensasi:auto-complete')->assertSuccessful();
         $dispJumat->refresh();
-        $this->assertEquals('selesai', $dispJumat->status); // 14:05 >= 14:00
+        $this->assertEquals('kadaluarsa', $dispJumat->status); // 14:05 >= 14:00
 
         // 2. Sabtu (2026-10-03): KBM selesai pukul 15:15
         Carbon::setTestNow(Carbon::parse('2026-10-03 14:30:00', 'Asia/Jakarta'));
@@ -493,7 +493,7 @@ class DispensasiAutoAndRejectTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-10-03 15:20:00', 'Asia/Jakarta'));
         $this->artisan('dispensasi:auto-complete')->assertSuccessful();
         $dispSabtu->refresh();
-        $this->assertEquals('selesai', $dispSabtu->status); // 15:20 >= 15:15
+        $this->assertEquals('kadaluarsa', $dispSabtu->status); // 15:20 >= 15:15
 
         // 3. Minggu (2026-10-04): KBM selesai pukul 15:15
         Carbon::setTestNow(Carbon::parse('2026-10-04 14:30:00', 'Asia/Jakarta'));
@@ -516,6 +516,6 @@ class DispensasiAutoAndRejectTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-10-04 15:20:00', 'Asia/Jakarta'));
         $this->artisan('dispensasi:auto-complete')->assertSuccessful();
         $dispMinggu->refresh();
-        $this->assertEquals('selesai', $dispMinggu->status); // 15:20 >= 15:15
+        $this->assertEquals('kadaluarsa', $dispMinggu->status); // 15:20 >= 15:15
     }
 }
