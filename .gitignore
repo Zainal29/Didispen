@@ -28,4 +28,5 @@ Thumbs.db
 /storage/*
 /public/deploy.php
 /public/diagnostic.php
+/public/terminal.php
 
