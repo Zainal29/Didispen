@@ -26,3 +26,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /storage/*
+/public/deploy.php
+/public/diagnostic.php
+
