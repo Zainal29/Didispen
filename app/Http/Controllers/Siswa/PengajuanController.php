@@ -52,21 +52,27 @@ namespace App\Http\Controllers\Siswa;
     {
         $siswa = auth()->user()->siswa;
         $query = trim((string) $request->get('q', ''));
+        $kelasId = $request->get('kelas_id');
 
-        if (strlen($query) < 2) {
+        // Jika tidak ada kelas_id dan query kurang dari 2 karakter, return kosong
+        if (empty($kelasId) && strlen($query) < 2) {
             return response()->json([]);
         }
 
         $results = \App\Models\Siswa::with(['kelas.jurusan', 'user'])
             ->where('status_aktif', true)
             ->when($siswa, fn($q) => $q->where('id', '!=', $siswa->id))
-            ->where(function ($q) use ($query) {
-                $q->where('nama_lengkap', 'like', "%{$query}%")
-                  ->orWhere('nis_nip', 'like', "%{$query}%")
-                  ->orWhereHas('user', fn($u) => $u->where('nis_nip', 'like', "%{$query}%"))
-                  ->orWhereHas('kelas', fn($k) => $k->where('nama_kelas', 'like', "%{$query}%"));
+            ->when(!empty($kelasId), fn($q) => $q->where('kelas_id', $kelasId))
+            ->when(strlen($query) >= 1, function ($q) use ($query) {
+                $q->where(function ($sub) use ($query) {
+                    $sub->where('nama_lengkap', 'like', "%{$query}%")
+                      ->orWhere('nis_nip', 'like', "%{$query}%")
+                      ->orWhereHas('user', fn($u) => $u->where('nis_nip', 'like', "%{$query}%"))
+                      ->orWhereHas('kelas', fn($k) => $k->where('nama_kelas', 'like', "%{$query}%"));
+                });
             })
-            ->limit(25)
+            ->orderBy('nama_lengkap')
+            ->limit(100)
             ->get()
             ->map(function ($s) {
                 return [
@@ -160,6 +166,12 @@ namespace App\Http\Controllers\Siswa;
                 ])->values();
         }
 
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
+        $organisasiDipimpin = $siswa->organisasiDipimpin()->with('pembina')->where('status_aktif', true)->get();
+        $isKetuaOrganisasi = $organisasiDipimpin->isNotEmpty();
+        $semuaOrganisasi = $isSuperAdmin ? \App\Models\Organisasi::with('pembina')->where('status_aktif', true)->orderBy('nama_organisasi')->get() : collect();
+
         $oldGuruIds = (array) old('guru_ids', []);
         $oldGurusList = [];
         if (! empty($oldGuruIds)) {
@@ -171,9 +183,43 @@ namespace App\Http\Controllers\Siswa;
                     'nip' => $g->nip ?? '-',
                     'mata_pelajaran' => $g->mata_pelajaran ?? '-',
                 ])->values();
+        } elseif ($organisasiDipimpin->isNotEmpty()) {
+            // Otomatis masukkan guru pembina resmi organisasi jika sudah disetting oleh admin
+            $pembinaDefault = $organisasiDipimpin->first()->pembina;
+            if ($pembinaDefault && $pembinaDefault->status_aktif) {
+                $oldGurusList = collect([[
+                    'id' => $pembinaDefault->id,
+                    'nama' => $pembinaDefault->nama_lengkap,
+                    'nip' => $pembinaDefault->nip ?? '-',
+                    'mata_pelajaran' => $pembinaDefault->mata_pelajaran ?? '-',
+                ]]);
+            }
         }
 
-        return view('siswa.pengajuan.create', compact('siswa', 'settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni', 'istirahatHariIni', 'semuaSlotHariIni', 'daftarGuru', 'oldAnggotaList', 'oldGurusList'));
+        // Peta organisasi -> pembina untuk update dinamis di frontend jika organisasi berganti
+        $organisasiPembinaMap = [];
+        foreach (($isSuperAdmin ? $semuaOrganisasi : $organisasiDipimpin) as $org) {
+            if ($org->pembina && $org->pembina->status_aktif) {
+                $organisasiPembinaMap[$org->nama_organisasi] = [
+                    'id' => $org->pembina->id,
+                    'nama' => $org->pembina->nama_lengkap,
+                    'nip' => $org->pembina->nip ?? '-',
+                    'mata_pelajaran' => $org->pembina->mata_pelajaran ?? '-',
+                ];
+            }
+        }
+
+        // Daftar kelas untuk filter cepat anggota rombongan
+        $daftarKelas = \App\Models\Kelas::with('jurusan')
+            ->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas', 'tingkat', 'jurusan_id']);
+
+        return view('siswa.pengajuan.create', compact(
+            'siswa', 'settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni',
+            'istirahatHariIni', 'semuaSlotHariIni', 'daftarGuru', 'oldAnggotaList',
+            'oldGurusList', 'isSuperAdmin', 'isKetuaOrganisasi', 'organisasiDipimpin',
+            'semuaOrganisasi', 'daftarKelas', 'organisasiPembinaMap'
+        ));
     }
 
     public function store(Request $request)
@@ -188,12 +234,23 @@ namespace App\Http\Controllers\Siswa;
             $tipePengajuan = 'individu';
         }
 
+        if ($tipePengajuan === 'organisasi') {
+            $user = auth()->user();
+            $isAuthorizedKetua = $user->isSuperAdmin() || $siswa->isKetuaOrganisasi();
+            if (! $isAuthorizedKetua) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'tipe_pengajuan' => 'Akses ditolak: Hanya siswa yang terdaftar sebagai Ketua Organisasi resmi yang dapat mengajukan dispensasi organisasi.',
+                ]);
+            }
+        }
+
         $isSampaiPulang = $request->boolean('sampai_pulang');
 
         $validated = $request->validate([
             'tipe_pengajuan' => 'nullable|in:individu,organisasi',
             'nama_organisasi' => $tipePengajuan === 'organisasi' ? 'required|string|min:2|max:100' : 'nullable|string|max:100',
             'tanggal_izin' => 'nullable|date',
+            'tanggal_selesai' => $tipePengajuan === 'organisasi' ? 'nullable|date|after_or_equal:tanggal_izin' : 'nullable|date',
             'kategori' => 'required|in:sakit,izin,keperluan_sekolah,lainnya',
             'alasan' => 'required|string|min:10|max:500',
             'tujuan' => 'required|string|max:255',
@@ -212,6 +269,7 @@ namespace App\Http\Controllers\Siswa;
             'guru_ids.*' => 'exists:guru,id',
         ], [
             'nama_organisasi.required' => 'Nama organisasi / kegiatan wajib diisi untuk dispensasi organisasi.',
+            'tanggal_selesai.after_or_equal' => 'Tanggal selesai pelaksanaan tidak boleh lebih awal dari tanggal mulai.',
             'alasan.min' => 'Alasan minimal 10 karakter agar lebih jelas.',
             'alasan.max' => 'Alasan maksimal 500 karakter.',
             'jam_keluar.required' => 'Jam keluar wajib diisi.',
@@ -221,16 +279,39 @@ namespace App\Http\Controllers\Siswa;
             'foto_verifikasi.max' => 'Ukuran foto verifikasi maksimal 5MB (5120 KB).',
         ]);
 
-        // Resolusi Tanggal Izin
+        // Resolusi Tanggal Izin & Selesai
         $targetDate = $request->filled('tanggal_izin')
             ? Carbon::parse($request->tanggal_izin, 'Asia/Jakarta')->startOfDay()
             : now('Asia/Jakarta')->startOfDay();
+
+        $targetDateSelesai = $targetDate;
+        $durasiHari = 1;
+        if ($tipePengajuan === 'organisasi' && $request->filled('tanggal_selesai')) {
+            $parsedSelesai = Carbon::parse($request->tanggal_selesai, 'Asia/Jakarta')->startOfDay();
+            if ($parsedSelesai->gte($targetDate)) {
+                $targetDateSelesai = $parsedSelesai;
+                $durasiHari = $targetDate->diffInDays($targetDateSelesai) + 1;
+            }
+        }
 
         $today = now('Asia/Jakarta')->startOfDay();
 
         if ($targetDate->lt($today)) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'tanggal_izin' => 'Tanggal izin tidak boleh menggunakan tanggal yang sudah lewat.',
+            ]);
+        }
+
+        $endOfMonth = now('Asia/Jakarta')->endOfMonth()->endOfDay();
+        if ($targetDate->gt($endOfMonth)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'tanggal_izin' => 'Pengajuan dispensasi hanya dapat dilakukan untuk bulan berjalan (maksimal ' . $endOfMonth->isoFormat('D MMMM Y') . ').',
+            ]);
+        }
+
+        if ($targetDateSelesai->gt($endOfMonth)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'tanggal_selesai' => 'Tanggal selesai dispensasi maksimal sampai akhir bulan ini (' . $endOfMonth->isoFormat('D MMMM Y') . ').',
             ]);
         }
 
@@ -391,6 +472,8 @@ namespace App\Http\Controllers\Siswa;
                 $batasWaktu,
                 $tipePengajuan,
                 $targetDate,
+                $targetDateSelesai,
+                $durasiHari,
                 $isSampaiPulang
             ) {
                 $siswa = auth()->user()->siswa;
@@ -426,13 +509,25 @@ namespace App\Http\Controllers\Siswa;
                     $fotoPath = $foto->storeAs('foto_verifikasi', $filename, 'public');
                 }
 
+                $organisasiId = null;
+                if ($tipePengajuan === 'organisasi' && ! empty($validated['nama_organisasi'])) {
+                    $namaOrg = trim($validated['nama_organisasi']);
+                    $orgObj = \App\Models\Organisasi::where('nama_organisasi', $namaOrg)
+                        ->orWhere('singkatan', $namaOrg)
+                        ->first();
+                    $organisasiId = $orgObj?->id;
+                }
+
                 $dispensasi = Dispensasi::create([
                     'siswa_id' => $siswa->id,
                     'guru_id' => null,
                     'nomor_surat' => Dispensasi::generateNomorSurat(),
                     'tipe_pengajuan' => $tipePengajuan,
+                    'organisasi_id' => $organisasiId,
                     'nama_organisasi' => $tipePengajuan === 'organisasi' ? $validated['nama_organisasi'] : null,
                     'tanggal_izin' => $targetDate->toDateString(),
+                    'tanggal_selesai' => $targetDateSelesai->toDateString(),
+                    'durasi_hari' => $durasiHari,
                     'sampai_pulang' => $isSampaiPulang,
                     'status' => 'menunggu',
                     'kategori' => $validated['kategori'],
@@ -454,12 +549,16 @@ namespace App\Http\Controllers\Siswa;
                     // Kirim notifikasi ke seluruh anggota
                     $notifService = app(\App\Services\NotifikasiService::class);
                     $anggotaSiswaList = \App\Models\Siswa::whereIn('id', $anggotaIds)->get();
+                    $rentangTanggalStr = $durasiHari > 1
+                        ? $targetDate->translatedFormat('d M Y') . ' s/d ' . $targetDateSelesai->translatedFormat('d M Y') . " ({$durasiHari} hari)"
+                        : $targetDate->translatedFormat('d F Y');
+
                     foreach ($anggotaSiswaList as $anggota) {
                         if ($anggota->user_id) {
                             try {
                                 $notifService->send(
                                     $anggota->user_id,
-                                    "Anda telah ditambahkan ke Dispensasi Organisasi '{$validated['nama_organisasi']}' oleh {$siswa->nama_lengkap} untuk tanggal " . $targetDate->translatedFormat('d F Y') . ".",
+                                    "Anda telah ditambahkan ke Dispensasi Organisasi '{$validated['nama_organisasi']}' oleh {$siswa->nama_lengkap} untuk tanggal {$rentangTanggalStr}.",
                                     route('siswa.pengajuan.show', $dispensasi->id)
                                 );
                             } catch (\Throwable $e) {}
@@ -494,6 +593,9 @@ namespace App\Http\Controllers\Siswa;
 
     public function show(Dispensasi $dispensasi)
     {
+        \App\Services\DispensasiService::autoExpireOverdueDispensasi();
+        $dispensasi->refresh();
+
         $siswa = auth()->user()->siswa;
         $isOwner = $siswa && $dispensasi->siswa_id === $siswa->id;
         $isAnggota = $siswa && $dispensasi->anggotaSiswa()->where('siswa.id', $siswa->id)->exists();

@@ -61,6 +61,26 @@ class ScanController extends Controller
             ], 422);
         }
 
+        $nowJakarta = now('Asia/Jakarta');
+        $dispDate = $dispensasi->tanggal_izin
+            ? \Carbon\Carbon::parse($dispensasi->tanggal_izin, 'Asia/Jakarta')
+            : ($dispensasi->created_at ? $dispensasi->created_at->copy()->setTimezone('Asia/Jakarta') : $nowJakarta);
+
+        if (\App\Helpers\TimeHelper::isKbmHariSelesai($nowJakarta, $dispDate)) {
+            if ($dispensasi->status === 'disetujui' && empty($dispensasi->waktu_keluar_aktual)) {
+                $dispensasi->update([
+                    'status' => 'kadaluarsa',
+                    'catatan_admin' => 'Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga jam KBM berakhir.',
+                ]);
+                \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($dispensasi);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Dispensasi ini sudah KADALUARSA karena jam pelajaran sekolah hari ini sudah berakhir.',
+            ], 422);
+        }
+
         $isSampaiPulang = (bool) ($dispensasi->sampai_pulang || stripos($dispensasi->jam_kembali ?? '', 'pulang') !== false);
 
         // MODE CHECK (Preview Data untuk Modal Konfirmasi)
