@@ -17,7 +17,7 @@
                     class="w-10 h-10 shrink-0 rounded-xl bg-blue-50 text-blue-600
                            flex items-center justify-center"
                 >
-                    <i class="fas fa-print text-lg"></i>
+                    <i class="ti ti-printer text-xl"></i>
                 </div>
 
                 <div class="min-w-0">
@@ -58,7 +58,7 @@
                        rounded-xl transition-all shadow-sm
                        active:scale-95 shrink-0"
             >
-                <i class="fas fa-bluetooth-b"></i>
+                <i class="ti ti-bluetooth text-sm"></i>
                 <span>Hubungkan</span>
             </button>
 
@@ -83,7 +83,7 @@
 
                     <i
                         id="printer-print-status-icon"
-                        class="fas fa-circle-check text-[10px]"
+                        class="ti ti-circle-check text-xs"
                     ></i>
 
                     <span id="printer-print-status-text">
@@ -107,7 +107,7 @@
 
                     <i
                         id="printer-print-status-icon"
-                        class="fas fa-circle-exclamation text-[10px]"
+                        class="ti ti-alert-circle text-xs"
                     ></i>
 
                     <span id="printer-print-status-text">
@@ -146,7 +146,7 @@
                        shadow-sm
                        active:scale-[0.98]"
             >
-                <i class="fas fa-file-invoice text-sm"></i>
+                <i class="ti ti-receipt text-base"></i>
 
                 <span>
                     Cetak Bukti Dispensasi
@@ -174,7 +174,7 @@
                        rounded-xl transition-all
                        active:scale-[0.98]"
             >
-                <i class="fas fa-vial text-sm"></i>
+                <i class="ti ti-test-pipe text-base"></i>
 
                 <span>
                     Test Print
@@ -195,9 +195,9 @@
         >
 
             <i
-                class="fas fa-circle-info
+                class="ti ti-info-circle
                        text-slate-400
-                       text-[11px]
+                       text-sm
                        mt-0.5 shrink-0"
             ></i>
 
@@ -235,7 +235,7 @@
 
                 <span class="flex items-center gap-1.5">
 
-                    <i class="fas fa-microchip text-slate-400"></i>
+                    <i class="ti ti-cpu text-slate-400 text-sm"></i>
 
                     <span>
                         Diagnostik Web Bluetooth
@@ -244,8 +244,8 @@
                 </span>
 
                 <i
-                    class="fas fa-chevron-down
-                           text-[10px]
+                    class="ti ti-chevron-down
+                           text-xs
                            text-slate-400
                            transition-transform
                            duration-200
@@ -556,19 +556,19 @@
         const configs = {
             success: {
                 wrapper: 'inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100',
-                icon: 'fas fa-circle-check text-[10px]'
+                icon: 'ti ti-circle-check text-xs'
             },
             warning: {
                 wrapper: 'inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1.5 rounded-lg border border-amber-100',
-                icon: 'fas fa-circle-exclamation text-[10px]'
+                icon: 'ti ti-alert-circle text-xs'
             },
             error: {
                 wrapper: 'inline-flex items-center gap-1.5 text-xs font-medium text-rose-700 bg-rose-50 px-2.5 py-1.5 rounded-lg border border-rose-100',
-                icon: 'fas fa-circle-xmark text-[10px]'
+                icon: 'ti ti-circle-x text-xs'
             },
             info: {
                 wrapper: 'inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100',
-                icon: 'fas fa-circle-info text-[10px]'
+                icon: 'ti ti-info-circle text-xs'
             }
         };
 
@@ -597,10 +597,10 @@
         if (!connectBtn) return;
 
         if (connected) {
-            connectBtn.innerHTML = '<i class="fas fa-unlink"></i><span>Putuskan</span>';
+            connectBtn.innerHTML = '<i class="ti ti-unlink text-sm"></i><span>Putuskan</span>';
             connectBtn.className = 'inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-xl transition-all active:scale-95 shrink-0';
         } else {
-            connectBtn.innerHTML = '<i class="fas fa-bluetooth-b"></i><span>Hubungkan</span>';
+            connectBtn.innerHTML = '<i class="ti ti-bluetooth text-sm"></i><span>Hubungkan</span>';
             connectBtn.className = 'inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-xl transition-all shadow-sm active:scale-95 shrink-0';
         }
     }
