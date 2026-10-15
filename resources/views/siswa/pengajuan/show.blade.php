@@ -21,6 +21,10 @@
                                 Anggota Rombongan
                             </span>
                         @endif
+                    @else
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                            <i class="ti ti-user text-xs"></i> Dispensasi Individu
+                        </span>
                     @endif
                 </div>
                 <p class="text-xs text-slate-500 mt-1 flex items-center gap-1.5">

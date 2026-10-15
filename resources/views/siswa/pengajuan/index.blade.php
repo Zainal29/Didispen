@@ -52,6 +52,10 @@
                                         Anggota Rombongan
                                     </span>
                                 @endif
+                            @else
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                    <i class="ti ti-user text-[10px]"></i> Individu
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -121,6 +125,12 @@
                                             Anggota Rombongan
                                         </span>
                                     @endif
+                                </div>
+                            @else
+                                <div class="mt-1">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                        <i class="ti ti-user text-[10px]"></i> Individu
+                                    </span>
                                 </div>
                             @endif
                         </td>

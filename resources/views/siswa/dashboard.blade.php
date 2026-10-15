@@ -273,6 +273,10 @@
                             Anggota Rombongan
                         </span>
                     @endif
+                @else
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                        <i class="ti ti-user mr-1"></i>Individu
+                    </span>
                 @endif
                 @if($dispensasiAktif->tanggal_izin && $dispensasiAktif->tanggal_izin->isFuture())
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
@@ -642,6 +646,10 @@ $cards = [
                                             Anggota Rombongan
                                         </span>
                                     @endif
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                        <i class="ti ti-user text-[10px]"></i> Individu
+                                    </span>
                                 @endif
                             </div>
                             <p class="text-xs text-slate-500 mt-1">
