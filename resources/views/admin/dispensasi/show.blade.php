@@ -12,6 +12,18 @@
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB</p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
+                @if($dispensasi->isOrganisasi())
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1.5">
+                        <i class="fas fa-users"></i> {{ $dispensasi->nama_organisasi ?? 'Organisasi' }}
+                    </span>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                        Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)
+                    </span>
+                @else
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200 flex items-center gap-1.5">
+                        <i class="fas fa-user"></i> Dispensasi Individu
+                    </span>
+                @endif
                 @if($dispensasi->trashed())
                     <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-amber-100 text-amber-800 border border-amber-300">
                         <i class="fas fa-archive mr-1"></i> Diarsipkan
