@@ -198,6 +198,32 @@ class GuruModuleTest extends TestCase
         $this->assertEquals('08:20', $dispensasi->batas_waktu_kembali->format('H:i'));
     }
 
+    public function test_guru_dapat_membuat_dispensasi_manual_sampai_pulang_dan_sync_telepon(): void
+    {
+        $payload = $this->validGuruStorePayload([
+            'sampai_pulang' => '1',
+            'jam_keluar' => 1,
+            'jam_kembali' => null,
+            'no_telepon' => '089876543210',
+        ]);
+
+        $response = $this->actingAs($this->guruUser)
+            ->post(route('guru.pengajuan.store'), $payload);
+
+        $response->assertSessionHasNoErrors();
+
+        $dispensasi = Dispensasi::where('siswa_id', $this->siswa->id)->first();
+        $this->assertNotNull($dispensasi);
+        $this->assertTrue($dispensasi->sampai_pulang);
+        $this->assertEquals('Sampai Pulang Sekolah', $dispensasi->jam_kembali);
+        $this->assertEquals('individu', $dispensasi->tipe_pengajuan);
+        $this->assertEquals('disetujui', $dispensasi->status);
+
+        // Cek bahwa no_telepon siswa ter-update
+        $this->siswa->refresh();
+        $this->assertEquals('6289876543210', $this->siswa->no_telepon);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | 3. DUPLICATE ACTIVE DISPENSASI VALIDATION
