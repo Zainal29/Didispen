@@ -161,6 +161,10 @@
                 </a>
 
                 <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Sistem</p>
+                <a href="{{ route('admin.superadmin.index') }}"
+                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.superadmin.*') ? 'active' : '' }}">
+                    <i class="fas fa-shield-alt w-5 mr-3 text-purple-600"></i> Super Admin
+                </a>
                 <a href="{{ route('admin.settings.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <i class="fas fa-cog w-5 mr-3"></i> Pengaturan

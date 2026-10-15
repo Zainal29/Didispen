@@ -44,7 +44,7 @@
                     </div>
                 </div>
 
-                <div class="md:col-span-3">
+                <div class="md:col-span-2">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Filter Kelas</label>
                     <select name="kelas_id" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
                         <option value="">-- Semua Kelas --</option>
@@ -52,6 +52,15 @@
                         @foreach($kelasList as $k)
                             <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
                         @endforeach
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Hak Akses</label>
+                    <select name="role_filter" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
+                        <option value="">Semua Siswa</option>
+                        <option value="superadmin" {{ request('role_filter') == 'superadmin' ? 'selected' : '' }}>Hanya Super Admin</option>
+                        <option value="regular" {{ request('role_filter') == 'regular' ? 'selected' : '' }}>Siswa Biasa</option>
                     </select>
                 </div>
 
@@ -151,6 +160,21 @@
 
                         <td class="p-4 text-center align-middle whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                @if($s->user?->isSuperAdmin())
+                                    <button type="button"
+                                            onclick="toggleSuperadmin({{ $s->id }}, '{{ addslashes($s->nama_lengkap) }}', true)"
+                                            class="w-9 h-9 inline-flex items-center justify-center text-purple-700 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors"
+                                            title="Cabut Status Super Admin">
+                                        <i class="fas fa-shield-alt text-sm"></i>
+                                    </button>
+                                @else
+                                    <button type="button"
+                                            onclick="toggleSuperadmin({{ $s->id }}, '{{ addslashes($s->nama_lengkap) }}', false)"
+                                            class="w-9 h-9 inline-flex items-center justify-center text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                            title="Jadikan Super Admin">
+                                        <i class="far fa-shield text-sm"></i>
+                                    </button>
+                                @endif
                                 <button onclick="editItem({{ $s->id }})" class="w-9 h-9 inline-flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat Data">
                                     <i class="fas fa-eye"></i>
                                 </button>
@@ -466,6 +490,36 @@ document.getElementById('siswaForm').addEventListener('submit', function(e) {
 document.getElementById('formModal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
 });
+
+function toggleSuperadmin(siswaId, namaSiswa, isSuperAdmin) {
+    const actionText = isSuperAdmin ? 'Cabut Status Super Admin' : 'Jadikan Super Admin';
+    const confirmText = isSuperAdmin ? 'Ya, Cabut Akses' : 'Ya, Jadikan Super Admin';
+    const confirmColor = isSuperAdmin ? '#dc2626' : '#7c3aed';
+    const descText = isSuperAdmin
+        ? `Apakah Anda yakin ingin mencabut hak akses Super Admin untuk siswa <b>"${namaSiswa}"</b>?<br><span class="text-xs text-gray-500 mt-2 block">Siswa ini akan kembali menjadi siswa biasa tanpa akses ke panel admin.</span>`
+        : `Apakah Anda yakin ingin mengangkat siswa <b>"${namaSiswa}"</b> sebagai <b>Super Admin</b>?<br><span class="text-xs text-purple-700 mt-2 block">Siswa ini akan memiliki hak Dual-Role: dapat login ke portal siswa sekaligus panel admin, serta dapat membuat pengajuan dispensasi rombongan ekstra tanpa batas ketua.</span>`;
+
+    Swal.fire({
+        title: actionText + '?',
+        html: descText,
+        icon: isSuperAdmin ? 'warning' : 'question',
+        showCancelButton: true,
+        confirmButtonColor: confirmColor,
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/siswa/${siswaId}/toggle-superadmin`;
+            form.innerHTML = `@csrf @method('PATCH')`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
 </script>
 @endpush
 @endsection
