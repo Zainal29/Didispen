@@ -18,6 +18,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_superadmin',
         'nis_nip',
         'external_id',
         'sipintu_last_synced_at',
@@ -29,7 +30,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-
+            'is_superadmin' => 'boolean',
             'sipintu_last_synced_at' => 'datetime',
             'password' => 'hashed',
         ];
@@ -55,9 +56,14 @@ class User extends Authenticatable
         return $this->hasMany(AuditLog::class);
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return (bool) ($this->is_superadmin ?? false);
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'admin' || $this->isSuperAdmin();
     }
 
     public function isGuru(): bool

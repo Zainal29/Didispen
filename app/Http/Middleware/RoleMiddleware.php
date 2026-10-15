@@ -10,7 +10,20 @@ class RoleMiddleware
     {
         $user = $request->user();
 
-        if (!$user || $user->role !== $role) {
+        if (!$user) {
+            abort(403, 'Akses ditolak. Anda tidak memiliki izin.');
+        }
+
+        $isAllowed = false;
+        if ($role === 'superadmin') {
+            $isAllowed = $user->isSuperAdmin();
+        } elseif ($role === 'admin') {
+            $isAllowed = $user->isAdmin();
+        } else {
+            $isAllowed = ($user->role === $role) || ($user->isSuperAdmin() && in_array($role, ['siswa', 'admin'], true));
+        }
+
+        if (!$isAllowed) {
             abort(403, 'Akses ditolak. Anda tidak memiliki izin.');
         }
 

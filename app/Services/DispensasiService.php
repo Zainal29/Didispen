@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\TimeHelper;
 use App\Models\Dispensasi;
 use App\Models\Guru;
 use App\Models\Siswa;
@@ -268,67 +269,97 @@ class DispensasiService
     }
 
     /**
-     * Memperbarui secara otomatis pengajuan yang sudah lewat 1 hari menjadi kadaluarsa:
-     * 1. Status 'menunggu' yang tanggal izinnya kemarin / lewat hari -> kadaluarsa
-     * 2. Status 'disetujui' tapi tidak scan keluar sampai lewat hari -> kadaluarsa
-     * 3. Status 'keluar' tapi tidak kembali lewat hari:
+     * Memperbarui secara otomatis pengajuan yang sudah lewat 1 hari atau jam KBM selesai menjadi kadaluarsa:
+     * 1. Status 'menunggu' yang tanggal izinnya kemarin atau jam KBM hari ini usai -> kadaluarsa
+     * 2. Status 'disetujui' tapi tidak scan keluar sampai jam KBM usai / lewat hari -> kadaluarsa
+     * 3. Status 'keluar' tapi tidak scan kembali sampai jam KBM usai / lewat hari:
      *    - Jika sampai_pulang: ditandai selesai (sampai pulang)
      *    - Jika regular: ditandai kadaluarsa / terlambat tidak kembali
      */
     public static function autoExpireOverdueDispensasi(): int
     {
-        $today = now('Asia/Jakarta')->toDateString();
+        $now = now('Asia/Jakarta');
+        $today = $now->toDateString();
         $affectedCount = 0;
 
-        // 1. Menunggu yang lewat hari
-        $menungguList = Dispensasi::where('status', 'menunggu')
-            ->whereRaw('DATE(COALESCE(tanggal_izin, created_at)) < ?', [$today])
+        // Ambil semua permohonan yang masih aktif menggantung (menunggu, disetujui, keluar)
+        $activeList = Dispensasi::with('siswa')
+            ->whereIn('status', ['menunggu', 'disetujui', 'keluar'])
             ->get();
 
-        foreach ($menungguList as $d) {
-            $d->update([
-                'status' => 'kadaluarsa',
-                'catatan_admin' => $d->catatan_admin ?? 'Kadaluarsa otomatis karena melewati tanggal izin.',
-            ]);
-            self::cleanupCompletedDispensasiFiles($d);
-            $affectedCount++;
-        }
+        foreach ($activeList as $d) {
+            $dispDate = $d->tanggal_izin
+                ? Carbon::parse($d->tanggal_izin, 'Asia/Jakarta')
+                : ($d->created_at ? $d->created_at->copy()->setTimezone('Asia/Jakarta') : $now);
 
-        // 2. Disetujui tapi tidak pernah scan keluar sampai lewat hari
-        $disetujuiList = Dispensasi::where('status', 'disetujui')
-            ->whereRaw('DATE(COALESCE(tanggal_izin, created_at)) < ?', [$today])
-            ->get();
+            $dateStr = $dispDate->toDateString();
+            $isPastDay = $dateStr < $today;
+            $isTodayKbmDone = ($dateStr === $today && TimeHelper::isKbmHariSelesai($now, $dispDate));
 
-        foreach ($disetujuiList as $d) {
-            $d->update([
-                'status' => 'kadaluarsa',
-                'catatan_admin' => $d->catatan_admin ?? 'Kadaluarsa otomatis karena tidak melakukan check-out pada tanggal izin.',
-            ]);
-            self::cleanupCompletedDispensasiFiles($d);
-            $affectedCount++;
-        }
+            // Jika masih hari mendatang, atau hari ini tapi jam KBM belum selesai, skip
+            if (! $isPastDay && ! $isTodayKbmDone) {
+                continue;
+            }
 
-        // 3. Keluar tapi tidak scan kembali lewat hari
-        $keluarList = Dispensasi::where('status', 'keluar')
-            ->whereRaw('DATE(COALESCE(tanggal_izin, created_at)) < ?', [$today])
-            ->get();
-
-        foreach ($keluarList as $d) {
-            if ($d->sampai_pulang) {
-                $d->update([
-                    'status' => 'selesai',
-                    'catatan_admin' => $d->catatan_admin ?? 'Selesai otomatis (izin sampai pulang sekolah).',
-                ]);
-            } else {
+            // 1. Kasus 'menunggu': Tidak disetujui hingga jam KBM usai / lewat hari
+            if ($d->status === 'menunggu') {
                 $d->update([
                     'status' => 'kadaluarsa',
-                    'is_warned' => true,
-                    'warned_at' => now(),
-                    'catatan_admin' => $d->catatan_admin ?? 'Kadaluarsa otomatis karena tidak kembali ke sekolah melewati batas hari.',
+                    'catatan_admin' => $d->catatan_admin ?? ($isPastDay
+                        ? 'Kadaluarsa otomatis karena melewati tanggal izin.'
+                        : 'Kadaluarsa otomatis: Pengajuan tidak disetujui Guru Piket hingga jam KBM berakhir.'),
                 ]);
+                self::cleanupCompletedDispensasiFiles($d);
+                $affectedCount++;
+                continue;
             }
-            self::cleanupCompletedDispensasiFiles($d);
-            $affectedCount++;
+
+            // 2. Kasus 'disetujui': Tidak kunjung scan keluar di pos gerbang hingga jam KBM usai / lewat hari
+            if ($d->status === 'disetujui' && empty($d->waktu_keluar_aktual)) {
+                $d->update([
+                    'status' => 'kadaluarsa',
+                    'catatan_admin' => $d->catatan_admin ?? ($isPastDay
+                        ? 'Kadaluarsa otomatis karena tidak melakukan check-out pada tanggal izin.'
+                        : 'Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga jam KBM berakhir.'),
+                ]);
+                self::cleanupCompletedDispensasiFiles($d);
+                $affectedCount++;
+                continue;
+            }
+
+            // 3. Kasus 'keluar': Sudah keluar tapi tidak scan kembali hingga KBM usai / lewat hari
+            if ($d->status === 'keluar') {
+                if ($d->sampai_pulang) {
+                    $d->update([
+                        'status' => 'selesai',
+                        'catatan_admin' => $d->catatan_admin ?? 'Selesai otomatis: Siswa izin sampai pulang sekolah.',
+                    ]);
+                } else {
+                    $d->update([
+                        'status' => 'kadaluarsa',
+                        'is_warned' => true,
+                        'warned_at' => $now,
+                        'catatan_admin' => $d->catatan_admin ?? 'Kadaluarsa otomatis: Siswa tidak melakukan scan kembali hingga KBM berakhir (Tidak Kembali).',
+                    ]);
+
+                    // Kirim notifikasi jika ada user siswa
+                    try {
+                        if ($d->siswa?->user_id) {
+                            $notif = app(\App\Services\NotifikasiService::class);
+                            $notif->send(
+                                $d->siswa->user_id,
+                                "PERINGATAN: Dispensasi Anda ({$d->nomor_surat}) telah ditutup otomatis. Anda tercatat TIDAK KEMBALI / TANPA SCAN MASUK ke sekolah.",
+                                route('siswa.pengajuan.show', $d->id)
+                            );
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore notification failure
+                    }
+                }
+                self::cleanupCompletedDispensasiFiles($d);
+                $affectedCount++;
+                continue;
+            }
         }
 
         return $affectedCount;
