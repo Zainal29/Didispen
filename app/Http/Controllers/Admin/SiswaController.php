@@ -34,7 +34,7 @@ class SiswaController extends Controller
         if (! array_key_exists($sort, $sortable)) $sort = 'created_at';
         if (! in_array($dir, ['asc', 'desc'])) $dir = 'desc';
 
-        $query = Siswa::with(['user', 'kelas', 'jurusan'])
+        $query = Siswa::with(['user', 'kelas', 'jurusan', 'organisasiDipimpin'])
             ->where('status_aktif', true)
             ->where(function ($q) {
                 $q->whereNull('kelas_id')

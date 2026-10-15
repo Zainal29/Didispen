@@ -11,6 +11,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request, GuruPiketService $guruPiketService)
     {
+        \App\Services\DispensasiService::autoExpireOverdueDispensasi();
+
         $today = now()->format('Y-m-d');
         $filter = $request->get('filter', 'semua');
         $search = $request->get('search', ''); // <i class="fas fa-check-circle"></i> BARU: Ambil kata kunci pencarian
