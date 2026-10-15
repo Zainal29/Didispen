@@ -104,12 +104,12 @@
     visibility: hidden !important;
 }
 
-/* Tampilkan centang bersih via Font Awesome */
+/* Tampilkan centang bersih via Tabler Icons / Font Awesome */
 .swal2-icon.swal2-success::before {
-    content: "\f00c" !important; /* fa-check */
-    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", FontAwesome !important;
-    font-weight: 900 !important;
-    font-size: 1.6rem !important;
+    content: "\ea5e" !important; /* ti-check */
+    font-family: "tabler-icons", "Font Awesome 6 Free", "Font Awesome 5 Free", FontAwesome !important;
+    font-weight: normal !important;
+    font-size: 1.85rem !important;
     color: #059669 !important;
     position: absolute !important;
     top: 50% !important;

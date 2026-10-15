@@ -115,7 +115,21 @@
                         <td class="p-4 font-mono text-xs text-gray-500 align-top">{{ $s->user?->nis_nip ?? '-' }}</td>
 
                         <td class="p-4 align-top">
-                            <div class="font-semibold text-gray-900">{{ $s->nama_lengkap }}</div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-semibold text-gray-900">{{ $s->nama_lengkap }}</span>
+                                @if($s->user?->isSuperAdmin())
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs" title="Super Admin Sistem">
+                                        <i class="fas fa-shield-halved text-[9px] text-purple-600"></i> Super Admin
+                                    </span>
+                                @endif
+                                @if($s->organisasiDipimpin && $s->organisasiDipimpin->isNotEmpty())
+                                    @foreach($s->organisasiDipimpin as $org)
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs" title="Ketua Resmi: {{ $org->nama_organisasi }}">
+                                            <i class="fas fa-crown text-[9px] text-amber-500"></i> Ketua {{ $org->singkatan ?: $org->nama_organisasi }}
+                                        </span>
+                                    @endforeach
+                                @endif
+                            </div>
                         </td>
 
                         <td class="p-4 align-top">
