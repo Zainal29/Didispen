@@ -73,6 +73,13 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
             'status_aktif' => true,
         ]);
 
+        \App\Models\Organisasi::create([
+            'nama_organisasi' => 'OSIS SMKN 1 Bangsri',
+            'singkatan' => 'OSIS',
+            'ketua_siswa_id' => $this->siswaKetua->id,
+            'status_aktif' => true,
+        ]);
+
         $this->userAnggota1 = User::create([
             'name' => 'Anggota 1',
             'email' => 'anggota1@didispen.sch.id',

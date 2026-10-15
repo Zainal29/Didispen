@@ -68,6 +68,13 @@ class DispensasiMultiGuruOrganisasiTest extends TestCase
             'no_telepon' => '081234567890',
         ]);
 
+        \App\Models\Organisasi::create([
+            'nama_organisasi' => 'OSIS SMKN 1 Bangsri',
+            'singkatan' => 'OSIS',
+            'ketua_siswa_id' => $this->siswa->id,
+            'status_aktif' => true,
+        ]);
+
         $userTeman = User::create([
             'name' => 'Teman Anggota',
             'email' => 'teman@didispen.sch.id',

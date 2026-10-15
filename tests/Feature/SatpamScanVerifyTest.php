@@ -22,6 +22,8 @@ class SatpamScanVerifyTest extends TestCase
     {
         parent::setUp();
 
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::today('Asia/Jakarta')->setTime(9, 0, 0));
+
         $this->satpam = User::create([
             'name'     => 'Satpam Test',
             'email'    => 'satpam@sch.id',
@@ -214,5 +216,11 @@ class SatpamScanVerifyTest extends TestCase
             'id'     => $this->dispensasi->id,
             'status' => 'selesai',
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        \Carbon\Carbon::setTestNow();
+        parent::tearDown();
     }
 }
