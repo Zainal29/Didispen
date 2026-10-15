@@ -82,9 +82,13 @@
                     <dt class="text-slate-500 font-medium mb-1.5">No. Telepon / WA</dt>
                     <dd class="flex items-center justify-end">
                         @if($user->siswa->no_telepon)
-                            <a href="tel:{{ $user->siswa->no_telepon }}"
+                            @php
+                                $rawProfPhone = preg_replace('/[^0-9]/', '', $user->siswa->no_telepon);
+                                $waProfPhone = str_starts_with($rawProfPhone, '0') ? '62' . substr($rawProfPhone, 1) : $rawProfPhone;
+                            @endphp
+                            <a href="https://wa.me/{{ $waProfPhone }}" target="_blank" rel="noopener noreferrer"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200 text-xs font-bold break-all">
-                                <i class="ti ti-phone flex-shrink-0 text-sm"></i>
+                                <i class="ti ti-brand-whatsapp flex-shrink-0 text-emerald-600 text-sm"></i>
                                 <span>{{ str_replace('+62', '0', $user->siswa->no_telepon) }}</span>
                             </a>
                         @else
@@ -125,10 +129,10 @@
                 <form method="POST" action="{{ route('profil.update-additional') }}">
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 min-w-0">
-                        {{-- NOMOR TELEPON --}}
+                        {{-- NOMOR TELEPON / WHATSAPP --}}
                         <div class="md:col-span-2 min-w-0">
                             <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                                <i class="ti ti-phone mr-1 text-emerald-600 text-sm"></i> No. Telepon / WhatsApp
+                                <i class="ti ti-brand-whatsapp mr-1 text-emerald-600 text-base"></i> Kontak WhatsApp
                             </label>
                             <div class="flex w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/20">
                                 <span class="inline-flex items-center px-3 sm:px-3.5 bg-slate-50 text-slate-600 font-bold text-xs sm:text-sm flex-shrink-0 whitespace-nowrap border-r border-slate-200">

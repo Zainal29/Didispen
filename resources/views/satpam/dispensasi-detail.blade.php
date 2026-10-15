@@ -266,7 +266,7 @@
         @if($waLink || $dispensasi->is_warned)
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
                 <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center uppercase tracking-wider">
-                    <i class="fas fa-phone-alt text-green-600 mr-2"></i>Kontak Darurat
+                    <i class="fab fa-whatsapp text-emerald-600 mr-2 text-base"></i>Kontak WhatsApp (Darurat)
                 </h3>
 
                 @if($dispensasi->is_warned)

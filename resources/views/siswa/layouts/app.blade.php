@@ -47,6 +47,14 @@
             -moz-osx-font-smoothing: grayscale;
             letter-spacing: -0.011em;
         }
+        /* Sembunyikan bottom bar saat keyboard virtual HP terbuka agar tidak ikut terangkat ke atas input */
+        body.keyboard-open .mobile-bottom-nav,
+        body.keyboard-open #siswaBottomNav {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(120%) !important;
+            transition: transform 0.2s ease, opacity 0.2s ease !important;
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 antialiased">
@@ -218,8 +226,8 @@
                 </div>
             </header>
 
-            {{-- KONTEN (pb-28 agar tidak tertutup bottom nav di HP) --}}
-            <main class="flex-1 p-4 sm:p-6 pb-28 lg:pb-6">
+            {{-- KONTEN (pb-32 sm:pb-36 lg:pb-6 agar tidak tertutup bottom nav di HP) --}}
+            <main class="flex-1 p-4 sm:p-6 pb-32 sm:pb-36 lg:pb-6">
                 @include('components.alert')
                 @yield('content')
             </main>
@@ -229,8 +237,14 @@
     {{-- ================================================== --}}
     {{-- BOTTOM NAVIGATION BAR — KHUSUS MOBILE (OPTIMAL UNTUK HP) --}}
     {{-- ================================================== --}}
-    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50 shadow-lg" style="padding-bottom: env(safe-area-inset-bottom);">
-        <div class="grid grid-cols-5 h-16 w-full max-w-md mx-auto">
+    @php
+        $isCreateActive = request()->routeIs('siswa.pengajuan.create');
+        $isRiwayatActive = (request()->routeIs('siswa.pengajuan.index') || request()->routeIs('siswa.pengajuan.show')) && !$isCreateActive;
+    @endphp
+    <nav id="siswaBottomNav"
+         class="mobile-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transform-gpu transition-all duration-200"
+         style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);">
+        <div class="grid grid-cols-5 h-16 w-full max-w-md mx-auto items-center">
             
             {{-- 1. Beranda --}}
             <a href="{{ route('siswa.dashboard') }}"
@@ -241,19 +255,19 @@
 
             {{-- 2. Riwayat --}}
             <a href="{{ route('siswa.pengajuan.index') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors {{ request()->routeIs('siswa.pengajuan.*') ? $mobOn : $mobOff }}">
+               class="flex flex-col items-center justify-center gap-1 transition-colors {{ $isRiwayatActive ? $mobOn : $mobOff }}">
                 <i class="ti ti-history text-xl"></i>
                 <span class="text-[10px] font-semibold leading-tight tracking-tight">Riwayat</span>
             </a>
 
             {{-- 3. FAB: Buat Pengajuan (Elevated Center Button) --}}
-            <div class="relative flex flex-col items-center justify-end pb-1">
+            <div class="relative flex flex-col items-center justify-end h-full pb-1.5">
                 <a href="{{ route('siswa.pengajuan.create') }}"
                    aria-label="Buat Pengajuan Dispensasi"
-                   class="absolute -top-5 w-12 h-12 rounded-full bg-blue-600 text-white text-xl flex items-center justify-center shadow-md border-4 border-slate-50 active:scale-95 transition-transform">
+                   class="absolute -top-5 w-12 h-12 rounded-full text-white text-xl flex items-center justify-center border-4 border-slate-50 transition-all duration-200 active:scale-95 {{ $isCreateActive ? 'bg-blue-600 shadow-lg shadow-blue-500/35 ring-4 ring-blue-500/25 scale-105' : 'bg-blue-600 shadow-md hover:bg-blue-700' }}">
                     <i class="ti ti-plus"></i>
                 </a>
-                <span class="text-[10px] font-semibold leading-tight text-slate-700 tracking-tight">Buat</span>
+                <span class="text-[10px] leading-tight tracking-tight mt-auto {{ $isCreateActive ? 'font-bold text-blue-600' : 'font-semibold text-slate-700' }}">Buat</span>
             </div>
 
             {{-- 4. Notifikasi (+badge) --}}
@@ -323,6 +337,46 @@
             </div>
         </div>
     </div>
+
+    <script>
+    (function() {
+        function handleViewportResize() {
+            if (!window.visualViewport) return;
+            const isKeyboard = (window.innerHeight - window.visualViewport.height) > 150;
+            if (isKeyboard) {
+                document.body.classList.add('keyboard-open');
+            } else {
+                const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+                if (!['input', 'textarea', 'select'].includes(activeTag)) {
+                    document.body.classList.remove('keyboard-open');
+                }
+            }
+        }
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportResize);
+            window.visualViewport.addEventListener('scroll', handleViewportResize);
+        }
+
+        document.addEventListener('focusin', function(e) {
+            const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+            if (['input', 'textarea', 'select'].includes(tag) && window.innerWidth < 1024) {
+                document.body.classList.add('keyboard-open');
+            }
+        });
+
+        document.addEventListener('focusout', function(e) {
+            setTimeout(function() {
+                const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+                if (!['input', 'textarea', 'select'].includes(activeTag) && window.innerWidth < 1024) {
+                    if (!window.visualViewport || (window.innerHeight - window.visualViewport.height) <= 150) {
+                        document.body.classList.remove('keyboard-open');
+                    }
+                }
+            }, 150);
+        });
+    })();
+    </script>
 
     @stack('scripts')
 
