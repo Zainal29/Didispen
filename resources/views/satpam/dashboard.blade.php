@@ -154,7 +154,7 @@
                                     @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
                                         <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
                                             <i class="fas fa-exchange-alt text-[10px]"></i>
-                                            <span class="truncate">Gantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
+                                            <span class="truncate">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
                                         </p>
                                     @endif
                                 </div>

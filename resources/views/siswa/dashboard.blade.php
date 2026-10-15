@@ -3,49 +3,51 @@
 @section('page-title', 'Dashboard Siswa')
 @section('content')
 
-{{-- ============ HERO BANNER (MODERN, RESPONSIVE, COMFORTABLE) ============ --}}
-<div class="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-4 sm:p-6 mb-5 shadow-lg shadow-blue-500/15 text-white">
-    {{-- Subtle decorative elements --}}
-    <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+{{-- ============ HERO BANNER (CLEAN TABLER BLUE, RESPONSIVE) ============ --}}
+<div class="relative overflow-hidden bg-blue-600 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs text-white border border-blue-700">
     <div class="relative z-10">
-        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 text-[11px] font-semibold text-blue-100 uppercase tracking-wide mb-2">
-            <i class="far fa-calendar-alt text-blue-200"></i>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-semibold text-blue-100 uppercase tracking-wide mb-2 border border-white/10">
+            <i class="ti ti-calendar text-blue-200"></i>
             {{ now()->isoFormat('dddd, D MMMM Y') }}
         </div>
-        <h2 class="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
+        <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug">
             Halo, {{ auth()->user()->name }}!
         </h2>
-        <p class="text-xs sm:text-sm text-blue-100/90 mt-1 max-w-xl">
+        <p class="text-xs sm:text-sm text-blue-100/90 mt-1 max-w-xl leading-relaxed">
             Sistem Digital Dispensasi SMKN 1 Bangsri. Ajukan dan pantau izin dispensasi Anda secara real-time.
         </p>
-        <div class="mt-4 flex flex-wrap items-center gap-2">
+        <div class="mt-3.5 flex flex-wrap items-center gap-2">
             <a href="{{ route('siswa.notifikasi.index') }}"
-               class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-semibold border border-white/20 transition-colors">
-                <i class="fas fa-bell mr-1.5 text-yellow-300"></i>{{ $notifikasiBelumDibaca ?? 0 }} Notifikasi Baru
+               class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-colors">
+                <i class="ti ti-bell mr-1.5 text-amber-300"></i>{{ $notifikasiBelumDibaca ?? 0 }} Notifikasi Baru
             </a>
             <a href="{{ route('siswa.pengajuan.create') }}"
-               class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-sm active:scale-95 transition-all">
-                <i class="fas fa-plus mr-1.5"></i>Buat Pengajuan
+               class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-xs active:scale-95 transition-all">
+                <i class="ti ti-plus mr-1.5"></i>Buat Pengajuan
             </a>
         </div>
     </div>
 </div>
 
-{{-- ============ BANNER HUBUNGI GURU PIKET (6 MENIT) ============ --}}
-@if(!empty($piketEligible) && isset($dispensasiMenunggu))
-<div id="piketDashboardBanner" class="bg-gradient-to-r from-amber-50 via-amber-50 to-orange-50/40 border-2 border-amber-200/90 rounded-2xl p-4 sm:p-5 mb-5 shadow-xs transition-all">
+{{-- ============ BANNER HUBUNGI GURU PIKET & PERINGATAN KADALUARSA ============ --}}
+@if(isset($dispensasiMenunggu))
+<div id="piketDashboardBanner" class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs transition-all">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="flex items-start gap-3.5">
-            <div class="w-11 h-11 rounded-xl bg-amber-100/90 border border-amber-200 text-amber-700 flex items-center justify-center flex-shrink-0 text-base shadow-xs">
-                <i class="fas fa-user-clock text-lg"></i>
+            <div class="w-10 h-10 rounded-xl bg-white border border-amber-200 text-amber-600 flex items-center justify-center flex-shrink-0 text-base shadow-xs">
+                <i class="ti ti-alert-triangle text-xl"></i>
             </div>
             <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2 flex-wrap mb-1">
-                    <h3 class="text-sm sm:text-base font-bold text-gray-900">
-                        Guru Piket Belum Merespons
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900">
+                        Pengajuan Menunggu Persetujuan Guru Piket
                     </h3>
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold border border-amber-200">
-                        <i class="fas fa-clock text-[10px]"></i>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold border border-amber-200">
+                        <i class="ti ti-hourglass-low text-[11px]"></i> Kadaluarsa: {{ $dispensasiMenunggu->getJamSelesaiKbmText() }}
+                    </span>
+                    @if(!empty($piketEligible))
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+                        <i class="ti ti-clock text-[11px]"></i>
                         <span id="dashboardCountdownDisplay" class="font-mono">
                             @php
                                 $mins = intdiv($popupSecondsLeft ?? 0, 60);
@@ -54,24 +56,28 @@
                             {{ sprintf('%02d:%02d', $mins, $secs) }}
                         </span>
                     </div>
+                    @endif
                 </div>
-                <p class="text-xs text-gray-600 leading-relaxed">
-                    Pengajuan <span class="font-mono font-semibold text-gray-800">#{{ $dispensasiMenunggu->nomor_surat }}</span> Anda sedang menunggu persetujuan. Anda dapat menghubungi Guru Piket melalui WhatsApp.
+                <p class="text-xs text-amber-900 leading-relaxed">
+                    Pengajuan <span class="font-mono font-semibold text-slate-800">#{{ $dispensasiMenunggu->nomor_surat }}</span> Anda <strong>akan segera kadaluarsa</strong> jika tidak disetujui hingga jam KBM usai (pukul <strong>{{ $dispensasiMenunggu->getJamSelesaiKbmText() }}</strong>). Segera temui Guru Piket di ruang piket untuk menyelesaikan prosesnya.
                 </p>
             </div>
         </div>
 
         <div class="flex items-center gap-2 self-stretch sm:self-center flex-shrink-0">
+            @if(!empty($piketEligible))
             <button type="button"
                     onclick="openPiketDashboardModal()"
-                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/20 active:scale-95 transition-all">
-                <i class="fab fa-whatsapp text-sm"></i>
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all">
+                <i class="ti ti-brand-whatsapp text-sm"></i>
                 <span>Hubungi Guru Piket</span>
             </button>
+            @endif
             <a href="{{ route('siswa.pengajuan.show', $dispensasiMenunggu) }}"
-               class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-xs font-bold transition-all shadow-xs"
+               class="inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 text-xs font-bold transition-all shadow-xs gap-1.5"
                title="Lihat Detail Pengajuan">
-                <i class="fas fa-arrow-right"></i>
+                <span>Lihat Detail</span>
+                <i class="ti ti-arrow-right"></i>
             </a>
         </div>
     </div>
@@ -80,20 +86,20 @@
 {{-- MODAL HUBUNGI GURU PIKET DI DASHBOARD --}}
 <div id="piketDashboardModal"
      class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 flex items-center justify-center p-4">
-    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-200/90 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150">
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150">
         {{-- Header Modal --}}
-        <div class="px-5 py-4 bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100 flex items-center justify-between">
+        <div class="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">
-                    <i class="fab fa-whatsapp"></i>
+                    <i class="ti ti-brand-whatsapp text-base"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-gray-900">Hubungi Guru Piket</h3>
-                    <p class="text-[11px] text-gray-500">Daftar Guru Piket yang sedang bertugas pada sesi ini</p>
+                    <h3 class="text-sm font-bold text-slate-900">Hubungi Guru Piket</h3>
+                    <p class="text-[11px] text-slate-500">Daftar Guru Piket yang sedang bertugas pada sesi ini</p>
                 </div>
             </div>
-            <button type="button" onclick="closePiketDashboardModal()" class="w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
-                <i class="fas fa-times text-xs"></i>
+            <button type="button" onclick="closePiketDashboardModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                <i class="ti ti-x text-sm"></i>
             </button>
         </div>
 
@@ -110,27 +116,27 @@
                                 'Sedang Bertugas' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
                                 'Sedang Keluar' => 'bg-amber-100 text-amber-800 border-amber-200',
                                 'Sudah Kembali' => 'bg-blue-100 text-blue-800 border-blue-200',
-                                default => 'bg-gray-100 text-gray-700 border-gray-200',
+                                default => 'bg-slate-100 text-slate-700 border-slate-200',
                             };
                         @endphp
                         <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-colors">
                             <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-10 h-10 rounded-xl bg-blue-100/70 text-blue-700 flex items-center justify-center text-sm flex-shrink-0 font-bold">
-                                    <i class="fas fa-user-tie"></i>
+                                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-sm flex-shrink-0 font-bold">
+                                    <i class="ti ti-user text-base"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-1.5 flex-wrap">
-                                        <p class="text-xs sm:text-sm font-bold text-gray-900 truncate">{{ $guru->nama_lengkap }}</p>
+                                        <p class="text-xs sm:text-sm font-bold text-slate-900 truncate">{{ $guru->nama_lengkap }}</p>
                                         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $badgeClass }}">
                                             {{ $status }}
                                         </span>
                                     </div>
                                     @if($hasPhone)
-                                        <p class="text-[11px] text-gray-500 font-mono mt-0.5">
-                                            <i class="fab fa-whatsapp text-emerald-600 mr-1"></i>{{ $guru->no_telepon }}
+                                        <p class="text-[11px] text-slate-500 font-mono mt-0.5">
+                                            <i class="ti ti-brand-whatsapp text-emerald-600 mr-1"></i>{{ $guru->no_telepon }}
                                         </p>
                                     @else
-                                        <p class="text-[11px] text-gray-400 italic mt-0.5">Nomor WA belum diatur</p>
+                                        <p class="text-[11px] text-slate-400 italic mt-0.5">Nomor WA belum diatur</p>
                                     @endif
                                 </div>
                             </div>
@@ -142,11 +148,11 @@
                                        rel="noopener noreferrer"
                                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
                                        title="Hubungi {{ $guru->nama_lengkap }} via WhatsApp">
-                                        <i class="fab fa-whatsapp text-sm"></i>
+                                        <i class="ti ti-brand-whatsapp text-sm"></i>
                                         <span>Hubungi WA</span>
                                     </a>
                                 @else
-                                    <button type="button" disabled class="px-3 py-2 rounded-xl bg-gray-200 text-gray-400 text-xs font-semibold cursor-not-allowed">
+                                    <button type="button" disabled class="px-3 py-2 rounded-xl bg-slate-200 text-slate-400 text-xs font-semibold cursor-not-allowed">
                                         WA Belum Ada
                                     </button>
                                 @endif
@@ -157,14 +163,14 @@
             @elseif(!empty($hubungiGuru))
                 <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-3.5 min-w-0">
-                        <div class="w-11 h-11 rounded-xl bg-blue-100/70 text-blue-700 flex items-center justify-center text-base flex-shrink-0 font-bold">
-                            <i class="fas fa-user-tie"></i>
+                        <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-base flex-shrink-0 font-bold">
+                            <i class="ti ti-user text-base"></i>
                         </div>
                         <div class="min-w-0 flex-1">
-                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Petugas Guru Piket</p>
-                            <p class="text-sm font-bold text-gray-900 truncate">{{ $hubungiGuru->nama_lengkap }}</p>
+                            <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Petugas Guru Piket</p>
+                            <p class="text-sm font-bold text-slate-900 truncate">{{ $hubungiGuru->nama_lengkap }}</p>
                             @if($hubungiGuru->no_telepon)
-                                <p class="text-xs text-gray-500 font-mono mt-0.5">{{ $hubungiGuru->no_telepon }}</p>
+                                <p class="text-xs text-slate-500 font-mono mt-0.5">{{ $hubungiGuru->no_telepon }}</p>
                             @endif
                         </div>
                     </div>
@@ -173,7 +179,7 @@
                            target="_blank"
                            rel="noopener noreferrer"
                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all">
-                            <i class="fab fa-whatsapp text-sm"></i>
+                            <i class="ti ti-brand-whatsapp text-sm"></i>
                             <span>Hubungi WA</span>
                         </a>
                     @endif
@@ -181,7 +187,7 @@
             @endif
 
             <div class="p-3.5 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2.5">
-                <i class="fas fa-info-circle text-blue-600 mt-0.5 text-sm flex-shrink-0"></i>
+                <i class="ti ti-info-circle text-blue-600 mt-0.5 text-base flex-shrink-0"></i>
                 <div class="text-xs text-blue-900 leading-relaxed">
                     <p class="font-semibold">Format pesan WhatsApp sudah disiapkan sistem.</p>
                     <p class="mt-0.5 text-blue-700">Silakan kirim pesan tersebut kepada salah satu Guru Piket di atas untuk mempercepat verifikasi pengajuan dispensasi Anda.</p>
@@ -190,20 +196,20 @@
 
             @if(!empty($hubungiError))
             <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5">
-                <i class="fas fa-exclamation-circle text-amber-600 mt-0.5 text-sm flex-shrink-0"></i>
+                <i class="ti ti-alert-circle text-amber-600 mt-0.5 text-base flex-shrink-0"></i>
                 <p class="text-xs text-amber-800 leading-relaxed">{{ $hubungiError }}</p>
             </div>
             @endif
 
-            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200/80 text-xs">
-                <span class="text-gray-500 font-medium"><i class="fas fa-hourglass-half mr-1.5 text-amber-500"></i>Waktu Hubungi Tersisa:</span>
+            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                <span class="text-slate-500 font-medium flex items-center gap-1"><i class="ti ti-hourglass-low text-amber-500"></i>Waktu Hubungi Tersisa:</span>
                 <span id="modalDashboardCountdownDisplay" class="font-mono font-bold text-amber-700">--:--</span>
             </div>
         </div>
 
         {{-- Footer Modal --}}
-        <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
-            <button type="button" onclick="closePiketDashboardModal()" class="w-full sm:w-auto py-2.5 px-5 rounded-xl bg-white border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-100 transition-colors">
+        <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+            <button type="button" onclick="closePiketDashboardModal()" class="w-full sm:w-auto py-2 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition-colors">
                 Tutup
             </button>
         </div>
@@ -211,20 +217,20 @@
 </div>
 @endif
 
-{{-- ✅ TAMBAHKAN INI: Banner Terlambat (Hanya muncul jika terlambat) --}}
-@if($isTerlambat) {{-- ✅ BENAR: Sesuai dengan variabel di DashboardController --}}
-<div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 sm:p-5 mb-4">
+{{-- Banner Terlambat (Hanya muncul jika terlambat) --}}
+@if($isTerlambat)
+<div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
     <div class="flex items-start gap-3">
-        <div class="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+        <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+            <i class="ti ti-alert-triangle text-xl"></i>
         </div>
         <div class="flex-1 min-w-0">
-            <h3 class="text-red-900 font-bold text-sm mb-1">Peringatan: Anda Terlambat!</h3>
-            <p class="text-red-700 text-sm mb-2">
+            <h3 class="text-rose-900 font-bold text-sm mb-1">Peringatan: Anda Terlambat!</h3>
+            <p class="text-rose-700 text-xs sm:text-sm mb-2 leading-relaxed">
                 Anda telah melewati batas waktu kembali dispensasi
-                <strong class="text-red-900">({{ $dispensasiAktif->nomor_surat }})</strong>
+                <strong class="text-rose-900">({{ $dispensasiAktif->nomor_surat }})</strong>
                 selama
-                <span class="bg-red-100 px-2 py-0.5 rounded font-semibold">
+                <span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md font-semibold">
                     @if($terlambatJam > 0)
                         {{ $terlambatJam }} jam {{ $terlambatMenit }} menit
                     @else
@@ -232,13 +238,13 @@
                     @endif
                 </span>
             </p>
-            <p class="text-xs text-red-600 mb-3">
-                <i class="far fa-clock mr-1"></i>
+            <p class="text-xs text-rose-600 mb-3 flex items-center gap-1">
+                <i class="ti ti-clock"></i>
                 Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasiAktif->batas_waktu_kembali)->format('H:i') }} WIB</strong>
             </p>
             <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
-               class="inline-flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                <i class="fas fa-qrcode mr-1.5"></i>Lihat QR Code
+               class="inline-flex items-center px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
+                <i class="ti ti-qrcode mr-1.5"></i>Lihat QR Code
             </a>
         </div>
     </div>
@@ -249,40 +255,40 @@
 @if(isset($dispensasiAktif))
     {{-- KONDISI 1: DISETUJUI --}}
     @if($dispensasiAktif->status === 'disetujui')
-    <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4">
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-4 shadow-xs">
         <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2 flex-wrap">
-                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-700">
+                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                     Aktif
                 </span>
-                <h3 class="text-sm font-semibold text-gray-900">
-                    <i class="fas fa-check-circle text-emerald-600 mr-1.5"></i>Dispensasi Disetujui
+                <h3 class="text-sm font-bold text-slate-900 flex items-center">
+                    <i class="ti ti-circle-check text-emerald-600 mr-1.5 text-base"></i>Dispensasi Disetujui
                 </h3>
                 @if($dispensasiAktif->isOrganisasi())
-                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        <i class="fas fa-users mr-1"></i>{{ $dispensasiAktif->nama_organisasi }}
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                        <i class="ti ti-users mr-1"></i>{{ $dispensasiAktif->nama_organisasi }}
                     </span>
                     @if(auth()->user()->siswa && auth()->user()->siswa->id !== $dispensasiAktif->siswa_id)
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                             Anggota Rombongan
                         </span>
                     @endif
                 @endif
                 @if($dispensasiAktif->tanggal_izin && $dispensasiAktif->tanggal_izin->isFuture())
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                        <i class="fas fa-calendar-day mr-1"></i>Jadwal {{ $dispensasiAktif->tanggal_izin->translatedFormat('d M Y') }}
+                        <i class="ti ti-calendar-event mr-1"></i>Jadwal {{ $dispensasiAktif->tanggal_izin->translatedFormat('d M Y') }}
                     </span>
                 @endif
             </div>
         </div>
         <div class="space-y-2 text-xs">
-            <div class="bg-gray-50 rounded-lg px-3 py-2">
-                <p class="text-xs font-medium text-gray-500 uppercase mb-0.5">No. Surat</p>
-                <p class="font-mono font-semibold text-gray-900 truncate">{{ $dispensasiAktif->nomor_surat }}</p>
+            <div class="bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">No. Surat</p>
+                <p class="font-mono font-semibold text-slate-900 truncate">{{ $dispensasiAktif->nomor_surat }}</p>
             </div>
-            <div class="bg-gray-50 rounded-lg px-3 py-2">
-                <p class="text-xs font-medium text-gray-500 uppercase mb-0.5">Waktu</p>
-                <p class="font-semibold text-gray-900">
+            <div class="bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Waktu</p>
+                <p class="font-semibold text-slate-900">
                     {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_keluar, $dispensasiAktif->created_at?->dayOfWeek) }} – 
                     @if($dispensasiAktif->isSampaiPulang())
                         <span class="text-emerald-700 font-bold">Sampai Pulang Sekolah</span>
@@ -292,10 +298,10 @@
                 </p>
             </div>
         </div>
-        <div class="mt-3 flex gap-2">
+        <div class="mt-3.5 flex gap-2">
             <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
-               class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                <i class="fas fa-qrcode mr-1.5"></i>Lihat QR Code
+               class="flex-1 inline-flex items-center justify-center px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
+                <i class="ti ti-qrcode mr-1.5 text-sm"></i>Lihat QR Code
             </a>
             @php
                 $maxLimitAktif = \App\Helpers\PrintHelper::maxStudentLimit();
@@ -304,18 +310,18 @@
             @if(($dispensasiAktif->student_print_count ?? 0) < $maxLimitAktif && $isWithinPrintTime)
             <a href="{{ route('siswa.cetak', $dispensasiAktif) }}"
                target="_blank"
-               class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                <i class="fas fa-print mr-1.5"></i>Cetak
+               class="flex-1 inline-flex items-center justify-center px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
+                <i class="ti ti-printer mr-1.5 text-sm"></i>Cetak
             </a>
             @endif
         </div>
 
         @if(empty($dispensasiAktif->waktu_keluar_aktual) && (!auth()->user()->siswa || auth()->user()->siswa->id === $dispensasiAktif->siswa_id))
-        <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between">
-            <span class="text-[11px] text-gray-500">Tidak jadi izin keluar?</span>
+        <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-[11px] text-slate-500">Tidak jadi izin keluar?</span>
             <button type="button" onclick="confirmBatalKeluar('{{ route('siswa.pengajuan.batal', $dispensasiAktif) }}')"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-colors">
-                <i class="fas fa-ban text-[11px]"></i> Batalkan Dispensasi
+                    class="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-colors">
+                <i class="ti ti-ban text-[11px]"></i> Batalkan Dispensasi
             </button>
         </div>
         @endif
@@ -324,108 +330,122 @@
 
     {{-- KONDISI 2: SUDAH KELUAR --}}
     @if($dispensasiAktif->status === 'keluar')
-    <div class="bg-sky-50 border border-sky-200 rounded-xl p-4 mb-4">
+    <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
         <div class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-walking text-sky-600 text-lg"></i>
+            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+                <i class="ti ti-walk text-xl"></i>
             </div>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="font-semibold text-sky-900 text-sm">Anda Sedang di Luar Sekolah</h3>
+                    <h3 class="font-bold text-slate-900 text-sm">Anda Sedang di Luar Sekolah</h3>
                     @if($dispensasiAktif->isOrganisasi())
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800">
-                            <i class="fas fa-users mr-1"></i>{{ $dispensasiAktif->nama_organisasi }}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                            <i class="ti ti-users mr-1"></i>{{ $dispensasiAktif->nama_organisasi }}
                         </span>
                     @endif
                 </div>
-                <p class="text-sm text-sky-700 mt-1">
-                    Keluar pukul: {{ $dispensasiAktif->waktu_keluar_aktual ? \Carbon\Carbon::parse($dispensasiAktif->waktu_keluar_aktual)->format('H:i') : '-' }} WIB
+                <p class="text-xs sm:text-sm text-slate-600 mt-1">
+                    Keluar pukul: <strong class="text-slate-900">{{ $dispensasiAktif->waktu_keluar_aktual ? \Carbon\Carbon::parse($dispensasiAktif->waktu_keluar_aktual)->format('H:i') : '-' }} WIB</strong>
                 </p>
                 @if($dispensasiAktif->isSampaiPulang())
                     <p class="text-xs text-emerald-700 font-semibold mt-1 flex items-center gap-1">
-                        <i class="fas fa-circle-check text-emerald-600"></i>
+                        <i class="ti ti-circle-check text-emerald-600 text-sm"></i>
                         Izin sampai jam pulang sekolah (Tidak perlu scan kembali & bebas peringatan terlambat).
                     </p>
                 @else
-                    <p class="text-xs text-sky-600 mt-1">
-                        <i class="fas fa-info-circle mr-1"></i>Harap kembali sebelum pukul {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali) }}
+                    <p class="text-xs text-slate-600 mt-1 flex items-center gap-1">
+                        <i class="ti ti-info-circle text-blue-500"></i>Harap kembali sebelum pukul {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali) }}
                     </p>
                 @endif
             </div>
         </div>
 
-        {{-- ========================================== --}}
         {{-- BAGIAN FOTO BUKTI (DENGAN KAMERA LANGSUNG) --}}
-        {{-- ========================================== --}}
-        <div class="mt-4 pt-4 border-t border-sky-200">
-            <p class="text-xs font-bold text-sky-900 mb-2 flex items-center gap-1.5">
-                <i class="fas fa-camera"></i> Foto Bukti Kegiatan
+        <div class="mt-4 pt-4 border-t border-blue-200/80">
+            <p class="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
+                <i class="ti ti-camera text-blue-600 text-sm"></i> Foto Bukti Kegiatan
             </p>
 
             @if($dispensasiAktif->foto_bukti)
-                {{-- ✅ FOTO SUDAH DIUPLOAD --}}
-                <div class="flex items-center justify-between bg-white rounded-lg p-3 border border-emerald-200">
+                {{-- FOTO SUDAH DIUPLOAD --}}
+                <div class="flex items-center justify-between bg-white rounded-xl p-3 border border-emerald-200 shadow-2xs">
                     <div class="flex items-center gap-3">
                         <img src="{{ asset('storage/' . $dispensasiAktif->foto_bukti) }}"
-                             class="w-12 h-12 object-cover rounded-lg border border-gray-200 cursor-pointer"
+                             class="w-12 h-12 object-cover rounded-xl border border-slate-200 cursor-pointer shadow-xs"
                              onclick="showPreview('{{ asset('storage/' . $dispensasiAktif->foto_bukti) }}', '{{ $dispensasiAktif->nomor_surat }}')">
                         <div>
                             <p class="text-xs font-bold text-emerald-700 flex items-center gap-1">
-                                <i class="fas fa-check-circle"></i> Foto Bukti Terkirim
+                                <i class="ti ti-circle-check text-emerald-600"></i> Foto Bukti Terkirim
                             </p>
-                            <p class="text-[10px] text-gray-500">
+                            <p class="text-[10px] text-slate-500">
                                 Diupload: {{ $dispensasiAktif->foto_bukti_uploaded_at ? \Carbon\Carbon::parse($dispensasiAktif->foto_bukti_uploaded_at)->format('H:i') : '-' }} WIB
                             </p>
                         </div>
                     </div>
                     <button onclick="hapusFoto({{ $dispensasiAktif->id }})"
-                            class="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition-colors"
+                            class="text-rose-500 hover:text-rose-700 p-2 rounded-lg hover:bg-rose-50 transition-colors"
                             title="Hapus Foto">
-                        <i class="fas fa-trash-alt text-xs"></i>
+                        <i class="ti ti-trash text-sm"></i>
                     </button>
                 </div>
             @else
-                {{-- ❌ FOTO BELUM DIUPLOAD --}}
-                <div class="bg-white rounded-lg p-3 border {{ $isTerlambat ? 'border-red-300 bg-red-50' : 'border-amber-200 bg-amber-50/50' }}">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold {{ $isTerlambat ? 'text-red-700' : 'text-amber-700' }} flex items-center gap-1.5">
-                                <i class="fas fa-exclamation-circle"></i>
-                                {{ $isTerlambat ? 'Wajib Upload Foto Bukti!' : 'Belum ada foto bukti' }}
-                            </p>
-                            <p class="text-[10px] text-gray-500 mt-0.5">
-                                Ambil foto langsung menggunakan kamera sebagai bukti
-                            </p>
-                        </div>
-                        <button onclick="openUploadModal({{ $dispensasiAktif->id }})"
-                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5">
-                            <i class="fas fa-camera"></i> Ambil Foto
-                        </button>
+                {{-- FOTO BELUM DIUPLOAD --}}
+                <div class="bg-white rounded-xl p-3.5 border {{ $isTerlambat ? 'border-rose-300 bg-rose-50/50' : 'border-amber-200 bg-amber-50/50' }} shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div>
+                        <p class="text-xs font-bold {{ $isTerlambat ? 'text-rose-700' : 'text-amber-800' }} flex items-center gap-1.5">
+                            <i class="ti ti-alert-circle text-sm"></i>
+                            {{ $isTerlambat ? 'Wajib Upload Foto Bukti!' : 'Belum ada foto bukti' }}
+                        </p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
+                            Ambil foto langsung menggunakan kamera sebagai bukti kegiatan
+                        </p>
                     </div>
+                    <button onclick="openUploadModal({{ $dispensasiAktif->id }})"
+                            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors inline-flex items-center justify-center gap-1.5 self-start sm:self-auto">
+                        <i class="ti ti-camera text-sm"></i> Ambil Foto
+                    </button>
                 </div>
             @endif
 
-            {{-- Tombol QR Code --}}
-            <div class="mt-3">
-                <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
-                   class="w-full inline-flex items-center justify-center px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                    <i class="fas fa-qrcode mr-1.5"></i>Lihat QR Code (Untuk Scan Kembali)
-                </a>
-            </div>
+            {{-- Aksi / QR Code Berdasarkan Tipe Kepulangan --}}
+            @if($dispensasiAktif->isSampaiPulang())
+                <div class="mt-3 p-3 rounded-xl bg-white border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0">
+                            <i class="ti ti-door-exit text-base"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-emerald-950">Dispensasi Sampai Pulang Sekolah</p>
+                            <p class="text-[11px] text-slate-500">Tidak perlu scan kembali ke Satpam. Otomatis selesai di akhir jadwal KBM.</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
+                       class="inline-flex items-center justify-center px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors shrink-0">
+                        <i class="ti ti-file-text mr-1.5 text-sm"></i>Detail Surat
+                    </a>
+                </div>
+            @else
+                <div class="mt-3">
+                    <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
+                       class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
+                        <i class="ti ti-qrcode mr-1.5 text-sm"></i>Lihat QR Code (Untuk Scan Kembali)
+                    </a>
+                </div>
+            @endif
         </div>
     </div>
     @endif
 
     {{-- KONDISI 3: SUDAH SELESAI --}}
     @if($dispensasiAktif->status === 'selesai')
-    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+    <div class="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
         <div class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-check-circle text-emerald-600 text-lg"></i>
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                <i class="ti ti-circle-check text-xl"></i>
             </div>
             <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-emerald-900 text-sm">Dispensasi Selesai</h3>
-                <p class="text-sm text-emerald-700 mt-1">
+                <h3 class="font-bold text-slate-900 text-sm">Dispensasi Selesai</h3>
+                <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
                     Anda telah kembali ke sekolah pukul {{ $dispensasiAktif->waktu_kembali_aktual ? \Carbon\Carbon::parse($dispensasiAktif->waktu_kembali_aktual)->format('H:i') : '-' }} WIB.
                 </p>
             </div>
@@ -435,44 +455,44 @@
 @endif
 
 {{-- ============ GURU PIKET HARI INI ============ --}}
-<div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-xs">
-    <div class="border-b border-gray-100 pb-3 mb-3">
+<div class="bg-white border border-slate-200 rounded-2xl p-4 mb-4 shadow-xs">
+    <div class="border-b border-slate-100 pb-3 mb-3">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div class="flex items-start gap-2.5 min-w-0">
-                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5 sm:mt-0">
-                    <i class="fas fa-user-shield"></i>
+                <div class="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5 sm:mt-0">
+                    <i class="ti ti-user-shield text-base"></i>
                 </div>
                 <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <h3 class="text-sm font-bold text-gray-900 whitespace-nowrap">Guru Piket Hari Ini</h3>
+                        <h3 class="text-sm font-bold text-slate-900 whitespace-nowrap">Guru Piket Hari Ini</h3>
                         @if(!empty($infoPiket['jadwal']))
                             @if(!empty($infoPiket['jadwal']->nama_sesi))
-                                <span class="text-[10px] sm:text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 whitespace-nowrap">
+                                <span class="text-[10px] sm:text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 whitespace-nowrap">
                                     {{ $infoPiket['jadwal']->nama_sesi }}
                                 </span>
                             @endif
-                            <span class="text-[11px] sm:text-xs font-mono font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded whitespace-nowrap">
-                                <i class="far fa-clock text-[10px] text-gray-400 mr-1"></i>{{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} – {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB
+                            <span class="text-[11px] sm:text-xs font-mono font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md whitespace-nowrap">
+                                <i class="ti ti-clock text-[11px] text-slate-400 mr-1"></i>{{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} – {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB
                             </span>
                         @endif
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Daftar Bapak/Ibu Guru yang bertugas piket pada sesi ini.</p>
+                    <p class="text-xs text-slate-500 mt-1">Daftar Bapak/Ibu Guru yang bertugas piket pada sesi ini.</p>
                 </div>
             </div>
             @if(!empty($infoPiket['jadwal']))
                 <div class="flex items-center sm:self-center self-start pl-10 sm:pl-0">
                     @if($infoPiket['status_sesi'] === 'Berlangsung')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap">
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
                             Sedang Berlangsung
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Akan Datang')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 shadow-2xs whitespace-nowrap">
-                            <i class="far fa-clock mr-1.5 text-[10px]"></i>
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200 shadow-2xs whitespace-nowrap">
+                            <i class="ti ti-clock mr-1 text-[11px]"></i>
                             Akan Datang
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Sesi Selesai')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap">
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
                             Sesi Selesai
                         </span>
                     @endif
@@ -484,38 +504,38 @@
     {{-- KONDISI 1: CONFLICT REPLACEMENT --}}
     @if(!empty($infoPiket['conflict']))
         <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2.5">
-            <i class="fas fa-info-circle text-base text-amber-600 flex-shrink-0"></i>
+            <i class="ti ti-info-circle text-base text-amber-600 flex-shrink-0"></i>
             <span class="font-medium">Data Guru Piket sedang diperiksa.</span>
         </div>
 
     {{-- KONDISI 2: TIDAK ADA JADWAL SESI --}}
     @elseif(empty($infoPiket['jadwal']))
-        <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 flex items-center gap-2">
-            <i class="fas fa-info-circle text-base text-gray-400 flex-shrink-0"></i>
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center gap-2">
+            <i class="ti ti-info-circle text-base text-slate-400 flex-shrink-0"></i>
             <span>{{ empty($adaJadwalHariIni) ? 'Belum ada jadwal Guru Piket untuk hari ini.' : 'Tidak ada sesi berikutnya hari ini.' }}</span>
         </div>
 
      {{-- KONDISI 3: ADA SESI & PETUGAS AKTUAL --}}
     @else
         @if(empty($infoPiket['petugas']))
-            <p class="text-xs text-gray-500 italic">Belum ada petugas piket yang ditentukan untuk sesi ini.</p>
+            <p class="text-xs text-slate-500 italic">Belum ada petugas piket yang ditentukan untuk sesi ini.</p>
         @else
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                 @foreach($infoPiket['petugas'] as $p)
                     @php
                         $statusClass = match($p['status']) {
                             'Sedang Bertugas' => 'bg-emerald-50 text-emerald-800 border-emerald-200',
                             'Sedang Keluar'   => 'bg-amber-50 text-amber-800 border-amber-200',
-                            'Sudah Kembali'   => 'bg-sky-50 text-sky-800 border-sky-200',
-                            'Akan Bertugas'   => 'bg-indigo-50 text-indigo-800 border-indigo-200',
-                            default           => 'bg-gray-50 text-gray-700 border-gray-200',
+                            'Sudah Kembali'   => 'bg-blue-50 text-blue-800 border-blue-200',
+                            'Akan Bertugas'   => 'bg-slate-100 text-slate-800 border-slate-200',
+                            default           => 'bg-slate-50 text-slate-700 border-slate-200',
                         };
                         $dotColor = match($p['status']) {
                             'Sedang Bertugas' => 'bg-emerald-500',
                             'Sedang Keluar'   => 'bg-amber-500',
-                            'Sudah Kembali'   => 'bg-sky-500',
-                            'Akan Bertugas'   => 'bg-indigo-500',
-                            default           => 'bg-gray-400',
+                            'Sudah Kembali'   => 'bg-blue-500',
+                            'Akan Bertugas'   => 'bg-slate-500',
+                            default           => 'bg-slate-400',
                         };
                         $initials = collect(explode(' ', $p['guru']->nama_lengkap ?? 'G'))
                             ->filter()
@@ -523,33 +543,26 @@
                             ->map(fn($part) => strtoupper(substr($part, 0, 1)))
                             ->join('');
                     @endphp
-                    <div class="p-3.5 rounded-xl border border-gray-200/90 bg-white hover:border-blue-200 hover:shadow-xs transition-all flex flex-col justify-between gap-3">
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between gap-2.5">
                         <div class="flex items-center gap-2.5 min-w-0">
-                            <div class="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
                                 {{ $initials ?: 'GP' }}
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="font-bold text-sm text-gray-900 truncate">{{ $p['guru']->nama_lengkap }}</p>
+                                <p class="font-bold text-xs sm:text-sm text-slate-900 truncate">{{ $p['guru']->nama_lengkap }}</p>
                                 @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
                                     <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
-                                        <i class="fas fa-exchange-alt text-[10px]"></i>
+                                        <i class="ti ti-arrows-exchange text-xs"></i>
                                         <span class="truncate">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
                                     </p>
                                 @endif
                             </div>
                         </div>
-                        <div class="pt-1 border-t border-gray-100 flex flex-wrap items-center gap-1.5">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border {{ $statusClass }}">
+                        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold border {{ $statusClass }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} {{ $p['status'] === 'Sedang Bertugas' ? 'animate-pulse' : '' }}"></span>
                                 {{ $p['status'] }}
                             </span>
-
-                            @if($p['status'] === 'Sudah Kembali' && ($infoPiket['status_sesi'] ?? null) === 'Berlangsung')
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-emerald-50 text-emerald-800 border-emerald-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    Sedang Bertugas
-                                </span>
-                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -558,26 +571,26 @@
     @endif
 </div>
 
-{{-- ============ STATISTIK UTAMA (MODERN, EXPLICIT COLORS, RESPONSIVE) ============ --}}
+{{-- ============ STATISTIK UTAMA (MODERN, SOLID SURFACE, CLEAN SHADOW) ============ --}}
 @php
 $cards = [
-    'menunggu'  => ['Menunggu',  $stats['menunggu'] ?? 0,  'fa-clock',        'bg-amber-100 text-amber-600',   'hover:border-amber-300'],
-    'disetujui' => ['Disetujui', $stats['disetujui'] ?? 0, 'fa-check-circle', 'bg-emerald-100 text-emerald-600', 'hover:border-emerald-300'],
-    'ditolak'   => ['Ditolak',   $stats['ditolak'] ?? 0,   'fa-times-circle', 'bg-red-100 text-red-600',       'hover:border-red-300'],
-    'selesai'   => ['Selesai',   $stats['selesai'] ?? 0,   'fa-check-double', 'bg-blue-100 text-blue-600',     'hover:border-blue-300'],
+    'menunggu'  => ['Menunggu',  $stats['menunggu'] ?? 0,  'ti-clock-pause', 'bg-amber-50 text-amber-600 border border-amber-200/80'],
+    'disetujui' => ['Disetujui', $stats['disetujui'] ?? 0, 'ti-circle-check', 'bg-emerald-50 text-emerald-600 border border-emerald-200/80'],
+    'ditolak'   => ['Ditolak',   $stats['ditolak'] ?? 0,   'ti-circle-x',     'bg-rose-50 text-rose-600 border border-rose-200/80'],
+    'selesai'   => ['Selesai',   $stats['selesai'] ?? 0,   'ti-checks',       'bg-blue-50 text-blue-600 border border-blue-200/80'],
 ];
 @endphp
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-3">
-    @foreach($cards as $key => [$label, $value, $icon, $iconStyle, $borderHover])
+    @foreach($cards as $key => [$label, $value, $icon, $iconStyle])
     <a href="{{ route('siswa.pengajuan.index', ['status' => $key]) }}"
-       class="stat-card-btn text-left rounded-2xl border border-gray-200/90 bg-white p-3.5 sm:p-4 min-h-[44px] shadow-xs hover:shadow-md {{ $borderHover }} active:scale-95 transition-all w-full block">
+       class="stat-card-btn text-left rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 min-h-[44px] shadow-xs hover:border-slate-300 active:scale-95 transition-all w-full block">
         <div class="flex items-center justify-between mb-2">
             <div class="w-9 h-9 rounded-xl flex items-center justify-center {{ $iconStyle }}">
-                <i class="fas {{ $icon }} text-sm"></i>
+                <i class="ti {{ $icon }} text-lg"></i>
             </div>
-            <span class="text-2xl sm:text-3xl font-black text-gray-900">{{ $value }}</span>
+            <span class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{{ $value }}</span>
         </div>
-        <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $label }}</p>
+        <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{{ $label }}</p>
     </a>
     @endforeach
 </div>
@@ -585,24 +598,24 @@ $cards = [
 {{-- SECONDARY BUTTON: SEMUA PENGAJUAN --}}
 <div class="mb-4">
     <a href="{{ route('siswa.pengajuan.index') }}"
-       class="filter-btn w-full px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all text-center">
-        <i class="fas fa-layer-group mr-1.5 text-blue-600"></i>Tampilkan Semua Pengajuan ({{ $stats['total'] ?? 0 }})
+       class="filter-btn w-full px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all text-center shadow-xs">
+        <i class="ti ti-layers-intersect mr-1.5 text-blue-600 text-sm"></i>Tampilkan Semua Pengajuan ({{ $stats['total'] ?? 0 }})
     </a>
 </div>
 
 {{-- ============ PENGAJUAN TERBARU ============ --}}
-<div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-    <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 class="text-sm font-semibold text-gray-900">
-            <i class="fas fa-history mr-1.5 text-gray-400"></i>Pengajuan Terbaru
+<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+    <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center">
+            <i class="ti ti-history mr-1.5 text-slate-400 text-base"></i>Pengajuan Terbaru
         </h3>
-        <a href="{{ route('siswa.pengajuan.index') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-700">
-            Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
+        <a href="{{ route('siswa.pengajuan.index') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1">
+            Lihat Semua <i class="ti ti-arrow-right text-xs"></i>
         </a>
     </div>
 
     @if(isset($pengajuanTerbaru) && $pengajuanTerbaru->count() > 0)
-        <div class="divide-y divide-gray-100">
+        <div class="divide-y divide-slate-100">
             @foreach($pengajuanTerbaru as $pengajuan)
                 @php
                     $badge = $pengajuan->status_badge;
@@ -615,16 +628,28 @@ $cards = [
                     $canPrint = in_array($pengajuan->status, \App\Helpers\PrintHelper::PRINTABLE_STATUSES) &&
                                 $studentPrintCount < $maxPrint && $isWithinTime;
                 @endphp
-                <div class="p-4 sm:p-5 hover:bg-gray-50 transition-colors">
+                <div class="p-4 sm:p-5 hover:bg-slate-50/70 transition-colors">
                     <div class="flex justify-between items-start gap-3 mb-2">
                         <div class="min-w-0 flex-1">
-                            <h4 class="font-mono font-semibold text-gray-900 text-xs truncate">{{ $pengajuan->nomor_surat }}</h4>
-                            <p class="text-xs text-gray-500 mt-0.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <h4 class="font-mono font-bold text-slate-900 text-xs">{{ $pengajuan->nomor_surat }}</h4>
+                                @if($pengajuan->isOrganisasi())
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                        <i class="ti ti-users text-[10px]"></i> {{ $pengajuan->nama_organisasi }}
+                                    </span>
+                                    @if(auth()->user()->siswa && auth()->user()->siswa->id !== $pengajuan->siswa_id)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                            Anggota Rombongan
+                                        </span>
+                                    @endif
+                                @endif
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
                                 {{ $pengajuan->created_at->format('d M Y, H:i') }} •
                                 <span class="capitalize">{{ str_replace('_', ' ', $pengajuan->kategori) }}</span>
                             </p>
-                            <p class="text-xs text-gray-600 mt-1 truncate">
-                                <span class="font-medium text-gray-700">Tujuan:</span> {{ $pengajuan->tujuan }}
+                            <p class="text-xs text-slate-600 mt-1 truncate">
+                                <span class="font-medium text-slate-700">Tujuan:</span> {{ $pengajuan->tujuan }}
                             </p>
                         </div>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold flex-shrink-0 border {{ $badge['class'] }}">
@@ -634,20 +659,20 @@ $cards = [
                     </div>
                     <div class="mt-3 flex gap-2">
                         <a href="{{ route('siswa.pengajuan.show', $pengajuan) }}"
-                           class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-eye mr-1.5"></i>Detail
+                           class="inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-colors">
+                            <i class="ti ti-eye mr-1.5 text-sm"></i>Detail
                         </a>
                         @if(in_array($pengajuan->status, ['disetujui', 'keluar']))
                             @if($canPrint)
                                 <a href="{{ route('siswa.cetak', $pengajuan) }}" target="_blank"
-                                   class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
-                                    <i class="fas fa-print mr-1.5"></i>Cetak
+                                   class="inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs transition-colors">
+                                    <i class="ti ti-printer mr-1.5 text-sm"></i>Cetak
                                 </a>
                             @else
                                 <button disabled
-                                        class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-gray-400 bg-gray-100 cursor-not-allowed"
+                                        class="inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 bg-slate-100 cursor-not-allowed"
                                         title="{{ $studentPrintCount >= $maxPrint ? 'Batas cetak tercapai (' . $maxPrint . ' kali)' : 'Di luar jam cetak (' . $startTime . ' - ' . $endTime . ' WIB)' }}">
-                                    <i class="fas fa-lock mr-1.5"></i>Cetak
+                                    <i class="ti ti-lock mr-1.5 text-sm"></i>Cetak
                                 </button>
                             @endif
                         @endif
@@ -657,37 +682,34 @@ $cards = [
         </div>
     @else
         <div class="p-8 sm:p-12 text-center">
-            <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3">
-                <i class="fas fa-inbox"></i>
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-3">
+                <i class="ti ti-inbox text-3xl"></i>
             </div>
-            <p class="text-gray-700 font-semibold text-sm mb-1">Belum ada pengajuan dispensasi</p>
-            <p class="text-xs text-gray-500 mb-4">Buat pengajuan pertama Anda untuk memulai.</p>
+            <p class="text-slate-800 font-bold text-sm mb-1">Belum ada pengajuan dispensasi</p>
+            <p class="text-xs text-slate-500 mb-4">Buat pengajuan pertama Anda untuk memulai.</p>
             <a href="{{ route('siswa.pengajuan.create') }}"
-               class="inline-flex items-center px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <i class="fas fa-plus mr-1.5"></i>Buat Pengajuan Pertama
+               class="inline-flex items-center px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-colors">
+                <i class="ti ti-plus mr-1.5 text-sm"></i>Buat Pengajuan Pertama
             </a>
         </div>
     @endif
 </div>
 
-
-{{-- ========================================== --}}
-{{-- MODAL AMBIL FOTO BUKTI LANGSUNG KAMERA    --}}
-{{-- ========================================== --}}
-<div id="uploadModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
-        <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
+{{-- MODAL AMBIL FOTO BUKTI LANGSUNG KAMERA --}}
+<div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">
-                    <i class="fas fa-camera"></i>
+                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+                    <i class="ti ti-camera text-base"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-gray-900">Ambil Foto Bukti</h3>
-                    <p class="text-[11px] text-gray-500">Kamera langsung aktif saat ini</p>
+                    <h3 class="text-sm font-bold text-slate-900">Ambil Foto Bukti</h3>
+                    <p class="text-[11px] text-slate-500">Kamera langsung aktif saat ini</p>
                 </div>
             </div>
-            <button type="button" onclick="closeUploadModal()" class="w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
-                <i class="fas fa-times text-sm"></i>
+            <button type="button" onclick="closeUploadModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                <i class="ti ti-x text-sm"></i>
             </button>
         </div>
 
@@ -695,54 +717,54 @@ $cards = [
             @csrf
             <input type="hidden" id="dispensasiId">
 
-            <div class="relative w-full rounded-xl overflow-hidden bg-black aspect-[4/3] flex items-center justify-center border border-gray-300 shadow-inner">
+            <div class="relative w-full rounded-2xl overflow-hidden bg-black aspect-[4/3] flex items-center justify-center border border-slate-300 shadow-inner">
                 <video id="videoBukti" autoplay playsinline muted class="w-full h-full object-cover"></video>
                 <img id="previewImgBukti" class="w-full h-full object-cover hidden" alt="Preview Foto Bukti">
                 <canvas id="canvasBukti" class="hidden"></canvas>
 
-                <div id="liveBadgeBukti" class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow">
+                <div id="liveBadgeBukti" class="absolute top-3 left-3 bg-rose-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
                     <span class="w-2 h-2 rounded-full bg-white animate-ping"></span> LIVE KAMERA
                 </div>
 
                 <button type="button" id="btnFlipBukti" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-xs transition-colors shadow" title="Putar Kamera">
-                    <i class="fas fa-camera-rotate"></i>
+                    <i class="ti ti-camera-rotate text-sm"></i>
                 </button>
 
-                <div id="cameraLoadingBukti" class="absolute inset-0 bg-gray-900 flex flex-col items-center justify-center text-white hidden">
-                    <i class="fas fa-spinner fa-spin text-2xl mb-2 text-emerald-400"></i>
+                <div id="cameraLoadingBukti" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center text-white hidden">
+                    <i class="ti ti-loader-2 animate-spin text-2xl mb-2 text-emerald-400"></i>
                     <p class="text-xs font-semibold">Mengaktifkan kamera...</p>
                 </div>
 
-                <div id="cameraErrorBukti" class="absolute inset-0 bg-gray-950/95 p-5 flex flex-col items-center justify-center text-center text-white hidden">
+                <div id="cameraErrorBukti" class="absolute inset-0 bg-slate-950/95 p-5 flex flex-col items-center justify-center text-center text-white hidden">
                     <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-2">
-                        <i class="fas fa-triangle-exclamation"></i>
+                        <i class="ti ti-alert-triangle text-2xl"></i>
                     </div>
                     <p class="text-xs font-bold mb-1">Kamera Tidak Dapat Diakses</p>
-                    <p class="text-[11px] text-gray-300 mb-3 max-w-xs leading-relaxed">Pastikan izin akses kamera telah diizinkan pada peramban Anda.</p>
-                    <button type="button" onclick="retryBuktiCamera()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1">
-                        <i class="fas fa-rotate-right"></i> Coba Lagi
+                    <p class="text-[11px] text-slate-300 mb-3 max-w-xs leading-relaxed">Pastikan izin akses kamera telah diizinkan pada peramban Anda.</p>
+                    <button type="button" onclick="retryBuktiCamera()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1">
+                        <i class="ti ti-rotate text-sm"></i> Coba Lagi
                     </button>
                 </div>
             </div>
 
-            <div class="text-[11px] text-gray-500 bg-gray-50 border border-gray-200 rounded-lg p-2.5 flex items-center gap-2">
-                <i class="fas fa-shield-halved text-emerald-600 text-sm flex-shrink-0"></i>
+            <div class="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2">
+                <i class="ti ti-shield-check text-emerald-600 text-base flex-shrink-0"></i>
                 <span>Foto diambil seketika dengan stempel waktu otomatis untuk mencegah penggunaan foto lama.</span>
             </div>
 
             <div id="controlsCameraBukti" class="flex gap-2">
-                <button type="button" onclick="closeUploadModal()" class="w-1/3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-xs transition-colors">Batal</button>
-                <button type="button" id="btnSnapBukti" class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-2 transition-all">
-                    <i class="fas fa-camera text-sm"></i> Jepret Foto Bukti
+                <button type="button" onclick="closeUploadModal()" class="w-1/3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs transition-colors">Batal</button>
+                <button type="button" id="btnSnapBukti" class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl font-bold text-xs shadow-xs flex items-center justify-center gap-2 transition-all">
+                    <i class="ti ti-camera text-base"></i> Jepret Foto Bukti
                 </button>
             </div>
 
             <div id="controlsPreviewBukti" class="hidden flex gap-2">
-                <button type="button" id="btnRetakeBukti" class="w-1/2 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-xs transition-colors flex items-center justify-center gap-1.5">
-                    <i class="fas fa-rotate-left"></i> Foto Ulang
+                <button type="button" id="btnRetakeBukti" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs transition-colors flex items-center justify-center gap-1.5">
+                    <i class="ti ti-rotate text-sm"></i> Foto Ulang
                 </button>
-                <button type="submit" id="btnSubmitBukti" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 transition-colors">
-                    <i class="fas fa-cloud-arrow-up"></i> Upload Foto
+                <button type="submit" id="btnSubmitBukti" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 transition-colors">
+                    <i class="ti ti-upload text-sm"></i> Upload Foto
                 </button>
             </div>
         </form>
@@ -866,7 +888,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
 
     const formData = new FormData();
     formData.append('foto_bukti', capturedBuktiBlob, `bukti-${Date.now()}.jpg`);
-    btnSubmitBukti.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Mengupload...';
+    btnSubmitBukti.innerHTML = '<i class="ti ti-loader-2 animate-spin mr-1"></i> Mengupload...';
     btnSubmitBukti.disabled = true;
 
     try {
@@ -879,7 +901,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         if (data.success) { closeUploadModal(); location.reload(); }
         else { alert('Gagal: ' + (data.message || 'Terjadi kesalahan')); }
     } catch (err) { alert('Error jaringan'); }
-    finally { btnSubmitBukti.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> Upload Foto'; btnSubmitBukti.disabled = false; }
+    finally { btnSubmitBukti.innerHTML = '<i class="ti ti-upload"></i> Upload Foto'; btnSubmitBukti.disabled = false; }
 });
 
 async function hapusFoto(id) {
@@ -945,7 +967,7 @@ function confirmBatalKeluar(url) {
         showCancelButton: true,
         confirmButtonColor: '#e11d48',
         cancelButtonColor: '#64748b',
-        confirmButtonText: '<i class="fas fa-ban mr-1.5"></i> Ya, Batalkan Dispensasi',
+        confirmButtonText: '<i class="ti ti-ban mr-1.5"></i> Ya, Batalkan Dispensasi',
         cancelButtonText: 'Tidak Jadi',
         reverseButtons: true,
         customClass: {
