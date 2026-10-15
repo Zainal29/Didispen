@@ -66,6 +66,14 @@ class SiswaController extends Controller
             $query->where('jurusan_id', $request->jurusan_id);
         }
 
+        if ($request->filled('role_filter')) {
+            if ($request->role_filter === 'superadmin') {
+                $query->whereHas('user', fn($u) => $u->where('is_superadmin', true));
+            } elseif ($request->role_filter === 'regular') {
+                $query->whereHas('user', fn($u) => $u->where('is_superadmin', false)->orWhereNull('is_superadmin'));
+            }
+        }
+
         $siswas = $query->orderBy($sort, $dir)->paginate(15)->withQueryString();
 
         $kelasList   = Kelas::with('jurusan')
@@ -179,5 +187,40 @@ class SiswaController extends Controller
             $siswa->user?->delete();
         });
         return redirect()->route('admin.siswa.index')->with('success', 'Siswa berhasil dihapus.');
+    }
+
+    /**
+     * Toggle status Super Admin untuk siswa tertentu.
+     */
+    public function toggleSuperadmin(Request $request, Siswa $siswa)
+    {
+        $user = $siswa->user;
+        if (! $user) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Akun login untuk siswa ini tidak ditemukan.'], 404);
+            }
+            return back()->with('error', 'Akun login untuk siswa ini tidak ditemukan.');
+        }
+
+        $newStatus = ! (bool) $user->is_superadmin;
+        $user->is_superadmin = $newStatus;
+        $user->save();
+
+        $action = $newStatus ? 'grant_superadmin' : 'revoke_superadmin';
+        $this->auditLog->log(auth()->id(), $action, 'users', $user->id);
+
+        $msg = $newStatus
+            ? "Berhasil! Siswa '{$siswa->nama_lengkap}' sekarang memiliki hak akses Super Admin."
+            : "Status Super Admin untuk siswa '{$siswa->nama_lengkap}' telah dicabut.";
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_superadmin' => $newStatus,
+                'message' => $msg,
+            ]);
+        }
+
+        return back()->with('success', $msg);
     }
 }

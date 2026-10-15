@@ -80,7 +80,14 @@ Route::middleware(['auth'])->group(function () {
 
                 Route::get('/dashboard', Admin\DashboardController::class)->name('dashboard');
 
+                Route::patch('siswa/{siswa}/toggle-superadmin', [Admin\SiswaController::class, 'toggleSuperadmin'])->name('siswa.toggle-superadmin');
                 Route::resource('siswa', Admin\SiswaController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
+
+                // ✅ KELOLA SUPER ADMIN (Dual-Role Siswa / Admin)
+                Route::get('superadmin', [Admin\SuperAdminController::class, 'index'])->name('superadmin.index');
+                Route::post('superadmin', [Admin\SuperAdminController::class, 'store'])->name('superadmin.store');
+                Route::delete('superadmin/{user}', [Admin\SuperAdminController::class, 'destroy'])->name('superadmin.destroy');
+                Route::get('api/superadmin/search-siswa', [Admin\SuperAdminController::class, 'searchSiswa'])->name('superadmin.search-siswa');
                 Route::resource('guru', Admin\GuruController::class)->only(['index', 'store', 'update', 'destroy']);
                 Route::resource('organisasi', Admin\OrganisasiController::class)->except(['create', 'show']);
                 Route::get('api/cari-siswa-ketua', [Admin\OrganisasiController::class, 'cariSiswa'])->name('api.cari-siswa-ketua');
