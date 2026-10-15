@@ -25,30 +25,27 @@
 </style>
 
 {{-- HERO SECTION - Format modern, responsive seperti siswa --}}
-<div class="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 rounded-2xl p-4 sm:p-6 mb-5 shadow-lg shadow-blue-500/15 text-white">
-    <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-    <div class="absolute right-12 top-2 w-24 h-24 bg-indigo-400/20 rounded-full blur-xl pointer-events-none"></div>
-    
+<div class="relative overflow-hidden bg-blue-600 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs text-white border border-blue-700">
     <div class="relative z-10">
-        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-semibold text-blue-100 uppercase tracking-wide mb-2">
-            <i class="far fa-calendar-alt text-blue-200"></i>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-semibold text-blue-100 uppercase tracking-wide mb-2 border border-white/10">
+            <i class="ti ti-calendar text-blue-200"></i>
             {{ now()->isoFormat('dddd, D MMMM Y') }}
         </div>
-        <h2 class="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
+        <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug">
             Halo, {{ auth()->user()->name }}!
         </h2>
-        <p class="text-xs sm:text-sm text-blue-100/90 mt-1 max-w-xl">
+        <p class="text-xs sm:text-sm text-blue-100/90 mt-1 max-w-xl leading-relaxed">
             Panel Guru Piket DIDISPEN. Verifikasi permohonan dispensasi dan pantau aktivitas izin siswa hari ini secara real-time.
         </p>
-        <div class="mt-4 flex flex-wrap items-center gap-2">
+        <div class="mt-3.5 flex flex-wrap items-center gap-2">
             <a href="{{ route('guru.pengajuan.create') }}"
-               class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-sm active:scale-95 transition-all">
-                <i class="fas fa-plus mr-1.5"></i>Buat Dispensasi
+               class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-xs active:scale-95 transition-all">
+                <i class="ti ti-plus mr-1.5"></i>Buat Dispensasi
             </a>
             @if(!empty($incomingSwapCount) && $incomingSwapCount > 0)
                 <a href="{{ route('guru.piket.swap.incoming') }}"
-                   class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-xs font-semibold border border-white/20 transition-all">
-                    <i class="fas fa-inbox mr-1.5 text-yellow-300"></i>{{ $incomingSwapCount }} Permintaan Tukar
+                   class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-all">
+                    <i class="ti ti-inbox mr-1.5 text-amber-300"></i>{{ $incomingSwapCount }} Permintaan Tukar
                 </a>
             @endif
         </div>
@@ -61,7 +58,7 @@
         <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
                 <h3 class="text-sm sm:text-base font-bold text-gray-900 flex items-center whitespace-nowrap">
-                    <i class="fas fa-user-shield text-blue-600 mr-2"></i>
+                    <i class="ti ti-user-shield text-blue-600 mr-2 text-lg"></i>
                     <span>{{ isset($infoPiket['status_sesi']) && $infoPiket['status_sesi'] === 'Akan Datang' ? 'Guru Piket Berikutnya' : 'Guru Piket Hari Ini' }}</span>
                 </h3>
                 @if(!empty($infoPiket['jadwal']))
@@ -74,8 +71,8 @@
                             Sedang Berlangsung
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Akan Datang')
-                        <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200 whitespace-nowrap">
-                            <i class="far fa-clock mr-1 text-[11px]"></i>
+                        <span class="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+                            <i class="ti ti-clock mr-1 text-xs"></i>
                             Akan Datang
                         </span>
                     @endif
@@ -87,30 +84,30 @@
         {{-- Status Keikutsertaan Guru Login & Tombol Aksi --}}
         <div class="flex items-center gap-2 flex-wrap">
             @if(!empty($incomingSwapCount) && $incomingSwapCount > 0)
-                <a href="{{ route('guru.piket.swap.incoming') }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-xs font-bold transition-colors">
-                    <i class="fas fa-inbox mr-1.5"></i>Permintaan Masuk
-                    <span class="ml-1.5 px-1.5 py-0.5 bg-indigo-600 text-white rounded-full text-[10px] leading-none">{{ $incomingSwapCount }}</span>
+                <a href="{{ route('guru.piket.swap.incoming') }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-xs font-bold transition-colors">
+                    <i class="ti ti-inbox mr-1.5"></i>Permintaan Masuk
+                    <span class="ml-1.5 px-1.5 py-0.5 bg-blue-600 text-white rounded-full text-[10px] leading-none">{{ $incomingSwapCount }}</span>
                 </a>
             @endif
 
             @if($isPetugasAktual)
                 <span class="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg inline-flex items-center">
-                    <i class="fas fa-check-circle mr-1.5 text-emerald-600"></i>Anda bertugas pada sesi ini
+                    <i class="ti ti-circle-check mr-1.5 text-emerald-600 text-base"></i>Anda bertugas pada sesi ini
                 </span>
                 <a href="{{ route('guru.piket.swap.create', ['jadwal_id' => $infoPiket['jadwal']?->id]) }}" class="inline-flex items-center px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-colors">
-                    <i class="fas fa-exchange-alt mr-1.5"></i>Tukar Jadwal
+                    <i class="ti ti-arrows-exchange mr-1.5"></i>Tukar Jadwal
                 </a>
                 @if(isset($infoPiket['status_sesi']) && $infoPiket['status_sesi'] === 'Berlangsung')
                     <a href="{{ route('guru.checklog.index') }}" class="inline-flex items-center px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition-colors">
-                        <i class="fas fa-sign-out-alt mr-1.5"></i>Catat Keluar
+                        <i class="ti ti-door-exit mr-1.5"></i>Catat Keluar
                     </a>
                 @endif
             @else
                 <span class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg inline-flex items-center shadow-2xs">
-                    <i class="fas fa-times-circle text-red-500 mr-1.5 text-sm"></i>Anda tidak bertugas pada sesi ini/hari ini.
+                    <i class="ti ti-circle-x text-red-500 mr-1.5 text-sm"></i>Anda tidak bertugas pada sesi ini/hari ini.
                 </span>
                 <a href="{{ route('guru.piket.swap.incoming') }}" class="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold transition-colors">
-                    <i class="fas fa-handshake mr-1.5 text-gray-400"></i>Jadwal Tukar
+                    <i class="ti ti-arrows-exchange mr-1.5 text-gray-400"></i>Jadwal Tukar
                 </a>
             @endif
         </div>
@@ -119,14 +116,14 @@
     {{-- KONDISI 1: CONFLICT REPLACEMENT --}}
     @if(!empty($infoPiket['conflict']))
         <div class="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-center gap-2.5">
-            <i class="fas fa-exclamation-triangle text-base text-red-600 flex-shrink-0"></i>
+            <i class="ti ti-alert-triangle text-base text-red-600 flex-shrink-0"></i>
             <span class="font-medium">Data jadwal membutuhkan pemeriksaan admin.</span>
         </div>
 
     {{-- KONDISI 2: TIDAK ADA JADWAL SESI --}}
     @elseif(empty($infoPiket['jadwal']))
         <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 flex items-center gap-2">
-            <i class="fas fa-info-circle text-base text-gray-400 flex-shrink-0"></i>
+            <i class="ti ti-info-circle text-base text-gray-400 flex-shrink-0"></i>
             <span>{{ empty($adaJadwalHariIni) ? 'Belum ada jadwal Guru Piket untuk hari ini.' : 'Tidak ada sesi Guru Piket berikutnya hari ini.' }}</span>
         </div>
 
@@ -141,15 +138,15 @@
                         $statusClass = match($p['status']) {
                             'Sedang Bertugas' => 'bg-emerald-50 text-emerald-800 border-emerald-200',
                             'Sedang Keluar'   => 'bg-amber-50 text-amber-800 border-amber-200',
-                            'Sudah Kembali'   => 'bg-sky-50 text-sky-800 border-sky-200',
-                            'Akan Bertugas'   => 'bg-indigo-50 text-indigo-800 border-indigo-200',
+                            'Sudah Kembali'   => 'bg-blue-50 text-blue-800 border-blue-200',
+                            'Akan Bertugas'   => 'bg-slate-100 text-slate-800 border-slate-200',
                             default           => 'bg-gray-50 text-gray-700 border-gray-200',
                         };
                         $dotColor = match($p['status']) {
                             'Sedang Bertugas' => 'bg-emerald-500',
                             'Sedang Keluar'   => 'bg-amber-500',
-                            'Sudah Kembali'   => 'bg-sky-500',
-                            'Akan Bertugas'   => 'bg-indigo-500',
+                            'Sudah Kembali'   => 'bg-blue-500',
+                            'Akan Bertugas'   => 'bg-slate-500',
                             default           => 'bg-gray-400',
                         };
                     @endphp
@@ -158,7 +155,7 @@
                             <p class="font-bold text-sm text-gray-900 break-words">{{ $p['guru']->nama_lengkap }}</p>
                             @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
                                 <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
-                                    <i class="fas fa-exchange-alt text-[10px]"></i>
+                                    <i class="ti ti-arrows-exchange text-xs"></i>
                                     <span class="break-words">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
                                 </p>
                             @endif
@@ -196,7 +193,7 @@
         <input type="hidden" name="filter" value="{{ $filter ?? 'semua' }}">
         <div class="flex-1 relative min-w-0">
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                <i class="fas fa-search text-sm"></i>
+                <i class="ti ti-search text-base"></i>
             </span>
             <input type="text" name="search" value="{{ $search ?? '' }}"
                    placeholder="Cari nama siswa, NIS, atau nomor surat..."
@@ -205,17 +202,17 @@
             @if($search)
                 <a href="{{ route('guru.dashboard', ['filter' => $filter]) }}"
                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 transition-colors" title="Hapus pencarian">
-                    <i class="fas fa-times-circle text-lg"></i>
+                    <i class="ti ti-circle-x text-lg"></i>
                 </a>
             @endif
         </div>
         <button type="submit" class="px-5 py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-search mr-1.5 hidden sm:inline"></i>Cari
+            <i class="ti ti-search mr-1.5 hidden sm:inline"></i>Cari
         </button>
     </form>
     @if($search)
         <div class="mt-2 text-xs text-gray-500 flex items-center flex-wrap">
-            <i class="fas fa-info-circle mr-1"></i>
+            <i class="ti ti-info-circle mr-1 text-sm"></i>
             Menampilkan hasil pencarian untuk: <strong class="text-gray-800 mx-1">"{{ $search }}"</strong>
             <span class="mx-1">•</span>
             <span>{{ $displayData->count() }} data ditemukan</span>
@@ -226,10 +223,10 @@
 {{-- STATISTIK SEBAGAI FILTER UTAMA --}}
 @php
 $cards = [
-    'menunggu' => ['Menunggu', $stats['menunggu'] ?? 0, 'fa-clock', 'amber'],
-    'disetujui' => ['Disetujui', $stats['disetujui'] ?? 0, 'fa-check-circle', 'emerald'],
-    'keluar'    => ['Sedang Keluar', $stats['keluar'] ?? 0, 'fa-walking', 'sky'],
-    'selesai'   => ['Selesai', $stats['selesai'] ?? 0, 'fa-check-double', 'gray'],
+    'menunggu'  => ['Menunggu',     $stats['menunggu'] ?? 0,  'ti-clock-pause', 'amber'],
+    'disetujui' => ['Disetujui',    $stats['disetujui'] ?? 0, 'ti-circle-check', 'emerald'],
+    'keluar'    => ['Sedang Keluar',$stats['keluar'] ?? 0,    'ti-walk',         'blue'],
+    'selesai'   => ['Selesai',      $stats['selesai'] ?? 0,   'ti-checks',       'slate'],
 ];
 @endphp
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-3">
@@ -237,22 +234,28 @@ $cards = [
         @php
             $isActive = $filter === $key;
             $color = $card[3];
+            $iconBg = match($color) {
+                'amber'   => 'bg-amber-50 text-amber-600 border border-amber-200/80',
+                'emerald' => 'bg-emerald-50 text-emerald-600 border border-emerald-200/80',
+                'blue'    => 'bg-blue-50 text-blue-600 border border-blue-200/80',
+                'slate'   => 'bg-slate-100 text-slate-600 border border-slate-200',
+                default   => 'bg-slate-50 text-slate-600 border border-slate-200',
+            };
         @endphp
         <button type="button"
                 onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
                 data-filter="{{ $key }}"
                 class="stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[44px] transition-all w-full
                 {{ $isActive
-                    ? 'active bg-white border-' . $color . '-500 ring-2 ring-' . $color . '-500/20 shadow-sm'
-                    : 'bg-white border-gray-200/90 shadow-xs hover:border-gray-300 hover:shadow-md' }}">
+                    ? 'active bg-white border-blue-600 ring-2 ring-blue-600/10 shadow-sm'
+                    : 'bg-white border-slate-200 shadow-xs hover:border-slate-300' }}">
             <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors
-                    {{ $isActive ? 'bg-' . $color . '-500 text-white' : 'bg-' . $color . '-100 text-' . $color . '-600' }}">
-                    <i class="fas {{ $card[2] }} text-sm"></i>
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors {{ $iconBg }}">
+                    <i class="ti {{ $card[2] }} text-lg"></i>
                 </div>
-                <span class="text-2xl sm:text-3xl font-black text-gray-900">{{ $card[1] }}</span>
+                <span class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{{ $card[1] }}</span>
             </div>
-            <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $card[0] }}</p>
+            <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{{ $card[0] }}</p>
         </button>
     @endforeach
 </div>
@@ -262,29 +265,29 @@ $cards = [
     <button type="button"
             onclick="switchFilter('semua', 'blue', event)"
             data-filter="semua"
-            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center shadow-xs
             {{ $filter === 'semua'
-                ? 'active bg-blue-600 text-white shadow-sm border-transparent hover:bg-blue-700'
-                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
-        <i class="fas fa-layer-group mr-1.5 {{ $filter === 'semua' ? 'text-white' : 'text-blue-500' }}"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
+                ? 'active bg-blue-600 text-white shadow-xs border-transparent hover:bg-blue-700'
+                : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200' }}">
+        <i class="ti ti-layers-intersect mr-1.5 {{ $filter === 'semua' ? 'text-white' : 'text-blue-600' }}"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
     </button>
     <button type="button"
             onclick="switchFilter('terlambat', 'red', event)"
             data-filter="terlambat"
-            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center shadow-xs
             {{ $filter === 'terlambat'
-                ? 'active bg-red-600 text-white shadow-sm border-transparent hover:bg-red-700'
-                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
-        <i class="fas fa-exclamation-triangle mr-1.5 {{ $filter === 'terlambat' ? 'text-white' : 'text-red-500' }}"></i>Terlambat ({{ $stats['terlambat'] ?? count($terlambat ?? []) }})
+                ? 'active bg-rose-600 text-white shadow-xs border-transparent hover:bg-rose-700'
+                : 'bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 border-slate-200' }}">
+        <i class="ti ti-alert-triangle mr-1.5 {{ $filter === 'terlambat' ? 'text-white' : 'text-rose-500' }}"></i>Terlambat ({{ $stats['terlambat'] ?? count($terlambat ?? []) }})
     </button>
     <button type="button"
             onclick="switchFilter('dihubungi', 'purple', event)"
             data-filter="dihubungi"
-            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center col-span-2 sm:col-span-1
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center shadow-xs col-span-2 sm:col-span-1
             {{ $filter === 'dihubungi'
-                ? 'active bg-purple-600 text-white shadow-sm border-transparent hover:bg-purple-700'
-                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
-        <i class="fas fa-phone-alt mr-1.5 {{ $filter === 'dihubungi' ? 'text-white' : 'text-purple-500' }}"></i>Dihubungi ({{ count($dihubungi ?? []) }})
+                ? 'active bg-emerald-600 text-white shadow-xs border-transparent hover:bg-emerald-700'
+                : 'bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 border-slate-200' }}">
+        <i class="ti ti-brand-whatsapp mr-1.5 {{ $filter === 'dihubungi' ? 'text-white' : 'text-emerald-600' }}"></i>Dihubungi ({{ count($dihubungi ?? []) }})
     </button>
 </div>
 
@@ -327,18 +330,30 @@ $cards = [
             <div class="p-4 transition-colors {{ $isLate ? 'bg-red-50/60 hover:bg-red-100/60 border-l-4 border-l-red-500' : 'hover:bg-gray-50/80' }}">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                            <span class="font-mono text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{{ $item->nomor_surat }}</span>
+                        <div class="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                            <span class="font-mono text-xs font-bold text-slate-900">{{ $item->nomor_surat }}</span>
                             @php
                                 $badge = $item->status_badge;
                             @endphp
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide {{ $badge['class'] }}">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wide {{ $badge['class'] }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
                                 {{ $badge['text'] }}
                             </span>
+                            @if($item->isOrganisasi())
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                    <i class="ti ti-users text-[10px] text-blue-600"></i> {{ $item->nama_organisasi }}
+                                </span>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                    Organisasi
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                    <i class="ti ti-user text-[10px]"></i> Individu
+                                </span>
+                            @endif
                             @if($item->is_warned)
-                                <span class="warned-badge px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide bg-purple-100 text-purple-800 border-purple-200">
-                                    <i class="fas fa-phone-alt mr-1"></i>Sudah Dihubungi
+                                <span class="warned-badge px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-800 border-emerald-200 flex items-center gap-1">
+                                    <i class="ti ti-brand-whatsapp text-emerald-600"></i>Sudah Dihubungi
                                 </span>
                             @endif
                         </div>
@@ -354,7 +369,7 @@ $cards = [
                         </p>
                         @if($isLate)
                             <p class="text-xs text-red-600 font-semibold mt-1.5 flex items-center">
-                                <i class="far fa-clock mr-1.5"></i>
+                                <i class="ti ti-clock mr-1.5"></i>
                                 Batas kembali: {{ \Carbon\Carbon::parse($item->batas_waktu_kembali)->format('H:i') }} WIB
                             </p>
                         @endif
@@ -364,20 +379,20 @@ $cards = [
                             <button type="button"
                                     class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-green-600 text-white text-xs font-semibold rounded-lg opacity-50 cursor-not-allowed"
                                     disabled>
-                                <i class="fab fa-whatsapp mr-1.5"></i>
+                                <i class="ti ti-brand-whatsapp mr-1.5 text-base"></i>
                                 <span class="wa-text">Sudah Dihubungi</span>
                             </button>
                         @elseif($isLate && $waLink)
                             <button onclick="handleGuruWaContacted({{ $item->id }}, '{{ $waLink }}', this)"
                                     class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                                <i class="fab fa-whatsapp mr-1.5"></i>
+                                <i class="ti ti-brand-whatsapp mr-1.5 text-base"></i>
                                 <span class="wa-text">Hubungi</span>
                             </button>
                         @endif
                         <a href="{{ route('guru.pengajuan.show', $item) }}"
-                           class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition-colors border border-blue-200"
+                           class="inline-flex items-center justify-center px-3.5 py-2 min-h-[38px] bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors"
                            title="Lihat Detail">
-                            <i class="fas fa-eye mr-1.5"></i>Detail
+                            <i class="ti ti-eye mr-1.5 text-sm"></i>Detail
                         </a>
 
                             @if($item->status === 'menunggu')
@@ -387,14 +402,14 @@ $cards = [
                                             onclick="showApproveModal({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}', '{{ $item->nomor_surat }}')"
                                             class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
                                             title="Setujui">
-                                        <i class="fas fa-check mr-1.5"></i>Setuju
+                                        <i class="ti ti-check mr-1.5 text-sm"></i>Setuju
                                     </button>
                                 </form>
                             <button type="button"
                                     onclick="rejectDispensasi({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}')"
                                     class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
                                     title="Tolak">
-                                <i class="fas fa-times mr-1.5"></i>Tolak
+                                <i class="ti ti-x mr-1.5 text-sm"></i>Tolak
                             </button>
                        @endif
                     </div>
@@ -403,7 +418,7 @@ $cards = [
         @empty
             <div class="p-10 text-center">
                 <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3">
-                    <i class="fas fa-search"></i>
+                    <i class="ti ti-search"></i>
                 </div>
                 <p class="text-gray-800 font-semibold text-sm">
                     @if($search)
@@ -446,7 +461,7 @@ function showApproveModal(id, studentName, nomorSurat) {
     Swal.fire({
         icon: 'question', title: 'Setujui dispensasi?',
         html: `<div class="text-left rounded-xl border border-blue-100 bg-blue-50 p-3 text-sm text-gray-700"><p class="font-semibold text-gray-900">${escapeAlertHtml(studentName)}</p><p class="mt-0.5 font-mono text-xs text-gray-500">${escapeAlertHtml(nomorSurat)}</p><p class="mt-2 text-xs">Siswa akan dapat melanjutkan proses dispensasi.</p></div>`,
-        showCancelButton: true, confirmButtonText: '<i class="fas fa-check mr-1"></i> Setujui', cancelButtonText: 'Kembali',
+        showCancelButton: true, confirmButtonText: '<i class="ti ti-check mr-1 text-sm"></i> Setujui', cancelButtonText: 'Kembali',
         focusCancel: true, reverseButtons: true,
         customClass: { popup: 'dispensasi-alert', confirmButton: 'bg-emerald-600 hover:bg-emerald-700', cancelButton: 'bg-gray-100 hover:bg-gray-200 text-gray-700' },
         confirmButtonColor: '#059669', cancelButtonColor: '#f3f4f6'
@@ -465,8 +480,8 @@ let isFilterFetching = false;
 const statCardColors = {
     'menunggu': 'amber',
     'disetujui': 'emerald',
-    'keluar': 'sky',
-    'selesai': 'gray'
+    'keluar': 'blue',
+    'selesai': 'slate'
 };
 
 function switchFilter(filterKey, color, event) {
@@ -606,7 +621,7 @@ function rejectDispensasi(id, namaSiswa) {
         inputPlaceholder: 'Contoh: data atau alasan pengajuan belum lengkap',
         inputAttributes: { rows: 4, 'aria-label': 'Alasan penolakan' },
         showCancelButton: true,
-        confirmButtonText: '<i class="fas fa-times mr-1"></i> Tolak dispensasi', cancelButtonText: 'Kembali',
+        confirmButtonText: '<i class="ti ti-x mr-1 text-sm"></i> Tolak dispensasi', cancelButtonText: 'Kembali',
         reverseButtons: true, focusCancel: true,
         customClass: { popup: 'dispensasi-alert', confirmButton: 'bg-red-600 hover:bg-red-700', cancelButton: 'bg-gray-100 hover:bg-gray-200 text-gray-700' },
         confirmButtonColor: '#dc2626', cancelButtonColor: '#f3f4f6',
@@ -657,11 +672,11 @@ function handleGuruWaContacted(dispensasiId, waLink, button) {
 
             const card = button.closest('.p-4');
             if (card) {
-                const badgeRow = card.querySelector('.flex.items-center.gap-2.mb-1');
+                const badgeRow = card.querySelector('.flex.items-center.gap-1\\.5.mb-1\\.5') || card.querySelector('.flex.items-center.flex-wrap') || card.querySelector('.flex.items-center');
                 if (badgeRow && !badgeRow.querySelector('.warned-badge')) {
                     badgeRow.insertAdjacentHTML('beforeend',
-                        `<span class="warned-badge px-2 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide bg-purple-100 text-purple-800 border-purple-200 ml-2">
-                            <i class="fas fa-phone-alt mr-1"></i>Dihubungi
+                        `<span class="warned-badge px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-800 border-emerald-200 ml-1.5 inline-flex items-center gap-1">
+                            <i class="ti ti-brand-whatsapp text-emerald-600"></i>Sudah Dihubungi
                         </span>`
                     );
                 }

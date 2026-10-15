@@ -11,7 +11,7 @@
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                 <div class="px-4 py-4 border-b border-gray-200 bg-gray-50/50 flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-plus-circle"></i>
+                        <i class="ti ti-circle-plus text-xl"></i>
                     </div>
                     <div class="min-w-0">
                         <h3 class="text-sm font-bold text-gray-900 truncate">Catat Keluar</h3>
@@ -37,7 +37,7 @@
                     </div>
                     <button type="submit"
                             class="w-full inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Catat Saya Keluar
+                        <i class="ti ti-door-exit mr-2 text-lg"></i>Catat Saya Keluar
                     </button>
                 </form>
             </div>
@@ -46,7 +46,7 @@
             <div class="bg-white border border-red-200 rounded-xl shadow-sm overflow-hidden">
                 <div class="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-door-open"></i>
+                        <i class="ti ti-door-exit text-xl"></i>
                     </div>
                     <div>
                         <h3 class="text-sm font-bold text-gray-900">Anda Sedang Keluar</h3>
@@ -57,7 +57,7 @@
                     {{-- Timer Besar --}}
                     <div class="text-center mb-4">
                         <p class="text-[10px] font-bold uppercase tracking-wider text-red-600 mb-2">
-                            <i class="fas fa-stopwatch mr-1"></i>Durasi Keluar
+                            <i class="ti ti-stopwatch mr-1 text-sm"></i>Durasi Keluar
                         </p>
                         <div class="bg-red-50 border border-red-100 rounded-lg p-4">
                             <p class="text-3xl sm:text-4xl font-bold text-red-700 font-mono" id="durationTimer">00:00:00</p>
@@ -69,17 +69,17 @@
                     {{-- Detail Keluar --}}
                     <div class="space-y-2 text-xs mb-4">
                         <div class="flex justify-between gap-2">
-                            <span class="text-red-600"><i class="fas fa-map-marker-alt mr-1"></i>Tujuan</span>
+                            <span class="text-red-600 flex items-center"><i class="ti ti-map-pin mr-1 text-sm"></i>Tujuan</span>
                             <span class="font-semibold text-gray-900 text-right">{{ $sedangKeluar->tujuan }}</span>
                         </div>
                         @if($sedangKeluar->lokasi)
                             <div class="flex justify-between gap-2">
-                                <span class="text-red-600"><i class="fas fa-location-arrow mr-1"></i>Lokasi</span>
+                                <span class="text-red-600 flex items-center"><i class="ti ti-navigation mr-1 text-sm"></i>Lokasi</span>
                                 <span class="font-semibold text-gray-900 text-right">{{ $sedangKeluar->lokasi }}</span>
                             </div>
                         @endif
                         <div class="flex justify-between gap-2">
-                            <span class="text-red-600"><i class="fas fa-info-circle mr-1"></i>Alasan</span>
+                            <span class="text-red-600 flex items-center"><i class="ti ti-info-circle mr-1 text-sm"></i>Alasan</span>
                             <span class="font-semibold text-gray-900 text-right max-w-[60%]">{{ Str::limit($sedangKeluar->alasan, 30) }}</span>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
                         @csrf
                         <button type="submit"
                                 class="w-full inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
-                            <i class="fas fa-sign-in-alt mr-2"></i>Catat Saya Kembali
+                            <i class="ti ti-door-enter mr-2 text-lg"></i>Catat Saya Kembali
                         </button>
                     </form>
                 </div>
@@ -116,11 +116,11 @@
     <div class="lg:col-span-2 min-w-0">
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center gap-2">
-                <h3 class="text-sm font-bold text-gray-900">
-                    <i class="fas fa-history text-gray-400 mr-1.5"></i>Riwayat 10 Terakhir
+                <h3 class="text-sm font-bold text-gray-900 flex items-center">
+                    <i class="ti ti-history text-gray-400 mr-1.5 text-base"></i>Riwayat 10 Terakhir
                 </h3>
-                <div class="text-xs text-gray-500 font-semibold">
-                    <i class="fas fa-sync-alt mr-1 text-blue-500"></i>Update: <span id="lastUpdate" class="font-mono">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</span>
+                <div class="text-xs text-gray-500 font-semibold flex items-center">
+                    <i class="ti ti-refresh mr-1 text-blue-500 text-sm"></i>Update: <span id="lastUpdate" class="font-mono">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</span>
                 </div>
             </div>
 
@@ -136,25 +136,25 @@
                                 </p>
                             </div>
                             @if($log->status === 'keluar')
-                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-red-100 text-red-700 flex-shrink-0">
-                                    <i class="fas fa-circle text-[6px] mr-1"></i>Sedang Keluar
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-red-100 text-red-700 flex-shrink-0 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>Sedang Keluar
                                 </span>
                             @else
-                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-emerald-100 text-emerald-700 flex-shrink-0">
-                                    <i class="fas fa-check-circle mr-1"></i>Selesai
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-emerald-100 text-emerald-700 flex-shrink-0 flex items-center gap-1">
+                                    <i class="ti ti-circle-check text-xs"></i>Selesai
                                 </span>
                             @endif
                         </div>
                         @if($log->lokasi)
-                            <p class="text-xs text-gray-500 mb-1.5"><i class="fas fa-map-marker-alt mr-1"></i>{{ $log->lokasi }}</p>
+                            <p class="text-xs text-gray-500 mb-1.5 flex items-center"><i class="ti ti-map-pin mr-1 text-sm"></i>{{ $log->lokasi }}</p>
                         @endif
                         <div class="grid grid-cols-3 gap-2 text-xs">
                             <div class="px-2 py-1.5 rounded-lg bg-blue-50 border border-blue-100">
-                                <p class="text-blue-600 text-[9px] font-bold uppercase"><i class="fas fa-door-open mr-0.5"></i>Keluar</p>
+                                <p class="text-blue-600 text-[9px] font-bold uppercase flex items-center"><i class="ti ti-door-exit mr-0.5 text-xs"></i>Keluar</p>
                                 <p class="font-mono font-semibold text-blue-800">{{ $log->jam_keluar->timezone('Asia/Jakarta')->format('H:i') }}</p>
                             </div>
                             <div class="px-2 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100">
-                                <p class="text-emerald-600 text-[9px] font-bold uppercase"><i class="fas fa-door-closed mr-0.5"></i>Kembali</p>
+                                <p class="text-emerald-600 text-[9px] font-bold uppercase flex items-center"><i class="ti ti-door-enter mr-0.5 text-xs"></i>Kembali</p>
                                 @if($log->jam_kembali)
                                     <p class="font-mono font-semibold text-emerald-800">{{ $log->jam_kembali->timezone('Asia/Jakarta')->format('H:i') }}</p>
                                 @else
@@ -180,7 +180,7 @@
                     </div>
                 @empty
                     <div class="p-10 text-center">
-                        <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-history"></i></div>
+                        <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3"><i class="ti ti-history text-2xl"></i></div>
                         <p class="text-gray-700 font-semibold text-sm">Belum ada riwayat keluar/masuk</p>
                     </div>
                 @endforelse
@@ -193,8 +193,8 @@
                         <tr>
                             <th class="p-4 text-left font-semibold">Tanggal</th>
                             <th class="p-4 text-left font-semibold">Tujuan</th>
-                            <th class="p-4 text-left font-semibold"><i class="fas fa-door-open mr-1"></i>Jam Keluar</th>
-                            <th class="p-4 text-left font-semibold"><i class="fas fa-door-closed mr-1"></i>Jam Kembali</th>
+                            <th class="p-4 text-left font-semibold"><i class="ti ti-door-exit mr-1 text-sm"></i>Jam Keluar</th>
+                            <th class="p-4 text-left font-semibold"><i class="ti ti-door-enter mr-1 text-sm"></i>Jam Kembali</th>
                             <th class="p-4 text-left font-semibold">Durasi</th>
                             <th class="p-4 text-left font-semibold">Status</th>
                         </tr>
@@ -209,7 +209,7 @@
                                 <td class="p-4">
                                     <div class="font-semibold text-gray-900">{{ $log->tujuan }}</div>
                                     @if($log->lokasi)
-                                        <div class="text-xs text-gray-500"><i class="fas fa-map-marker-alt mr-1"></i>{{ $log->lokasi }}</div>
+                                        <div class="text-xs text-gray-500 flex items-center"><i class="ti ti-map-pin mr-1 text-sm"></i>{{ $log->lokasi }}</div>
                                     @endif
                                 </td>
                                 <td class="p-4 font-mono font-semibold text-blue-700 text-xs">
@@ -244,7 +244,7 @@
                                         </span>
                                     @else
                                         <span class="px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-700 inline-flex items-center">
-                                            <i class="fas fa-check-circle mr-1.5"></i>Selesai
+                                            <i class="ti ti-circle-check mr-1.5 text-sm"></i>Selesai
                                         </span>
                                     @endif
                                 </td>
@@ -252,7 +252,7 @@
                         @empty
                             <tr>
                                 <td colspan="6" class="p-12 text-center">
-                                    <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-history"></i></div>
+                                    <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3"><i class="ti ti-history text-2xl"></i></div>
                                     <p class="text-gray-700 font-semibold text-sm">Belum ada riwayat keluar/masuk</p>
                                 </td>
                             </tr>

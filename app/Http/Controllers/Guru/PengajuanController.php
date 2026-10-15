@@ -119,6 +119,7 @@ class PengajuanController extends Controller
                 'nis' => $nis,
                 'kelas' => $kelasLengkap,
                 'jurusan' => $jurusan,
+                'no_telepon' => $item->no_telepon ?? '',
             ];
         });
 
@@ -151,6 +152,7 @@ class PengajuanController extends Controller
 
         $dayOfWeek = now('Asia/Jakarta')->dayOfWeek;
         $maxJam = TimeHelper::getMaxJamPelajaran($dayOfWeek);
+        $isSampaiPulang = $request->boolean('sampai_pulang');
 
         $validated = $request->validate([
             'siswa_id'        => [
@@ -163,114 +165,182 @@ class PengajuanController extends Controller
             'alasan'          => ['required', 'string', 'min:10', 'max:500'],
             'tujuan'          => ['required', 'string', 'max:255'],
             'lokasi'          => ['nullable', 'string', 'max:255'],
+            'no_telepon'      => ['nullable', 'string', 'regex:/^(?:\+?620?|0)?8[0-9]{8,12}$/'],
             'jam_keluar'      => ['required'],
-            'jam_kembali'     => ['required'],
-            'foto_verifikasi' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'jam_kembali'     => [$isSampaiPulang ? 'nullable' : 'required'],
+            'foto_verifikasi' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ], [
             'siswa_id.exists'          => 'Siswa yang dipilih tidak ditemukan atau sudah tidak aktif.',
             'alasan.min'               => 'Alasan dispensasi minimal 10 karakter.',
             'alasan.max'               => 'Alasan dispensasi maksimal 500 karakter.',
+            'no_telepon.regex'         => 'Format nomor WhatsApp tidak valid.',
             'foto_verifikasi.image'    => 'File harus berupa gambar.',
-            'foto_verifikasi.mimes'    => 'Format gambar harus JPEG, PNG, atau JPG.',
-            'foto_verifikasi.max'      => 'Ukuran gambar maksimal 2MB.',
+            'foto_verifikasi.mimes'    => 'Format gambar harus JPEG, PNG, JPG, atau WEBP.',
+            'foto_verifikasi.max'      => 'Ukuran gambar maksimal 5MB.',
         ]);
 
         $rawJamKeluar = (string) $request->input('jam_keluar');
-        $rawJamKembali = (string) $request->input('jam_kembali');
+        $rawJamKembali = $isSampaiPulang ? 'pulang' : (string) $request->input('jam_kembali');
 
-        if (is_numeric($rawJamKeluar) && is_numeric($rawJamKembali)) {
-            $jamKeluar = (int) $rawJamKeluar;
-            $jamKembali = (int) $rawJamKembali;
+        $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
+        $scheduleEarliest = ! empty($semuaSlotHariIni) ? $semuaSlotHariIni[0]['start'] : '07:00';
+        $scheduleLatest = ! empty($semuaSlotHariIni) ? end($semuaSlotHariIni)['end'] : '15:15';
+        [$startH, $startM] = array_map('intval', explode(':', $scheduleEarliest));
+        [$endH, $endM] = array_map('intval', explode(':', $scheduleLatest));
 
-            if ($jamKeluar < 1 || $jamKeluar > $maxJam) {
-                throw ValidationException::withMessages([
-                    'jam_keluar' => "Jam keluar maksimal adalah Jam ke-{$maxJam} untuk hari ini (" .
-                        now('Asia/Jakarta')->isoFormat('dddd') . ').',
-                ]);
-            }
+        $storedJamKeluar = null;
+        $storedJamKembali = null;
+        $batasWaktuKembali = null;
 
-            if ($jamKembali < 1 || $jamKembali > $maxJam) {
-                throw ValidationException::withMessages([
-                    'jam_kembali' => "Jam kembali maksimal adalah Jam ke-{$maxJam} untuk hari ini (" .
-                        now('Asia/Jakarta')->isoFormat('dddd') . ').',
-                ]);
-            }
+        if ($isSampaiPulang) {
+            // Mode Izin Sampai Pulang Sekolah
+            if (is_numeric($rawJamKeluar)) {
+                $jamKeluar = (int) $rawJamKeluar;
+                if ($jamKeluar < 1 || $jamKeluar > $maxJam) {
+                    throw ValidationException::withMessages([
+                        'jam_keluar' => "Jam keluar maksimal adalah Jam ke-{$maxJam} untuk hari ini (" .
+                            now('Asia/Jakarta')->isoFormat('dddd') . ').',
+                    ]);
+                }
+                $storedJamKeluar = 'Jam Pelajaran ke-' . $jamKeluar;
+            } elseif (preg_match('/^\d{2}:\d{2}$/', $rawJamKeluar)) {
+                $nowWib = now('Asia/Jakarta');
+                $currentMinutes = ($nowWib->hour * 60) + $nowWib->minute;
+                [$jamKeluarHour, $jamKeluarMinute] = array_map('intval', explode(':', $rawJamKeluar));
+                $jamKeluarMinutes = ($jamKeluarHour * 60) + $jamKeluarMinute;
 
-            if ($jamKembali <= $jamKeluar) {
-                throw ValidationException::withMessages([
-                    'jam_kembali' => 'Jam kembali harus lebih dari jam keluar.',
-                ]);
-            }
-
-            $storedJamKeluar = 'Jam Pelajaran ke-' . $jamKeluar;
-            $storedJamKembali = 'Jam Pelajaran ke-' . $jamKembali;
-            $batasWaktuKembali = TimeHelper::getBatasWaktuKembali($jamKembali, $dayOfWeek);
-        } elseif (preg_match('/^\d{2}:\d{2}$/', $rawJamKeluar) && preg_match('/^\d{2}:\d{2}$/', $rawJamKembali)) {
-            $nowWib = now('Asia/Jakarta');
-            $currentMinutes = ($nowWib->hour * 60) + $nowWib->minute;
-
-            [$jamKeluarHour, $jamKeluarMinute] = array_map('intval', explode(':', $rawJamKeluar));
-            [$jamKembaliHour, $jamKembaliMinute] = array_map('intval', explode(':', $rawJamKembali));
-
-            $jamKeluarMinutes = ($jamKeluarHour * 60) + $jamKeluarMinute;
-            $jamKembaliMinutes = ($jamKembaliHour * 60) + $jamKembaliMinute;
-
-            if ($jamKeluarMinutes < $currentMinutes) {
-                throw ValidationException::withMessages([
-                    'jam_keluar' => 'Jam keluar tidak boleh menggunakan waktu yang sudah lewat.',
-                ]);
-            }
-
-            if ($jamKembaliMinutes <= $jamKeluarMinutes) {
-                throw ValidationException::withMessages([
-                    'jam_kembali' => 'Jam kembali harus lebih besar dari jam keluar.',
-                ]);
-            }
-
-            $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
-            $waktuKeluarValid = false;
-            $waktuKembaliValid = false;
-
-            foreach ($semuaSlotHariIni as $slot) {
-                if (empty($slot['start']) || empty($slot['end'])) {
-                    continue;
+                if ($jamKeluarMinutes < $currentMinutes) {
+                    throw ValidationException::withMessages([
+                        'jam_keluar' => 'Jam keluar tidak boleh menggunakan waktu yang sudah lewat.',
+                    ]);
                 }
 
-                [$startHour, $startMinute] = array_map('intval', explode(':', substr($slot['start'], 0, 5)));
-                [$endHour, $endMinute] = array_map('intval', explode(':', substr($slot['end'], 0, 5)));
-
-                $slotStart = ($startHour * 60) + $startMinute;
-                $slotEnd = ($endHour * 60) + $endMinute;
-
-                if ($jamKeluarMinutes >= $slotStart && $jamKeluarMinutes <= $slotEnd) {
-                    $waktuKeluarValid = true;
+                $waktuKeluarValid = false;
+                foreach ($semuaSlotHariIni as $slot) {
+                    if (empty($slot['start']) || empty($slot['end'])) {
+                        continue;
+                    }
+                    [$slotStartH, $slotStartM] = array_map('intval', explode(':', substr($slot['start'], 0, 5)));
+                    [$slotEndH, $slotEndM] = array_map('intval', explode(':', substr($slot['end'], 0, 5)));
+                    $slotStart = ($slotStartH * 60) + $slotStartM;
+                    $slotEnd = ($slotEndH * 60) + $slotEndM;
+                    if ($jamKeluarMinutes >= $slotStart && $jamKeluarMinutes <= $slotEnd) {
+                        $waktuKeluarValid = true;
+                        break;
+                    }
                 }
 
-                if ($jamKembaliMinutes >= $slotStart && $jamKembaliMinutes <= $slotEnd) {
-                    $waktuKembaliValid = true;
+                if (! $waktuKeluarValid) {
+                    throw ValidationException::withMessages([
+                        'jam_keluar' => "Jam keluar ({$rawJamKeluar} WIB) harus berada dalam jadwal sekolah yang tersedia hari ini ({$scheduleEarliest} - {$scheduleLatest} WIB).",
+                    ]);
                 }
-            }
 
-            if (! $waktuKeluarValid) {
+                $storedJamKeluar = $rawJamKeluar;
+            } else {
                 throw ValidationException::withMessages([
-                    'jam_keluar' => 'Jam keluar harus berada dalam jadwal sekolah yang tersedia hari ini.',
+                    'jam_keluar' => 'Format jam keluar tidak valid.',
                 ]);
             }
 
-            if (! $waktuKembaliValid) {
-                throw ValidationException::withMessages([
-                    'jam_kembali' => 'Jam kembali harus berada dalam jadwal sekolah yang tersedia hari ini.',
-                ]);
-            }
-
-            $storedJamKeluar = $rawJamKeluar;
-            $storedJamKembali = $rawJamKembali;
-            $batasWaktuKembali = TimeHelper::getBatasWaktuKembali($storedJamKembali, $dayOfWeek);
+            $storedJamKembali = 'Sampai Pulang Sekolah';
+            $batasWaktuKembali = TimeHelper::getWaktuSelesaiKbmTerakhir($dayOfWeek)
+                ?? now('Asia/Jakarta')->setTime($endH, $endM);
         } else {
-            throw ValidationException::withMessages([
-                'jam_keluar' => 'Format jam keluar tidak valid.',
-                'jam_kembali' => 'Format jam kembali tidak valid.',
-            ]);
+            // Mode Normal (Wajib Jam Kembali)
+            if (is_numeric($rawJamKeluar) && is_numeric($rawJamKembali)) {
+                $jamKeluar = (int) $rawJamKeluar;
+                $jamKembali = (int) $rawJamKembali;
+
+                if ($jamKeluar < 1 || $jamKeluar > $maxJam) {
+                    throw ValidationException::withMessages([
+                        'jam_keluar' => "Jam keluar maksimal adalah Jam ke-{$maxJam} untuk hari ini (" .
+                            now('Asia/Jakarta')->isoFormat('dddd') . ').',
+                    ]);
+                }
+
+                if ($jamKembali < 1 || $jamKembali > $maxJam) {
+                    throw ValidationException::withMessages([
+                        'jam_kembali' => "Jam kembali maksimal adalah Jam ke-{$maxJam} untuk hari ini (" .
+                            now('Asia/Jakarta')->isoFormat('dddd') . ').',
+                    ]);
+                }
+
+                if ($jamKembali <= $jamKeluar) {
+                    throw ValidationException::withMessages([
+                        'jam_kembali' => 'Jam kembali harus lebih dari jam keluar.',
+                    ]);
+                }
+
+                $storedJamKeluar = 'Jam Pelajaran ke-' . $jamKeluar;
+                $storedJamKembali = 'Jam Pelajaran ke-' . $jamKembali;
+                $batasWaktuKembali = TimeHelper::getBatasWaktuKembali($jamKembali, $dayOfWeek);
+            } elseif (preg_match('/^\d{2}:\d{2}$/', $rawJamKeluar) && preg_match('/^\d{2}:\d{2}$/', $rawJamKembali)) {
+                $nowWib = now('Asia/Jakarta');
+                $currentMinutes = ($nowWib->hour * 60) + $nowWib->minute;
+
+                [$jamKeluarHour, $jamKeluarMinute] = array_map('intval', explode(':', $rawJamKeluar));
+                [$jamKembaliHour, $jamKembaliMinute] = array_map('intval', explode(':', $rawJamKembali));
+
+                $jamKeluarMinutes = ($jamKeluarHour * 60) + $jamKeluarMinute;
+                $jamKembaliMinutes = ($jamKembaliHour * 60) + $jamKembaliMinute;
+
+                if ($jamKeluarMinutes < $currentMinutes) {
+                    throw ValidationException::withMessages([
+                        'jam_keluar' => 'Jam keluar tidak boleh menggunakan waktu yang sudah lewat.',
+                    ]);
+                }
+
+                if ($jamKembaliMinutes <= $jamKeluarMinutes) {
+                    throw ValidationException::withMessages([
+                        'jam_kembali' => 'Jam kembali harus lebih besar dari jam keluar.',
+                    ]);
+                }
+
+                $waktuKeluarValid = false;
+                $waktuKembaliValid = false;
+
+                foreach ($semuaSlotHariIni as $slot) {
+                    if (empty($slot['start']) || empty($slot['end'])) {
+                        continue;
+                    }
+
+                    [$startHour, $startMinute] = array_map('intval', explode(':', substr($slot['start'], 0, 5)));
+                    [$endHour, $endMinute] = array_map('intval', explode(':', substr($slot['end'], 0, 5)));
+
+                    $slotStart = ($startHour * 60) + $startMinute;
+                    $slotEnd = ($endHour * 60) + $endMinute;
+
+                    if ($jamKeluarMinutes >= $slotStart && $jamKeluarMinutes <= $slotEnd) {
+                        $waktuKeluarValid = true;
+                    }
+
+                    if ($jamKembaliMinutes >= $slotStart && $jamKembaliMinutes <= $slotEnd) {
+                        $waktuKembaliValid = true;
+                    }
+                }
+
+                if (! $waktuKeluarValid) {
+                    throw ValidationException::withMessages([
+                        'jam_keluar' => 'Jam keluar harus berada dalam jadwal sekolah yang tersedia hari ini.',
+                    ]);
+                }
+
+                if (! $waktuKembaliValid) {
+                    throw ValidationException::withMessages([
+                        'jam_kembali' => 'Jam kembali harus berada dalam jadwal sekolah yang tersedia hari ini.',
+                    ]);
+                }
+
+                $storedJamKeluar = $rawJamKeluar;
+                $storedJamKembali = $rawJamKembali;
+                $batasWaktuKembali = now('Asia/Jakarta')->setTime($jamKembaliHour, $jamKembaliMinute);
+            } else {
+                throw ValidationException::withMessages([
+                    'jam_keluar' => 'Format jam keluar tidak valid.',
+                    'jam_kembali' => 'Format jam kembali tidak valid.',
+                ]);
+            }
         }
 
         $fotoPath = null;
@@ -296,13 +366,24 @@ class PengajuanController extends Controller
                 );
             }
 
+            if (! empty($validated['no_telepon'])) {
+                $normalizedPhone = preg_replace('/[^0-9]/', '', $validated['no_telepon']);
+                if (str_starts_with($normalizedPhone, '0')) {
+                    $normalizedPhone = '62' . substr($normalizedPhone, 1);
+                } elseif (str_starts_with($normalizedPhone, '8')) {
+                    $normalizedPhone = '62' . $normalizedPhone;
+                }
+                Siswa::where('id', $validated['siswa_id'])->update(['no_telepon' => $normalizedPhone]);
+            }
+
             $dispensasi = DB::transaction(function () use (
                 $validated,
                 $guru,
                 $fotoPath,
                 $batasWaktuKembali,
                 $storedJamKeluar,
-                $storedJamKembali
+                $storedJamKembali,
+                $isSampaiPulang
             ) {
                 /*
                  * Satu siswa tidak boleh memiliki dispensasi aktif
@@ -339,10 +420,15 @@ class PengajuanController extends Controller
                     'nomor_surat'             => Dispensasi::generateNomorSurat(),
                     'siswa_id'                => $validated['siswa_id'],
                     'guru_id'                 => $guru->id,
+                    'tipe_pengajuan'          => 'individu',
                     'kategori'                => $validated['kategori'],
                     'alasan'                  => $validated['alasan'],
                     'tujuan'                  => $validated['tujuan'],
                     'lokasi'                  => $validated['lokasi'] ?? null,
+                    'tanggal_izin'            => now('Asia/Jakarta')->toDateString(),
+                    'tanggal_selesai'         => now('Asia/Jakarta')->toDateString(),
+                    'durasi_hari'             => 1,
+                    'sampai_pulang'           => $isSampaiPulang,
                     'jam_keluar'              => $storedJamKeluar,
                     'jam_kembali'             => $storedJamKembali,
                     'batas_waktu_kembali'     => $batasWaktuKembali,
