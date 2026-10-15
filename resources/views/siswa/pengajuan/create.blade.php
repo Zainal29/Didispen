@@ -306,16 +306,16 @@
                 <section x-show="tipePengajuan === 'organisasi'" x-cloak
                     class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
                     <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div class="flex items-center gap-2.5">
+                        <div class="flex items-center gap-2.5 min-w-0">
                             <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                                 <i class="ti ti-users text-base"></i>
                             </div>
-                            <div>
-                                <h2 class="text-sm font-bold text-slate-900">Pengajuan Kolektif Organisasi / Rombongan</h2>
-                                <p class="text-[11px] text-slate-500">1 surat dispensasi resmi untuk seluruh rombongan & ekstrakurikuler.</p>
+                            <div class="min-w-0 flex-1">
+                                <h2 class="text-sm font-bold text-slate-900 leading-snug">Pengajuan Kolektif Organisasi / Rombongan</h2>
+                                <p class="text-[11px] text-slate-500 leading-normal">1 surat dispensasi resmi untuk seluruh rombongan & ekstrakurikuler.</p>
                             </div>
                         </div>
-                        <span class="inline-flex items-center gap-1 self-start sm:self-auto rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-[10px] font-bold">
+                        <span class="inline-flex items-center gap-1 self-start sm:self-auto rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-[10px] font-bold shrink-0 whitespace-nowrap">
                             <i class="ti ti-layers-subtract text-xs text-slate-500"></i> Multi-Siswa
                         </span>
                     </div>
@@ -357,9 +357,9 @@
                                         <i class="ti ti-sitemap"></i>
                                     </div>
                                     <div class="min-w-0 flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <p class="text-xs sm:text-sm font-bold text-slate-900 truncate">{{ $organisasiDipimpin->first()->nama_organisasi }}</p>
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Ketua</span>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="text-xs sm:text-sm font-bold text-slate-900 break-words">{{ $organisasiDipimpin->first()->nama_organisasi }}</p>
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 shrink-0">Ketua</span>
                                         </div>
                                         <p class="text-[11px] text-slate-500 mt-0.5">Terkunci otomatis sesuai jabatan Ketua resmi Anda.</p>
                                     </div>
@@ -566,13 +566,13 @@
                         {{-- Pemilihan Guru Pembina Ekstrakurikuler / Organisasi --}}
                         <div class="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 space-y-3">
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-800">
+                                <div class="min-w-0 flex-1">
+                                    <label class="block text-xs font-bold text-slate-800 leading-snug">
                                         <i class="ti ti-school text-blue-600 mr-1.5"></i>Guru Pembina Ekstrakurikuler / Organisasi
                                     </label>
                                     <p class="text-[11px] text-slate-500 mt-0.5">Otomatis terisi dari data sekolah. Anda dapat menambah pembina lain atau menggantinya.</p>
                                 </div>
-                                <span class="inline-flex self-start sm:self-auto items-center px-2.5 py-1 rounded-full text-xs font-bold transition-colors"
+                                <span class="inline-flex self-start sm:self-auto items-center px-2.5 py-1 rounded-full text-xs font-bold transition-colors shrink-0 whitespace-nowrap"
                                       :class="selectedGurus.length > 0 ? 'bg-blue-50 border border-blue-200 text-blue-700' : 'bg-slate-100 border border-slate-200 text-slate-600'"
                                       x-text="`${selectedGurus.length} Pembina Terpilih`">
                                     0 Pembina Terpilih
@@ -944,20 +944,22 @@
                 <section class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                            <i class="ti ti-phone text-base"></i>
+                            <i class="ti ti-brand-whatsapp text-lg"></i>
                         </div>
                         <div>
                             <h2 class="text-sm font-bold text-slate-900">Kontak WhatsApp</h2>
                             <p class="text-[11px] text-slate-500">Nomor aktif untuk keperluan komunikasi darurat.</p>
                         </div>
                     </div>
-                    <label for="noTelepon" class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">No. Telepon / WhatsApp <span class="text-rose-500">*</span></label>
+                    <label for="noTelepon" class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                        <i class="ti ti-brand-whatsapp text-emerald-600 mr-1"></i>Nomor WhatsApp Aktif <span class="text-rose-500">*</span>
+                    </label>
                     <input type="tel" name="no_telepon" id="noTelepon" value="{{ old('no_telepon', $siswa->no_telepon) }}" required inputmode="tel" placeholder="08xxxxxxxxxx"
                         class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('no_telepon') border-rose-500 bg-rose-50 @enderror">
                     @error('no_telepon')
                         <p class="text-rose-600 text-xs mt-1.5 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p>
                     @else
-                        <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1"><i class="ti ti-info-circle text-blue-500"></i>Nomor ini menjadi kontak darurat dan tercatat pada surat dispensasi resmi.</p>
+                        <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1"><i class="ti ti-info-circle text-blue-500"></i>Nomor WhatsApp ini menjadi kontak darurat dan tercatat pada surat dispensasi resmi.</p>
                     @enderror
                 </section>
 

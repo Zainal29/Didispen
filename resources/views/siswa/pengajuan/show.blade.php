@@ -3,7 +3,7 @@
 @section('page-title', 'Detail Pengajuan Dispensasi')
 @section('content')
 
-<div class="max-w-5xl mx-auto space-y-4 pb-28 sm:pb-12">
+<div class="max-w-5xl mx-auto space-y-4 pb-36 sm:pb-16">
 
     {{-- Header Card --}}
     <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
@@ -233,8 +233,10 @@
         <div class="lg:col-span-2 space-y-4">
             {{-- Card Informasi Dispensasi --}}
             <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
-                <h3 class="text-sm font-bold text-slate-900 mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
-                    <span class="flex items-center gap-2"><i class="ti ti-file-text text-slate-400 text-base"></i>Informasi Dispensasi</span>
+                <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 border-b border-slate-100 pb-3">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i class="ti ti-file-text text-slate-400 text-base"></i>Informasi Dispensasi
+                    </h3>
                     <span class="text-xs font-bold text-slate-500 font-mono">
                         @if($dispensasi->durasi_hari > 1 && $dispensasi->tanggal_selesai)
                             {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($dispensasi->tanggal_selesai)->translatedFormat('d M Y') }} ({{ $dispensasi->durasi_hari }} Hari)
@@ -242,24 +244,24 @@
                             {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('d M Y') }}
                         @endif
                     </span>
-                </h3>
+                </div>
 
                 @if($dispensasi->tipe_pengajuan === 'organisasi')
                 <div class="mb-5 bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs">
                     {{-- Header Organisasi --}}
                     <div class="flex items-start justify-between gap-2.5 mb-3">
-                        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shadow-sm flex-shrink-0">
+                        <div class="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+                            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shadow-sm shrink-0 mt-0.5">
                                 <i class="ti ti-users"></i>
                             </div>
-                            <div class="min-w-0">
+                            <div class="min-w-0 flex-1">
                                 <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-blue-600 block leading-tight">Dispensasi Organisasi</span>
-                                <h4 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight capitalize leading-tight mt-0.5 truncate">
+                                <h4 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight capitalize leading-snug mt-0.5 break-words">
                                     {{ $dispensasi->nama_organisasi }}
                                 </h4>
                             </div>
                         </div>
-                        <div class="flex-shrink-0">
+                        <div class="shrink-0">
                             @if($dispensasi->siswa_id === auth()->user()->siswa?->id)
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white shadow-xs whitespace-nowrap">
                                     <i class="ti ti-crown text-xs"></i> <span class="hidden sm:inline">Anda: </span>Ketua
@@ -388,11 +390,11 @@
                     {{-- Guru Pembina Ekstrakurikuler --}}
                     @if($dispensasi->gurus && $dispensasi->gurus->count() > 0)
                     <div class="mt-4 pt-4 border-t border-slate-200">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                                <i class="ti ti-school text-blue-600 text-sm"></i>Guru Pembina Ekstrakurikuler / Organisasi
+                        <div class="flex items-center justify-between gap-2 mb-2 flex-wrap sm:flex-nowrap">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5 leading-snug min-w-0">
+                                <i class="ti ti-school text-blue-600 text-sm shrink-0"></i><span class="break-words">Guru Pembina Ekstrakurikuler / Organisasi</span>
                             </span>
-                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shrink-0 whitespace-nowrap">
                                 {{ $dispensasi->gurus->count() }} Guru
                             </span>
                         </div>
@@ -784,9 +786,19 @@
                             <p class="text-slate-700 text-xs sm:text-sm">{{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
                         </div>
                         @if(!empty($dispensasi->siswa->no_telepon))
+                        @php
+                            $rawSiswaPhone = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
+                            $waSiswaPhone = str_starts_with($rawSiswaPhone, '0') ? '62' . substr($rawSiswaPhone, 1) : $rawSiswaPhone;
+                        @endphp
                         <div>
-                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-0.5">No. Telepon / WA</p>
-                            <p class="font-mono font-semibold text-slate-800 text-xs sm:text-sm">{{ $dispensasi->siswa->no_telepon }}</p>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-0.5 flex items-center gap-1">
+                                <i class="ti ti-brand-whatsapp text-emerald-600 text-xs"></i> Kontak WhatsApp
+                            </p>
+                            <a href="https://wa.me/{{ $waSiswaPhone }}" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center gap-1 font-mono font-semibold text-emerald-700 hover:text-emerald-800 text-xs sm:text-sm hover:underline">
+                                {{ $dispensasi->siswa->no_telepon }}
+                                <i class="ti ti-external-link text-[11px] text-emerald-500"></i>
+                            </a>
                         </div>
                         @endif
                     </div>
@@ -843,9 +855,19 @@
                             <p class="text-slate-700 text-xs sm:text-sm">{{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
                         </div>
                         @if(!empty($dispensasi->siswa->no_telepon))
+                        @php
+                            $rawSiswaPhone = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
+                            $waSiswaPhone = str_starts_with($rawSiswaPhone, '0') ? '62' . substr($rawSiswaPhone, 1) : $rawSiswaPhone;
+                        @endphp
                         <div>
-                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-0.5">No. Telepon</p>
-                            <p class="font-mono font-semibold text-slate-800 text-xs sm:text-sm">{{ $dispensasi->siswa->no_telepon }}</p>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-0.5 flex items-center gap-1">
+                                <i class="ti ti-brand-whatsapp text-emerald-600 text-xs"></i> Kontak WhatsApp
+                            </p>
+                            <a href="https://wa.me/{{ $waSiswaPhone }}" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center gap-1 font-mono font-semibold text-emerald-700 hover:text-emerald-800 text-xs sm:text-sm hover:underline">
+                                {{ $dispensasi->siswa->no_telepon }}
+                                <i class="ti ti-external-link text-[11px] text-emerald-500"></i>
+                            </a>
                         </div>
                         @endif
                     </div>
