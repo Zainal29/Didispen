@@ -16,12 +16,12 @@
                     <p class="mt-0.5 text-xs sm:text-sm text-slate-500 leading-relaxed">Lengkapi data di bawah dengan benar sebelum mengirim pengajuan.</p>
                 </div>
             </div>
-            <button type="button" id="btnLihatJadwalPageHeader"
+            <!-- <button type="button" id="btnLihatJadwalPageHeader"
                 class="sm:hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 active:scale-95 border border-slate-200 text-slate-700 text-xs font-bold transition-colors shrink-0 cursor-pointer min-h-[40px]"
                 aria-label="Lihat jadwal pelajaran">
                 <i class="ti ti-calendar-check text-slate-600 text-base"></i>
                 <span>Jadwal</span>
-            </button>
+            </button> -->
         </div>
     </div>
 
@@ -221,7 +221,7 @@
                                 const nip = (g.nip || '').toLowerCase();
                                 const mapel = (g.mata_pelajaran || '').toLowerCase();
                                 return nama.includes(q) || nip.includes(q) || mapel.includes(q);
-                            }).slice(0, 50);
+                            }).slice(0, 5);
                         },
                         isGuruSelected(id) {
                             return this.selectedGurus.some(g => String(g.id) === String(id));
@@ -242,7 +242,6 @@
 
                         isKetua: {{ ($isKetuaOrganisasi || $isSuperAdmin) ? 'true' : 'false' }},
                         switchTipe(tipe) {
-                            if (this.isDispensasiClosed) return;
                             if (tipe === 'organisasi' && !this.isKetua) {
                                 if (typeof alertBukanKetua === 'function') {
                                     alertBukanKetua();
@@ -282,17 +281,12 @@
                 </select>
 
                 {{-- Pemilih Tipe Pengajuan: Individu vs Organisasi --}}
-                <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 shadow-xs"
-                     :class="isDispensasiClosed ? 'opacity-60 cursor-not-allowed' : ''">
+                <div class="tipe-pengajuan-selector rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 shadow-xs">
                     <div class="grid grid-cols-2 gap-1.5">
                         <button type="button"
                             @click="switchTipe('individu')"
-                            :disabled="isDispensasiClosed"
-                            :class="[
-                                tipePengajuan === 'individu' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80',
-                                isDispensasiClosed ? 'cursor-not-allowed pointer-events-none' : ''
-                            ]"
-                            class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150">
+                            :class="tipePengajuan === 'individu' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80'"
+                            class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer">
                             <i class="ti ti-user text-sm sm:text-base" :class="tipePengajuan === 'individu' ? 'text-white' : 'text-slate-500'"></i>
                             <span>Dispensasi Pribadi</span>
                         </button>
@@ -300,12 +294,8 @@
                         @if($isKetuaOrganisasi || $isSuperAdmin)
                             <button type="button"
                                 @click="switchTipe('organisasi')"
-                                :disabled="isDispensasiClosed"
-                                :class="[
-                                    tipePengajuan === 'organisasi' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80',
-                                    isDispensasiClosed ? 'cursor-not-allowed pointer-events-none' : ''
-                                ]"
-                                class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150">
+                                :class="tipePengajuan === 'organisasi' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80'"
+                                class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer">
                                 <i class="ti ti-users text-sm sm:text-base" :class="tipePengajuan === 'organisasi' ? 'text-white' : 'text-slate-500'"></i>
                                 <span>Dispensasi Rombongan</span>
                                 @if($organisasiDipimpin->isNotEmpty())
@@ -318,7 +308,6 @@
                         @else
                             <button type="button"
                                 @click="alertBukanKetua()"
-                                :disabled="isDispensasiClosed"
                                 class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-colors duration-150 bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-not-allowed border border-dashed border-slate-300"
                                 title="Hanya untuk Ketua Organisasi / Ekstra resmi">
                                 <i class="ti ti-lock text-sm text-slate-400"></i>
@@ -537,8 +526,8 @@
                                                     @change="toggleAnggota(siswa)"
                                                     class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 shrink-0 cursor-pointer disabled:cursor-not-allowed">
                                                 <div class="min-w-0 flex-1">
-                                                    <p class="text-xs font-bold text-slate-900 truncate" x-text="siswa.nama"></p>
-                                                    <p class="text-[10px] text-slate-500 truncate" x-text="`${siswa.nis ? siswa.nis + ' • ' : ''}${siswa.kelas}`"></p>
+                                                    <p class="text-xs font-bold text-slate-900 break-words leading-tight" x-text="siswa.nama"></p>
+                                                    <p class="text-[10px] text-slate-500 truncate mt-0.5" x-text="`${siswa.nis ? siswa.nis + ' • ' : ''}${siswa.kelas}`"></p>
                                                 </div>
                                             </div>
                                             <span x-show="isAnggotaSelected(siswa.id)" class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full shrink-0">
@@ -563,10 +552,10 @@
                                         </div>
                                         <div class="min-w-0 flex-1">
                                             <div class="flex items-center gap-1.5 flex-wrap">
-                                                <p class="text-xs font-bold text-slate-900 truncate">{{ $siswa->nama_lengkap }}</p>
-                                                <span class="inline-flex items-center rounded bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5">Ketua (Pemohon)</span>
+                                                <p class="text-xs sm:text-sm font-bold text-slate-900 break-words leading-tight">{{ $siswa->nama_lengkap }}</p>
+                                                <span class="inline-flex items-center rounded bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5 shrink-0">Ketua (Pemohon)</span>
                                             </div>
-                                            <p class="text-[10px] text-slate-500 mt-0.5">{{ $siswa->user->nis_nip ?? '-' }} • {{ $siswa->kelas->nama_kelas ?? '-' }}</p>
+                                            <p class="text-[10px] text-slate-500 mt-1">{{ $siswa->user->nis_nip ?? '-' }} • {{ $siswa->kelas->nama_kelas ?? '-' }}</p>
                                         </div>
                                     </div>
                                     <span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-2.5 py-1 rounded-lg shrink-0">
@@ -582,8 +571,8 @@
                                                 <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0"
                                                     x-text="index + 1"></div>
                                                 <div class="min-w-0 flex-1">
-                                                    <p class="text-xs font-bold text-slate-900 truncate" x-text="anggota.nama"></p>
-                                                    <p class="text-[10px] text-slate-500 truncate" x-text="`${anggota.nis ? anggota.nis + ' • ' : ''}${anggota.kelas}`"></p>
+                                                    <p class="text-xs font-bold text-slate-900 break-words leading-tight" x-text="anggota.nama"></p>
+                                                    <p class="text-[10px] text-slate-500 truncate mt-0.5" x-text="`${anggota.nis ? anggota.nis + ' • ' : ''}${anggota.kelas}`"></p>
                                                 </div>
                                             </div>
                                             <button type="button"
@@ -693,8 +682,8 @@
                                                         :disabled="isDispensasiClosed"
                                                         class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-0 pointer-events-none shrink-0 disabled:cursor-not-allowed">
                                                     <div class="min-w-0 flex-1">
-                                                        <p class="text-xs font-bold text-slate-900 truncate" x-text="guru.nama"></p>
-                                                        <p class="text-[10px] text-slate-500 truncate" x-text="`${guru.nip && guru.nip !== '-' ? guru.nip + ' • ' : ''}${guru.mata_pelajaran || 'Guru'}`"></p>
+                                                        <p class="text-xs font-bold text-slate-900 break-words leading-tight" x-text="guru.nama"></p>
+                                                        <p class="text-[10px] text-slate-500 truncate mt-0.5" x-text="`${guru.nip && guru.nip !== '-' ? guru.nip + ' • ' : ''}${guru.mata_pelajaran || 'Guru'}`"></p>
                                                     </div>
                                                 </div>
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
@@ -723,10 +712,10 @@
                                             </div>
                                             <div class="min-w-0 flex-1">
                                                 <div class="flex items-center gap-1.5 flex-wrap">
-                                                    <p class="text-xs font-bold text-slate-900 truncate" x-text="guru.nama"></p>
-                                                    <span class="rounded bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5">Pembina</span>
+                                                    <p class="text-xs font-bold text-slate-900 break-words leading-tight" x-text="guru.nama"></p>
+                                                    <span class="rounded bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5 shrink-0">Pembina</span>
                                                 </div>
-                                                <p class="text-[10px] text-slate-500 truncate" x-text="`${guru.nip && guru.nip !== '-' ? guru.nip + ' • ' : ''}${guru.mata_pelajaran || '-'}`"></p>
+                                                <p class="text-[10px] text-slate-500 truncate mt-0.5" x-text="`${guru.nip && guru.nip !== '-' ? guru.nip + ' • ' : ''}${guru.mata_pelajaran || '-'}`"></p>
                                             </div>
                                         </div>
                                         <button type="button"
@@ -1140,6 +1129,7 @@
     </div>
 </div>
 
+@push('modals')
 {{-- Floating Button Jadwal (Hanya Desktop) --}}
 <button type="button" id="btnLihatJadwal"
     class="hidden sm:flex fixed right-5 bottom-6 z-40 items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-md border border-blue-500 transition-colors duration-150 cursor-pointer min-h-[44px]"
@@ -1150,18 +1140,18 @@
 
 {{-- Modal Jadwal Pelajaran --}}
 <div id="modalJadwal"
-    class="fixed inset-0 z-[70] hidden opacity-0 transition-opacity duration-200"
+    class="fixed inset-0 z-[80] hidden opacity-0 transition-opacity duration-200"
     role="dialog"
     aria-modal="true"
     aria-labelledby="modalJadwalTitle">
 
     <div id="modalJadwalOverlay"
-        class="absolute inset-0 bg-slate-950/70 opacity-0 transition-opacity duration-200 ease-out cursor-pointer">
+        class="absolute inset-0 bg-slate-950/75 opacity-0 transition-opacity duration-200 ease-out cursor-pointer">
     </div>
 
-    <div class="relative z-10 flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
+    <div id="modalJadwalWrapper" class="relative z-10 flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
         <div id="modalJadwalContent"
-            class="w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh]
+            class="pointer-events-auto w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh]
                    bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl
                    overflow-hidden flex flex-col
                    opacity-0 scale-95 translate-y-2
@@ -1250,7 +1240,8 @@
             </div>
 
             {{-- Footer --}}
-            <div class="flex-shrink-0 px-4 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/80">
+            <div class="flex-shrink-0 px-4 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/90"
+                 style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);">
                 <div class="flex items-center justify-between gap-2">
                     <div class="flex items-center gap-1.5 min-w-0">
                         <i class="ti ti-info-circle text-blue-600 text-sm shrink-0"></i>
@@ -1258,7 +1249,7 @@
                             Daftar jam pelajaran & istirahat hari ini sebagai referensi waktu pengajuan.
                         </p>
                     </div>
-                    <button type="button" onclick="document.getElementById('btnTutupJadwal').click()" class="text-xs font-bold text-slate-600 hover:text-slate-900 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 shrink-0 min-h-[36px]">
+                    <button type="button" onclick="document.getElementById('btnTutupJadwal').click()" class="text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-200 shrink-0 min-h-[36px] bg-white border border-slate-200 shadow-2xs">
                         Tutup
                     </button>
                 </div>
@@ -1266,6 +1257,7 @@
         </div>
     </div>
 </div>
+@endpush
 
 @push('scripts')
 <script src="{{ asset('js/dispensasi-watermark.js') }}"></script>
@@ -1310,6 +1302,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Modal Jadwal Elements
     const modalJadwal = document.getElementById('modalJadwal');
     const modalJadwalOverlay = document.getElementById('modalJadwalOverlay');
+    const modalJadwalWrapper = document.getElementById('modalJadwalWrapper');
     const modalJadwalContent = document.getElementById('modalJadwalContent');
     const modalJadwalHari = document.getElementById('modalJadwalHari');
     const jadwalList = document.getElementById('jadwalList');
@@ -2215,13 +2208,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    let modalCloseTimeout = null;
+
     function bukaModalJadwal() {
         if (!modalJadwal) return;
+        if (modalCloseTimeout) {
+            clearTimeout(modalCloseTimeout);
+            modalCloseTimeout = null;
+        }
         if (modalJadwalHari) modalJadwalHari.textContent = formatHariTanggalWib();
 
         modalJadwal.classList.remove('hidden');
         document.documentElement.classList.add('overflow-hidden');
-        document.body.classList.add('overflow-hidden');
+        document.body.classList.add('overflow-hidden', 'modal-open', 'modal-jadwal-open');
 
         requestAnimationFrame(function () {
             modalJadwal.classList.remove('opacity-0');
@@ -2243,10 +2242,11 @@ document.addEventListener('DOMContentLoaded', function () {
             modalJadwalContent.classList.add('opacity-0', 'scale-95', 'translate-y-2');
         }
 
-        setTimeout(function () {
+        if (modalCloseTimeout) clearTimeout(modalCloseTimeout);
+        modalCloseTimeout = setTimeout(function () {
             modalJadwal.classList.add('hidden');
             document.documentElement.classList.remove('overflow-hidden');
-            document.body.classList.remove('overflow-hidden');
+            document.body.classList.remove('overflow-hidden', 'modal-open', 'modal-jadwal-open');
         }, 200);
     }
 
@@ -2266,6 +2266,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (modalJadwalOverlay) {
         modalJadwalOverlay.addEventListener('click', tutupModalJadwal);
+    }
+
+    if (modalJadwalWrapper) {
+        modalJadwalWrapper.addEventListener('click', function (e) {
+            if (e.target === modalJadwalWrapper) {
+                tutupModalJadwal();
+            }
+        });
     }
 
     document.addEventListener('keydown', function (e) {
@@ -2508,13 +2516,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        const isExemptControl = function (el) {
+            if (!el) return true;
+            if (el.id === 'foto_verifikasi_input') return true;
+            if (el.id === 'btnLihatJadwalPageHeader' || el.id === 'btnLihatJadwalHeader' || el.id === 'btnLihatJadwal') return true;
+            if (el.closest('.tipe-pengajuan-selector')) return true;
+            return false;
+        };
+
         if (isAllowed) {
             if (banner) banner.classList.add('hidden');
             updateAlpineDispensasiState(false);
             if (formDispensasi) {
                 formDispensasi.querySelectorAll('input, select, textarea, button').forEach(function (el) {
-                    if (el.id === 'foto_verifikasi_input') return;
-                    if (el.id === 'btnLihatJadwalPageHeader') return;
+                    if (isExemptControl(el)) return;
                     el.disabled = false;
                     el.classList.remove('opacity-50', 'cursor-not-allowed');
                 });
@@ -2536,8 +2551,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (formDispensasi) {
             formDispensasi.querySelectorAll('input, select, textarea, button').forEach(function (el) {
-                if (el.id === 'foto_verifikasi_input') return;
-                if (el.id === 'btnLihatJadwalPageHeader') return;
+                if (isExemptControl(el)) return;
                 el.disabled = true;
                 el.classList.add('opacity-50', 'cursor-not-allowed');
             });

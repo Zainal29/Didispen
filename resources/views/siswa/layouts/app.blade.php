@@ -107,6 +107,17 @@
             transform: translateY(120%) !important;
             transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
         }
+
+        /* Sembunyikan bottom bar saat modal atau sheet terbuka agar tidak menutupi modal */
+        body.modal-open .mobile-bottom-nav,
+        body.modal-open #siswaBottomNav,
+        body.modal-jadwal-open .mobile-bottom-nav,
+        body.modal-jadwal-open #siswaBottomNav {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(120%) !important;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 antialiased">
@@ -430,6 +441,7 @@
     })();
     </script>
 
+    @stack('modals')
     @stack('scripts')
 
 </body>
