@@ -212,7 +212,7 @@ class ProfileController extends Controller
             abort(401);
         }
 
-        if ($user->role !== 'admin') {
+        if (! $user->isAdmin()) {
             abort(
                 403,
                 'Hanya Administrator yang diizinkan mengubah password.'

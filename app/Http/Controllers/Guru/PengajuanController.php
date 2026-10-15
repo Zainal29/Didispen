@@ -36,6 +36,8 @@ class PengajuanController extends Controller
      */
     public function index(Request $request)
     {
+        \App\Services\DispensasiService::autoExpireOverdueDispensasi();
+
         $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
             ->latest();
 
@@ -395,13 +397,16 @@ class PengajuanController extends Controller
             ->withInput()
             ->with('error', 'Pengajuan dispensasi gagal dibuat. Silakan coba lagi.');
     }
-}   
+}
 
     /**
      * Detail pengajuan
      */
     public function show(Dispensasi $dispensasi)
     {
+        \App\Services\DispensasiService::autoExpireOverdueDispensasi();
+        $dispensasi->refresh();
+
         $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru', 'anggotaSiswa.kelas.jurusan', 'anggotaSiswa.user']);
 
         return view('guru.pengajuan.show', compact('dispensasi'));

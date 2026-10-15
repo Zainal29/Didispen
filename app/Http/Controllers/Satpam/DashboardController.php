@@ -18,6 +18,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request, GuruPiketService $guruPiketService) // <i class="fas fa-check-circle"></i> 1. TAMBAHKAN Request $request
     {
+        \App\Services\DispensasiService::autoExpireOverdueDispensasi();
+
         $today = now()->format('Y-m-d');
 
         // Informasi Guru Piket
