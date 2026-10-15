@@ -13,7 +13,7 @@
     <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100
                     text-blue-600 flex items-center justify-center shrink-0">
-            <i class="fas fa-exchange-alt"></i>
+            <i class="ti ti-arrows-exchange text-xl"></i>
         </div>
 
         <div>
@@ -28,7 +28,7 @@
 </div>
 
 {{-- Form Card --}}
-<div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+<div class="bg-white border border-gray-200/90 rounded-2xl shadow-sm overflow-hidden">
 
     <form method="POST"
           action="{{ route('guru.piket.swap.store') }}"
@@ -52,7 +52,7 @@
                                 bg-amber-50 p-3.5">
                         <div class="w-8 h-8 shrink-0 rounded-lg bg-amber-100
                                     text-amber-600 flex items-center justify-center">
-                            <i class="fas fa-exclamation-triangle text-xs"></i>
+                            <i class="ti ti-alert-triangle text-base"></i>
                         </div>
 
                         <div>
@@ -162,8 +162,8 @@
                 <div class="relative">
 
                     <div class="relative">
-                        <i class="fas fa-search absolute left-3.5 top-1/2
-                                  -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <i class="ti ti-search absolute left-3.5 top-1/2
+                                  -translate-y-1/2 text-gray-400 text-base"></i>
 
                         <input type="text"
                                id="guru_search"
@@ -182,7 +182,7 @@
                                 class="hidden absolute right-3 top-1/2
                                        -translate-y-1/2 text-gray-400
                                        hover:text-gray-600">
-                            <i class="fas fa-times text-xs"></i>
+                            <i class="ti ti-x text-sm"></i>
                         </button>
                     </div>
 
@@ -198,7 +198,7 @@
 
                         <div id="guruEmpty"
                              class="hidden px-4 py-5 text-center">
-                            <i class="fas fa-user-slash text-gray-300 text-lg"></i>
+                            <i class="ti ti-user-off text-gray-300 text-2xl"></i>
                             <p class="text-xs text-gray-500 mt-2">
                                 Guru tidak ditemukan.
                             </p>
@@ -215,7 +215,7 @@
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-full bg-blue-100
                                     text-blue-600 flex items-center justify-center shrink-0">
-                            <i class="fas fa-user-tie text-xs"></i>
+                            <i class="ti ti-user text-sm"></i>
                         </div>
 
                         <div class="min-w-0 flex-1">
@@ -291,7 +291,7 @@
                       border border-gray-300 bg-white
                       text-xs font-semibold text-gray-700
                       hover:bg-gray-50 transition-colors">
-                <i class="fas fa-arrow-left text-[10px]"></i>
+                <i class="ti ti-arrow-left text-sm"></i>
                 Kembali
             </a>
 
@@ -301,7 +301,7 @@
                            bg-blue-600 hover:bg-blue-700
                            text-white text-xs font-bold
                            shadow-sm transition-colors">
-                <i class="fas fa-paper-plane text-xs"></i>
+                <i class="ti ti-send text-sm"></i>
                 Kirim Pengajuan
             </button>
 
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
             button.innerHTML = `
                 <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500
                             flex items-center justify-center shrink-0">
-                    <i class="fas fa-user text-xs"></i>
+                    <i class="ti ti-user text-xs"></i>
                 </div>
 
                 <div class="min-w-0 flex-1">
@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </p>
                 </div>
 
-                <i class="fas fa-chevron-right text-[9px] text-gray-300"></i>
+                <i class="ti ti-chevron-right text-xs text-gray-400"></i>
             `;
 
             button.addEventListener('click', function () {

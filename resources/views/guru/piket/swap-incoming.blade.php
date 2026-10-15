@@ -8,20 +8,20 @@
 <div class="space-y-5 sm:space-y-6">
 
     {{-- HEADER & QUICK ACTION --}}
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 sm:p-5">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-            <div class="flex items-start gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-handshake"></i>
+            <div class="flex items-start gap-3.5 min-w-0">
+                <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                    <i class="ti ti-arrows-exchange text-2xl"></i>
                 </div>
 
                 <div class="min-w-0">
-                    <h3 class="text-sm sm:text-base font-bold text-gray-900">
+                    <h3 class="text-base sm:text-lg font-bold text-slate-900">
                         Kelola Penggantian Guru Piket
                     </h3>
 
-                    <p class="mt-1 text-xs leading-5 text-gray-500">
+                    <p class="mt-1 text-xs leading-5 text-slate-500">
                         Tinjau permohonan penggantian yang ditujukan kepada Anda
                         atau ajukan penggantian baru.
                     </p>
@@ -30,11 +30,11 @@
 
             <a href="{{ route('guru.piket.swap.create') }}"
                class="inline-flex w-full sm:w-auto items-center justify-center
-                      px-4 py-2.5 rounded-lg
+                      px-4 py-2.5 rounded-xl
                       bg-blue-600 hover:bg-blue-700
                       text-white text-xs font-bold
                       shadow-sm transition-colors">
-                <i class="fas fa-plus mr-1.5"></i>
+                <i class="ti ti-plus text-sm mr-1.5"></i>
                 Ajukan Tukar Jadwal
             </a>
 
@@ -45,23 +45,23 @@
     {{-- ========================================================= --}}
     {{-- BAGIAN 1: PERMINTAAN MASUK --}}
     {{-- ========================================================= --}}
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
 
         {{-- Section Header --}}
-        <div class="px-4 sm:px-5 py-4 border-b border-gray-200 bg-gray-50/50
+        <div class="px-4 sm:px-5 py-4 border-b border-slate-200 bg-slate-50/60
                     flex items-center justify-between gap-3">
 
             <div class="flex items-center gap-2 min-w-0">
-                <i class="fas fa-inbox text-indigo-600 flex-shrink-0"></i>
+                <i class="ti ti-inbox text-blue-600 text-base flex-shrink-0"></i>
 
-                <h4 class="text-xs sm:text-sm font-bold text-gray-900 truncate">
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 truncate">
                     Permintaan Masuk Untuk Anda
                 </h4>
             </div>
 
             <span class="flex-shrink-0 text-[10px] sm:text-xs
                          px-2.5 py-1 rounded-full font-bold
-                         bg-indigo-100 text-indigo-700">
+                         bg-blue-50 text-blue-700 border border-blue-200">
                 {{ $incomingRequests->count() }} Permintaan
             </span>
 
@@ -71,7 +71,7 @@
         @if($incomingRequests->isEmpty())
 
             <div class="p-8 text-center text-gray-500 text-xs">
-                <i class="fas fa-check-circle text-gray-300 text-3xl mb-2"></i>
+                <i class="ti ti-circle-check text-gray-300 text-3xl mb-2"></i>
 
                 <p>
                     Tidak ada permohonan penggantian tugas piket
@@ -127,13 +127,13 @@
                                 <td class="px-4 py-3.5">
 
                                     <div class="font-medium text-gray-900">
-                                        <i class="far fa-calendar-alt text-gray-400 mr-1"></i>
+                                        <i class="ti ti-calendar text-gray-400 mr-1"></i>
 
                                         {{ \Carbon\Carbon::parse($req->tanggal)->translatedFormat('l, d M Y') }}
                                     </div>
 
                                     <div class="text-[11px] text-gray-500 mt-0.5">
-                                        <i class="far fa-clock text-gray-400 mr-1"></i>
+                                        <i class="ti ti-clock text-gray-400 mr-1"></i>
 
                                         {{ substr($req->jadwalPiket->jam_mulai, 0, 5) }}
                                         -
@@ -180,7 +180,7 @@
                                                                bg-emerald-600 hover:bg-emerald-700
                                                                text-white font-bold text-xs
                                                                shadow-sm transition-colors">
-                                                    <i class="fas fa-check mr-1"></i>
+                                                    <i class="ti ti-check mr-1"></i>
                                                     Terima
                                                 </button>
 
@@ -197,7 +197,7 @@
                                                                bg-rose-600 hover:bg-rose-700
                                                                text-white font-bold text-xs
                                                                shadow-sm transition-colors">
-                                                    <i class="fas fa-times mr-1"></i>
+                                                    <i class="ti ti-x mr-1"></i>
                                                     Tolak
                                                 </button>
 
@@ -268,7 +268,7 @@
                         <div class="rounded-lg bg-gray-50 border border-gray-100 p-3">
 
                             <div class="flex items-start gap-2">
-                                <i class="far fa-calendar-alt text-gray-400 mt-0.5"></i>
+                                <i class="ti ti-calendar text-gray-400 mt-0.5"></i>
 
                                 <div>
                                     <p class="text-xs font-semibold text-gray-800">
@@ -276,7 +276,7 @@
                                     </p>
 
                                     <p class="text-[11px] text-gray-500 mt-1">
-                                        <i class="far fa-clock mr-1"></i>
+                                        <i class="ti ti-clock mr-1"></i>
 
                                         {{ substr($req->jadwalPiket->jam_mulai, 0, 5) }}
                                         -
@@ -318,7 +318,7 @@
                                                    bg-emerald-600 hover:bg-emerald-700
                                                    text-white text-xs font-bold
                                                    transition-colors">
-                                        <i class="fas fa-check mr-1"></i>
+                                        <i class="ti ti-check mr-1"></i>
                                         Terima
                                     </button>
 
@@ -335,7 +335,7 @@
                                                    bg-rose-600 hover:bg-rose-700
                                                    text-white text-xs font-bold
                                                    transition-colors">
-                                        <i class="fas fa-times mr-1"></i>
+                                        <i class="ti ti-x mr-1"></i>
                                         Tolak
                                     </button>
 
@@ -367,14 +367,14 @@
     {{-- ========================================================= --}}
     {{-- BAGIAN 2: RIWAYAT PENGAJUAN SAYA --}}
     {{-- ========================================================= --}}
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div class="bg-white border border-gray-200/90 rounded-2xl shadow-sm overflow-hidden">
 
         {{-- Section Header --}}
         <div class="px-4 sm:px-5 py-4 border-b border-gray-200 bg-gray-50/50
                     flex items-center justify-between gap-3">
 
             <div class="flex items-center gap-2 min-w-0">
-                <i class="fas fa-paper-plane text-blue-600 flex-shrink-0"></i>
+                <i class="ti ti-send text-blue-600 text-base flex-shrink-0"></i>
 
                 <h4 class="text-xs sm:text-sm font-bold text-gray-900 truncate">
                     Riwayat Pengajuan Penggantian Saya
@@ -393,7 +393,7 @@
         @if($outgoingRequests->isEmpty())
 
             <div class="p-8 text-center text-gray-500 text-xs">
-                <i class="fas fa-history text-gray-300 text-3xl mb-2"></i>
+                <i class="ti ti-history text-gray-300 text-3xl mb-2"></i>
 
                 <p>
                     Anda belum pernah mengajukan penggantian jadwal piket.
@@ -451,13 +451,13 @@
                                 <td class="px-4 py-3.5">
 
                                     <div class="font-medium text-gray-900">
-                                        <i class="far fa-calendar-alt text-gray-400 mr-1"></i>
+                                        <i class="ti ti-calendar text-gray-400 mr-1"></i>
 
                                         {{ \Carbon\Carbon::parse($out->tanggal)->translatedFormat('l, d M Y') }}
                                     </div>
 
                                     <div class="text-[11px] text-gray-500 mt-0.5">
-                                        <i class="far fa-clock text-gray-400 mr-1"></i>
+                                        <i class="ti ti-clock text-gray-400 mr-1"></i>
 
                                         {{ substr($out->jadwalPiket->jam_mulai, 0, 5) }}
                                         -
@@ -504,7 +504,7 @@
                                                            text-gray-700 font-bold text-xs
                                                            border border-gray-300
                                                            transition-colors">
-                                                <i class="fas fa-ban mr-1"></i>
+                                                <i class="ti ti-ban mr-1"></i>
                                                 Batalkan
                                             </button>
 
@@ -577,7 +577,7 @@
 
                             <div class="flex items-start gap-2">
 
-                                <i class="far fa-calendar-alt text-gray-400 mt-0.5"></i>
+                                <i class="ti ti-calendar text-gray-400 mt-0.5"></i>
 
                                 <div>
 
@@ -586,7 +586,7 @@
                                     </p>
 
                                     <p class="text-[11px] text-gray-500 mt-1">
-                                        <i class="far fa-clock mr-1"></i>
+                                        <i class="ti ti-clock mr-1"></i>
 
                                         {{ substr($out->jadwalPiket->jam_mulai, 0, 5) }}
                                         -
@@ -629,7 +629,7 @@
                                                text-gray-700 font-bold text-xs
                                                border border-gray-300
                                                transition-colors">
-                                    <i class="fas fa-ban mr-1"></i>
+                                    <i class="ti ti-ban mr-1"></i>
                                     Batalkan Pengajuan
                                 </button>
 
@@ -644,6 +644,14 @@
                             </div>
 
                         @endif
+
+                    </div>
+
+                @endforeach
+
+            </div>
+
+        @endif
 
                     </div>
 

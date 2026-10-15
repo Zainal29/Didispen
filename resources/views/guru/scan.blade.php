@@ -3,46 +3,72 @@
 @section('page-title', 'Scan QR Code')
 @section('content')
 
-<div class="max-w-xl mx-auto space-y-4 w-full min-w-0">
+<div class="max-w-xl mx-auto space-y-4 w-full min-w-0" x-data="{ activeTab: 'camera' }">
+    {{-- Tab Switcher --}}
+    <div class="bg-gray-100/80 p-1 rounded-xl flex items-center gap-1 border border-gray-200">
+        <button type="button"
+                @click="activeTab = 'camera'"
+                :class="activeTab === 'camera' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600 hover:text-gray-900 font-medium'"
+                class="flex-1 py-2.5 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5">
+            <i class="ti ti-qrcode text-base"></i>
+            <span>Scan Kamera</span>
+        </button>
+        <button type="button"
+                @click="activeTab = 'manual'"
+                :class="activeTab === 'manual' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600 hover:text-gray-900 font-medium'"
+                class="flex-1 py-2.5 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5">
+            <i class="ti ti-search text-base"></i>
+            <span>Cari Manual</span>
+        </button>
+    </div>
+
     {{-- Card Scanner --}}
-    <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 text-center shadow-sm">
-        <div class="w-12 h-12 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-3">
-            <i class="fas fa-qrcode text-xl"></i>
+    <div x-show="activeTab === 'camera'" class="bg-white border border-gray-200/90 rounded-2xl p-4 sm:p-6 text-center shadow-sm transition-all">
+        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3 border border-blue-100">
+            <i class="ti ti-qrcode text-2xl"></i>
         </div>
         <h2 class="text-base font-bold text-gray-900 mb-1">Scanner QR Code Dispensasi</h2>
         <p class="text-xs text-gray-500 mb-4">Arahkan kamera ke QR Code pada layar HP siswa.</p>
 
-        <div class="relative bg-gray-900 rounded-xl overflow-hidden shadow-inner w-full max-w-sm mx-auto">
+        <div class="relative bg-gray-900 rounded-2xl overflow-hidden shadow-inner w-full max-w-sm mx-auto border-2 border-gray-800">
             <div id="reader" class="w-full"></div>
         </div>
 
-        <div class="mt-3.5 flex items-center justify-between border-t border-gray-100 pt-3 gap-2">
+        <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3.5 gap-2">
             <span id="scanStatus" class="inline-flex items-center text-xs font-semibold text-emerald-600 truncate min-w-0">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse flex-shrink-0"></span> Kamera aktif
             </span>
-            <button onclick="window.location.reload()" class="inline-flex items-center px-3.5 py-2.5 min-h-[44px] rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors flex-shrink-0">
-                <i class="fas fa-redo mr-1.5"></i>Reset Scanner
+            <button onclick="window.location.reload()" class="inline-flex items-center px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors flex-shrink-0">
+                <i class="ti ti-refresh mr-1.5"></i>Reset Scanner
             </button>
         </div>
     </div>
 
     {{-- VERIFIKASI MANUAL GURU --}}
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <p class="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">Verifikasi Manual</p>
-        <form onsubmit="manualVerify(event)" class="flex gap-2">
+    <div x-show="activeTab === 'manual'" x-cloak class="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-5 space-y-3 transition-all">
+        <div class="flex items-center gap-3 pb-2 border-b border-gray-100">
+            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <i class="ti ti-search text-lg"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-gray-900">Verifikasi Manual</h3>
+                <p class="text-[11px] text-gray-500">Cari berdasarkan No. Surat, NIS, atau Nama Siswa</p>
+            </div>
+        </div>
+        <form onsubmit="manualVerify(event)" class="flex gap-2 pt-1">
             @csrf
             <input type="text"
                    id="manualCode"
                    required
-                   placeholder="Masukkan No. Surat, NIS, atau Nama"
-                   class="flex-1 h-11 px-3.5 rounded-lg border border-gray-300 bg-white text-xs font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                   placeholder="Contoh: DISP/2026/... atau 12345"
+                   class="flex-1 h-11 px-3.5 rounded-xl border border-gray-300 bg-white text-xs font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
             <button type="submit"
-                    class="px-4 h-11 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <i class="fas fa-search mr-1"></i> Cek
+                    class="px-5 h-11 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shrink-0 shadow-sm">
+                <i class="ti ti-search mr-1"></i> Cek
             </button>
         </form>
-        <p class="text-[10px] text-gray-500 mt-2">
-            <i class="fas fa-info-circle mr-1"></i> Gunakan jika QR Code tidak bisa discan.
+        <p class="text-[11px] text-gray-500 flex items-center gap-1">
+            <i class="ti ti-info-circle text-blue-500"></i> Gunakan opsi ini jika layar HP siswa retak atau kamera gagal memindai QR Code.
         </p>
     </div>
 
@@ -63,7 +89,7 @@
         <div id="modalHeader" class="p-4 bg-gray-900 text-white flex items-center justify-between transition-colors flex-shrink-0">
             <div class="flex items-center gap-2.5 min-w-0">
                 <div id="modalHeaderIcon" class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm flex-shrink-0">
-                    <i class="fas fa-qrcode"></i>
+                    <i class="ti ti-qrcode text-lg"></i>
                 </div>
                 <div class="min-w-0">
                     <h3 id="modalTitle" class="text-sm font-bold text-white leading-tight truncate">Hasil Scan QR Code</h3>
@@ -74,7 +100,7 @@
                     onclick="closeScanModal()"
                     class="text-white/70 hover:text-white w-11 h-11 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
                     title="Tutup (Esc)">
-                <i class="fas fa-times text-base"></i>
+                <i class="ti ti-x text-lg"></i>
             </button>
         </div>
 
@@ -137,13 +163,13 @@ function showModalLoading() {
     const footer = document.getElementById('modalFooter');
 
     header.className = 'p-4 bg-gray-900 text-white flex items-center justify-between transition-colors';
-    headerIcon.innerHTML = '<i class="fas fa-qrcode"></i>';
+    headerIcon.innerHTML = '<i class="ti ti-qrcode text-lg"></i>';
     title.textContent = 'Memeriksa QR Code';
     subtitle.textContent = 'Menghubungkan ke server...';
 
     body.innerHTML = `
         <div class="py-12 text-center">
-            <i class="fas fa-circle-notch fa-spin text-blue-600 text-4xl mb-3"></i>
+            <i class="ti ti-loader-2 animate-spin text-blue-600 text-4xl mb-3 inline-block"></i>
             <h4 class="font-bold text-gray-800 text-base">Memverifikasi Data Siswa...</h4>
             <p class="text-xs text-gray-500 mt-1">Mohon tunggu sebentar, sedang mencocokkan kode QR.</p>
         </div>
@@ -215,17 +241,17 @@ function renderScanDetail(data) {
 
     if (isKeluar) {
         header.className = 'p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between transition-colors';
-        headerIcon.innerHTML = '<i class="fas fa-door-open"></i>';
+        headerIcon.innerHTML = '<i class="ti ti-door-exit text-lg"></i>';
         title.textContent = 'Konfirmasi Siswa KELUAR';
         subtitle.textContent = 'Dispensasi telah disetujui & siap keluar';
     } else if (isKembali) {
         header.className = 'p-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between transition-colors';
-        headerIcon.innerHTML = '<i class="fas fa-door-closed"></i>';
+        headerIcon.innerHTML = '<i class="ti ti-door-enter text-lg"></i>';
         title.textContent = 'Konfirmasi Siswa KEMBALI';
         subtitle.textContent = 'Siswa telah kembali ke sekolah';
     } else {
         header.className = 'p-4 bg-gray-800 text-white flex items-center justify-between transition-colors';
-        headerIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+        headerIcon.innerHTML = '<i class="ti ti-info-circle text-lg"></i>';
         title.textContent = 'Informasi Dispensasi';
         subtitle.textContent = `Status: ${data.status.toUpperCase()}`;
     }
@@ -234,7 +260,7 @@ function renderScanDetail(data) {
     if (data.is_terlambat) {
         alertHtml += `
             <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-semibold flex items-center gap-2.5">
-                <i class="fas fa-exclamation-triangle text-red-600 text-base flex-shrink-0"></i>
+                <i class="ti ti-alert-triangle text-red-600 text-base flex-shrink-0"></i>
                 <div>
                     <p class="font-bold text-red-900">PERINGATAN: TERLAMBAT KEMBALI!</p>
                     <p class="text-[11px] text-red-700 font-normal">Siswa telah melewati batas jam kembali (${escapeHtml(data.jam_kembali)}).</p>
@@ -245,7 +271,7 @@ function renderScanDetail(data) {
     if (data.is_sampai_pulang && isKeluar) {
         alertHtml += `
             <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-semibold flex items-center gap-2.5">
-                <i class="fas fa-info-circle text-amber-600 text-base flex-shrink-0"></i>
+                <i class="ti ti-info-circle text-amber-600 text-base flex-shrink-0"></i>
                 <div>
                     <p class="font-bold text-amber-900">Dispensasi Sampai Pulang</p>
                     <p class="text-[11px] text-amber-700 font-normal">Siswa diizinkan hingga jam pulang, tidak wajib scan kembali.</p>
@@ -269,7 +295,7 @@ function renderScanDetail(data) {
     } else {
         photoHtml = `
             <div class="w-20 h-20 rounded-xl bg-blue-50 text-blue-600 flex flex-col items-center justify-center flex-shrink-0 border border-blue-100 shadow-sm">
-                <i class="fas fa-user-graduate text-2xl mb-1"></i>
+                <i class="ti ti-school text-2xl mb-1"></i>
                 <span class="text-[9px] text-gray-500 font-medium">Siswa</span>
             </div>
         `;
@@ -282,9 +308,9 @@ function renderScanDetail(data) {
             ${photoHtml}
             <div class="min-w-0 flex-1">
                 <h4 class="font-bold text-gray-900 text-base leading-snug">${escapeHtml(data.siswa.nama_lengkap)}</h4>
-                <p class="text-xs text-gray-500 font-mono mt-0.5"><i class="fas fa-id-card text-gray-400 mr-1"></i>NIS: ${escapeHtml(data.siswa.nis)}</p>
-                <p class="text-xs font-semibold text-gray-700 mt-1"><i class="fas fa-graduation-cap text-gray-400 mr-1"></i>${escapeHtml(data.siswa.kelas)} • ${escapeHtml(data.siswa.jurusan)}</p>
-                <p class="text-[11px] text-gray-500 mt-1"><i class="fas fa-user-check text-gray-400 mr-1"></i>Piket: <span class="font-medium text-gray-700">${escapeHtml(data.guru)}</span></p>
+                <p class="text-xs text-gray-500 font-mono mt-0.5"><i class="ti ti-id text-gray-400 mr-1"></i>NIS: ${escapeHtml(data.siswa.nis)}</p>
+                <p class="text-xs font-semibold text-gray-700 mt-1"><i class="ti ti-school text-gray-400 mr-1"></i>${escapeHtml(data.siswa.kelas)} • ${escapeHtml(data.siswa.jurusan)}</p>
+                <p class="text-[11px] text-gray-500 mt-1"><i class="ti ti-user-check text-gray-400 mr-1"></i>Piket: <span class="font-medium text-gray-700">${escapeHtml(data.guru)}</span></p>
             </div>
         </div>
 
@@ -302,7 +328,7 @@ function renderScanDetail(data) {
         <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs">
             <span class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Keperluan / Alasan</span>
             <p class="text-gray-800 font-medium leading-relaxed">${escapeHtml(data.alasan || '-')}</p>
-            ${data.tujuan ? `<p class="text-[11px] text-gray-500 mt-1.5"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i>Tujuan: <strong>${escapeHtml(data.tujuan)}</strong></p>` : ''}
+            ${data.tujuan ? `<p class="text-[11px] text-gray-500 mt-1.5"><i class="ti ti-map-pin text-red-500 mr-1"></i>Tujuan: <strong>${escapeHtml(data.tujuan)}</strong></p>` : ''}
         </div>
 
         <div class="text-center pt-2">
@@ -318,7 +344,7 @@ function renderScanDetail(data) {
                 <p class="text-[11px] text-gray-500 mt-0.5">Status dispensasi akan otomatis ditandai SELESAI.</p>
             ` : isSelesai ? `
                 <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold">
-                    <i class="fas fa-check-circle mr-1 text-emerald-600"></i> Dispensasi ini sudah selesai diproses.
+                    <i class="ti ti-circle-check mr-1 text-emerald-600"></i> Dispensasi ini sudah selesai diproses.
                 </div>
             ` : `
                 <p class="text-xs text-gray-600">Dispensasi dalam status <strong>${escapeHtml(data.status)}</strong>. Tidak memerlukan aksi scan.</p>
@@ -331,13 +357,13 @@ function renderScanDetail(data) {
             <button type="button"
                     onclick="closeScanModal()"
                     class="py-3 px-4 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 font-semibold text-xs transition-colors">
-                <i class="fas fa-times mr-1"></i> Batal
+                <i class="ti ti-x mr-1"></i> Batal
             </button>
             <button type="button"
                     id="btnConfirmAction"
                     onclick="submitConfirmation('keluar')"
                     class="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-1.5">
-                <i class="fas fa-door-open"></i> Ya, Setujui KELUAR
+                <i class="ti ti-door-exit text-base"></i> Ya, Setujui KELUAR
             </button>
         `;
     } else if (isKembali) {
@@ -345,13 +371,13 @@ function renderScanDetail(data) {
             <button type="button"
                     onclick="closeScanModal()"
                     class="py-3 px-4 rounded-xl bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 font-semibold text-xs transition-colors">
-                <i class="fas fa-times mr-1"></i> Batal
+                <i class="ti ti-x mr-1"></i> Batal
             </button>
             <button type="button"
                     id="btnConfirmAction"
                     onclick="submitConfirmation('kembali')"
                     class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5">
-                <i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI
+                <i class="ti ti-door-enter text-base"></i> Ya, Konfirmasi KEMBALI
             </button>
         `;
     } else {
@@ -359,7 +385,7 @@ function renderScanDetail(data) {
             <button type="button"
                     onclick="closeScanModal()"
                     class="w-full py-3 px-4 rounded-xl bg-gray-800 hover:bg-gray-900 text-white font-semibold text-xs transition-colors">
-                <i class="fas fa-check mr-1.5"></i> Tutup & Scan Ulang
+                <i class="ti ti-check mr-1.5"></i> Tutup & Scan Ulang
             </button>
         `;
     }
@@ -377,14 +403,14 @@ function renderScanError(message) {
     const footer = document.getElementById('modalFooter');
 
     header.className = 'p-4 bg-red-600 text-white flex items-center justify-between transition-colors';
-    headerIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+    headerIcon.innerHTML = '<i class="ti ti-alert-triangle text-lg"></i>';
     title.textContent = 'QR Code Tidak Valid';
     subtitle.textContent = 'Gagal memverifikasi dispensasi';
 
     body.innerHTML = `
         <div class="py-8 text-center">
             <div class="w-14 h-14 mx-auto rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl mb-3">
-                <i class="fas fa-times"></i>
+                <i class="ti ti-x text-2xl"></i>
             </div>
             <h4 class="font-bold text-gray-800 text-base">Tidak Dapat Memproses</h4>
             <p class="text-xs text-gray-600 mt-1 max-w-sm mx-auto">${escapeHtml(message)}</p>
@@ -395,7 +421,7 @@ function renderScanError(message) {
         <button type="button"
                 onclick="closeScanModal()"
                 class="w-full py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition-colors">
-            <i class="fas fa-redo mr-1.5"></i> Scan Ulang
+            <i class="ti ti-refresh mr-1.5"></i> Scan Ulang
         </button>
     `;
 
@@ -408,7 +434,7 @@ function submitConfirmation(action) {
     if (!btn || !currentScannedQr) return;
 
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1.5"></i> Memproses...';
+    btn.innerHTML = '<i class="ti ti-loader-2 animate-spin mr-1.5 inline-block"></i> Memproses...';
     btn.classList.add('opacity-75', 'cursor-not-allowed');
 
     fetch('{{ route("guru.scan.verify") }}', {
@@ -434,7 +460,7 @@ function submitConfirmation(action) {
         } else {
             Swal.fire('Gagal', (data && data.message) ? data.message : 'Terjadi kesalahan saat konfirmasi.', 'error');
             btn.disabled = false;
-            btn.innerHTML = action === 'keluar' ? '<i class="fas fa-door-open"></i> Ya, Setujui KELUAR' : '<i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI';
+            btn.innerHTML = action === 'keluar' ? '<i class="ti ti-door-exit text-base"></i> Ya, Setujui KELUAR' : '<i class="ti ti-door-enter text-base"></i> Ya, Konfirmasi KEMBALI';
             btn.classList.remove('opacity-75', 'cursor-not-allowed');
         }
     })
@@ -442,7 +468,7 @@ function submitConfirmation(action) {
         console.error('Submit error:', err);
         Swal.fire('Gagal', err.message || 'Terjadi kesalahan jaringan.', 'error');
         btn.disabled = false;
-        btn.innerHTML = action === 'keluar' ? '<i class="fas fa-door-open"></i> Ya, Setujui KELUAR' : '<i class="fas fa-door-closed"></i> Ya, Konfirmasi KEMBALI';
+        btn.innerHTML = action === 'keluar' ? '<i class="ti ti-door-exit text-base"></i> Ya, Setujui KELUAR' : '<i class="ti ti-door-enter text-base"></i> Ya, Konfirmasi KEMBALI';
         btn.classList.remove('opacity-75', 'cursor-not-allowed');
     });
 }
@@ -457,14 +483,14 @@ function renderSuccessState(data) {
     const footer = document.getElementById('modalFooter');
 
     header.className = 'p-4 bg-emerald-600 text-white flex items-center justify-between transition-colors';
-    headerIcon.innerHTML = '<i class="fas fa-check"></i>';
+    headerIcon.innerHTML = '<i class="ti ti-check text-lg"></i>';
     title.textContent = 'Berhasil Dikonfirmasi!';
     subtitle.textContent = 'Data telah dicatat ke sistem';
 
     body.innerHTML = `
         <div class="py-8 text-center">
             <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mb-3 shadow-inner">
-                <i class="fas fa-check"></i>
+                <i class="ti ti-check text-3xl"></i>
             </div>
             <h4 class="font-bold text-gray-900 text-lg leading-snug">${escapeHtml(data.message)}</h4>
             <p class="text-xs text-gray-500 mt-2">Modal akan tertutup otomatis dalam 3 detik untuk scan berikutnya.</p>
@@ -475,7 +501,7 @@ function renderSuccessState(data) {
         <button type="button"
                 onclick="closeScanModal()"
                 class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-md shadow-emerald-600/20">
-            <i class="fas fa-redo mr-1.5"></i> Scan Siswa Berikutnya
+            <i class="ti ti-refresh mr-1.5"></i> Scan Siswa Berikutnya
         </button>
     `;
 
@@ -563,7 +589,7 @@ function manualVerify(e) {
 
     const resultDiv = document.getElementById('manualSearchResult');
     resultDiv.classList.remove('hidden');
-    resultDiv.innerHTML = '<div class="text-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm"><i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i><p class="text-xs text-gray-500 mt-2">Mencari data...</p></div>';
+    resultDiv.innerHTML = '<div class="text-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm"><i class="ti ti-loader-2 animate-spin text-blue-500 text-2xl inline-block"></i><p class="text-xs text-gray-500 mt-2">Mencari data...</p></div>';
 
     fetch('{{ route("guru.search-dispensasi") }}', {
         method: 'POST',
@@ -591,9 +617,9 @@ function manualVerify(e) {
                                  'bg-gray-100 text-gray-700';
 
                 if (d.status === 'disetujui') {
-                    actionBtn = `<button onclick="quickAction('keluar', ${d.id})" class="w-full mt-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"><i class="fas fa-door-open"></i> Konfirmasi KELUAR</button>`;
+                    actionBtn = `<button onclick="quickAction('keluar', ${d.id})" class="w-full mt-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"><i class="ti ti-door-exit text-base"></i> Konfirmasi KELUAR</button>`;
                 } else if (d.status === 'keluar') {
-                    actionBtn = `<button onclick="quickAction('kembali', ${d.id})" class="w-full mt-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"><i class="fas fa-door-closed"></i> Konfirmasi KEMBALI</button>`;
+                    actionBtn = `<button onclick="quickAction('kembali', ${d.id})" class="w-full mt-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"><i class="ti ti-door-enter text-base"></i> Konfirmasi KEMBALI</button>`;
                 } else {
                     actionBtn = `<p class="text-xs text-gray-500 text-center mt-2 italic">Status: ${d.status}</p>`;
                 }
@@ -604,7 +630,7 @@ function manualVerify(e) {
                             <div>
                                 <p class="font-mono font-semibold text-xs text-blue-600">${escapeHtml(d.nomor_surat)}</p>
                                 <p class="font-bold text-gray-900 text-sm mt-0.5">${escapeHtml(d.siswa_nama)}</p>
-                                <p class="text-xs text-gray-500 mt-0.5"><i class="fas fa-id-card text-gray-400 mr-1"></i>${escapeHtml(d.siswa_nis)} • ${escapeHtml(d.siswa_kelas)}</p>
+                                <p class="text-xs text-gray-500 mt-0.5"><i class="ti ti-id text-gray-400 mr-1"></i>${escapeHtml(d.siswa_nis)} • ${escapeHtml(d.siswa_kelas)}</p>
                             </div>
                             <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${statusClass}">${escapeHtml(d.status.toUpperCase())}</span>
                         </div>
