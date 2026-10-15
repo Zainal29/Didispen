@@ -24,71 +24,79 @@
     }
 @endphp
 
-{{-- ============ HERO SECTION ============ --}}
-<div class="relative overflow-hidden bg-gradient-to-br from-red-600 via-red-600 to-rose-700 rounded-2xl p-4 sm:p-6 mb-5 shadow-lg shadow-red-500/15 text-white">
-    <div class="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-    <div class="absolute right-12 top-2 w-24 h-24 bg-rose-400/20 rounded-full blur-xl pointer-events-none"></div>
-    
-    <div class="relative z-10">
-        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-semibold text-red-100 uppercase tracking-wide mb-2">
-            <i class="far fa-calendar-alt text-red-200"></i>
-            {{ now()->isoFormat('dddd, D MMMM Y') }} • Pos Gerbang
-        </div>
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-                <h2 class="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
+{{-- ============ HERO HEADER (CLEAN WHITE CARD MINIMALIS) ============ --}}
+<div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+        <div class="flex items-start gap-3 min-w-0">
+            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs">
+                <i class="ti ti-shield-check text-xl sm:text-2xl"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-100 text-[10px] sm:text-[11px] font-bold text-rose-700">
+                        <i class="ti ti-map-pin text-xs"></i> Pos Gerbang Utama
+                    </span>
+                    <span class="text-[11px] sm:text-xs text-slate-500 font-medium">
+                        {{ now()->isoFormat('dddd, D MMMM Y') }}
+                    </span>
+                </div>
+                <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-snug break-words">
                     Halo, {{ auth()->user()->name }}!
-                </h2>
-                <p class="text-xs sm:text-sm text-red-100/90 mt-1 max-w-xl">
-                    Pos Keamanan Gerbang SMKN 1 Bangsri. Verifikasi barcode keluar-masuk siswa dispensasi hari ini.
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    Verifikasi barcode keluar-masuk siswa dispensasi hari ini secara realtime di pos keamanan gerbang.
                 </p>
             </div>
-            <a href="{{ route('satpam.scan') }}" class="inline-flex items-center px-4 py-2 rounded-xl bg-white text-red-700 text-xs font-bold hover:bg-red-50 shadow-sm active:scale-95 transition-all self-start sm:self-center flex-shrink-0">
-                <i class="fas fa-qrcode mr-1.5"></i> Scan QR Dispensasi
+        </div>
+        <div class="flex items-center gap-2 self-stretch sm:self-center shrink-0">
+            <a href="{{ route('satpam.scan') }}"
+               class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold shadow-xs active:scale-[0.98] transition-all">
+                <i class="ti ti-qrcode text-base"></i>
+                <span>Scan QR Dispensasi</span>
             </a>
         </div>
     </div>
 </div>
 
 {{-- ============ GURU PIKET HARI INI ============ --}}
-<div class="bg-white border border-gray-200 rounded-xl p-3.5 sm:p-4 mb-4 shadow-xs">
-    <div class="border-b border-gray-100 pb-3 mb-3">
+<div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
+    <div class="border-b border-slate-100 pb-3 mb-3.5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
             <div class="flex items-start gap-2.5 min-w-0">
-                <div class="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5 sm:mt-0">
-                    <i class="fas fa-user-shield"></i>
+                <div class="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0 text-sm mt-0.5 sm:mt-0 shadow-2xs">
+                    <i class="ti ti-user-shield text-base"></i>
                 </div>
                 <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <h3 class="text-sm font-bold text-gray-900 whitespace-nowrap">Guru Piket Hari Ini</h3>
+                        <h3 class="text-sm font-bold text-slate-900 whitespace-nowrap">Guru Piket Hari Ini</h3>
                         @if(!empty($infoPiket['jadwal']))
                             @if(!empty($infoPiket['jadwal']->nama_sesi))
-                                <span class="text-[10px] sm:text-[11px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-100 whitespace-nowrap">
+                                <span class="text-[10px] sm:text-[11px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100 whitespace-nowrap">
                                     {{ $infoPiket['jadwal']->nama_sesi }}
                                 </span>
                             @endif
-                            <span class="text-[11px] sm:text-xs font-mono font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded whitespace-nowrap">
-                                <i class="far fa-clock text-[10px] text-gray-400 mr-1"></i>{{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} – {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB
+                            <span class="text-[11px] sm:text-xs font-mono font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md whitespace-nowrap">
+                                <i class="ti ti-clock text-[11px] text-slate-400 mr-1"></i>{{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} – {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB
                             </span>
                         @endif
                     </div>
-                    <p class="text-xs text-gray-500 mt-0.5 sm:mt-1">Daftar Bapak/Ibu Guru yang bertugas piket pada sesi ini untuk koordinasi gerbang.</p>
+                    <p class="text-xs text-slate-500 mt-0.5 sm:mt-1">Daftar Bapak/Ibu Guru yang bertugas piket pada sesi ini untuk koordinasi gerbang.</p>
                 </div>
             </div>
             @if(!empty($infoPiket['jadwal']))
                 <div class="flex items-center sm:self-center self-start pl-10 sm:pl-0 flex-shrink-0">
                     @if($infoPiket['status_sesi'] === 'Berlangsung')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap">
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
                             Sedang Berlangsung
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Akan Datang')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 shadow-2xs whitespace-nowrap">
-                            <i class="far fa-clock mr-1.5 text-[10px]"></i>
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200 shadow-2xs whitespace-nowrap">
+                            <i class="ti ti-clock mr-1 text-[11px]"></i>
                             Akan Datang
                         </span>
                     @elseif($infoPiket['status_sesi'] === 'Sesi Selesai')
-                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap">
+                        <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
                             Sesi Selesai
                         </span>
                     @endif
@@ -100,38 +108,38 @@
     {{-- KONDISI 1: CONFLICT REPLACEMENT --}}
     @if(!empty($infoPiket['conflict']))
         <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2.5">
-            <i class="fas fa-info-circle text-base text-amber-600 flex-shrink-0"></i>
+            <i class="ti ti-alert-triangle text-base text-amber-600 flex-shrink-0"></i>
             <span class="font-medium">Data Guru Piket sedang diperiksa.</span>
         </div>
 
     {{-- KONDISI 2: TIDAK ADA JADWAL SESI --}}
     @elseif(empty($infoPiket['jadwal']))
-        <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 flex items-center gap-2">
-            <i class="fas fa-info-circle text-base text-gray-400 flex-shrink-0"></i>
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center gap-2">
+            <i class="ti ti-info-circle text-base text-slate-400 flex-shrink-0"></i>
             <span>{{ empty($adaJadwalHariIni) ? 'Belum ada jadwal Guru Piket untuk hari ini.' : 'Tidak ada sesi Guru Piket berikutnya hari ini.' }}</span>
         </div>
 
      {{-- KONDISI 3: ADA SESI & PETUGAS AKTUAL --}}
     @else
         @if(empty($infoPiket['petugas']))
-            <p class="text-xs text-gray-500 italic">Belum ada petugas piket yang ditentukan untuk sesi ini.</p>
+            <p class="text-xs text-slate-500 italic">Belum ada petugas piket yang ditentukan untuk sesi ini.</p>
         @else
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
                 @foreach($infoPiket['petugas'] as $p)
                     @php
                         $statusClass = match($p['status']) {
                             'Sedang Bertugas' => 'bg-emerald-50 text-emerald-800 border-emerald-200',
                             'Sedang Keluar'   => 'bg-amber-50 text-amber-800 border-amber-200',
-                            'Sudah Kembali'   => 'bg-sky-50 text-sky-800 border-sky-200',
-                            'Akan Bertugas'   => 'bg-indigo-50 text-indigo-800 border-indigo-200',
-                            default           => 'bg-gray-50 text-gray-700 border-gray-200',
+                            'Sudah Kembali'   => 'bg-blue-50 text-blue-800 border-blue-200',
+                            'Akan Bertugas'   => 'bg-slate-100 text-slate-800 border-slate-200',
+                            default           => 'bg-slate-50 text-slate-700 border-slate-200',
                         };
                         $dotColor = match($p['status']) {
                             'Sedang Bertugas' => 'bg-emerald-500',
                             'Sedang Keluar'   => 'bg-amber-500',
-                            'Sudah Kembali'   => 'bg-sky-500',
-                            'Akan Bertugas'   => 'bg-indigo-500',
-                            default           => 'bg-gray-400',
+                            'Sudah Kembali'   => 'bg-blue-500',
+                            'Akan Bertugas'   => 'bg-slate-500',
+                            default           => 'bg-slate-400',
                         };
                         $initials = collect(explode(' ', $p['guru']->nama_lengkap ?? 'G'))
                             ->filter()
@@ -141,44 +149,37 @@
                         $rawPhone = preg_replace('/[^0-9]/', '', $p['guru']->no_telepon ?? '');
                         $waPhone = str_starts_with($rawPhone, '0') ? '62' . substr($rawPhone, 1) : $rawPhone;
                     @endphp
-                    <div class="p-3 sm:p-3.5 rounded-xl border border-gray-200 bg-white hover:border-red-200 hover:shadow-xs transition-all flex flex-col justify-between gap-2.5">
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between gap-2.5 shadow-2xs">
                         <div class="flex items-start justify-between gap-2">
                             <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                                <div class="w-9 h-9 rounded-full bg-red-50 border border-red-100 text-red-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                <div class="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs">
                                     {{ $initials ?: 'GP' }}
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <p class="font-bold text-sm text-gray-900 truncate" title="{{ $p['guru']->nama_lengkap }}">
+                                    <p class="font-bold text-sm text-slate-900 break-words" title="{{ $p['guru']->nama_lengkap }}">
                                         {{ $p['guru']->nama_lengkap }}
                                     </p>
                                     @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
                                         <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
-                                            <i class="fas fa-exchange-alt text-[10px]"></i>
-                                            <span class="truncate">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
+                                            <i class="ti ti-arrows-exchange text-xs"></i>
+                                            <span class="break-words">Menggantikan: {{ $p['guru_resmi']->nama_lengkap }}</span>
                                         </p>
                                     @endif
                                 </div>
                             </div>
 
-                            <!-- @if(!empty($p['guru']->no_telepon))
-                                <div class="flex items-center gap-1 flex-shrink-0">
-                                    <a href="https://wa.me/{{ $waPhone }}?text={{ urlencode('Halo Bapak/Ibu Guru Piket, ada koordinasi terkait perizinan siswa dari Pos Satpam SMKN 1 Bangsri.') }}" 
-                                       target="_blank" 
-                                       rel="noopener noreferrer" 
-                                       title="Chat WhatsApp" 
-                                       class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 border border-emerald-100 transition-colors text-xs active:scale-95">
-                                        <i class="fab fa-whatsapp"></i>
-                                    </a>
-                                    <a href="tel:{{ $p['guru']->no_telepon }}" 
-                                       title="Telepon Guru" 
-                                       class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800 border border-gray-200 transition-colors text-xs active:scale-95">
-                                        <i class="fas fa-phone-alt text-[10px]"></i>
-                                    </a>
-                                </div>
+                            <!-- @if($waPhone)
+                                <a href="https://wa.me/{{ $waPhone }}?text={{ urlencode('Halo Bapak/Ibu Guru Piket, ada koordinasi terkait perizinan siswa dari Pos Satpam SMKN 1 Bangsri.') }}" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   title="Chat WhatsApp {{ $p['guru']->nama_lengkap }}" 
+                                   class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors text-sm active:scale-95 flex-shrink-0">
+                                    <i class="ti ti-brand-whatsapp text-base"></i>      
+                                </a>
                             @endif -->
                         </div>
 
-                        <div class="pt-2 border-t border-gray-100 flex flex-wrap items-center gap-1.5">
+                        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border {{ $statusClass }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }} {{ $p['status'] === 'Sedang Bertugas' ? 'animate-pulse' : '' }}"></span>
                                 {{ $p['status'] }}
@@ -201,10 +202,10 @@
 {{-- STATISTIK SEBAGAI FILTER UTAMA --}}
 @php
 $cards = [
-    'menunggu'  => ['Menunggu Scan', $menungguKeluar->count(), 'fa-clock', 'amber'],
-    'keluar'    => ['Sedang Keluar', $siswaKeluar->count(), 'fa-person-walking', 'sky'],
-    'terlambat' => ['Terlambat', $terlambatCount, 'fa-exclamation-triangle', 'red'],
-    'selesai'   => ['Selesai', $stats['selesai'] ?? 0, 'fa-check-double', 'emerald'],
+    'menunggu'  => ['Menunggu Scan', $menungguKeluar->count(), 'ti-clock-pause', 'amber'],
+    'keluar'    => ['Sedang Keluar', $siswaKeluar->count(), 'ti-walk', 'blue'],
+    'terlambat' => ['Terlambat', $terlambatCount, 'ti-alert-triangle', 'rose'],
+    'selesai'   => ['Selesai', $stats['selesai'] ?? 0, 'ti-checks', 'emerald'],
 ];
 @endphp
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-3">
@@ -216,18 +217,18 @@ $cards = [
         <button type="button"
                 onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
                 data-filter="{{ $key }}"
-                class="stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[44px] transition-all w-full
+                class="stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[48px] transition-all w-full active:scale-[0.99]
                 {{ $isActive
                     ? 'active bg-white border-' . $color . '-500 ring-2 ring-' . $color . '-500/20 shadow-sm'
-                    : 'bg-white border-gray-200/90 shadow-xs hover:border-gray-300 hover:shadow-md' }}">
+                    : 'bg-white border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs' }}">
             <div class="flex items-center justify-between mb-2">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors
-                    {{ $isActive ? 'bg-' . $color . '-500 text-white' : 'bg-' . $color . '-100 text-' . $color . '-600' }}">
-                    <i class="fas {{ $card[2] }} text-sm"></i>
+                    {{ $isActive ? 'bg-' . $color . '-500 text-white' : 'bg-' . $color . '-50 text-' . $color . '-600 border border-' . $color . '-100' }}">
+                    <i class="ti {{ $card[2] }} text-base"></i>
                 </div>
-                <span class="text-2xl sm:text-3xl font-black text-gray-900">{{ $card[1] }}</span>
+                <span class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{{ $card[1] }}</span>
             </div>
-            <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $card[0] }}</p>
+            <p class="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $card[0] }}</p>
         </button>
     @endforeach
 </div>
@@ -235,64 +236,62 @@ $cards = [
 {{-- SECONDARY FILTER BUTTONS --}}
 <div class="grid grid-cols-2 gap-2 mb-4">
     <button type="button"
-            onclick="switchFilter('semua', 'red', event)"
+            onclick="switchFilter('semua', 'rose', event)"
             data-filter="semua"
-            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-bold border transition-all text-center
             {{ $currentFilter === 'semua'
-                ? 'active bg-red-600 text-white shadow-sm border-transparent hover:bg-red-700'
-                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
-        <i class="fas fa-layer-group mr-1.5"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
+                ? 'active bg-rose-600 text-white shadow-xs border-transparent hover:bg-rose-700'
+                : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200 shadow-2xs' }}">
+        <i class="ti ti-layout-grid mr-1.5 text-sm"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
     </button>
     <button type="button"
             onclick="switchFilter('dihubungi', 'purple', event)"
             data-filter="dihubungi"
-            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-lg text-xs font-semibold border transition-all text-center
+            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-bold border transition-all text-center
             {{ $currentFilter === 'dihubungi'
-                ? 'active bg-purple-600 text-white shadow-sm border-transparent hover:bg-purple-700'
-                : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-gray-200' }}">
-        <i class="fas fa-phone-alt mr-1.5"></i>Dihubungi ({{ $dihubungi->count() }})
+                ? 'active bg-purple-600 text-white shadow-xs border-transparent hover:bg-purple-700'
+                : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200 shadow-2xs' }}">
+        <i class="ti ti-brand-whatsapp mr-1.5 text-base"></i>Dihubungi ({{ $dihubungi->count() }})
     </button>
-</div>
-
-{{-- ============ CONTENT SECTIONS ============ --}}
+</div>{{-- ============ CONTENT SECTIONS ============ --}}
 <div id="content-area" class="fade-in">
 
     {{-- SECTION: MENUNGGU --}}
     <div id="section-menunggu" class="space-y-3 {{ $currentFilter !== 'menunggu' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-clock text-amber-500 mr-1.5"></i>Menunggu Scan Keluar</h3>
+        <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i class="ti ti-clock-pause text-amber-500 mr-2 text-base"></i>Menunggu Scan Keluar</h3>
         @if($menungguKeluar->count() > 0)
             @foreach($menungguKeluar as $dispensasi)
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
             @endforeach
         @else
-            <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <div class="w-14 h-14 mx-auto rounded-lg bg-amber-50 text-amber-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-clock"></i></div>
-                <p class="text-gray-700 text-sm font-semibold">Belum ada siswa yang menunggu scan keluar hari ini</p>
-                <p class="text-gray-500 text-xs mt-1">Dispensasi yang telah disetujui Guru Piket akan muncul di sini untuk verifikasi gerbang</p>
+            <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-2xs">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-500 border border-amber-100 flex items-center justify-center text-2xl mb-3 shadow-2xs"><i class="ti ti-clock-pause"></i></div>
+                <p class="text-slate-800 text-sm font-semibold">Belum ada siswa yang menunggu scan keluar hari ini</p>
+                <p class="text-slate-500 text-xs mt-1">Dispensasi yang telah disetujui Guru Piket akan muncul di sini untuk verifikasi gerbang</p>
             </div>
         @endif
     </div>
 
     {{-- SECTION: KELUAR --}}
     <div id="section-keluar" class="space-y-3 {{ $currentFilter !== 'keluar' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-person-walking text-sky-500 mr-1.5"></i>Sedang Keluar</h3>
+        <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i class="ti ti-walk text-sky-500 mr-2 text-base"></i>Sedang Keluar</h3>
         @if($siswaKeluar->count() > 0)
             @foreach($siswaKeluar as $dispensasi)
                 @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue])
             @endforeach
         @else
-            <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <div class="w-14 h-14 mx-auto rounded-lg bg-sky-50 text-sky-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-person-walking"></i></div>
-                <p class="text-gray-700 text-sm font-semibold">Belum ada siswa yang sedang keluar hari ini</p>
-                <p class="text-gray-500 text-xs mt-1">Siswa yang sudah di-scan keluar oleh satpam akan muncul di sini</p>
+            <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-2xs">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-sky-50 text-sky-500 border border-sky-100 flex items-center justify-center text-2xl mb-3 shadow-2xs"><i class="ti ti-walk"></i></div>
+                <p class="text-slate-800 text-sm font-semibold">Belum ada siswa yang sedang keluar hari ini</p>
+                <p class="text-slate-500 text-xs mt-1">Siswa yang sudah di-scan keluar oleh satpam akan muncul di sini</p>
             </div>
         @endif
     </div>
 
     {{-- SECTION: TERLAMBAT --}}
     <div id="section-terlambat" class="space-y-3 {{ $currentFilter !== 'terlambat' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-exclamation-triangle text-red-500 mr-1.5"></i>Siswa Terlambat</h3>
+        <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i class="ti ti-alert-triangle text-rose-500 mr-2 text-base"></i>Siswa Terlambat</h3>
         @php $renderedTerlambat = 0; @endphp
 
         @foreach($siswaKeluar as $dispensasi)
@@ -303,38 +302,49 @@ $cards = [
                 $lateMinutes = \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($dispensasi->batas_waktu_kembali);
                 $lateText = \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat($lateMinutes, short: true);
             @endphp
-            <div class="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden" data-dispensasi="{{ $dispensasi->id }}" data-status="terlambat" data-overdue="true" data-deadline="{{ $dispensasi->batas_waktu_kembali->format('Y-m-d H:i:s') }}">
-                <div class="px-4 py-3.5 bg-red-50 border-b border-red-100">
+            <div class="bg-white rounded-2xl border border-rose-200 shadow-xs overflow-hidden" data-dispensasi="{{ $dispensasi->id }}" data-status="terlambat" data-overdue="true" data-deadline="{{ $dispensasi->batas_waktu_kembali->format('Y-m-d H:i:s') }}">
+                <div class="px-4 py-3.5 bg-rose-50/70 border-b border-rose-100">
                     <div class="flex justify-between items-start gap-2">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <p class="font-mono font-semibold text-gray-700 text-xs">{{ $dispensasi->nomor_surat }}</p>
-                                <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-red-100 text-red-700 uppercase">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i>TERLAMBAT {{ $lateText }}
+                                <p class="font-mono font-semibold text-slate-700 text-xs">{{ $dispensasi->nomor_surat }}</p>
+                                @if($dispensasi->isOrganisasi())
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                        <i class="ti ti-users text-xs"></i>
+                                        <span>{{ $dispensasi->nama_organisasi ?? 'Organisasi' }}</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                        <i class="ti ti-user text-xs"></i>
+                                        <span>Individu</span>
+                                    </span>
+                                @endif
+                                <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-rose-100 text-rose-700 uppercase">
+                                    <i class="ti ti-alert-triangle mr-1"></i>TERLAMBAT {{ $lateText }}
                                 </span>
                                 @if($dispensasi->is_warned)
                                     <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-purple-100 text-purple-700 uppercase">
-                                        <i class="fas fa-phone-alt mr-1"></i>DIHUBUNGI
+                                        <i class="ti ti-phone-call mr-1"></i>DIHUBUNGI
                                     </span>
                                 @endif
                             </div>
-                            <p class="font-bold text-gray-900 text-sm truncate">{{ $dispensasi->siswa->nama_lengkap }}</p>
-                            <p class="text-[10px] text-gray-500 truncate">{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} • {{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
+                            <p class="font-bold text-slate-900 text-sm truncate">{{ $dispensasi->siswa->nama_lengkap }}</p>
+                            <p class="text-[10px] text-slate-500 truncate">{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} • {{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
                         </div>
-                        <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}" class="inline-flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex-shrink-0">
-                            <i class="fas fa-eye text-xs"></i>
+                        <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}" class="inline-flex items-center justify-center w-8 h-8 min-h-[32px] bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-2xs transition-colors flex-shrink-0">
+                            <i class="ti ti-eye text-sm"></i>
                         </a>
                     </div>
                 </div>
-                <div class="p-4 space-y-3 bg-gray-50/50">
+                <div class="p-4 space-y-3 bg-slate-50/50">
                     <div class="grid grid-cols-2 gap-3 text-xs">
-                        <div class="bg-white p-2.5 rounded-lg border border-gray-200">
-                            <p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Keluar</p>
-                            <p class="font-semibold text-gray-800">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->created_at?->dayOfWeek) }}</p>
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                            <p class="text-slate-400 text-[9px] font-bold uppercase mb-1">Jam Keluar</p>
+                            <p class="font-semibold text-slate-800">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->created_at?->dayOfWeek) }}</p>
                         </div>
-                        <div class="bg-white p-2.5 rounded-lg border border-gray-200">
-                            <p class="text-gray-400 text-[9px] font-bold uppercase mb-1">Jam Kembali</p>
-                            <p class="font-semibold text-red-700">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek) }}</p>
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                            <p class="text-slate-400 text-[9px] font-bold uppercase mb-1">Jam Kembali</p>
+                            <p class="font-semibold text-rose-700">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek) }}</p>
                         </div>
                     </div>
                     @if(!empty($dispensasi->siswa->no_telepon))
@@ -343,88 +353,88 @@ $cards = [
                             if (str_starts_with($hp, '0')) $hp = '62' . substr($hp, 1);
                             $waLink = "https://wa.me/{$hp}?text=" . urlencode("*PERINGATAN KETERLAMBATAN*\n\nYth. *{$dispensasi->siswa->nama_lengkap}*,\nBatas waktu kembali dispensasi Anda telah LEWAT.\n\nLokasi Tujuan: {$dispensasi->tujuan}\nSEGERA KEMBALI ke sekolah.\n\nPetugas Satpam SMKN 1 Bangsri");
                         @endphp
-                        <div id="wa-section-{{ $dispensasi->id }}" class="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div id="wa-section-{{ $dispensasi->id }}" class="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3">
                             <div class="flex items-center justify-between {{ $dispensasi->is_warned ? 'mb-1' : 'mb-2' }}">
                                 <div>
-                                    <p class="text-[10px] font-bold text-green-700 uppercase">Kontak Darurat</p>
-                                    <p class="text-sm font-semibold text-gray-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
+                                    <p class="text-[10px] font-bold text-emerald-700 uppercase">Kontak Darurat</p>
+                                    <p class="text-sm font-semibold text-slate-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
                                 </div>
                                 @if($dispensasi->is_warned)
-                                    <div class="inline-flex items-center justify-center w-10 h-10 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" title="Sudah dihubungi">
-                                        <i class="fas fa-check text-base"></i>
+                                    <div class="inline-flex items-center justify-center w-10 h-10 bg-slate-200 text-slate-500 rounded-xl cursor-not-allowed" title="Sudah dihubungi">
+                                        <i class="ti ti-check text-base"></i>
                                     </div>
                                 @else
                                     <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}')"
-                                            class="inline-flex items-center justify-center w-10 h-10 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                                        <i class="fab fa-whatsapp text-lg"></i>
+                                            class="inline-flex items-center justify-center w-10 h-10 min-h-[44px] min-w-[44px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-colors">
+                                        <i class="ti ti-brand-whatsapp text-xl"></i>
                                     </button>
                                 @endif
                             </div>
                             @if($dispensasi->is_warned)
-                                <p class="text-[10px] text-green-600 font-medium"><i class="fas fa-check-circle mr-1"></i>Sudah dihubungi via WhatsApp</p>
+                                <p class="text-[10px] text-green-600 font-medium"><i class="ti ti-circle-check mr-1 text-xs"></i>Sudah dihubungi via WhatsApp</p>
                             @endif
                         </div>
                     @elseif($dispensasi->is_warned)
-                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-center justify-between">
+                        <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-center justify-between">
                             <div>
                                 <p class="text-[10px] font-bold text-purple-700 uppercase">Status Kontak</p>
-                                <p class="text-xs font-semibold text-purple-900 mt-0.5"><i class="fas fa-check-circle mr-1"></i>Sudah Dihubungi</p>
+                                <p class="text-xs font-semibold text-purple-900 mt-0.5"><i class="ti ti-circle-check mr-1 text-xs"></i>Sudah Dihubungi</p>
                             </div>
                             <span class="text-xs text-purple-600 font-mono">{{ $dispensasi->warned_at ? \Carbon\Carbon::parse($dispensasi->warned_at)->format('H:i') . ' WIB' : '-' }}</span>
                         </div>
                     @endif
                     <a href="{{ route('satpam.scan') }}"
-                       class="w-full inline-flex justify-center items-center px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
-                        <i class="fas fa-camera mr-1.5"></i>Scan QR Code untuk Kembali
+                       class="w-full inline-flex justify-center items-center px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors">
+                        <i class="ti ti-qrcode mr-1.5 text-base"></i>Scan QR Code untuk Kembali
                     </a>
                 </div>
             </div>
         @endforeach
 
         @if($renderedTerlambat === 0)
-            <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <div class="w-14 h-14 mx-auto rounded-lg bg-emerald-50 text-emerald-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-check-circle"></i></div>
-                <p class="text-gray-700 text-sm font-semibold">Tidak ada siswa yang terlambat hari ini</p>
-                <p class="text-gray-500 text-xs mt-1">Semua siswa yang keluar telah kembali tepat waktu</p>
+            <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-2xs">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center text-2xl mb-3 shadow-2xs"><i class="ti ti-circle-check"></i></div>
+                <p class="text-slate-800 text-sm font-semibold">Tidak ada siswa yang terlambat hari ini</p>
+                <p class="text-slate-500 text-xs mt-1">Semua siswa yang keluar telah kembali tepat waktu</p>
             </div>
         @endif
     </div>
 
     {{-- SECTION: SELESAI --}}
     <div id="section-selesai" class="space-y-3 {{ $currentFilter !== 'selesai' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-check-circle text-emerald-500 mr-1.5"></i>Sudah Kembali</h3>
+        <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i class="ti ti-circle-check text-emerald-500 mr-2 text-base"></i>Sudah Kembali</h3>
         @if(isset($selesai) && $selesai->count() > 0)
             @foreach($selesai as $dispensasi)
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'selesai', 'isOverdue' => false])
             @endforeach
         @else
-            <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <div class="w-14 h-14 mx-auto rounded-lg bg-emerald-50 text-emerald-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-check-circle"></i></div>
-                <p class="text-gray-700 text-sm font-semibold">Belum ada siswa yang kembali hari ini</p>
-                <p class="text-gray-500 text-xs mt-1">Siswa yang sudah di-scan kembali akan muncul di sini</p>
+            <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-2xs">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center text-2xl mb-3 shadow-2xs"><i class="ti ti-circle-check"></i></div>
+                <p class="text-slate-800 text-sm font-semibold">Belum ada siswa yang kembali hari ini</p>
+                <p class="text-slate-500 text-xs mt-1">Siswa yang sudah di-scan kembali akan muncul di sini</p>
             </div>
         @endif
     </div>
 
     {{-- SECTION: DIHUBUNGI --}}
     <div id="section-dihubungi" class="space-y-3 {{ $currentFilter !== 'dihubungi' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-phone-alt text-purple-500 mr-1.5"></i>Riwayat Siswa yang Sudah Dihubungi <span class="text-xs font-normal text-gray-500 ml-2">({{ $dihubungi->count() }} siswa)</span></h3>
+        <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i class="ti ti-brand-whatsapp text-purple-500 mr-2 text-base"></i>Riwayat Siswa yang Sudah Dihubungi <span class="text-xs font-normal text-slate-500 ml-2">({{ $dihubungi->count() }} siswa)</span></h3>
         @if($dihubungi->count() > 0)
             @foreach($dihubungi as $dispensasi)
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'dihubungi', 'isOverdue' => false])
             @endforeach
         @else
-            <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <div class="w-14 h-14 mx-auto rounded-lg bg-purple-50 text-purple-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-phone-slash"></i></div>
-                <p class="text-gray-700 text-sm font-semibold">Belum ada siswa yang dihubungi hari ini</p>
-                <p class="text-gray-500 text-xs mt-1">Gunakan tombol "Hubungi" pada kartu siswa yang terlambat</p>
+            <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-2xs">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-purple-50 text-purple-500 border border-purple-100 flex items-center justify-center text-2xl mb-3 shadow-2xs"><i class="ti ti-phone-off"></i></div>
+                <p class="text-slate-800 text-sm font-semibold">Belum ada siswa yang dihubungi hari ini</p>
+                <p class="text-slate-500 text-xs mt-1">Gunakan tombol "Hubungi" pada kartu siswa yang terlambat</p>
             </div>
         @endif
     </div>
 
     {{-- SECTION: SEMUA --}}
     <div id="section-semua" class="space-y-3 {{ $currentFilter !== 'semua' ? 'hidden' : '' }}">
-        <h3 class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-layer-group text-gray-500 mr-1.5"></i>Semua Dispensasi Hari Ini</h3>
+        <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i class="ti ti-layout-grid text-slate-500 mr-2 text-base"></i>Semua Dispensasi Hari Ini</h3>
         @if($menungguKeluar->count() > 0 || $siswaKeluar->count() > 0 || (isset($selesai) && $selesai->count() > 0))
             @foreach($menungguKeluar as $dispensasi)
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
@@ -437,10 +447,10 @@ $cards = [
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'selesai', 'isOverdue' => false])
             @endforeach
         @else
-            <div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <div class="w-14 h-14 mx-auto rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-layer-group"></i></div>
-                <p class="text-gray-700 text-sm font-semibold">Belum ada data dispensasi hari ini</p>
-                <p class="text-gray-500 text-xs mt-1">Semua aktivitas dispensasi akan muncul di sini</p>
+            <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-2xs">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-50 text-slate-400 border border-slate-200 flex items-center justify-center text-2xl mb-3 shadow-2xs"><i class="ti ti-layout-grid"></i></div>
+                <p class="text-slate-800 text-sm font-semibold">Belum ada data dispensasi hari ini</p>
+                <p class="text-slate-500 text-xs mt-1">Semua aktivitas dispensasi akan muncul di sini</p>
             </div>
         @endif
     </div>
@@ -448,10 +458,10 @@ $cards = [
 </div>
 
 {{-- Loading Overlay --}}
-<div id="loading-overlay" class="hidden fixed inset-0 bg-black/10 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg p-4 shadow-lg flex items-center space-x-3 border border-gray-200">
-        <div class="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
-        <span class="text-xs font-semibold text-gray-700">Memuat data...</span>
+<div id="loading-overlay" class="hidden fixed inset-0 bg-slate-900/20 backdrop-blur-2xs z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-4 shadow-lg flex items-center space-x-3 border border-slate-200">
+        <div class="animate-spin rounded-full h-5 w-5 border-2 border-rose-600 border-t-transparent"></div>
+        <span class="text-xs font-semibold text-slate-700">Memuat data...</span>
     </div>
 </div>
 @endsection
@@ -466,14 +476,14 @@ function switchFilter(filterKey, color, event) {
 
     // Reset secondary filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active', 'bg-red-600', 'bg-purple-600', 'text-white', 'shadow-sm', 'border-transparent');
-        btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
+        btn.classList.remove('active', 'bg-rose-600', 'bg-purple-600', 'text-white', 'shadow-xs', 'border-transparent');
+        btn.classList.add('bg-white', 'text-slate-700', 'hover:bg-slate-50', 'hover:text-slate-900', 'border-slate-200');
     });
 
     // Reset stat cards
     document.querySelectorAll('.stat-card-btn').forEach(card => {
-        card.classList.remove('active', 'ring-2', 'shadow-sm');
-        card.classList.add('border-gray-200');
+        card.classList.remove('active', 'ring-2', 'shadow-xs');
+        card.classList.add('border-slate-200');
         card.className = card.className.replace(/border-\w+-500/g, '');
         card.className = card.className.replace(/ring-\w+-500\/20/g, '');
         const iconContainer = card.querySelector('div > div');
@@ -483,15 +493,16 @@ function switchFilter(filterKey, color, event) {
     // Set active button
     const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
     if (activeBtn) {
-        activeBtn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
-        activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-sm', 'border-transparent');
+        activeBtn.classList.remove('bg-white', 'text-slate-700', 'hover:bg-slate-50', 'hover:text-slate-900', 'border-slate-200');
+        activeBtn.classList.add('active', `bg-${color === 'red' ? 'rose' : color}-600`, 'text-white', 'shadow-xs', 'border-transparent');
     }
 
     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
     if (activeStatCard) {
-        activeStatCard.classList.add('active', `border-${color}-500`, `ring-2`, `ring-${color}-500/20`, 'shadow-sm');
+        const c = color === 'red' ? 'rose' : color;
+        activeStatCard.classList.add('active', `border-${c}-500`, `ring-2`, `ring-${c}-500/20`, 'shadow-xs');
         const iconContainer = activeStatCard.querySelector('div > div');
-        if (iconContainer) iconContainer.classList.add(`bg-${color}-500`, 'text-white');
+        if (iconContainer) iconContainer.classList.add(`bg-${c}-500`, 'text-white');
     }
 
     const contentArea = document.getElementById('content-area');
@@ -535,10 +546,10 @@ window.addEventListener('popstate', function(event) {
     if (filter !== currentFilter) {
         const btn = document.querySelector(`button[data-filter="${filter}"]`);
         if (btn) {
-            let color = 'gray';
+            let color = 'slate';
             if(filter === 'menunggu') color = 'amber';
             if(filter === 'keluar') color = 'sky';
-            if(filter === 'terlambat') color = 'red';
+            if(filter === 'terlambat') color = 'rose';
             if(filter === 'selesai') color = 'emerald';
             if(filter === 'dihubungi') color = 'purple';
             switchFilter(filter, color, null);
@@ -563,19 +574,19 @@ function handleWaContacted(dispensasiId, waLink) {
                     waSection.innerHTML = `
                         <div class="flex items-center justify-between mb-2">
                             <div>
-                                <p class="text-[10px] font-bold text-green-700 uppercase">Kontak Darurat</p>
-                                <p class="text-sm font-semibold text-gray-800 font-mono">${waSection.querySelector('.font-mono').textContent}</p>
+                                <p class="text-[10px] font-bold text-emerald-700 uppercase">Kontak Darurat</p>
+                                <p class="text-sm font-semibold text-slate-800 font-mono">${waSection.querySelector('.font-mono').textContent}</p>
                             </div>
-                            <div class="inline-flex items-center justify-center w-10 h-10 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" title="Sudah dihubungi">
-                                <i class="fas fa-check text-base"></i>
+                            <div class="inline-flex items-center justify-center w-10 h-10 bg-slate-200 text-slate-500 rounded-xl cursor-not-allowed" title="Sudah dihubungi">
+                                <i class="ti ti-check text-base"></i>
                             </div>
                         </div>
-                        <p class="text-[10px] text-green-600"><i class="fas fa-check-circle mr-1"></i>Sudah dihubungi via WhatsApp</p>
+                        <p class="text-[10px] text-green-600"><i class="ti ti-circle-check mr-1 text-xs"></i>Sudah dihubungi via WhatsApp</p>
                     `;
                 }
                 const badgeRow = card.querySelector('.flex.items-center.gap-2.mb-1');
                 if (badgeRow && !badgeRow.querySelector('.warned-badge')) {
-                    badgeRow.insertAdjacentHTML('beforeend', `<span class="warned-badge px-2 py-0.5 rounded-md text-[9px] font-bold bg-purple-100 text-purple-700 uppercase ml-1"><i class="fas fa-phone-alt mr-1"></i>DIHUBUNGI</span>`);
+                    badgeRow.insertAdjacentHTML('beforeend', `<span class="warned-badge px-2 py-0.5 rounded-md text-[9px] font-bold bg-purple-100 text-purple-700 uppercase ml-1"><i class="ti ti-phone-call mr-1"></i>DIHUBUNGI</span>`);
                 }
             }
             window.open(waLink, '_blank');
@@ -597,7 +608,7 @@ function tickCountdowns() {
             const lateText = hrs > 0 ? `${hrs}j ${mins}m` : `${lateMin}m`;
             el.textContent = `TERLAMBAT ${lateText}`;
             el.classList.remove('bg-amber-100', 'text-amber-700');
-            el.classList.add('bg-red-100', 'text-red-700');
+            el.classList.add('bg-rose-100', 'text-rose-700');
         } else {
             const totalMin = Math.floor(diffMs / 60000);
             const hrs = Math.floor(totalMin / 60);
@@ -606,7 +617,7 @@ function tickCountdowns() {
             el.textContent = hrs > 0 ? `Sisa ${hrs}j ${mins}m` : `Sisa ${mins}m ${secs}s`;
             if (totalMin <= 5) {
                 el.classList.remove('bg-amber-100', 'text-amber-700');
-                el.classList.add('bg-red-100', 'text-red-700');
+                el.classList.add('bg-rose-100', 'text-rose-700');
             }
         }
     });
@@ -618,14 +629,14 @@ function watchOverdue() {
         const deadline = new Date(card.dataset.deadline);
         if (new Date() > deadline) {
             card.dataset.overdue = 'true';
-            const nama = card.querySelector('.font-bold.text-gray-900')?.textContent.trim() || 'Siswa';
+            const nama = card.querySelector('.font-bold.text-slate-900')?.textContent.trim() || 'Siswa';
             if (!overdueNotified.has(card.dataset.dispensasi)) {
                 overdueNotified.add(card.dataset.dispensasi);
                 Swal.fire({
                     icon: 'warning',
-                    html: '<i class="fas fa-exclamation-triangle text-amber-500 text-4xl mb-3"></i><h3 style="color: #1f2937; font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem;">Siswa Terlambat!</h3>',
+                    title: 'Siswa Terlambat!',
                     text: `${nama} telah melewati batas waktu kembali.`,
-                    confirmButtonColor: '#dc2626',
+                    confirmButtonColor: '#e11d48',
                     timer: 5000,
                     timerProgressBar: true
                 });

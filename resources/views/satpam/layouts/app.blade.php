@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#dc2626">
+    <meta name="theme-color" content="#e11d48">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="DIDISPEN Satpam">
     <title>@yield('title', 'Satpam') - DIDISPEN</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <link rel="icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
@@ -20,22 +22,19 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @include('components.sweetalert-theme')
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>[x-cloak] { display: none !important; }</style>
     <style>
-        /* Prevent text overflow */
-        .break-words {
-            word-break: break-word;
-            overflow-wrap: break-word;
-        }
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .break-words { word-break: break-word; overflow-wrap: break-word; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-slate-50 text-slate-900 antialiased selection:bg-rose-500 selection:text-white min-h-screen">
 @php
     $user   = auth()->user();
-    $navOn  = 'flex items-center w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-red-600';
-    $navOff = 'flex items-center w-full px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors';
-    $mobOn  = 'text-red-600';
-    $mobOff = 'text-gray-400';
+    $navOn  = 'flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 shadow-xs transition-colors';
+    $navOff = 'flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-rose-50/80 hover:text-rose-700 transition-colors';
+    $mobOn  = 'text-rose-600 font-bold';
+    $mobOff = 'text-slate-400 hover:text-slate-600';
 @endphp
 
 <div class="min-h-screen" x-data="{ sheet: false }">
@@ -43,46 +42,50 @@
     {{-- ================================================== --}}
     {{-- SIDEBAR — DESKTOP SAJA                              --}}
     {{-- ================================================== --}}
-    <aside class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 flex-col z-30">
+    <aside class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex-col z-30 shadow-2xs">
 
-        <div class="flex items-center space-x-3 px-5 py-5 border-b border-gray-200">
-            <div class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 border border-red-100 flex-shrink-0">
+        <div class="flex items-center space-x-3 px-5 py-5 border-b border-slate-100">
+            <div class="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex-shrink-0 shadow-2xs">
                 @if(file_exists(public_path('images/logo-didispen.png')))
-                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-1">
                 @else
-                    <i class="fas fa-shield-alt text-red-600 text-lg"></i>
+                    <i class="ti ti-shield-check text-xl"></i>
                 @endif
             </div>
             <div>
-                <h1 class="text-sm font-bold text-gray-900 tracking-tight">DIDISPEN</h1>
-                <p class="text-[10px] text-gray-500 font-medium">Pos Keamanan / Satpam</p>
+                <h1 class="text-sm font-bold text-slate-900 tracking-tight leading-snug">DIDISPEN</h1>
+                <p class="text-[10px] text-slate-500 font-medium">Pos Keamanan / Satpam</p>
             </div>
         </div>
 
-        <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        <nav class="flex-1 overflow-y-auto px-3.5 py-4 space-y-1.5">
             <a href="{{ route('satpam.dashboard') }}" class="{{ request()->routeIs('satpam.dashboard') ? $navOn : $navOff }}">
-                <i class="fas fa-tachometer-alt w-5 mr-3 text-center"></i> Dashboard
+                <i class="ti ti-dashboard w-5 mr-3 text-center text-lg"></i>
+                <span>Dashboard</span>
             </a>
             <a href="{{ route('satpam.scan') }}"
-               class="flex items-center w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-red-200' : '' }}">
-                <i class="fas fa-qrcode w-5 mr-3 text-center"></i> Scan QR Code
-                <i class="fas fa-arrow-right ml-auto text-[10px]"></i>
+               class="flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-rose-200' : '' }}">
+                <i class="ti ti-qrcode w-5 mr-3 text-center text-lg"></i>
+                <span>Scan QR Code</span>
+                <i class="ti ti-chevron-right ml-auto text-xs"></i>
             </a>
             <a href="{{ route('profil.show') }}"
-               class="flex items-center w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('profil.show') ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-red-50 hover:text-red-600' }}">
-                <i class="fas fa-user-circle w-5 mr-3 text-center"></i> Profil Saya
+               class="flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors
+                      {{ request()->routeIs('profil.show') ? 'bg-rose-600 text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-rose-50/80 hover:text-rose-700' }}">
+                <i class="ti ti-user w-5 mr-3 text-center text-lg"></i>
+                <span>Profil Saya</span>
             </a>
             <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
-                <i class="fas fa-book-open w-5 mr-3 text-center"></i> Panduan
+                <i class="ti ti-book-2 w-5 mr-3 text-center text-lg"></i>
+                <span>Panduan</span>
             </a>
         </nav>
 
-        <div class="p-3 border-t border-gray-200">
+        <div class="p-3.5 border-t border-slate-100">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 transition-colors">
-                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold text-rose-600 border border-rose-200 bg-rose-50/40 hover:bg-rose-50 transition-colors">
+                    <i class="ti ti-logout mr-2 text-base"></i> Logout
                 </button>
             </form>
         </div>
@@ -94,41 +97,41 @@
     <div class="flex flex-col min-h-screen lg:pl-64">
 
         {{-- TOPBAR --}}
-        <header class="sticky top-0 z-20 bg-white border-b border-gray-200">
+        <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-slate-200/90 shadow-2xs">
             {{-- Mobile Header --}}
             <div class="lg:hidden flex items-center justify-between px-4 py-3">
                 <div class="flex items-center space-x-2.5">
-                    <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-red-50 border border-red-100 flex-shrink-0">
+                    <div class="relative flex items-center justify-center w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 flex-shrink-0 shadow-2xs">
                         @if(file_exists(public_path('images/logo-didispen.png')))
                             <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
                         @else
-                            <i class="fas fa-shield-alt text-red-600 text-sm"></i>
+                            <i class="ti ti-shield-check text-base"></i>
                         @endif
                     </div>
                     <div>
-                        <h1 class="text-sm font-bold text-gray-900 tracking-tight leading-none">DIDISPEN</h1>
-                        <p class="text-[10px] text-gray-500 font-medium mt-0.5">@yield('page-title', 'Dashboard')</p>
+                        <h1 class="text-sm font-bold text-slate-900 tracking-tight leading-none">DIDISPEN</h1>
+                        <p class="text-[10px] text-slate-500 font-medium mt-0.5">@yield('page-title', 'Dashboard')</p>
                     </div>
                 </div>
-                <span class="inline-flex items-center px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> Online
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Online
                 </span>
             </div>
             {{-- Desktop Header --}}
-            <div class="hidden lg:flex items-center justify-between px-6 py-3">
-                <h2 class="text-base font-bold text-gray-900">@yield('page-title', 'Dashboard')</h2>
-                <div class="flex items-center space-x-3">
-                    <span class="flex items-center text-xs font-medium text-gray-500">
-                        <i class="far fa-calendar mr-1.5 text-red-600"></i> {{ now()->format('d M Y') }}
+            <div class="hidden lg:flex items-center justify-between px-6 py-3.5">
+                <h2 class="text-base font-bold text-slate-900">@yield('page-title', 'Dashboard')</h2>
+                <div class="flex items-center space-x-3.5">
+                    <span class="flex items-center text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                        <i class="ti ti-calendar mr-1.5 text-rose-600 text-sm"></i> {{ now()->format('d M Y') }}
                     </span>
-                    <div class="h-4 w-px bg-gray-200"></div>
+                    <div class="h-4 w-px bg-slate-200"></div>
                     <div class="flex items-center space-x-2.5">
-                        <div class="w-8 h-8 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center">
+                        <div class="w-9 h-9 rounded-xl bg-rose-600 text-white text-xs font-bold flex items-center justify-center shadow-xs">
                             {{ strtoupper(substr($user->name, 0, 1)) }}
                         </div>
                         <div class="leading-tight">
-                            <p class="text-sm font-semibold text-gray-900">{{ $user->name }}</p>
-                            <p class="text-[10px] text-red-600 font-medium">Petugas Satpam</p>
+                            <p class="text-sm font-bold text-slate-900">{{ $user->name }}</p>
+                            <p class="text-[10px] text-rose-600 font-semibold">Petugas Satpam</p>
                         </div>
                     </div>
                 </div>
@@ -136,14 +139,14 @@
         </header>
 
         {{-- KONTEN --}}
-        <main class="flex-1 p-4 sm:p-6 pb-24 lg:pb-6">
+        <main class="flex-1 p-4 sm:p-6 pb-28 lg:pb-8">
             @include('components.alert')
             @yield('content')
         </main>
     </div>
 
     {{-- ================================================== --}}
-    {{-- BOTTOM NAV — MOBILE                                 --}}
+    {{-- BOTTOM NAV — MOBILE (HP-FRIENDLY & ERGONOMIS)        --}}
     {{-- ================================================== --}}
     <nav x-show="!sheet"
          x-transition:enter="transition ease-out duration-200"
@@ -152,32 +155,32 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="translate-y-0 opacity-100"
          x-transition:leave-end="translate-y-full opacity-0"
-         class="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-gray-200 shadow-lg"
+         class="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg"
          style="padding-bottom: max(env(safe-area-inset-bottom), 8px);">
         <div class="grid grid-cols-5 h-16 w-full">
-            <a href="{{ route('satpam.dashboard') }}" class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('satpam.dashboard') ? $mobOn : $mobOff }}">
-                <i class="fas fa-house text-lg"></i>
-                <span class="text-[9px] font-semibold leading-tight">Beranda</span>
+            <a href="{{ route('satpam.dashboard') }}" class="flex flex-col items-center justify-center gap-1 transition-colors {{ request()->routeIs('satpam.dashboard') ? $mobOn : $mobOff }}">
+                <i class="ti ti-smart-home text-xl"></i>
+                <span class="text-[10px] leading-tight">Beranda</span>
             </a>
-            <a href="{{ route('satpam.scan') }}#manual" class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ $mobOff }} hover:text-red-600">
-                <i class="fas fa-search text-lg"></i>
-                <span class="text-[9px] font-semibold leading-tight">Manual</span>
+            <a href="{{ route('satpam.scan') }}#manual" class="flex flex-col items-center justify-center gap-1 transition-colors {{ $mobOff }} hover:text-rose-600">
+                <i class="ti ti-search text-xl"></i>
+                <span class="text-[10px] leading-tight">Manual</span>
             </a>
             <div class="relative flex flex-col items-center justify-end pb-1">
-                <a href="{{ route('satpam.scan') }}" class="absolute -top-5 w-12 h-12 rounded-full bg-red-600 text-white text-lg flex items-center justify-center shadow-lg border-4 border-gray-50 active:scale-95 transition-transform {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-red-200' : '' }}">
-                    <i class="fas fa-qrcode"></i>
+                <a href="{{ route('satpam.scan') }}" class="absolute -top-5 w-12 h-12 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xl flex items-center justify-center shadow-lg shadow-rose-600/30 border-4 border-slate-50 active:scale-95 transition-all {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-rose-300' : '' }}" aria-label="Scan QR Code">
+                    <i class="ti ti-qrcode"></i>
                 </a>
-                <span class="text-[9px] font-semibold leading-tight {{ request()->routeIs('satpam.scan') ? $mobOn : $mobOff }}">Scan</span>
+                <span class="text-[10px] font-semibold leading-tight {{ request()->routeIs('satpam.scan') ? $mobOn : $mobOff }}">Scan</span>
             </div>
-            <a href="{{ route('panduan') }}" class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ request()->routeIs('panduan') ? $mobOn : $mobOff }}">
-                <i class="fas fa-book-open text-lg"></i>
-                <span class="text-[9px] font-semibold leading-tight">Panduan</span>
+            <a href="{{ route('panduan') }}" class="flex flex-col items-center justify-center gap-1 transition-colors {{ request()->routeIs('panduan') ? $mobOn : $mobOff }}">
+                <i class="ti ti-book-2 text-xl"></i>
+                <span class="text-[10px] leading-tight">Panduan</span>
             </a>
-            <button @click="sheet = true" class="flex flex-col items-center justify-center gap-0.5 transition-colors {{ $mobOff }} hover:text-red-600">
-                <span class="w-6 h-6 rounded-full bg-red-600 text-white text-[9px] font-bold flex items-center justify-center">
+            <button type="button" @click="sheet = true" class="flex flex-col items-center justify-center gap-1 transition-colors {{ $mobOff }} hover:text-rose-600">
+                <span class="w-6 h-6 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold flex items-center justify-center">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
                 </span>
-                <span class="text-[9px] font-semibold leading-tight">Akun</span>
+                <span class="text-[10px] leading-tight">Akun</span>
             </button>
         </div>
     </nav>
@@ -186,42 +189,47 @@
     {{-- BOTTOM SHEET AKUN                                   --}}
     {{-- ================================================== --}}
     <div x-show="sheet" x-cloak class="fixed inset-0 z-[60] lg:hidden">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="sheet = false"
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-xs" @click="sheet = false"
              x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
              x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
 
-        <div class="absolute bottom-0 inset-x-0 bg-white rounded-t-2xl p-6" style="padding-bottom: calc(env(safe-area-inset-bottom) + 24px);"
+        <div class="absolute bottom-0 inset-x-0 bg-white rounded-t-3xl p-5 sm:p-6 shadow-2xl border-t border-slate-100" style="padding-bottom: calc(env(safe-area-inset-bottom) + 24px);"
              x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
              x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full">
 
-            <div class="w-12 h-1.5 rounded-full bg-gray-200 mx-auto mb-6"></div>
+            <div class="w-12 h-1.5 rounded-full bg-slate-200 mx-auto mb-5"></div>
 
-            <div class="flex items-center space-x-4 mb-6">
-                <div class="w-12 h-12 rounded-full bg-red-600 text-white font-bold text-lg flex items-center justify-center flex-shrink-0">
+            <div class="flex items-center space-x-3.5 mb-5 pb-4 border-b border-slate-100">
+                <div class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700 font-bold text-lg flex items-center justify-center flex-shrink-0 shadow-2xs">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
                 </div>
-                <div class="min-w-0">
-                    <p class="font-bold text-gray-900 text-base truncate">{{ $user->name }}</p>
-                    <p class="text-xs text-gray-500 mt-0.5">Petugas Keamanan • Pos Gerbang</p>
+                <div class="min-w-0 flex-1">
+                    <p class="font-bold text-slate-900 text-sm sm:text-base break-words">{{ $user->name }}</p>
+                    <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                        <span>Petugas Keamanan • Pos Gerbang</span>
+                    </p>
                 </div>
             </div>
 
             <div class="space-y-2">
-                <a href="{{ route('panduan') }}" @click="sheet = false" class="w-full min-h-[44px] flex items-center px-4 py-3 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
-                    <i class="fas fa-book-open text-red-600 mr-3 text-base"></i> Panduan Penggunaan
+                <a href="{{ route('panduan') }}" @click="sheet = false" class="w-full min-h-[46px] flex items-center px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors">
+                    <i class="ti ti-book-2 text-rose-600 mr-3 text-lg"></i>
+                    <span>Panduan Penggunaan</span>
                 </a>
-                <a href="{{ route('profil.show') }}" class="flex items-center min-h-[44px] px-4 py-3 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('profil.show') ? 'bg-red-600 text-white' : 'text-gray-700 hover:bg-red-50 hover:text-red-600' }}">
-                    <i class="fas fa-user-circle w-5 mr-3 text-center"></i> Profil Saya
+                <a href="{{ route('profil.show') }}" class="flex items-center min-h-[46px] px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-colors {{ request()->routeIs('profil.show') ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-700 bg-slate-50 border border-slate-200 hover:bg-rose-50 hover:text-rose-700' }}">
+                    <i class="ti ti-user w-5 mr-3 text-center text-lg"></i>
+                    <span>Profil Saya</span>
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="w-full min-h-[44px] flex items-center justify-center px-4 py-3 rounded-lg text-sm font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors mt-2">
-                        <i class="fas fa-sign-out-alt mr-3 text-base"></i> Keluar dari Akun
+                    <button type="submit" class="w-full min-h-[46px] flex items-center justify-center px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-colors mt-2">
+                        <i class="ti ti-logout mr-2 text-base"></i> Keluar dari Akun
                     </button>
                 </form>
             </div>
 
-            <button type="button" @click="sheet = false" class="w-full min-h-[44px] mt-4 px-4 py-3 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
+            <button type="button" @click="sheet = false" class="w-full min-h-[44px] mt-4 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">
                 Tutup
             </button>
         </div>
@@ -230,3 +238,4 @@
 @stack('scripts')
 </body>
 </html>
+
