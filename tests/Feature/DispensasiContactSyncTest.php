@@ -27,6 +27,8 @@ class DispensasiContactSyncTest extends TestCase
     {
         parent::setUp();
 
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::today('Asia/Jakarta')->setTime(10, 0, 0));
+
         $this->guruUser = User::create([
             'name'     => 'Guru Penguji',
             'email'    => 'gurupenguji@sch.id',
@@ -315,5 +317,11 @@ class DispensasiContactSyncTest extends TestCase
         $response->assertOk();
         $response->assertSee($this->dispensasi->nomor_surat);
         $response->assertDontSee($dispensasiBelum->nomor_surat);
+    }
+
+    protected function tearDown(): void
+    {
+        \Carbon\Carbon::setTestNow();
+        parent::tearDown();
     }
 }

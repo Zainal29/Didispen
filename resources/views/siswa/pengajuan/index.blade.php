@@ -3,18 +3,18 @@
 @section('page-title', 'Riwayat Pengajuan Dispensasi')
 @section('content')
 
-<div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+<div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
     {{-- Header + Filter --}}
-    <div class="p-4 sm:p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50">
+    <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/60">
         <div>
-            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <i class="fas fa-clock-rotate-left text-gray-400"></i>Riwayat Pengajuan
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <i class="ti ti-history text-slate-400 text-base"></i>Riwayat Pengajuan
             </h3>
-            <p class="text-xs text-gray-500 mt-0.5">Pantau seluruh pengajuan dispensasi Anda.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Pantau seluruh pengajuan dispensasi Anda.</p>
         </div>
         <div class="flex items-center gap-2">
             <form method="GET" class="flex-1 sm:flex-none">
-                <select name="status" onchange="this.form.submit()" class="w-full sm:w-auto h-10 px-3 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
+                <select name="status" onchange="this.form.submit()" class="w-full sm:w-auto h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all">
                     <option value="">Semua Status</option>
                     <option value="menunggu"   {{ request('status') == 'menunggu'   ? 'selected' : '' }}>Menunggu</option>
                     <option value="disetujui"  {{ request('status') == 'disetujui'  ? 'selected' : '' }}>Disetujui</option>
@@ -25,47 +25,47 @@
                     <option value="kadaluarsa" {{ request('status') == 'kadaluarsa' ? 'selected' : '' }}>Kadaluarsa</option>
                 </select>
             </form>
-            <a href="{{ route('siswa.pengajuan.create') }}" class="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 flex-shrink-0 transition-colors">
-                <i class="fas fa-plus mr-1.5"></i>Buat
+            <a href="{{ route('siswa.pengajuan.create') }}" class="inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs flex-shrink-0 transition-colors">
+                <i class="ti ti-plus mr-1.5 text-sm"></i>Buat
             </a>
         </div>
     </div>
 
-    {{-- MOBILE: Kartu Riwayat --}}
-    <div class="md:hidden divide-y divide-gray-100">
+    {{-- MOBILE: Kartu Riwayat (Dioptimalkan untuk HP) --}}
+    <div class="md:hidden divide-y divide-slate-100">
         @forelse($pengajuan as $p)
             @php
                 $badge = $p->status_badge;
                 $isAnggota = auth()->user()->siswa && auth()->user()->siswa->id !== $p->siswa_id;
             @endphp
-            <div class="p-4 hover:bg-gray-50 transition-colors">
+            <div class="p-4 hover:bg-slate-50/70 transition-colors">
                 <div class="flex justify-between items-start gap-2 mb-1.5">
-                    <div>
+                    <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-1.5 flex-wrap">
-                            <p class="font-mono font-semibold text-gray-900 text-xs">{{ $p->nomor_surat }}</p>
+                            <p class="font-mono font-bold text-slate-900 text-xs">{{ $p->nomor_surat }}</p>
                             @if($p->isOrganisasi())
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                    <i class="fas fa-users text-[9px]"></i> {{ $p->nama_organisasi }}
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                    <i class="ti ti-users text-[10px]"></i> {{ $p->nama_organisasi }}
                                 </span>
                                 @if($isAnggota)
-                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                                        Anggota
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                        Anggota Rombongan
                                     </span>
                                 @endif
                             @endif
                         </div>
                     </div>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold flex-shrink-0 border {{ $badge['class'] }}">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 border {{ $badge['class'] }}">
                         <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
                         {{ $badge['text'] }}
                     </span>
                 </div>
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-slate-500">
                     {{ $p->tanggal_izin ? $p->tanggal_izin->format('d/m/Y') : $p->created_at->format('d/m/Y') }} • 
                     <span class="capitalize">{{ str_replace('_', ' ', $p->kategori) }}</span>
                 </p>
-                <p class="text-xs text-gray-600 mt-0.5 truncate">
-                    <i class="far fa-clock mr-1 text-gray-400"></i>
+                <p class="text-xs text-slate-600 mt-1 truncate">
+                    <i class="ti ti-clock mr-1 text-slate-400 text-xs inline"></i>
                     {{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_keluar, $p->created_at?->dayOfWeek) }} – 
                     @if($p->isSampaiPulang())
                         <span class="text-emerald-700 font-semibold">Sampai Pulang</span>
@@ -74,16 +74,16 @@
                     @endif
                     • {{ $p->tujuan }}
                 </p>
-                <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                    <a href="{{ route('siswa.pengajuan.show', $p) }}" class="inline-flex items-center px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-eye mr-1.5"></i>Detail
+                <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                    <a href="{{ route('siswa.pengajuan.show', $p) }}" class="inline-flex items-center px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-colors">
+                        <i class="ti ti-eye mr-1.5 text-sm"></i>Detail
                     </a>
                 </div>
             </div>
         @empty
             <div class="p-10 text-center">
-                <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-inbox"></i></div>
-                <p class="text-gray-700 font-semibold text-sm">Belum ada pengajuan dispensasi</p>
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-3"><i class="ti ti-inbox text-3xl"></i></div>
+                <p class="text-slate-800 font-bold text-sm">Belum ada pengajuan dispensasi</p>
             </div>
         @endforelse
     </div>
@@ -91,7 +91,7 @@
     {{-- DESKTOP: Tabel --}}
     <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-sm">
-            <thead class="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
+            <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-200">
                 <tr>
                     <th class="p-4 text-left font-semibold">No. Surat</th>
                     <th class="p-4 text-left font-semibold">Tanggal Pelaksanaan</th>
@@ -102,37 +102,37 @@
                     <th class="p-4 text-center font-semibold">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-slate-100">
                 @forelse($pengajuan as $p)
                     @php
                         $badge = $p->status_badge;
                         $isAnggota = auth()->user()->siswa && auth()->user()->siswa->id !== $p->siswa_id;
                     @endphp
-                    <tr class="hover:bg-gray-50 transition-colors">
+                    <tr class="hover:bg-slate-50/70 transition-colors">
                         <td class="p-4 text-xs">
-                            <span class="font-mono font-semibold text-gray-900">{{ $p->nomor_surat }}</span>
+                            <span class="font-mono font-bold text-slate-900">{{ $p->nomor_surat }}</span>
                             @if($p->isOrganisasi())
                                 <div class="mt-1 flex items-center gap-1">
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                        <i class="fas fa-users text-[9px]"></i> {{ $p->nama_organisasi }}
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                        <i class="ti ti-users text-[10px]"></i> {{ $p->nama_organisasi }}
                                     </span>
                                     @if($isAnggota)
-                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                                            Anggota
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                            Anggota Rombongan
                                         </span>
                                     @endif
                                 </div>
                             @endif
                         </td>
-                        <td class="p-4 text-gray-600 text-xs">
+                        <td class="p-4 text-slate-600 text-xs">
                             {{ $p->tanggal_izin ? $p->tanggal_izin->format('d/m/Y') : $p->created_at->format('d/m/Y') }}
                             @if($p->tanggal_izin && $p->tanggal_izin->isFuture())
                                 <span class="block text-[10px] text-amber-600 font-bold">Mendatang</span>
                             @endif
                         </td>
-                        <td class="p-4 capitalize text-gray-700 text-xs">{{ str_replace('_', ' ', $p->kategori) }}</td>
-                        <td class="p-4 text-gray-700 text-xs">{{ $p->tujuan }}</td>
-                        <td class="p-4 text-gray-600 text-xs">
+                        <td class="p-4 capitalize text-slate-700 text-xs">{{ str_replace('_', ' ', $p->kategori) }}</td>
+                        <td class="p-4 text-slate-700 text-xs">{{ $p->tujuan }}</td>
+                        <td class="p-4 text-slate-600 text-xs">
                             {{ \App\Helpers\TimeHelper::getWaktuAktual($p->jam_keluar, $p->created_at?->dayOfWeek) }} – 
                             @if($p->isSampaiPulang())
                                 <span class="text-emerald-700 font-bold">Sampai Pulang</span>
@@ -141,22 +141,22 @@
                             @endif
                         </td>
                         <td class="p-4">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border {{ $badge['class'] }}">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $badge['class'] }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
                                 {{ $badge['text'] }}
                             </span>
                         </td>
                         <td class="p-4 text-center">
-                            <a href="{{ route('siswa.pengajuan.show', $p) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                                <i class="fas fa-eye mr-1.5"></i>Detail
+                            <a href="{{ route('siswa.pengajuan.show', $p) }}" class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-colors">
+                                <i class="ti ti-eye mr-1.5 text-sm"></i>Detail
                             </a>
                         </td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="7" class="p-12 text-center">
-                            <div class="w-16 h-16 mx-auto rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-inbox"></i></div>
-                            <p class="text-gray-700 font-semibold text-sm">Belum ada pengajuan dispensasi</p>
+                            <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-3"><i class="ti ti-inbox text-3xl"></i></div>
+                            <p class="text-slate-800 font-bold text-sm">Belum ada pengajuan dispensasi</p>
                         </td>
                     </tr>
                 @endforelse
@@ -165,7 +165,7 @@
     </div>
 
     @if($pengajuan->hasPages())
-        <div class="p-4 border-t border-gray-200 bg-gray-50">{{ $pengajuan->links() }}</div>
+        <div class="p-4 border-t border-slate-200 bg-slate-50">{{ $pengajuan->links() }}</div>
     @endif
 </div>
 
@@ -175,8 +175,8 @@
         {{-- Header Modal --}}
         <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">
-                    <i class="fas fa-camera"></i>
+                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
+                    <i class="ti ti-camera"></i>
                 </div>
                 <div>
                     <h3 class="text-sm font-bold text-gray-900">Ambil Foto Bukti</h3>
@@ -184,7 +184,7 @@
                 </div>
             </div>
             <button type="button" onclick="closeUploadModal()" class="w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors">
-                <i class="fas fa-times text-sm"></i>
+                <i class="ti ti-x text-sm"></i>
             </button>
         </div>
 
@@ -211,33 +211,33 @@
 
                 {{-- Switch Camera Button (Front/Back) --}}
                 <button type="button" id="btnFlipBukti" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-xs transition-colors shadow" title="Putar Kamera">
-                    <i class="fas fa-camera-rotate"></i>
+                    <i class="ti ti-camera-rotate"></i>
                 </button>
 
                 {{-- Loading Spinner --}}
                 <div id="cameraLoadingBukti" class="absolute inset-0 bg-gray-900 flex flex-col items-center justify-center text-white hidden">
-                    <i class="fas fa-spinner fa-spin text-2xl mb-2 text-emerald-400"></i>
+                    <i class="ti ti-loader-2 animate-spin text-2xl mb-2 text-blue-400"></i>
                     <p class="text-xs font-semibold">Mengaktifkan kamera...</p>
                 </div>
 
                 {{-- Error Container (Jika Izin Ditolak/Tidak Ada Kamera) --}}
                 <div id="cameraErrorBukti" class="absolute inset-0 bg-gray-950/95 p-5 flex flex-col items-center justify-center text-center text-white hidden">
                     <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-2">
-                        <i class="fas fa-triangle-exclamation"></i>
+                        <i class="ti ti-alert-triangle"></i>
                     </div>
                     <p class="text-xs font-bold mb-1">Kamera Tidak Dapat Diakses</p>
                     <p class="text-[11px] text-gray-300 mb-3 max-w-xs leading-relaxed">
                         Pastikan izin akses kamera telah diizinkan pada peramban (browser) Anda. Foto harus diambil langsung dari kamera.
                     </p>
-                    <button type="button" onclick="retryBuktiCamera()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1">
-                        <i class="fas fa-rotate-right"></i> Coba Lagi
+                    <button type="button" onclick="retryBuktiCamera()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1">
+                        <i class="ti ti-refresh"></i> Coba Lagi
                     </button>
                 </div>
             </div>
 
             {{-- Informasi Keaslian --}}
             <div class="text-[11px] text-gray-500 bg-gray-50 border border-gray-200 rounded-lg p-2.5 flex items-center gap-2">
-                <i class="fas fa-shield-halved text-emerald-600 text-sm flex-shrink-0"></i>
+                <i class="ti ti-shield-check text-blue-600 text-sm flex-shrink-0"></i>
                 <span>Foto diambil seketika dengan stempel waktu otomatis untuk mencegah penggunaan foto lama.</span>
             </div>
 
@@ -246,18 +246,18 @@
                 <button type="button" onclick="closeUploadModal()" class="w-1/3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-xs transition-colors">
                     Batal
                 </button>
-                <button type="button" id="btnSnapBukti" class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-2 transition-all">
-                    <i class="fas fa-camera text-sm"></i> Jepret Foto Bukti
+                <button type="button" id="btnSnapBukti" class="w-2/3 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-2 transition-all">
+                    <i class="ti ti-camera text-sm"></i> Jepret Foto Bukti
                 </button>
             </div>
 
             {{-- Action Controls (Setelah Jepret) --}}
             <div id="controlsPreviewBukti" class="hidden flex gap-2">
                 <button type="button" id="btnRetakeBukti" class="w-1/2 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-xs transition-colors flex items-center justify-center gap-1.5">
-                    <i class="fas fa-rotate-left"></i> Foto Ulang
+                    <i class="ti ti-refresh"></i> Foto Ulang
                 </button>
-                <button type="submit" id="btnSubmitBukti" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 transition-colors">
-                    <i class="fas fa-cloud-arrow-up"></i> Upload Foto
+                <button type="submit" id="btnSubmitBukti" class="w-1/2 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 transition-colors">
+                    <i class="ti ti-cloud-upload"></i> Upload Foto
                 </button>
             </div>
         </form>
@@ -432,7 +432,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
     const formData = new FormData();
     formData.append('foto_bukti', capturedBuktiBlob, `bukti-${Date.now()}.jpg`);
 
-    btnSubmitBukti.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Mengupload...';
+    btnSubmitBukti.innerHTML = '<i class="ti ti-loader-2 animate-spin mr-1"></i> Mengupload...';
     btnSubmitBukti.disabled = true;
 
     try {
@@ -460,7 +460,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
     } catch (err) {
         Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
     } finally {
-        btnSubmitBukti.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> Upload Foto';
+        btnSubmitBukti.innerHTML = '<i class="ti ti-cloud-upload mr-1"></i> Upload Foto';
         btnSubmitBukti.disabled = false;
     }
 });
