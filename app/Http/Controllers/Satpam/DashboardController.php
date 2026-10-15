@@ -84,16 +84,26 @@ class DashboardController extends Controller
 
             $query = trim($request->input('query'));
 
-            $dispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
+            $dispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'organisasi', 'anggotaSiswa.kelas', 'gurus', 'guru'])
                 ->whereIn('status', ['disetujui', 'keluar', 'selesai'])
                 ->where(function($q) use ($query) {
                     $q->where('nomor_surat', 'like', "%{$query}%")
                       ->orWhere('id', $query)
+                      ->orWhere('nama_organisasi', 'like', "%{$query}%")
                       ->orWhereHas('siswa', function($q2) use ($query) {
                           $q2->where('nama_lengkap', 'like', "%{$query}%")
                              ->orWhereHas('user', function($q3) use ($query) {
                                  $q3->where('nis_nip', 'like', "%{$query}%");
                              });
+                      })
+                      ->orWhereHas('anggotaSiswa', function($q4) use ($query) {
+                          $q4->where('nama_lengkap', 'like', "%{$query}%")
+                             ->orWhereHas('user', function($q5) use ($query) {
+                                 $q5->where('nis_nip', 'like', "%{$query}%");
+                             });
+                      })
+                      ->orWhereHas('gurus', function($q6) use ($query) {
+                          $q6->where('nama_lengkap', 'like', "%{$query}%");
                       });
                 })
                 ->latest()
@@ -103,23 +113,47 @@ class DashboardController extends Controller
             if ($dispensasi->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dispensasi tidak ditemukan. Pastikan No. Surat, NIS, atau Nama benar.'
+                    'message' => 'Dispensasi tidak ditemukan. Pastikan No. Surat, NIS, Nama, Organisasi, atau Pembina benar.'
                 ], 404);
             }
 
             $results = $dispensasi->map(function($d) {
+                $isOrg = $d->isOrganisasi();
+                $namaOrg = $d->nama_organisasi ?? $d->organisasi?->nama_organisasi ?? 'Organisasi';
+                $totalSiswa = $isOrg ? ($d->anggotaSiswa->count() + 1) : 1;
+                $pembinas = $d->gurus->pluck('nama_lengkap')->all();
+                $pembinaText = !empty($pembinas) ? implode(', ', $pembinas) : null;
+
+                $anggotaList = $d->anggotaSiswa->map(fn($a) => [
+                    'nama' => $a->nama_lengkap,
+                    'kelas' => $a->kelas?->nama_kelas ?? '-',
+                    'nis' => $a->user?->nis_nip ?? '-',
+                ])->all();
+
                 return [
                     'id' => $d->id,
                     'nomor_surat' => $d->nomor_surat,
                     'status' => $d->status,
+                    'tipe_pengajuan' => $d->tipe_pengajuan ?? ($isOrg ? 'organisasi' : 'individu'),
+                    'is_organisasi' => $isOrg,
+                    'nama_organisasi' => $namaOrg,
+                    'total_rombongan' => $totalSiswa,
+                    'pembinas' => $pembinas,
+                    'pembina_text' => $pembinaText,
+                    'guru_piket' => $d->guru?->nama_lengkap ?? null,
                     'siswa_nama' => $d->siswa?->nama_lengkap ?? 'Tidak Diketahui',
                     'siswa_nis' => $d->siswa?->user?->nis_nip ?? '-',
                     'siswa_kelas' => $d->siswa?->kelas?->nama_kelas ?? '-',
                     'siswa_jurusan' => $d->siswa?->kelas?->jurusan?->nama_jurusan ?? '-',
+                    'anggota_list' => $anggotaList,
                     'jam_keluar' => $d->jam_keluar,
                     'jam_kembali' => $d->jam_kembali,
+                    'is_sampai_pulang' => (bool)$d->sampai_pulang,
+                    'waktu_keluar_aktual' => $d->waktu_keluar_aktual ? \Carbon\Carbon::parse($d->waktu_keluar_aktual)->format('H:i') : null,
+                    'waktu_kembali_aktual' => $d->waktu_kembali_aktual ? \Carbon\Carbon::parse($d->waktu_kembali_aktual)->format('H:i') : null,
                     'alasan' => $d->alasan,
                     'tujuan' => $d->tujuan,
+                    'detail_url' => route('satpam.dispensasi.detail', $d->id),
                 ];
             });
 
@@ -201,7 +235,15 @@ class DashboardController extends Controller
     // }
     public function showDetail(Dispensasi $dispensasi, WhatsappMessageService $waService)
        {
-           $dispensasi->load(['siswa.kelas.jurusan', 'siswa.user', 'guru']);
+           $dispensasi->load([
+               'siswa.kelas.jurusan',
+               'siswa.user',
+               'guru',
+               'organisasi',
+               'anggotaSiswa.kelas.jurusan',
+               'anggotaSiswa.user',
+               'gurus',
+           ]);
 
            // ✅ HANYA 1 BARIS untuk generate link WA
            $context = $waService->resolveContext($dispensasi);

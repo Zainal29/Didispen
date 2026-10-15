@@ -41,7 +41,7 @@ class ScanController extends Controller
             ], 404);
         }
 
-        $dispensasi->loadMissing(['siswa.kelas.jurusan', 'siswa.user', 'guru']);
+        $dispensasi->loadMissing(['siswa.kelas.jurusan', 'siswa.user', 'guru', 'organisasi', 'anggotaSiswa.kelas', 'gurus']);
 
         // MODE CHECK (Preview Data untuk Modal Konfirmasi)
         if ($request->action === 'check') {
@@ -54,6 +54,18 @@ class ScanController extends Controller
             };
 
             $isSampaiPulang = stripos($dispensasi->jam_kembali ?? '', 'pulang') !== false;
+            $isOrg = $dispensasi->isOrganisasi();
+            $namaOrg = $dispensasi->nama_organisasi ?? $dispensasi->organisasi?->nama_organisasi ?? 'Organisasi';
+            $pembinas = $dispensasi->gurus->pluck('nama_lengkap')->all();
+            $pembinaText = !empty($pembinas) ? implode(', ', $pembinas) : null;
+            $anggotaFormatted = $dispensasi->anggotaSiswa->map(function ($a) {
+                return [
+                    'id' => $a->id,
+                    'nama_lengkap' => $a->nama_lengkap,
+                    'nis' => $a->user?->nis_nip ?? '-',
+                    'kelas' => $a->kelas?->nama_kelas ?? '-',
+                ];
+            })->values()->all();
 
             return response()->json([
                 'success' => true,
@@ -62,6 +74,12 @@ class ScanController extends Controller
                     'id' => $dispensasi->id,
                     'nomor_surat' => $dispensasi->nomor_surat,
                     'status' => $dispensasi->status,
+                    'tipe_pengajuan' => $dispensasi->tipe_pengajuan ?? ($isOrg ? 'organisasi' : 'individu'),
+                    'is_organisasi' => $isOrg,
+                    'nama_organisasi' => $namaOrg,
+                    'total_rombongan' => count($anggotaFormatted) + 1,
+                    'pembinas' => $pembinas,
+                    'pembina_text' => $pembinaText,
                     'can_action' => $canAction,
                     'action_type' => $actionType,
                     'is_sampai_pulang' => $isSampaiPulang,
@@ -78,6 +96,7 @@ class ScanController extends Controller
                         'kelas' => $dispensasi->siswa?->kelas?->nama_kelas ?? '-',
                         'jurusan' => $dispensasi->siswa?->kelas?->jurusan?->nama_jurusan ?? '-',
                     ],
+                    'anggota' => $anggotaFormatted,
                 ],
             ]);
         }
@@ -137,16 +156,34 @@ class ScanController extends Controller
 
             $query = trim($request->input('query'));
 
-            $dispensasi = \App\Models\Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan'])
+            $dispensasi = \App\Models\Dispensasi::with([
+                    'siswa.user',
+                    'siswa.kelas.jurusan',
+                    'organisasi',
+                    'anggotaSiswa.kelas',
+                    'anggotaSiswa.user',
+                    'gurus',
+                    'guru'
+                ])
                 ->whereIn('status', ['disetujui', 'keluar', 'selesai'])
                 ->where(function($q) use ($query) {
                     $q->where('nomor_surat', 'like', "%{$query}%")
                       ->orWhere('id', $query)
+                      ->orWhere('nama_organisasi', 'like', "%{$query}%")
                       ->orWhereHas('siswa', function($q2) use ($query) {
                           $q2->where('nama_lengkap', 'like', "%{$query}%")
                              ->orWhereHas('user', function($q3) use ($query) {
                                  $q3->where('nis_nip', 'like', "%{$query}%");
                              });
+                      })
+                      ->orWhereHas('anggotaSiswa', function($q4) use ($query) {
+                          $q4->where('nama_lengkap', 'like', "%{$query}%")
+                             ->orWhereHas('user', function($q5) use ($query) {
+                                 $q5->where('nis_nip', 'like', "%{$query}%");
+                             });
+                      })
+                      ->orWhereHas('gurus', function($q6) use ($query) {
+                          $q6->where('nama_lengkap', 'like', "%{$query}%");
                       });
                 })
                 ->latest()
@@ -156,23 +193,57 @@ class ScanController extends Controller
             if ($dispensasi->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dispensasi tidak ditemukan. Pastikan No. Surat, NIS, atau Nama benar.'
+                    'message' => 'Dispensasi tidak ditemukan. Pastikan No. Surat, NIS, Nama, Organisasi, atau Pembina benar.'
                 ], 404);
             }
 
             $results = $dispensasi->map(function($d) {
+                $isOrg = $d->isOrganisasi();
+                $namaOrg = $d->nama_organisasi ?? $d->organisasi?->nama_organisasi ?? 'Organisasi';
+                $totalSiswa = $isOrg ? ($d->anggotaSiswa->count() + 1) : 1;
+                $pembinas = $d->gurus->pluck('nama_lengkap')->all();
+                $pembinaText = !empty($pembinas) ? implode(', ', $pembinas) : null;
+
+                $anggotaList = $d->anggotaSiswa->map(fn($a) => [
+                    'nama' => $a->nama_lengkap,
+                    'kelas' => $a->kelas?->nama_kelas ?? '-',
+                    'nis' => $a->user?->nis_nip ?? '-',
+                ])->all();
+
+                $dayOfWeek = $d->created_at ? $d->created_at->dayOfWeek : null;
+                $waktuKeluarFormatted = \App\Helpers\TimeHelper::getWaktuAktual($d->jam_keluar, $dayOfWeek);
+                $waktuKembaliFormatted = \App\Helpers\TimeHelper::getWaktuAktual($d->jam_kembali, $dayOfWeek);
+
                 return [
                     'id' => $d->id,
                     'nomor_surat' => $d->nomor_surat,
                     'status' => $d->status,
+                    'tipe_pengajuan' => $d->tipe_pengajuan ?? ($isOrg ? 'organisasi' : 'individu'),
+                    'is_organisasi' => $isOrg,
+                    'nama_organisasi' => $namaOrg,
+                    'total_rombongan' => $totalSiswa,
+                    'pembinas' => $pembinas,
+                    'pembina_text' => $pembinaText,
+                    'guru_piket' => $d->guru?->nama_lengkap ?? null,
                     'siswa_nama' => $d->siswa?->nama_lengkap ?? 'Tidak Diketahui',
                     'siswa_nis' => $d->siswa?->user?->nis_nip ?? '-',
                     'siswa_kelas' => $d->siswa?->kelas?->nama_kelas ?? '-',
                     'siswa_jurusan' => $d->siswa?->kelas?->jurusan?->nama_jurusan ?? '-',
+                    'anggota_list' => $anggotaList,
                     'jam_keluar' => $d->jam_keluar,
                     'jam_kembali' => $d->jam_kembali,
+                    'jam_keluar_formatted' => $waktuKeluarFormatted,
+                    'jam_kembali_formatted' => $waktuKembaliFormatted,
+                    'is_sampai_pulang' => (bool)$d->sampai_pulang,
+                    'waktu_keluar_aktual' => $d->waktu_keluar_aktual ? \Carbon\Carbon::parse($d->waktu_keluar_aktual)->format('H:i') : null,
+                    'waktu_kembali_aktual' => $d->waktu_kembali_aktual ? \Carbon\Carbon::parse($d->waktu_kembali_aktual)->format('H:i') : null,
                     'alasan' => $d->alasan,
                     'tujuan' => $d->tujuan,
+                    'lokasi' => $d->lokasi,
+                    'kategori' => $d->kategori,
+                    'kategori_label' => ucfirst(str_replace('_', ' ', (string)$d->kategori)),
+                    'tanggal_izin' => $d->tanggal_izin ? $d->tanggal_izin->format('d/m/Y') : ($d->created_at ? $d->created_at->format('d/m/Y') : '-'),
+                    'detail_url' => route('guru.pengajuan.show', $d->id),
                 ];
             });
 

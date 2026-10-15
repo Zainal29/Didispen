@@ -108,7 +108,16 @@
                 @endphp
                 <tr class="hover:bg-gray-50/60 transition-colors {{ $isTrashed ? 'bg-amber-50/30' : '' }}">
                     <td class="p-3.5 font-mono text-xs text-gray-600 font-semibold">
-                        {{ $d->nomor_surat }}
+                        <div>{{ $d->nomor_surat }}</div>
+                        @if($d->isOrganisasi())
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 mt-1">
+                                <i class="fas fa-users text-[9px]"></i> {{ $d->nama_organisasi ?? 'Organisasi' }}
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200 mt-1">
+                                <i class="fas fa-user text-[9px]"></i> Individu
+                            </span>
+                        @endif
                     </td>
                     <td class="p-3.5 font-semibold text-gray-900">{{ $d->siswa?->nama_lengkap ?? '-' }}</td>
                     <td class="p-3.5 text-sm text-gray-600">{{ $d->siswa?->kelas?->nama_kelas ?? '-' }}</td>
