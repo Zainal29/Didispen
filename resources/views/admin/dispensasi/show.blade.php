@@ -33,6 +33,33 @@
             </div>
         @endif
 
+        @if($dispensasi->status === 'menunggu')
+            <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-300 flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-base animate-pulse"></i>
+                </div>
+                <div class="text-xs sm:text-sm text-amber-900 flex-1">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <p class="font-bold">Pengajuan Menunggu Persetujuan Guru Piket</p>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
+                            <i class="fas fa-hourglass-half text-[10px]"></i> Kadaluarsa: {{ $dispensasi->getJamSelesaiKbmText() }}
+                        </span>
+                    </div>
+                    <p class="text-amber-800 mt-1">Pengajuan ini belum disetujui dan akan otomatis berubah menjadi <strong>Kadaluarsa</strong> saat jam KBM sekolah hari ini berakhir (pukul {{ $dispensasi->getJamSelesaiKbmText() }}).</p>
+                </div>
+            </div>
+        @elseif($dispensasi->status === 'kadaluarsa')
+            <div class="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-calendar-xmark text-lg"></i>
+                </div>
+                <div class="text-xs sm:text-sm text-orange-900 flex-1">
+                    <p class="font-bold">Dispensasi Kadaluarsa</p>
+                    <p class="text-orange-800 mt-0.5">{{ $dispensasi->catatan_admin ?? 'Permohonan dispensasi ini telah kadaluarsa karena melewati batas waktu operasional KBM.' }}</p>
+                </div>
+            </div>
+        @endif
+
         <!--<div class="p-5 sm:p-6 space-y-5">-->
 
         {{-- Foto Verifikasi (Jika Ada) --}}

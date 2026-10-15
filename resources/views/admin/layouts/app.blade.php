@@ -7,6 +7,7 @@
     <title>@yield('title', 'Admin') - DIDISPEN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <link rel="icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
@@ -133,6 +134,10 @@
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ (request()->routeIs('admin.guru.index') || request()->routeIs('admin.guru.create') || request()->routeIs('admin.guru.edit')) ? 'active' : '' }}">
                     <i class="fas fa-chalkboard-teacher w-5 mr-3"></i> Guru
                 </a>
+                <a href="{{ route('admin.organisasi.index') }}"
+                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.organisasi.*') ? 'active' : '' }}">
+                    <i class="fas fa-users-rectangle w-5 mr-3"></i> Ekstrakurikuler
+                </a>
                 <a href="{{ route('admin.guru.checklog') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.guru.checklog') ? 'active' : '' }}">
                     <i class="fas fa-id-card-alt w-5 mr-3"></i> Izin Guru
@@ -197,6 +202,21 @@
                     <h2 class="text-base sm:text-lg font-semibold text-gray-800 truncate">@yield('page-title', 'Dashboard')</h2>
                 </div>
                 <div class="flex items-center gap-3 flex-shrink-0">
+                    @if(auth()->user()->isSuperAdmin())
+                        <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs">
+                            <i class="fas fa-shield-halved text-purple-600"></i> Super Admin
+                        </span>
+                    @endif
+
+                    @if(auth()->user()->siswa)
+                        <a href="{{ route('siswa.dashboard') }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                           title="Kembali ke Dashboard Siswa">
+                            <i class="fas fa-graduation-cap text-sm"></i>
+                            <span class="hidden sm:inline">Portal Siswa</span>
+                        </a>
+                    @endif
+
                     <span class="text-sm text-gray-600 hidden sm:inline-flex items-center">
                         <i class="fas fa-user-circle mr-1 text-slate-400"></i>
                         {{ auth()->user()->name }}
