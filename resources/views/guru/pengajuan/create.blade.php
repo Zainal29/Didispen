@@ -77,7 +77,14 @@
             <form
                 x-data="{
                     loading: false,
+                    isDispensasiClosed: false,
                     sampaiPulang: {{ old('sampai_pulang') ? 'true' : 'false' }},
+                    init() {
+                        const banner = document.getElementById('timeWarningBanner');
+                        if (banner && !banner.classList.contains('hidden')) {
+                            this.isDispensasiClosed = true;
+                        }
+                    }
                 }"
                 method="POST"
                 action="{{ route('guru.pengajuan.store') }}"
@@ -129,7 +136,8 @@
                 </section>
 
                 {{-- Section 2: Pilih Siswa Penerima Dispensasi --}}
-                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden transition-opacity"
+                         :class="isDispensasiClosed ? 'opacity-65' : ''">
                     <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                             <i class="ti ti-school text-base"></i>
@@ -192,7 +200,8 @@
                 </section>
 
                 {{-- Section 3: Detail Pengajuan (Kategori & Alasan) --}}
-                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden transition-opacity"
+                         :class="isDispensasiClosed ? 'opacity-65' : ''">
                     <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                             <i class="ti ti-edit text-base"></i>
@@ -244,7 +253,8 @@
                 </section>
 
                 {{-- Section 4: Kontak WhatsApp Siswa --}}
-                <section class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                <section class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 transition-opacity"
+                         :class="isDispensasiClosed ? 'opacity-65' : ''">
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                             <i class="ti ti-brand-whatsapp text-lg"></i>
@@ -267,7 +277,8 @@
                 </section>
 
                 {{-- Section 5: Foto Verifikasi Siswa (Kamera Selfie Live + Watermark + Fallback Bawaan) --}}
-                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden transition-opacity"
+                         :class="isDispensasiClosed ? 'opacity-65' : ''">
                     <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3 min-w-0">
                             <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
@@ -390,7 +401,8 @@
                 </section>
 
                 {{-- Section 6: Tujuan dan lokasi --}}
-                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden transition-opacity"
+                         :class="isDispensasiClosed ? 'opacity-65' : ''">
                     <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                             <i class="ti ti-map-pin text-base"></i>
@@ -417,7 +429,8 @@
                 </section>
 
                 {{-- Section 7: Waktu Dispensasi (Sama dengan Siswa: Time Picker + Jadwal Realtime + Sampai Pulang) --}}
-                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden transition-opacity"
+                         :class="isDispensasiClosed ? 'opacity-65' : ''">
                     <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
@@ -520,11 +533,13 @@
                 {{-- Section 8: Aksi Submit & Batal --}}
                 <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 sm:p-4">
                     <div class="flex flex-col sm:flex-row gap-2.5">
-                        <button type="submit" id="submitBtn" :disabled="loading"
-                            class="order-1 sm:order-2 flex-1 min-h-[48px] inline-flex justify-center items-center px-5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm transition-all gap-2">
+                        <button type="submit" id="submitBtn" :disabled="loading || isDispensasiClosed"
+                            class="order-1 sm:order-2 flex-1 min-h-[48px] inline-flex justify-center items-center px-5 rounded-xl text-sm font-bold text-white transition-all gap-2"
+                            :class="isDispensasiClosed ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm'">
                             <i x-show="loading" class="ti ti-loader-2 animate-spin text-lg" aria-hidden="true" style="display: none;"></i>
-                            <i x-show="!loading" class="ti ti-send text-lg" aria-hidden="true"></i>
-                            <span x-text="loading ? 'Sedang Menyimpan Pengajuan...' : 'Kirim Pengajuan (Disetujui)'">Kirim Pengajuan (Disetujui)</span>
+                            <i x-show="!loading && !isDispensasiClosed" class="ti ti-send text-lg" aria-hidden="true"></i>
+                            <i x-show="!loading && isDispensasiClosed" class="ti ti-ban text-lg text-slate-500" aria-hidden="true" style="display: none;"></i>
+                            <span x-text="loading ? 'Sedang Menyimpan Pengajuan...' : (isDispensasiClosed ? 'Pengajuan Dispensasi Sedang Ditutup' : 'Kirim Pengajuan (Disetujui)')">Kirim Pengajuan (Disetujui)</span>
                         </button>
                         <a href="{{ route('guru.pengajuan.index') }}" :class="{ 'pointer-events-none opacity-50': loading }"
                             class="order-2 sm:order-1 sm:w-32 min-h-[48px] inline-flex justify-center items-center px-5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 transition-all">
@@ -1832,6 +1847,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         formDispensasi.addEventListener('submit', function (e) {
             const alpineData = getAlpineData();
+            if (alpineData && alpineData.isDispensasiClosed) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                resetLoadingState();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pengajuan Ditutup',
+                    text: 'Pengajuan dispensasi saat ini sedang ditutup sesuai jam operasional sekolah.',
+                    confirmButtonColor: '#2563eb'
+                });
+                return;
+            }
+
             const isSampaiPulang = alpineData ? alpineData.sampaiPulang : false;
 
             // 1. Validasi Siswa
@@ -1986,19 +2014,55 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        function updateAlpineDispensasiState(closed) {
+            const alpineEl = document.getElementById('formDispensasi');
+            if (alpineEl && window.Alpine) {
+                try {
+                    const data = Alpine.$data(alpineEl);
+                    if (data) {
+                        data.isDispensasiClosed = closed;
+                    }
+                } catch (e) {}
+            }
+        }
+
+        const isExemptControl = function (el) {
+            if (!el) return true;
+            if (el.id === 'foto_verifikasi_input') return true;
+            if (el.id === 'btnLihatJadwalHeader' || el.id === 'btnLihatJadwal') return true;
+            return false;
+        };
+
         if (isAllowed) {
             if (banner) banner.classList.add('hidden');
+            updateAlpineDispensasiState(false);
             if (formDispensasi) {
-                formDispensasi.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(function (el) {
-                    if (el.id === 'foto_verifikasi_input') return;
+                formDispensasi.querySelectorAll('input, select, textarea, button').forEach(function (el) {
+                    if (isExemptControl(el)) return;
                     el.disabled = false;
-                    el.classList.remove('opacity-50', 'cursor-not-allowed');
+                    el.classList.remove('opacity-60', 'opacity-50', 'cursor-not-allowed', 'bg-slate-100');
+                    if (!el.classList.contains('bg-slate-50')) {
+                        el.classList.add('bg-white');
+                    }
                 });
+            }
+            if (window.jQuery && $('#siswa_select').length) {
+                $('#siswa_select').prop('disabled', false);
+                const s2 = $('#siswa_select').next('.select2-container');
+                if (s2.length) {
+                    s2.removeClass('opacity-60 cursor-not-allowed pointer-events-none');
+                    s2.find('.select2-selection').removeClass('bg-slate-100 cursor-not-allowed');
+                }
+            }
+            const btnClear = document.getElementById('btnClearSiswa');
+            if (btnClear) {
+                btnClear.disabled = false;
+                btnClear.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
             }
             [btnStartSelfie, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie, btnFallbackNativeCamera].forEach(function (b) {
                 if (b) {
                     b.disabled = false;
-                    b.classList.remove('opacity-50', 'cursor-not-allowed');
+                    b.classList.remove('opacity-60', 'opacity-50', 'cursor-not-allowed');
                 }
             });
             updateTimeInputLimits();
@@ -2008,16 +2072,33 @@ document.addEventListener('DOMContentLoaded', function () {
         if (banner) banner.classList.remove('hidden');
         if (message) message.innerHTML = restrictionMsg;
 
+        updateAlpineDispensasiState(true);
+
         if (formDispensasi) {
-            formDispensasi.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(function (el) {
+            formDispensasi.querySelectorAll('input, select, textarea, button').forEach(function (el) {
+                if (isExemptControl(el)) return;
                 el.disabled = true;
-                el.classList.add('opacity-50', 'cursor-not-allowed');
+                el.classList.add('opacity-60', 'cursor-not-allowed', 'bg-slate-100');
+                el.classList.remove('bg-white');
             });
+        }
+        if (window.jQuery && $('#siswa_select').length) {
+            $('#siswa_select').prop('disabled', true);
+            const s2 = $('#siswa_select').next('.select2-container');
+            if (s2.length) {
+                s2.addClass('opacity-60 cursor-not-allowed pointer-events-none');
+                s2.find('.select2-selection').addClass('bg-slate-100 cursor-not-allowed');
+            }
+        }
+        const btnClear = document.getElementById('btnClearSiswa');
+        if (btnClear) {
+            btnClear.disabled = true;
+            btnClear.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
         }
         [btnStartSelfie, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie, btnFallbackNativeCamera].forEach(function (b) {
             if (b) {
                 b.disabled = true;
-                b.classList.add('opacity-50', 'cursor-not-allowed');
+                b.classList.add('opacity-60', 'opacity-50', 'cursor-not-allowed');
             }
         });
         stopSelfieCamera();
