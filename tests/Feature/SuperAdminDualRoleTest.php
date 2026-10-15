@@ -94,4 +94,60 @@ class SuperAdminDualRoleTest extends TestCase
 
         $this->assertFalse($this->normalSiswa->fresh()->isSuperAdmin());
     }
+
+    public function test_admin_can_view_superadmin_index_page(): void
+    {
+        $response = $this->actingAs($this->superadminSiswa)->get(route('admin.superadmin.index'));
+        $response->assertOk();
+        $response->assertSee('Manajemen Super Admin');
+        $response->assertSee('MUHAMMAD ZAINAL ARIEF');
+    }
+
+    public function test_admin_can_grant_superadmin_via_web(): void
+    {
+        $this->assertFalse($this->normalSiswa->isSuperAdmin());
+
+        $response = $this->actingAs($this->superadminSiswa)->post(route('admin.superadmin.store'), [
+            'identifier' => '9999',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertTrue($this->normalSiswa->fresh()->isSuperAdmin());
+    }
+
+    public function test_admin_can_revoke_superadmin_via_web(): void
+    {
+        $this->assertTrue($this->superadminSiswa->isSuperAdmin());
+
+        // Buat admin lain agar bukan satu-satunya superadmin
+        $otherAdmin = User::create([
+            'name' => 'Staf Admin Lain',
+            'email' => 'other@smkn1bangsri.sch.id',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+            'is_superadmin' => true,
+        ]);
+
+        $response = $this->actingAs($otherAdmin)->delete(route('admin.superadmin.destroy', $this->superadminSiswa));
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertFalse($this->superadminSiswa->fresh()->isSuperAdmin());
+    }
+
+    public function test_admin_can_toggle_siswa_superadmin(): void
+    {
+        $siswa = Siswa::where('user_id', $this->normalSiswa->id)->firstOrFail();
+        $this->assertFalse($this->normalSiswa->isSuperAdmin());
+
+        // Toggle On
+        $response = $this->actingAs($this->superadminSiswa)->patch(route('admin.siswa.toggle-superadmin', $siswa));
+        $response->assertRedirect();
+        $this->assertTrue($this->normalSiswa->fresh()->isSuperAdmin());
+
+        // Toggle Off
+        $response = $this->actingAs($this->superadminSiswa)->patch(route('admin.siswa.toggle-superadmin', $siswa));
+        $response->assertRedirect();
+        $this->assertFalse($this->normalSiswa->fresh()->isSuperAdmin());
+    }
 }
