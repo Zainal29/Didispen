@@ -16,8 +16,8 @@ class Dispensasi extends Model
     protected $table = 'dispensasi';
 
     protected $fillable = [
-        'siswa_id', 'guru_id', 'nomor_surat', 'tipe_pengajuan', 'nama_organisasi',
-        'kategori', 'alasan', 'tujuan', 'lokasi', 'tanggal_izin',
+        'siswa_id', 'guru_id', 'nomor_surat', 'tipe_pengajuan', 'organisasi_id', 'nama_organisasi',
+        'kategori', 'alasan', 'tujuan', 'lokasi', 'tanggal_izin', 'tanggal_selesai', 'durasi_hari',
         'jam_keluar', 'jam_kembali', 'sampai_pulang', 'batas_waktu_kembali', 'status', 'catatan_admin',
         'approved_at', 'rejected_at',
         'qr_code', 'qr_token', 'print_count', 'max_print_limit', 'printed_at',
@@ -30,6 +30,8 @@ class Dispensasi extends Model
 
     protected $casts = [
         'tanggal_izin' => 'date',
+        'tanggal_selesai' => 'date',
+        'durasi_hari' => 'integer',
         'sampai_pulang' => 'boolean',
         'batas_waktu_kembali' => 'datetime',
         'waktu_keluar_aktual' => 'datetime',
@@ -77,6 +79,11 @@ class Dispensasi extends Model
     public function guru(): BelongsTo
     {
         return $this->belongsTo(Guru::class, 'guru_id');
+    }
+
+    public function organisasi(): BelongsTo
+    {
+        return $this->belongsTo(Organisasi::class, 'organisasi_id');
     }
 
     /**
@@ -283,10 +290,18 @@ class Dispensasi extends Model
                 'is_late' => false,
             ],
             'kadaluarsa' => [
-                'text' => 'Kadaluarsa',
-                'class' => 'bg-orange-100 text-orange-800 border-orange-200',
-                'dot' => 'bg-orange-400',
-                'is_late' => false,
+                'text' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
+                    ? 'Kadaluarsa (Tidak Kembali)'
+                    : (($this->catatan_admin && str_contains($this->catatan_admin, 'scan keluar'))
+                        ? 'Kadaluarsa (Tidak Scan Keluar)'
+                        : 'Kadaluarsa'),
+                'class' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
+                    ? 'bg-rose-100 text-rose-800 border-rose-200'
+                    : 'bg-orange-100 text-orange-800 border-orange-200',
+                'dot' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
+                    ? 'bg-rose-500'
+                    : 'bg-orange-500',
+                'is_late' => (bool) ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual)),
             ],
             default => [
                 'text' => ucfirst($this->status),
@@ -295,6 +310,35 @@ class Dispensasi extends Model
                 'is_late' => false,
             ],
         };
+    }
+
+    /**
+     * Waktu berakhir KBM pada hari dispensasi (format HH:mm WIB)
+     */
+    public function getJamSelesaiKbmText(): string
+    {
+        $date = $this->tanggal_izin
+            ? \Carbon\Carbon::parse($this->tanggal_izin, 'Asia/Jakarta')
+            : ($this->created_at ? $this->created_at->copy()->setTimezone('Asia/Jakarta') : now('Asia/Jakarta'));
+
+        $selesai = \App\Helpers\TimeHelper::getWaktuSelesaiKbmTerakhir($date->dayOfWeek, $date);
+        return $selesai ? $selesai->format('H:i') . ' WIB' : '15:15 WIB';
+    }
+
+    /**
+     * Cek apakah pengajuan status 'menunggu' berisiko kadaluarsa hari ini
+     */
+    public function isMenungguHariIni(): bool
+    {
+        if ($this->status !== 'menunggu') {
+            return false;
+        }
+
+        $date = $this->tanggal_izin
+            ? \Carbon\Carbon::parse($this->tanggal_izin, 'Asia/Jakarta')
+            : ($this->created_at ? $this->created_at->copy()->setTimezone('Asia/Jakarta') : now('Asia/Jakarta'));
+
+        return $date->toDateString() === now('Asia/Jakarta')->toDateString();
     }
 
     /**

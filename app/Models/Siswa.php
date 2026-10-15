@@ -58,6 +58,21 @@ class Siswa extends Model
         return $this->belongsToMany(Dispensasi::class, 'dispensasi_anggota', 'siswa_id', 'dispensasi_id')->withTimestamps();
     }
 
+    public function organisasiDipimpin(): HasMany
+    {
+        return $this->hasMany(Organisasi::class, 'ketua_siswa_id');
+    }
+
+    public function isKetuaOrganisasi(): bool
+    {
+        return $this->organisasiDipimpin()->where('status_aktif', true)->exists();
+    }
+
+    public function getDaftarOrganisasiDipimpinAttribute()
+    {
+        return $this->organisasiDipimpin()->where('status_aktif', true)->get();
+    }
+
     public function getNamaLengkapAttribute($value): string
     {
         // ✅ CASTING STRING AGAR AMAN DARI NILAI NULL
