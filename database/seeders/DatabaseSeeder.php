@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             SatpamSeeder::class,
+            OrganisasiSeeder::class,
         ]);
 
         $this->command->info('✅ DatabaseSeeder selesai. Data master akan diambil melalui sinkronisasi SIPINTU.');
