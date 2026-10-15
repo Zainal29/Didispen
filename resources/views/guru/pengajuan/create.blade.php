@@ -5,32 +5,34 @@
 @section('title', 'Buat Pengajuan Dispensasi')
 @section('content')
 
-<div class="max-w-3xl mx-auto pb-6 sm:pb-8">
+<div class="max-w-3xl mx-auto pb-36 sm:pb-12">
     {{-- Header halaman --}}
     <div class="mb-5 sm:mb-6">
-        <div class="flex items-start gap-3">
-            <div class="w-11 h-11 shrink-0 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shadow-sm">
-                <i class="fas fa-clipboard-user text-lg"></i>
-            </div>
-            <div class="min-w-0">
-                <h1 class="text-lg sm:text-xl font-bold tracking-tight text-gray-900">Form Pengajuan Dispensasi (Guru Piket)</h1>
-                <p class="mt-1 text-xs sm:text-sm text-gray-500 leading-relaxed">Buat dan setujui dispensasi atas nama siswa yang bersangkutan secara langsung.</p>
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shadow-xs">
+                    <i class="ti ti-clipboard-check text-xl"></i>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-base sm:text-xl font-bold tracking-tight text-slate-900">Form Pengajuan Dispensasi (Guru Piket)</h1>
+                    <p class="mt-0.5 text-xs sm:text-sm text-slate-500 leading-relaxed">Buat dan setujui permohonan dispensasi pribadi atas nama siswa secara langsung.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div class="p-4 sm:p-6 lg:p-7">
             {{-- Error validasi --}}
             @if ($errors->any())
-                <div class="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4">
+                <div class="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
                     <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 shrink-0 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
-                            <i class="fas fa-circle-exclamation text-sm"></i>
+                        <div class="w-8 h-8 shrink-0 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center border border-rose-200">
+                            <i class="ti ti-alert-circle text-base"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-sm font-bold text-red-900">Periksa kembali data pengajuan</p>
-                            <ul class="mt-1.5 text-xs text-red-700 list-disc list-inside space-y-0.5">
+                            <p class="text-sm font-bold text-rose-900">Periksa kembali data pengajuan</p>
+                            <ul class="mt-1.5 text-xs text-rose-700 list-disc list-inside space-y-0.5">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -41,43 +43,50 @@
             @endif
 
             {{-- Status waktu pengajuan --}}
-            <div id="timeWarningBanner" class="hidden mb-5 rounded-2xl border border-red-200 bg-red-50 p-4">
+            <div id="timeWarningBanner" class="hidden mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 shrink-0 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
-                        <i class="fas fa-clock-rotate-left text-sm"></i>
+                    <div class="w-8 h-8 shrink-0 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center border border-rose-200">
+                        <i class="ti ti-history text-base"></i>
                     </div>
                     <div class="min-w-0">
-                        <h4 class="text-sm font-bold text-red-900">Pengajuan Dispensasi Sedang Ditutup</h4>
-                        <p class="text-xs text-red-700 mt-1 leading-relaxed" id="timeWarningMessage"></p>
-                        <p class="text-[11px] text-red-600 mt-2 font-medium">
-                            <i class="fas fa-circle-info mr-1"></i>Waktu saat ini:
-                            <span id="currentTimeDisplay" class="font-bold"></span>
+                        <h4 class="text-sm font-bold text-rose-900">Pengajuan Dispensasi Sedang Ditutup</h4>
+                        <p class="text-xs text-rose-700 mt-1 leading-relaxed" id="timeWarningMessage"></p>
+                        <p class="text-[11px] text-rose-600 mt-2 font-medium flex items-center gap-1">
+                            <i class="ti ti-info-circle"></i>
+                            <span>Waktu saat ini: <strong id="currentTimeDisplay"></strong></span>
                         </p>
                     </div>
                 </div>
             </div>
 
             {{-- Informasi penting Guru Piket --}}
-            <div class="mb-6 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+            <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50/70 p-4">
                 <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 shrink-0 rounded-xl bg-white border border-blue-100 text-blue-600 flex items-center justify-center shadow-sm">
-                        <i class="fas fa-bolt text-sm"></i>
+                    <div class="w-8 h-8 shrink-0 rounded-xl bg-white border border-blue-200 text-blue-600 flex items-center justify-center shadow-xs">
+                        <i class="ti ti-bolt text-base"></i>
                     </div>
-                    <div>
+                    <div class="min-w-0">
                         <p class="text-sm font-bold text-blue-900">Persetujuan Instan Guru Piket</p>
-                        <p class="mt-0.5 text-xs text-blue-700 leading-relaxed">Pengajuan yang dibuat langsung oleh <strong>Guru Piket</strong> akan langsung berstatus <strong>Disetujui</strong> dan siap dipindai oleh Satpam.</p>
+                        <p class="mt-0.5 text-xs text-blue-700 leading-relaxed">
+                            Pengajuan yang dibuat langsung oleh <strong>Guru Piket</strong> akan langsung berstatus <strong>Disetujui</strong> dan QR Code siap dipindai oleh Satpam.
+                        </p>
                     </div>
                 </div>
             </div>
 
             <form
-                x-data="{ loading: false }"
+                x-data="{
+                    loading: false,
+                    sampaiPulang: {{ old('sampai_pulang') ? 'true' : 'false' }},
+                }"
                 method="POST"
                 action="{{ route('guru.pengajuan.store') }}"
                 enctype="multipart/form-data"
                 id="formDispensasi"
                 class="space-y-4 sm:space-y-5">
                 @csrf
+
+                <input type="hidden" name="tipe_pengajuan" value="individu">
 
                 {{-- Hidden fallback select untuk kompatibilitas test slot jadwal --}}
                 <select name="_jam_reference" class="hidden" style="display:none;" aria-hidden="true" tabindex="-1">
@@ -88,16 +97,16 @@
                     @endforeach
                 </select>
 
-                {{-- Info Guru Piket Pembuat --}}
-                <section class="rounded-2xl border border-gray-200 bg-gray-50/60 overflow-hidden">
-                    <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 bg-white flex items-center justify-between gap-3">
+                {{-- Section 1: Guru Piket Pembuat --}}
+                <section class="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden">
+                    <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                                <i class="fas fa-user-shield text-sm"></i>
+                                <i class="ti ti-user-shield text-base"></i>
                             </div>
                             <div>
-                                <h2 class="text-sm font-bold text-gray-900">Guru Piket Pembuat</h2>
-                                <p class="text-[11px] text-gray-500">Tercatat sebagai verifikator resmi dispensasi ini.</p>
+                                <h2 class="text-sm font-bold text-slate-900">Guru Piket Pembuat</h2>
+                                <p class="text-[11px] text-slate-500">Tercatat sebagai verifikator resmi dispensasi ini.</p>
                             </div>
                         </div>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -105,12 +114,12 @@
                         </span>
                     </div>
                     <div class="p-4 sm:p-5 flex items-center gap-3.5">
-                        <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
+                        <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-xs">
                             {{ strtoupper(substr(auth()->user()->name ?? 'G', 0, 1)) }}
                         </div>
                         <div class="min-w-0">
-                            <p class="text-sm font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
-                            <p class="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+                            <p class="text-sm font-bold text-slate-900 truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
                                 <span>Guru Piket</span>
                                 <span>•</span>
                                 <span class="font-mono">{{ auth()->user()->email }}</span>
@@ -119,87 +128,87 @@
                     </div>
                 </section>
 
-                {{-- Pilih Siswa (Select2 Search AJAX) --}}
-                <section class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                    <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 bg-gray-50/70 flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                            <i class="fas fa-user-graduate text-sm"></i>
+                {{-- Section 2: Pilih Siswa Penerima Dispensasi --}}
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                    <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                            <i class="ti ti-school text-base"></i>
                         </div>
                         <div>
-                            <h2 class="text-sm font-bold text-gray-900">Pilih Siswa</h2>
-                            <p class="text-[11px] text-gray-500">Cari berdasarkan NIS, nama lengkap, atau kelas.</p>
+                            <h2 class="text-sm font-bold text-slate-900">Pilih Siswa Penerima Dispensasi</h2>
+                            <p class="text-[11px] text-slate-500">Cari berdasarkan NIS, nama lengkap, atau kelas.</p>
                         </div>
                     </div>
 
                     <div class="p-4 sm:p-5 space-y-3">
                         <div>
-                            <label for="siswa_select" class="block text-xs font-bold text-gray-700 mb-2">
-                                Siswa Penerima Dispensasi <span class="text-red-500">*</span>
+                            <label for="siswa_select" class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                                Siswa Penerima <span class="text-rose-500">*</span>
                             </label>
                             <select name="siswa_id" id="siswa_select" required class="w-full">
                                 <option value="">-- Ketik NIS atau nama siswa contoh: 4717 --</option>
                             </select>
                             @error('siswa_id')
-                                <p class="mt-1.5 text-xs text-red-600"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p>
+                                <p class="mt-1.5 text-xs text-rose-600 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p>
                             @else
-                                <p class="text-[11px] text-gray-400 mt-1.5">
-                                    <i class="fas fa-circle-info mr-1 text-gray-400"></i>Ketik minimal 1 karakter (NIS atau nama) untuk mencari otomatis.
+                                <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+                                    <i class="ti ti-info-circle text-blue-500"></i>Ketik minimal 1 karakter (NIS, nama, atau kelas) untuk mencari otomatis.
                                 </p>
                             @enderror
                         </div>
 
                         {{-- Card Detail Profil Siswa Terpilih --}}
-                        <div id="siswaInfoCard" class="hidden mt-3 rounded-2xl border border-blue-100 bg-blue-50/50 p-4 transition-all">
-                            <div class="flex items-start justify-between gap-3 mb-3 border-b border-blue-100/80 pb-2.5">
+                        <div id="siswaInfoCard" class="hidden mt-3 rounded-2xl border border-blue-200 bg-blue-50/60 p-4 transition-all">
+                            <div class="flex items-start justify-between gap-3 mb-3 border-b border-blue-100 pb-2.5">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-xl bg-white border border-blue-200 text-blue-600 flex items-center justify-center text-xs font-bold shadow-sm">
-                                        <i class="fas fa-check"></i>
+                                    <div class="w-8 h-8 rounded-xl bg-white border border-blue-200 text-blue-600 flex items-center justify-center text-xs font-bold shadow-xs">
+                                        <i class="ti ti-check"></i>
                                     </div>
                                     <div>
                                         <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700">Siswa Terpilih</span>
-                                        <p class="text-xs text-blue-900 font-semibold" id="infoNamaHeader">-</p>
+                                        <p class="text-xs text-blue-900 font-bold" id="infoNamaHeader">-</p>
                                     </div>
                                 </div>
-                                <button type="button" id="btnClearSiswa" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded-lg hover:bg-blue-100/50 transition-colors">
-                                    <i class="fas fa-xmark mr-1"></i>Ganti
+                                <button type="button" id="btnClearSiswa" class="text-xs text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1 rounded-lg bg-white border border-blue-200 hover:bg-blue-50 transition-colors">
+                                    <i class="ti ti-rotate-2 mr-1"></i>Ganti
                                 </button>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                                <div class="bg-white/80 rounded-xl p-3 border border-blue-100/70">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Nama Lengkap</span>
-                                    <span class="font-bold text-gray-900 text-sm break-words" id="infoNama">-</span>
+                                <div class="bg-white rounded-xl p-3 border border-blue-100 shadow-2xs">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Nama Lengkap</span>
+                                    <span class="font-bold text-slate-900 text-sm break-words" id="infoNama">-</span>
                                 </div>
-                                <div class="bg-white/80 rounded-xl p-3 border border-blue-100/70">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">NIS / NISN</span>
-                                    <span class="font-bold text-gray-900 text-sm font-mono" id="infoNis">-</span>
+                                <div class="bg-white rounded-xl p-3 border border-blue-100 shadow-2xs">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">NIS / NISN</span>
+                                    <span class="font-bold text-slate-900 text-sm font-mono" id="infoNis">-</span>
                                 </div>
-                                <div class="bg-white/80 rounded-xl p-3 border border-blue-100/70">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Kelas & Jurusan</span>
-                                    <span class="font-bold text-gray-900 text-sm break-words" id="infoKelas">-</span>
+                                <div class="bg-white rounded-xl p-3 border border-blue-100 shadow-2xs">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Kelas & Jurusan</span>
+                                    <span class="font-bold text-slate-900 text-sm break-words" id="infoKelas">-</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {{-- Detail pengajuan (Kategori & Alasan) --}}
-                <section class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                    <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 bg-gray-50/70 flex items-center gap-3">
+                {{-- Section 3: Detail Pengajuan (Kategori & Alasan) --}}
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                    <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                            <i class="fas fa-file-pen text-sm"></i>
+                            <i class="ti ti-edit text-base"></i>
                         </div>
                         <div>
-                            <h2 class="text-sm font-bold text-gray-900">Detail Pengajuan</h2>
-                            <p class="text-[11px] text-gray-500">Tentukan alasan dan kategori dispensasi siswa.</p>
+                            <h2 class="text-sm font-bold text-slate-900">Detail Pengajuan</h2>
+                            <p class="text-[11px] text-slate-500">Tentukan alasan dan kategori dispensasi siswa.</p>
                         </div>
                     </div>
 
-                    <div class="p-4 sm:p-5 space-y-5">
+                    <div class="p-4 sm:p-5 space-y-4 sm:space-y-5">
                         {{-- Kategori --}}
                         <div>
-                            <label for="kategori" class="block text-xs font-bold text-gray-700 mb-2">Kategori <span class="text-red-500">*</span></label>
+                            <label for="kategori" class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Kategori <span class="text-rose-500">*</span></label>
                             <select name="kategori" id="kategori" required
-                                class="w-full h-11 px-3.5 rounded-xl border border-gray-200 bg-gray-50/60 text-sm font-medium text-gray-900 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('kategori') border-red-500 bg-red-50 @enderror">
+                                class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm font-medium text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('kategori') border-rose-500 bg-rose-50 @enderror">
                                 <option value="">-- Pilih Kategori --</option>
                                 <option value="sakit" {{ old('kategori') == 'sakit' ? 'selected' : '' }}>Sakit</option>
                                 <option value="izin" {{ old('kategori') == 'izin' ? 'selected' : '' }}>Izin</option>
@@ -207,199 +216,255 @@
                                 <option value="lainnya" {{ old('kategori') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
                             </select>
                             @error('kategori')
-                                <p class="mt-1.5 text-xs text-red-600"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p>
+                                <p class="mt-1.5 text-xs text-rose-600 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p>
                             @enderror
                         </div>
 
                         {{-- Alasan --}}
                         <div>
-                            <div class="flex items-center justify-between gap-3 mb-2">
-                                <label for="alasan" class="block text-xs font-bold text-gray-700">
-                                    <i class="fas fa-align-left text-blue-500 mr-1"></i>Alasan Dispensasi <span class="text-red-500">*</span>
+                            <div class="flex items-center justify-between gap-3 mb-1.5">
+                                <label for="alasan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    <i class="ti ti-align-left text-blue-600 mr-1"></i>Alasan Dispensasi <span class="text-rose-500">*</span>
                                 </label>
-                                <span class="text-[11px] text-gray-400 whitespace-nowrap">Minimal 10 karakter, maksimal 500 karakter.</span>
+                                <span class="text-[11px] text-slate-400 whitespace-nowrap">Minimal 10, maks 500 karakter.</span>
                             </div>
                             <textarea name="alasan" id="alasan" required minlength="10" maxlength="500" rows="3"
-                                placeholder="Jelaskan alasan pengajuan dispensasi siswa dengan detail..."
-                                class="w-full px-3.5 py-3 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all resize-y @error('alasan') border-red-500 bg-red-50 @enderror">{{ old('alasan') }}</textarea>
+                                placeholder="Jelaskan alasan dispensasi siswa dengan jelas..."
+                                class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all resize-y @error('alasan') border-rose-500 bg-rose-50 @enderror">{{ old('alasan') }}</textarea>
                             <div class="flex items-center justify-between gap-3 mt-1.5">
                                 @error('alasan')
-                                    <p class="text-xs text-red-600"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p>
+                                    <p class="text-xs text-rose-600 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p>
                                 @else
-                                    <p class="text-[11px] text-gray-400">Jelaskan secara jelas agar mudah diverifikasi Satpam.</p>
+                                    <p class="text-[11px] text-slate-400">Jelaskan secara jelas agar mudah diverifikasi Satpam.</p>
                                 @enderror
-                                <p class="text-[11px] font-semibold text-gray-500 whitespace-nowrap" id="charCounter"><span id="charCount">0</span> / 500</p>
+                                <p class="text-[11px] font-semibold text-slate-500 whitespace-nowrap" id="charCounter"><span id="charCount">0</span> / 500</p>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {{-- Selfie Siswa Langsung (Anti-Mirror + Watermark, NO file picker) --}}
-                <section class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                    <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 bg-gray-50/70 flex items-center justify-between gap-3">
+                {{-- Section 4: Kontak WhatsApp Siswa --}}
+                <section class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                            <i class="ti ti-brand-whatsapp text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-900">Kontak WhatsApp Siswa</h2>
+                            <p class="text-[11px] text-slate-500">Nomor aktif untuk keperluan komunikasi darurat & surat dispensasi.</p>
+                        </div>
+                    </div>
+                    <label for="noTelepon" class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                        <i class="ti ti-brand-whatsapp text-emerald-600 mr-1"></i>Nomor WhatsApp Siswa <span class="text-slate-400 font-normal">(opsional / diperbarui otomatis)</span>
+                    </label>
+                    <input type="tel" name="no_telepon" id="noTelepon" value="{{ old('no_telepon') }}" inputmode="tel" placeholder="08xxxxxxxxxx"
+                        class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('no_telepon') border-rose-500 bg-rose-50 @enderror">
+                    @error('no_telepon')
+                        <p class="text-rose-600 text-xs mt-1.5 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p>
+                    @else
+                        <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1"><i class="ti ti-info-circle text-blue-500"></i>Otomatis terisi dari profil siswa yang dipilih dan dapat diperbarui.</p>
+                    @enderror
+                </section>
+
+                {{-- Section 5: Foto Verifikasi Siswa (Kamera Selfie Live + Watermark + Fallback Bawaan) --}}
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                    <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3 min-w-0">
                             <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                                <i class="fas fa-camera text-sm"></i>
+                                <i class="ti ti-camera text-base"></i>
                             </div>
                             <div class="min-w-0">
-                                <h2 class="text-sm font-bold text-gray-900">Foto Verifikasi Siswa</h2>
-                                <p class="text-[11px] text-gray-500">Ambil selfie langsung dari kamera (tanpa upload galeri).</p>
+                                <h2 class="text-sm font-bold text-slate-900">Foto Verifikasi Siswa</h2>
+                                <p class="text-[11px] text-slate-500">Ambil selfie langsung dari kamera bersama Guru Piket.</p>
                             </div>
                         </div>
                         <span class="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700">
-                            <i class="fas fa-camera text-blue-500"></i> Kamera Langsung
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> Kamera Langsung
                         </span>
                     </div>
 
                     <div class="p-4 sm:p-5">
                         <div class="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3.5">
                             <div class="flex items-start gap-2.5">
-                                <i class="fas fa-shield-halved text-blue-600 mt-0.5"></i>
+                                <i class="ti ti-shield-check text-blue-600 mt-0.5 text-base"></i>
                                 <p class="text-[11px] leading-relaxed text-blue-900">
-                                    Foto harus diambil langsung dengan kamera saat siswa bersama Guru Piket. Foto selfie otomatis dilengkapi <strong>anti-mirror</strong> dan <strong>watermark resmi identitas siswa</strong>.
+                                    Foto harus diambil saat siswa menghadap Guru Piket. Foto selfie otomatis dilengkapi <strong>anti-mirror</strong> dan <strong>watermark resmi identitas siswa</strong>.
                                 </p>
                             </div>
                         </div>
 
-                        {{-- Hidden File Input (Dipopulasi oleh canvas snapshot) --}}
-                        <input type="file" name="foto_verifikasi" id="foto_verifikasi_input" class="hidden" accept="image/*">
+                        {{-- Hidden File Input (Dipopulasi oleh canvas snapshot atau fallback native kamera) --}}
+                        <input type="file" name="foto_verifikasi" id="foto_verifikasi_input" class="hidden" accept="image/*" capture="user">
 
                         {{-- Standby State --}}
-                        <div id="selfieStandbyBox" class="rounded-2xl border border-dashed border-gray-300 bg-gray-50/70 p-6 sm:p-8 text-center transition-all">
-                            <div class="w-16 h-16 mx-auto rounded-2xl bg-white border border-gray-200 text-blue-600 flex items-center justify-center text-2xl shadow-sm">
-                                <i class="fas fa-user-astronaut"></i>
+                        <div id="selfieStandbyBox" class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-6 sm:p-8 text-center transition-all">
+                            <div class="w-16 h-16 mx-auto rounded-2xl bg-white border border-slate-200 text-blue-600 flex items-center justify-center text-3xl shadow-xs">
+                                <i class="ti ti-camera"></i>
                             </div>
-                            <p class="mt-4 text-sm font-bold text-gray-900">Ambil Selfie Siswa</p>
-                            <p class="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed text-gray-500">Arahkan kamera ke wajah siswa yang bersangkutan untuk verifikasi Satpam di gerbang sekolah.</p>
-                            <button type="button" id="btnStartSelfie" class="mt-5 inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[.98] text-white text-xs font-bold shadow-sm transition-all">
-                                <i class="fas fa-camera"></i> Buka Kamera Selfie
-                            </button>
+                            <p class="mt-4 text-sm font-bold text-slate-900">Ambil Selfie Siswa</p>
+                            <p class="mt-1.5 max-w-sm mx-auto text-xs leading-relaxed text-slate-500">Pilih siswa terlebih dahulu, lalu arahkan kamera ke wajah siswa untuk verifikasi Satpam di gerbang sekolah.</p>
+                            <div class="mt-5 flex justify-center">
+                                <button type="button" id="btnStartSelfie" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 min-h-[48px] px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[.98] text-white text-xs sm:text-sm font-bold shadow-sm transition-all">
+                                    <i class="ti ti-camera text-base"></i> Buka Kamera Selfie
+                                </button>
+                            </div>
                         </div>
 
                         {{-- Live Camera State --}}
                         <div id="selfieCameraBox" class="hidden">
-                            <div class="relative rounded-2xl overflow-hidden bg-gray-950 aspect-[4/3] max-h-[28rem] mx-auto border border-gray-800 shadow-lg">
+                            <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-[3/4] sm:aspect-[4/3] max-h-[26rem] mx-auto border border-slate-800 shadow-lg">
                                 <video id="selfieVideo" autoplay playsinline muted class="w-full h-full object-cover -scale-x-100"></video>
 
-                                <div class="absolute top-3 left-3 bg-red-600/95 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow">
+                                <div class="absolute top-3 left-3 bg-rose-600/95 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> LIVE
                                 </div>
 
-                                <button type="button" id="btnFlipSelfie" class="absolute top-3 right-3 w-9 h-9 rounded-xl bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-xs transition-colors shadow" title="Putar Kamera" aria-label="Putar kamera">
-                                    <i class="fas fa-camera-rotate"></i>
+                                <button type="button" id="btnFlipSelfie" class="absolute top-3 right-3 w-10 h-10 rounded-xl bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-base transition-colors shadow" title="Putar Kamera" aria-label="Putar kamera">
+                                    <i class="ti ti-refresh"></i>
                                 </button>
 
                                 <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
-                                    <div class="w-44 h-56 sm:w-48 sm:h-60 border-2 border-dashed border-white/60 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,.18)]"></div>
+                                    <div class="w-44 h-56 sm:w-48 sm:h-60 border-2 border-dashed border-white/60 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,.22)]"></div>
                                 </div>
 
-                                <div id="selfieCameraLoading" class="absolute inset-0 bg-gray-950/95 flex flex-col items-center justify-center text-white hidden">
-                                    <i class="fas fa-spinner fa-spin text-2xl mb-2 text-blue-400"></i>
+                                <div id="selfieCameraLoading" class="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center text-white hidden">
+                                    <i class="ti ti-loader-2 animate-spin text-3xl mb-2 text-blue-400"></i>
                                     <p class="text-xs font-semibold">Mengaktifkan kamera...</p>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-[auto_1fr] gap-2 mt-3">
-                                <button type="button" id="btnCancelSelfie" class="min-h-11 px-4 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl font-semibold text-xs transition-colors">Batal</button>
-                                <button type="button" id="btnSnapSelfie" class="min-h-11 bg-blue-600 hover:bg-blue-700 active:scale-[.99] text-white rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all">
-                                    <i class="fas fa-circle-dot text-base"></i> Jepret Foto Siswa
+                                <button type="button" id="btnCancelSelfie" class="min-h-[44px] px-4 bg-white border border-slate-200 hover:bg-slate-50 active:bg-slate-100 text-slate-700 rounded-xl font-bold text-xs transition-colors">Batal</button>
+                                <button type="button" id="btnSnapSelfie" class="min-h-[44px] bg-blue-600 hover:bg-blue-700 active:scale-[.99] text-white rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all">
+                                    <i class="ti ti-camera text-base"></i> Jepret Foto Siswa
                                 </button>
                             </div>
                         </div>
 
                         {{-- Preview State --}}
                         <div id="selfiePreviewBox" class="hidden">
-                            <div class="relative rounded-2xl overflow-hidden border-2 border-emerald-500 aspect-[4/3] max-h-[28rem] mx-auto bg-gray-900 shadow-sm">
+                            <div class="relative rounded-2xl overflow-hidden border-2 border-emerald-500 aspect-[3/4] sm:aspect-[4/3] max-h-[26rem] mx-auto bg-slate-900 shadow-sm">
                                 <img id="selfiePreviewImg" class="w-full h-full object-contain" alt="Preview Selfie Siswa">
                                 <div class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow">
-                                    <i class="fas fa-circle-check"></i> TERVERIFIKASI
+                                    <i class="ti ti-circle-check"></i> TERVERIFIKASI
                                 </div>
                             </div>
                             <div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5">
                                 <div class="flex items-center justify-between gap-3">
                                     <div class="flex items-center gap-2.5 min-w-0">
                                         <div class="w-9 h-9 shrink-0 rounded-xl bg-white border border-emerald-100 text-emerald-600 flex items-center justify-center">
-                                            <i class="fas fa-shield-halved text-sm"></i>
+                                            <i class="ti ti-shield-check text-base"></i>
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-xs font-bold text-emerald-900">Foto selfie siswa siap digunakan</p>
                                             <p class="text-[11px] text-emerald-700 truncate" id="selfieTimestampText"></p>
                                         </div>
                                     </div>
-                                    <button type="button" id="btnRetakeSelfie" class="shrink-0 inline-flex items-center min-h-9 px-3 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold transition-colors">
-                                        <i class="fas fa-rotate-left mr-1.5"></i> Foto Ulang
+                                    <button type="button" id="btnRetakeSelfie" class="shrink-0 inline-flex items-center min-h-[40px] px-3.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors">
+                                        <i class="ti ti-rotate-2 mr-1.5 text-sm"></i> Foto Ulang
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Error State --}}
-                        <div id="selfieErrorBox" class="hidden mt-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+                        {{-- Error State / Info Fallback Native Camera --}}
+                        <div id="selfieErrorBox" class="hidden mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
                             <div class="flex items-start gap-2.5">
-                                <i class="fas fa-triangle-exclamation text-red-600 text-base mt-0.5"></i>
-                                <div>
-                                    <p class="text-xs font-bold text-red-900">Kamera tidak dapat diakses</p>
-                                    <p class="text-[11px] text-red-600 mt-1 mb-2 leading-relaxed">Pastikan izin kamera diaktifkan di peramban, lalu coba lagi.</p>
-                                    <button type="button" id="btnRetrySelfie" class="min-h-8 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5">
-                                        <i class="fas fa-rotate-right"></i> Coba Lagi
-                                    </button>
+                                <i class="ti ti-alert-triangle text-amber-600 text-base mt-0.5"></i>
+                                <div class="space-y-2">
+                                    <p class="text-xs font-bold text-amber-950">Akses kamera live tidak tersedia pada browser ini</p>
+                                    <p class="text-[11px] text-amber-800 leading-relaxed">Jangan khawatir, Anda dapat mengambil foto selfie menggunakan kamera bawaan perangkat Anda melalui tombol di bawah:</p>
+                                    <div class="pt-1">
+                                        <button type="button" id="btnFallbackNativeCamera" class="min-h-[44px] px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-sm">
+                                            <i class="ti ti-camera text-base"></i> Buka Kamera Perangkat
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         @error('foto_verifikasi')
-                            <p class="text-red-600 text-xs mt-2"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p>
+                            <p class="text-rose-600 text-xs mt-2 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p>
                         @enderror
                     </div>
                 </section>
 
-                {{-- Tujuan dan lokasi --}}
-                <section class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                    <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 bg-gray-50/70 flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                            <i class="fas fa-location-dot text-sm"></i>
+                {{-- Section 6: Tujuan dan lokasi --}}
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                    <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                            <i class="ti ti-map-pin text-base"></i>
                         </div>
                         <div>
-                            <h2 class="text-sm font-bold text-gray-900">Tujuan & Lokasi</h2>
-                            <p class="text-[11px] text-gray-500">Informasi tujuan dispensasi siswa.</p>
+                            <h2 class="text-sm font-bold text-slate-900">Tujuan & Lokasi</h2>
+                            <p class="text-[11px] text-slate-500">Informasi tujuan dispensasi siswa.</p>
                         </div>
                     </div>
                     <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="tujuan" class="block text-xs font-bold text-gray-700 mb-2">Tujuan <span class="text-red-500">*</span></label>
-                            <input type="text" name="tujuan" id="tujuan" value="{{ old('tujuan') }}" required placeholder="Contoh: Rumah Sakit, Rumah Duka, dll."
-                                class="w-full h-11 px-3.5 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('tujuan') border-red-500 bg-red-50 @enderror">
-                            @error('tujuan') <p class="mt-1.5 text-xs text-red-600"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
+                            <label for="tujuan" class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Tujuan <span class="text-rose-500">*</span></label>
+                            <input type="text" name="tujuan" id="tujuan" value="{{ old('tujuan') }}" required placeholder="Contoh: Rumah, Rumah Sakit, dll."
+                                class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('tujuan') border-rose-500 bg-rose-50 @enderror">
+                            @error('tujuan') <p class="mt-1.5 text-xs text-rose-600 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label for="lokasi" class="block text-xs font-bold text-gray-700 mb-2">Lokasi <span class="text-gray-400 font-normal">(opsional)</span></label>
+                            <label for="lokasi" class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Lokasi <span class="text-slate-400 font-normal">(opsional)</span></label>
                             <input type="text" name="lokasi" id="lokasi" value="{{ old('lokasi') }}" placeholder="Contoh: Jl. Merdeka No. 1"
-                                class="w-full h-11 px-3.5 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('lokasi') border-red-500 bg-red-50 @enderror">
-                            @error('lokasi') <p class="mt-1.5 text-xs text-red-600"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
+                                class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('lokasi') border-rose-500 bg-rose-50 @enderror">
+                            @error('lokasi') <p class="mt-1.5 text-xs text-rose-600 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p> @enderror
                         </div>
                     </div>
                 </section>
 
-                {{-- Waktu Dispensasi (Sama persis dengan Siswa: Time Picker + Jadwal Realtime) --}}
-                <section class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-                    <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 bg-gray-50/70 flex items-center justify-between gap-3">
+                {{-- Section 7: Waktu Dispensasi (Sama dengan Siswa: Time Picker + Jadwal Realtime + Sampai Pulang) --}}
+                <section class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                    <div class="px-4 sm:px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-violet-50 border border-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                                <i class="fas fa-clock text-sm"></i>
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                <i class="ti ti-clock text-base"></i>
                             </div>
                             <div>
-                                <h2 class="text-sm font-bold text-gray-900">Waktu Dispensasi</h2>
-                                <p class="text-[11px] text-gray-500">Tentukan jam keluar dan jam kembali (Format Jam Digital).</p>
+                                <h2 class="text-sm font-bold text-slate-900">Waktu Dispensasi</h2>
+                                <p class="text-[11px] text-slate-500">Tentukan jam keluar dan opsi kepulangan siswa.</p>
                             </div>
                         </div>
-                        <button type="button" onclick="bukaModalJadwal()" class="text-xs text-violet-600 hover:text-violet-800 font-bold inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-50 hover:bg-violet-100 border border-violet-200 transition-colors">
-                            <i class="fas fa-calendar-check"></i> Cek Jadwal
+                        <button type="button" id="btnLihatJadwalHeader"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 border border-slate-200 text-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer min-h-[36px]"
+                            aria-label="Lihat jadwal pelajaran hari ini">
+                            <i class="ti ti-calendar-check text-slate-600 text-sm"></i>
+                            <span>Lihat Jadwal</span>
                         </button>
                     </div>
                     <div class="p-4 sm:p-5">
+                        {{-- Toggle Sampai Pulang Sekolah --}}
+                        <div class="mb-4 rounded-xl border-2 transition-all p-3.5"
+                            :class="sampaiPulang ? 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/10' : 'border-slate-200 bg-slate-50/70'">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" name="sampai_pulang" value="1"
+                                    x-model="sampaiPulang"
+                                    class="w-5 h-5 mt-0.5 rounded-lg border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-xs sm:text-sm font-bold"
+                                            :class="sampaiPulang ? 'text-emerald-950' : 'text-slate-900'">
+                                            Izin Sampai Jam Pulang Sekolah
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                                            :class="sampaiPulang ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-700'">
+                                            Bebas Peringatan Terlambat
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] mt-1 leading-relaxed"
+                                        :class="sampaiPulang ? 'text-emerald-800' : 'text-slate-500'">
+                                        Siswa cukup melakukan <strong>scan keluar</strong> di pos satpam. Tidak perlu scan kembali saat pulang, dan <strong>tidak akan terkena peringatan/sanksi terlambat</strong> (status otomatis selesai di akhir KBM).
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3.5">
-                                <label for="jamKeluar" class="block text-xs font-bold text-gray-700 mb-2">Jam Keluar <span class="text-red-500">*</span></label>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
+                                <label for="jamKeluar" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Jam Keluar <span class="text-rose-500">*</span></label>
                                 <div class="relative">
                                     @php
                                         $oldKeluar = old('jam_keluar');
@@ -408,45 +473,67 @@
                                         }
                                     @endphp
                                     <input type="time" name="jam_keluar" id="jamKeluar" value="{{ $oldKeluar }}" required step="60"
-                                        class="w-full h-12 px-3.5 rounded-xl border border-gray-200 bg-white text-base font-semibold text-gray-800 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all @error('jam_keluar') border-red-500 @enderror">
+                                        class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base font-semibold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('jam_keluar') border-rose-500 @enderror">
                                 </div>
-                                @error('jam_keluar') <p class="text-red-600 text-xs mt-1.5"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
+                                <div id="jamKeluarError" class="text-xs text-rose-600 font-semibold mt-1.5 hidden"></div>
+                                @error('jam_keluar') <p class="text-rose-600 text-xs mt-1.5 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p> @enderror
                             </div>
-                            <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3.5">
-                                <label for="jamKembali" class="block text-xs font-bold text-gray-700 mb-2">Jam Kembali <span class="text-red-500">*</span></label>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 relative overflow-hidden"
+                                :class="{ 'opacity-80 bg-slate-100': sampaiPulang }">
+                                <label for="jamKembali" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
+                                    Jam Kembali <span class="text-rose-500" x-show="!sampaiPulang">*</span>
+                                </label>
                                 @php
                                     $oldKembali = old('jam_kembali');
                                     if (is_numeric($oldKembali) && isset($jadwalHariIni[$oldKembali]['end'])) {
                                         $oldKembali = $jadwalHariIni[$oldKembali]['end'];
                                     }
                                 @endphp
-                                <input type="time" name="jam_kembali" id="jamKembali" value="{{ $oldKembali }}" required step="60"
-                                    class="w-full h-12 px-3.5 rounded-xl border border-gray-200 bg-white text-base font-semibold text-gray-800 focus:outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all @error('jam_kembali') border-red-500 @enderror">
-                                @error('jam_kembali') <p class="text-red-600 text-xs mt-1.5"><i class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
+                                <div class="relative">
+                                    <input type="time" name="jam_kembali" id="jamKembali" value="{{ $oldKembali }}"
+                                        :required="!sampaiPulang"
+                                        :disabled="sampaiPulang"
+                                        step="60"
+                                        class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base font-semibold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('jam_kembali') border-rose-500 @enderror">
+                                    <div x-show="sampaiPulang" class="absolute inset-0 flex items-center px-3.5 bg-emerald-50/90 border border-emerald-300 text-xs font-bold text-emerald-800 rounded-xl pointer-events-none">
+                                        <i class="ti ti-door-exit mr-2 text-emerald-600 text-base"></i> Sampai Pulang Sekolah (Bebas Check-In)
+                                    </div>
+                                </div>
+                                <div id="jamKembaliError" class="text-xs text-rose-600 font-semibold mt-1.5 hidden"></div>
+                                @error('jam_kembali') <p class="text-rose-600 text-xs mt-1.5 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p> @enderror
                             </div>
                         </div>
-                        <div id="infoJam" class="mt-3 rounded-xl border border-violet-100 bg-violet-50/60 px-3.5 py-3 text-xs text-violet-800">
-                            <i class="fas fa-circle-info mr-1.5 text-violet-500"></i>Pilih waktu keluar dan waktu kembali sesuai rentang jam sekolah / istirahat yang aktif hari ini.
+
+                        <div id="infoJam" class="mt-3 rounded-xl border border-blue-100 bg-blue-50/60 px-3.5 py-3 text-xs text-blue-900">
+                            <span x-show="!sampaiPulang" class="flex items-start gap-1.5">
+                                <i class="ti ti-info-circle text-blue-600 mt-0.5 shrink-0 text-sm"></i>
+                                <span>Pilihan jam kembali tertentu: Siswa wajib melakukan scan kembali di pos satpam tepat waktu. Melewati batas waktu akan memicu peringatan keterlambatan.</span>
+                            </span>
+                            <span x-show="sampaiPulang" class="text-emerald-800 font-medium flex items-start gap-1.5">
+                                <i class="ti ti-circle-check text-emerald-600 mt-0.5 shrink-0 text-sm"></i>
+                                <span>Mode Sampai Pulang: Siswa cukup scan keluar satu kali di pos satpam saat meninggalkan sekolah dan tidak perlu scan kembali saat jam pulang sekolah tiba.</span>
+                            </span>
                         </div>
                     </div>
                 </section>
 
-                {{-- Aksi Submit & Batal --}}
-                <div class="rounded-2xl border border-gray-200 bg-gray-50/70 p-3 sm:p-4">
+                {{-- Section 8: Aksi Submit & Batal --}}
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 sm:p-4">
                     <div class="flex flex-col sm:flex-row gap-2.5">
                         <button type="submit" id="submitBtn" :disabled="loading"
-                            class="order-1 sm:order-2 flex-1 min-h-12 inline-flex justify-center items-center px-5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm hover:shadow transition-all gap-2">
-                            <i x-show="loading" class="fas fa-spinner fa-spin text-base" aria-hidden="true" style="display: none;"></i>
-                            <i x-show="!loading" class="fas fa-paper-plane text-base" aria-hidden="true"></i>
+                            class="order-1 sm:order-2 flex-1 min-h-[48px] inline-flex justify-center items-center px-5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm transition-all gap-2">
+                            <i x-show="loading" class="ti ti-loader-2 animate-spin text-lg" aria-hidden="true" style="display: none;"></i>
+                            <i x-show="!loading" class="ti ti-send text-lg" aria-hidden="true"></i>
                             <span x-text="loading ? 'Sedang Menyimpan Pengajuan...' : 'Kirim Pengajuan (Disetujui)'">Kirim Pengajuan (Disetujui)</span>
                         </button>
                         <a href="{{ route('guru.pengajuan.index') }}" :class="{ 'pointer-events-none opacity-50': loading }"
-                            class="order-2 sm:order-1 sm:w-32 min-h-12 inline-flex justify-center items-center px-5 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-all">
+                            class="order-2 sm:order-1 sm:w-32 min-h-[48px] inline-flex justify-center items-center px-5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 transition-all">
                             Batal
                         </a>
                     </div>
-                    <p class="mt-3 text-center text-[11px] text-gray-400">
-                        <i class="fas fa-lock mr-1"></i>Pengajuan langsung diverifikasi dan surat dispensasi siap dicetak.
+                    <p class="mt-3 text-center text-[11px] text-slate-400 flex items-center justify-center gap-1">
+                        <i class="ti ti-lock text-xs"></i>
+                        <span>Pengajuan langsung diverifikasi dan surat dispensasi resmi siap dicetak.</span>
                     </p>
                 </div>
             </form>
@@ -454,55 +541,54 @@
     </div>
 </div>
 
-{{-- Floating Button Jadwal --}}
+{{-- Floating Button Jadwal (Hanya Desktop >= 1024px) --}}
 <button type="button" id="btnLihatJadwal"
-    class="fixed right-3 sm:right-5 bottom-24 sm:bottom-6 z-[45] flex items-center gap-2 px-3.5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-lg shadow-emerald-900/10 border border-emerald-500 transition-all duration-200 ease-out"
+    class="hidden lg:flex fixed right-8 bottom-8 z-40 items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-blue-600/25 border border-blue-500 transition-all duration-150 cursor-pointer min-h-[44px]"
     aria-label="Lihat jadwal pelajaran">
-    <i class="fas fa-calendar-check"></i>
+    <i class="ti ti-calendar-check text-lg"></i>
     <span>Lihat Jadwal</span>
 </button>
 
 {{-- Modal Jadwal Pelajaran --}}
 <div id="modalJadwal"
-    class="fixed inset-0 z-[60] hidden opacity-0"
+    class="fixed inset-0 z-[80] hidden opacity-0 transition-opacity duration-200"
     role="dialog"
     aria-modal="true"
     aria-labelledby="modalJadwalTitle">
 
-    {{-- Overlay --}}
     <div id="modalJadwalOverlay"
-        class="absolute inset-0 bg-slate-950/55 backdrop-blur-sm opacity-0 transition-opacity duration-200 ease-out">
+        class="absolute inset-0 bg-slate-950/75 opacity-0 transition-opacity duration-200 ease-out cursor-pointer">
     </div>
 
-    <div class="relative z-10 flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
+    <div id="modalJadwalWrapper" class="relative z-10 flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
         <div id="modalJadwalContent"
-            class="w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh]
-                   bg-white rounded-t-2xl sm:rounded-2xl border border-gray-200 shadow-2xl
+            class="pointer-events-auto w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh]
+                   bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl
                    overflow-hidden flex flex-col
                    opacity-0 scale-95 translate-y-2
                    transition-all duration-200 ease-out">
 
             {{-- Header --}}
-            <div class="flex-shrink-0 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-gray-200 bg-white">
+            <div class="flex-shrink-0 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-white">
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-xs">
-                            <i class="fas fa-calendar-check text-base"></i>
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-xs">
+                            <i class="ti ti-calendar-check text-xl"></i>
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-2">
-                                <h2 id="modalJadwalTitle" class="text-sm sm:text-base font-bold text-gray-900 truncate">Jadwal Pelajaran & Istirahat</h2>
-                                <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 shrink-0">
-                                    <i class="fas fa-circle text-[5px]"></i> HARI INI
+                                <h2 id="modalJadwalTitle" class="text-sm sm:text-base font-bold text-slate-900 truncate">Jadwal Pelajaran & Istirahat</h2>
+                                <span class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-700 shrink-0">
+                                    <i class="ti ti-point text-xs"></i> HARI INI
                                 </span>
                             </div>
-                            <p id="modalJadwalHari" class="text-xs text-gray-500 mt-0.5 truncate">Memuat hari...</p>
+                            <p id="modalJadwalHari" class="text-xs text-slate-500 mt-0.5 truncate">Memuat hari...</p>
                         </div>
                     </div>
                     <button type="button" id="btnTutupJadwal"
-                        class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all duration-150"
+                        class="w-9 h-9 shrink-0 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 active:scale-95 transition-all duration-150 cursor-pointer"
                         aria-label="Tutup jadwal">
-                        <i class="fas fa-xmark text-sm"></i>
+                        <i class="ti ti-x text-base"></i>
                     </button>
                 </div>
             </div>
@@ -511,16 +597,16 @@
             <div id="jadwalList"
                 class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-2"
                 style="-webkit-overflow-scrolling: touch;">
-                @foreach($semuaSlotHariIni ?? [] as $slot)
+                @forelse($semuaSlotHariIni ?? [] as $slot)
                     @php
                         $isIstirahat = ($slot['type'] ?? '') === 'istirahat';
                         $isPembiasaan = ($slot['type'] ?? '') === 'pembiasaan';
                     @endphp
                     @if($isIstirahat)
-                        <div class="p-3 bg-amber-50/80 hover:bg-amber-100/80 rounded-xl border border-amber-200/90 transition-colors flex items-center justify-between gap-2">
+                        <div class="p-3 bg-amber-50/80 rounded-xl border border-amber-200 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-xs">
-                                    <i class="fas fa-mug-hot"></i>
+                                <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-sm">
+                                    <i class="ti ti-coffee"></i>
                                 </div>
                                 <span class="text-xs font-bold text-amber-900 truncate">{{ $slot['label'] }}</span>
                             </div>
@@ -530,10 +616,10 @@
                             </div>
                         </div>
                     @elseif($isPembiasaan)
-                        <div class="p-3 bg-indigo-50/80 hover:bg-indigo-100/80 rounded-xl border border-indigo-200/90 transition-colors flex items-center justify-between gap-2">
+                        <div class="p-3 bg-indigo-50/80 rounded-xl border border-indigo-200 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 text-xs">
-                                    <i class="fas fa-book-reader"></i>
+                                <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 text-sm">
+                                    <i class="ti ti-book"></i>
                                 </div>
                                 <span class="text-xs font-bold text-indigo-900 truncate">{{ $slot['label'] }}</span>
                             </div>
@@ -543,29 +629,40 @@
                             </div>
                         </div>
                     @else
-                        <div class="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/70 transition-colors flex items-center justify-between gap-2">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-blue-600 flex items-center justify-center shrink-0 text-xs">
-                                    <i class="fas fa-graduation-cap text-[11px]"></i>
+                                <div class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-blue-600 flex items-center justify-center shrink-0 text-sm shadow-2xs">
+                                    <i class="ti ti-school text-xs"></i>
                                 </div>
-                                <span class="text-xs font-semibold text-slate-800 truncate">{{ $slot['label'] }}</span>
+                                <span class="text-xs font-bold text-slate-800 truncate">{{ $slot['label'] }}</span>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full hidden xs:inline">KBM</span>
-                                <span class="text-xs text-slate-700 font-mono font-semibold">{{ $slot['start'] }} - {{ $slot['end'] }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-200/70 px-2 py-0.5 rounded-full hidden xs:inline">KBM</span>
+                                <span class="text-xs text-slate-900 font-mono font-bold">{{ $slot['start'] }} - {{ $slot['end'] }}</span>
                             </div>
                         </div>
                     @endif
-                @endforeach
+                @empty
+                    <div class="p-6 text-center text-xs text-slate-500">
+                        <i class="ti ti-calendar-off text-3xl text-slate-400 mb-2 block"></i>
+                        Tidak ada jadwal KBM aktif untuk hari ini.
+                    </div>
+                @endforelse
             </div>
 
             {{-- Footer --}}
-            <div class="flex-shrink-0 px-4 sm:px-5 py-3 border-t border-gray-200 bg-gray-50/80">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-circle-info text-blue-600 text-xs shrink-0"></i>
-                    <p class="text-[11px] sm:text-xs text-gray-500 leading-tight">
-                        Waktu pengajuan dispensasi disesuaikan dengan jadwal KBM yang aktif.
-                    </p>
+            <div class="flex-shrink-0 px-4 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/90"
+                 style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <i class="ti ti-info-circle text-blue-600 text-sm shrink-0"></i>
+                        <p class="text-[11px] text-slate-500 leading-tight truncate">
+                            Daftar jam pelajaran & istirahat hari ini sebagai referensi waktu dispensasi.
+                        </p>
+                    </div>
+                    <button type="button" onclick="document.getElementById('btnTutupJadwal').click()" class="text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-200 shrink-0 min-h-[36px] bg-white border border-slate-200 shadow-2xs">
+                        Tutup
+                    </button>
                 </div>
             </div>
         </div>
@@ -576,8 +673,16 @@
 {{-- Select2 CSS & JS --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
-/* Custom styling agar Select2 serasi dengan desain modern Tailwind */
-/* Terapkan width 100% pada container inline di dalam form */
+/* Pastikan tombol floating jadwal HANYA untuk desktop saja (>= 1024px), tidak pernah muncul di mobile/tablet */
+@media (max-width: 1023.98px) {
+    #btnLihatJadwal {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+}
+
+/* Custom styling Select2 serasi dengan desain modern Tailwind */
 .select2-container {
     width: 100% !important;
     max-width: 100% !important;
@@ -587,13 +692,13 @@
     box-sizing: border-box !important;
 }
 .select2-container--default .select2-selection--single {
-    height: 46px !important;
-    border: 1px solid #e5e7eb !important;
+    height: 44px !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 0.75rem !important;
     padding: 0.5rem 0.875rem !important;
     display: flex !important;
     align-items: center !important;
-    background-color: rgba(249, 250, 251, 0.6) !important;
+    background-color: #ffffff !important;
     transition: all 0.2s ease-in-out !important;
     box-sizing: border-box !important;
 }
@@ -604,21 +709,21 @@
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
 }
 .select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #111827 !important;
+    color: #0f172a !important;
     font-size: 0.875rem !important;
     font-weight: 500 !important;
     line-height: 1.25rem !important;
     padding-left: 0 !important;
 }
 .select2-container--default .select2-selection--single .select2-selection__placeholder {
-    color: #9ca3af !important;
+    color: #94a3b8 !important;
 }
 .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 44px !important;
+    height: 42px !important;
     right: 12px !important;
 }
 .select2-dropdown {
-    border: 1px solid #e5e7eb !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 1rem !important;
     box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
     overflow: hidden !important;
@@ -628,15 +733,15 @@
 }
 .select2-search--dropdown {
     padding: 8px 10px !important;
-    background-color: #f9fafb !important;
+    background-color: #f8fafc !important;
     box-sizing: border-box !important;
     width: 100% !important;
 }
 .select2-search--dropdown .select2-search__field {
-    border: 1px solid #d1d5db !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 0.625rem !important;
     padding: 9px 12px !important;
-    font-size: 16px !important; /* 16px mencegah auto-zoom browser HP saat fokus */
+    font-size: 16px !important;
     outline: none !important;
     box-sizing: border-box !important;
     width: 100% !important;
@@ -648,14 +753,14 @@
 .select2-results__option {
     padding: 10px 14px !important;
     font-size: 0.875rem !important;
-    border-bottom: 1px solid #f3f4f6 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
 }
 .select2-results__option:last-child {
     border-bottom: none !important;
 }
 .select2-results__option--highlighted[aria-selected] {
     background-color: #eff6ff !important;
-    color: #1e40af !important;
+    color: #1d4ed8 !important;
 }
 </style>
 
@@ -672,15 +777,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const settings = @json($settings);
     const jadwalHariIni = @json($jadwalHariIni ?? []);
     const semuaSlotHariIni = @json($semuaSlotHariIni ?? []);
-    const JADWAL_MODAL_SESSION_KEY = 'didispen_guru_jadwal_modal_seen';
 
-    // State data siswa terpilih untuk watermark foto
+    // State data siswa terpilih untuk watermark foto dan sync telepon
     let selectedStudent = {
         id: '',
         nama: '',
         nis: '',
         kelas: '',
-        jurusan: ''
+        jurusan: '',
+        no_telepon: ''
     };
 
     // =========================================================
@@ -698,24 +803,443 @@ document.addEventListener('DOMContentLoaded', function () {
     const selfiePreviewImg = document.getElementById('selfiePreviewImg');
     const selfieTimestampText = document.getElementById('selfieTimestampText');
     const btnStartSelfie = document.getElementById('btnStartSelfie');
+    const btnFallbackNativeCamera = document.getElementById('btnFallbackNativeCamera');
     const btnSnapSelfie = document.getElementById('btnSnapSelfie');
     const btnRetakeSelfie = document.getElementById('btnRetakeSelfie');
     const btnCancelSelfie = document.getElementById('btnCancelSelfie');
     const btnFlipSelfie = document.getElementById('btnFlipSelfie');
-    const btnRetrySelfie = document.getElementById('btnRetrySelfie');
 
     const jamKeluar = document.getElementById('jamKeluar');
     const jamKembali = document.getElementById('jamKembali');
+    const infoJam = document.getElementById('infoJam');
+    const noTeleponInput = document.getElementById('noTelepon');
+
     const alasan = document.getElementById('alasan');
     const charCount = document.getElementById('charCount');
     const charCounter = document.getElementById('charCounter');
 
+    // Modal Jadwal Elements
     const modalJadwal = document.getElementById('modalJadwal');
     const modalJadwalOverlay = document.getElementById('modalJadwalOverlay');
     const modalJadwalContent = document.getElementById('modalJadwalContent');
     const modalJadwalHari = document.getElementById('modalJadwalHari');
-    const btnLihatJadwal = document.getElementById('btnLihatJadwal');
     const btnTutupJadwal = document.getElementById('btnTutupJadwal');
+    const btnLihatJadwal = document.getElementById('btnLihatJadwal');
+    const btnLihatJadwalHeader = document.getElementById('btnLihatJadwalHeader');
+
+    // =========================================================
+    // TIMEZONE WIB HELPERS
+    // =========================================================
+    function getWibNow() {
+        const now = new Date();
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        return new Date(utc + (7 * 60 * 60 * 1000));
+    }
+
+    function formatTimeInput(date) {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+
+    function timeToMinutes(time) {
+        if (!time) return null;
+        const parts = String(time).split(':');
+        if (parts.length < 2) return null;
+        const hours = Number(parts[0]);
+        const minutes = Number(parts[1]);
+        if (Number.isNaN(hours) || Number.isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+            return null;
+        }
+        return (hours * 60) + minutes;
+    }
+
+    function getAlpineData() {
+        try {
+            if (window.Alpine && typeof Alpine.$data === 'function' && formDispensasi) {
+                return Alpine.$data(formDispensasi);
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    let isAlertShown = false;
+    function showSingleAlert(config) {
+        if (isAlertShown || (typeof Swal !== 'undefined' && Swal.isVisible())) {
+            return Promise.resolve();
+        }
+        isAlertShown = true;
+        return Swal.fire(Object.assign({
+            confirmButtonColor: '#2563eb',
+            returnFocus: false,
+            allowOutsideClick: false,
+            customClass: {
+                popup: 'rounded-2xl shadow-xl border border-slate-200'
+            }
+        }, config)).finally(() => {
+            setTimeout(() => {
+                isAlertShown = false;
+            }, 300);
+        });
+    }
+
+    // =========================================================
+    // JADWAL & SLOT LOGIC
+    // =========================================================
+    function getScheduleSlots() {
+        const source = (Array.isArray(semuaSlotHariIni) && semuaSlotHariIni.length > 0)
+            ? semuaSlotHariIni
+            : Object.values(jadwalHariIni || {});
+
+        return source
+            .filter(slot => slot && slot.start && slot.end)
+            .map(slot => {
+                const start = String(slot.start).substring(0, 5);
+                const end = String(slot.end).substring(0, 5);
+                return {
+                    type: slot.type || 'kbm',
+                    label: slot.label || 'Jam',
+                    start: start,
+                    end: end,
+                    startMinutes: timeToMinutes(start),
+                    endMinutes: timeToMinutes(end)
+                };
+            })
+            .filter(slot => slot.startMinutes !== null && slot.endMinutes !== null && slot.endMinutes > slot.startMinutes)
+            .sort((a, b) => a.startMinutes - b.startMinutes);
+    }
+
+    function getOperatingScheduleBounds() {
+        const slots = getScheduleSlots();
+        if (slots.length > 0) {
+            return {
+                start: slots[0].start,
+                end: slots[slots.length - 1].end,
+                startMinutes: slots[0].startMinutes,
+                endMinutes: slots[slots.length - 1].endMinutes
+            };
+        }
+        return {
+            start: '07:00',
+            end: '15:15',
+            startMinutes: 420,
+            endMinutes: 915
+        };
+    }
+
+    function updateTimeInputLimits() {
+        if (!jamKeluar || !jamKembali) return;
+
+        const nowWib = getWibNow();
+        const currentTime = formatTimeInput(nowWib);
+        const currentMinutes = timeToMinutes(currentTime);
+        const bounds = getOperatingScheduleBounds();
+
+        // Batas Jam Keluar untuk Hari Ini
+        if (currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+            jamKeluar.readOnly = true;
+            jamKeluar.min = bounds.end;
+            jamKeluar.max = bounds.end;
+        } else if (currentMinutes !== null && currentMinutes > bounds.startMinutes) {
+            jamKeluar.readOnly = false;
+            jamKeluar.min = currentTime;
+            jamKeluar.max = bounds.end;
+        } else {
+            jamKeluar.readOnly = false;
+            jamKeluar.min = bounds.start;
+            jamKeluar.max = bounds.end;
+        }
+
+        const alpineData = getAlpineData();
+        const isSampaiPulang = alpineData ? alpineData.sampaiPulang : false;
+
+        if (!isSampaiPulang) {
+            if (currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+                jamKembali.readOnly = true;
+            } else {
+                jamKembali.readOnly = false;
+            }
+
+            if (jamKeluar.value) {
+                const kMin = timeToMinutes(jamKeluar.value);
+                if (kMin !== null) {
+                    const nextMin = kMin + 1;
+                    const nextH = Math.floor(nextMin / 60);
+                    const nextM = nextMin % 60;
+                    jamKembali.min = `${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`;
+                } else {
+                    jamKembali.min = jamKeluar.min;
+                }
+            } else {
+                jamKembali.min = jamKeluar.min;
+            }
+            jamKembali.max = bounds.end;
+        }
+    }
+
+    // =========================================================
+    // VALIDASI WAKTU KELUAR & KEMBALI
+    // =========================================================
+    function validateJamKeluar(triggerAlert = true, isSubmitting = false) {
+        if (!jamKeluar) return true;
+        const val = jamKeluar.value ? jamKeluar.value.trim() : '';
+        const errEl = document.getElementById('jamKeluarError');
+
+        if (errEl) {
+            errEl.textContent = '';
+            errEl.classList.add('hidden');
+        }
+        jamKeluar.classList.remove('border-rose-500', 'bg-rose-50');
+
+        if (!val) {
+            if (isSubmitting) {
+                const msg = 'Jam Keluar wajib diisi.';
+                if (errEl) {
+                    errEl.innerHTML = `<i class="ti ti-alert-circle mr-1"></i>${msg}`;
+                    errEl.classList.remove('hidden');
+                }
+                jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
+                if (triggerAlert) {
+                    showSingleAlert({
+                        icon: 'warning',
+                        title: 'Jam Keluar Belum Diisi',
+                        text: 'Silakan tentukan jam keluar dispensasi terlebih dahulu.'
+                    });
+                }
+                return false;
+            }
+            return true;
+        }
+
+        const nowWib = getWibNow();
+        const currentTime = formatTimeInput(nowWib);
+        const currentMinutes = timeToMinutes(currentTime);
+        const selMin = timeToMinutes(val);
+        const bounds = getOperatingScheduleBounds();
+
+        // 1. Cek format jam
+        if (selMin === null) {
+            const msg = 'Format jam keluar tidak valid.';
+            if (errEl) {
+                errEl.innerHTML = `<i class="ti ti-alert-circle mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+            }
+            jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
+            jamKeluar.value = '';
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Format Jam Tidak Valid',
+                    text: 'Silakan masukkan format jam keluar yang benar.'
+                });
+            }
+            return false;
+        }
+
+        // 2. Cek apakah KBM hari ini sudah berakhir
+        if (currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+            const msg = `Kegiatan Belajar Mengajar (KBM) hari ini (${bounds.start} - ${bounds.end} WIB) telah berakhir.`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="ti ti-alert-circle mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+            }
+            jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
+            jamKeluar.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Jadwal Hari Ini Telah Berakhir',
+                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.</span>`,
+                    confirmButtonText: 'Mengerti'
+                });
+            }
+            updateTimeInputLimits();
+            return false;
+        }
+
+        // 3. Cek apakah jam keluar berada di luar jadwal KBM sekolah
+        if (selMin < bounds.startMinutes || selMin > bounds.endMinutes) {
+            const msg = `Jam Keluar (${val} WIB) berada di luar jadwal KBM sekolah (${bounds.start} - ${bounds.end} WIB).`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="ti ti-alert-circle mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+            }
+            jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
+            jamKeluar.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Di Luar Jadwal Sekolah',
+                    html: `Jam Keluar (<strong>${val} WIB</strong>) berada di luar jadwal KBM sekolah hari ini.<br><span class="text-xs text-slate-500 mt-2 block">Jam operasional KBM: <strong>${bounds.start} - ${bounds.end} WIB</strong>.<br>Klik tombol <strong>Lihat Jadwal</strong> untuk melihat slot jam aktif.</span>`,
+                    confirmButtonText: 'Pilih Jam Sesuai Jadwal'
+                });
+            }
+            updateTimeInputLimits();
+            return false;
+        }
+
+        // 4. Cek apakah jam sudah lewat dari jam saat ini
+        if (currentMinutes !== null && selMin < currentMinutes) {
+            const msg = `Jam Keluar (${val} WIB) sudah lewat dari waktu saat ini (${currentTime} WIB).`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="ti ti-alert-circle mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+            }
+            jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
+            jamKeluar.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Jam Tidak Valid',
+                    html: `Jam Keluar (<strong>${val} WIB</strong>) tidak dapat dipilih karena waktu tersebut sudah lewat.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.</span>`,
+                    confirmButtonText: 'Pilih Jam Lain'
+                });
+            }
+            updateTimeInputLimits();
+            return false;
+        }
+
+        updateTimeInputLimits();
+        return true;
+    }
+
+    function validateJamKembali(triggerAlert = true, isSubmitting = false) {
+        if (!jamKembali) return true;
+        const alpineData = getAlpineData();
+        const isSampaiPulang = alpineData ? alpineData.sampaiPulang : false;
+        if (isSampaiPulang) {
+            const errEl = document.getElementById('jamKembaliError');
+            if (errEl) {
+                errEl.textContent = '';
+                errEl.classList.add('hidden');
+            }
+            jamKembali.classList.remove('border-rose-500', 'bg-rose-50');
+            return true;
+        }
+
+        const val = jamKembali.value ? jamKembali.value.trim() : '';
+        const errEl = document.getElementById('jamKembaliError');
+
+        if (errEl) {
+            errEl.textContent = '';
+            errEl.classList.add('hidden');
+        }
+        jamKembali.classList.remove('border-rose-500', 'bg-rose-50');
+
+        if (!val) {
+            if (isSubmitting) {
+                const msg = 'Jam Kembali wajib diisi jika bukan izin sampai pulang.';
+                if (errEl) {
+                    errEl.innerHTML = `<i class="ti ti-alert-circle mr-1"></i>${msg}`;
+                    errEl.classList.remove('hidden');
+                }
+                jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+                if (triggerAlert) {
+                    showSingleAlert({
+                        icon: 'warning',
+                        title: 'Jam Kembali Belum Diisi',
+                        text: 'Silakan tentukan jam kembali atau centang izin sampai pulang sekolah.'
+                    });
+                }
+                return false;
+            }
+            return true;
+        }
+
+        const keluarMin = timeToMinutes(jamKeluar?.value);
+        const kembaliMin = timeToMinutes(val);
+        const bounds = getOperatingScheduleBounds();
+
+        if (kembaliMin === null) {
+            const msg = 'Format jam kembali tidak valid.';
+            if (errEl) {
+                errEl.innerHTML = `<i class="ti ti-alert-circle mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+            }
+            jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+            jamKembali.value = '';
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Format Jam Tidak Valid',
+                    text: 'Silakan masukkan format jam kembali yang benar.'
+                });
+            }
+            return false;
+        }
+
+        if (keluarMin === null) {
+            jamKembali.value = '';
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'info',
+                    title: 'Tentukan Jam Keluar Dahulu',
+                    text: 'Harap tentukan jam keluar sebelum memilih jam kembali.'
+                });
+            }
+            return false;
+        }
+
+        if (kembaliMin <= keluarMin) {
+            const msg = `Jam Kembali (${val} WIB) harus lebih besar dari Jam Keluar (${jamKeluar.value} WIB).`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="ti ti-alert-circle mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+            }
+            jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+            jamKembali.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Jam Kembali Tidak Valid',
+                    html: `Jam Kembali (<strong>${val} WIB</strong>) harus lebih besar daripada Jam Keluar (<strong>${jamKeluar.value} WIB</strong>).`,
+                    confirmButtonText: 'Sesuaikan Jam'
+                });
+            }
+            return false;
+        }
+
+        if (kembaliMin < bounds.startMinutes || kembaliMin > bounds.endMinutes) {
+            const msg = `Jam Kembali (${val} WIB) berada di luar jadwal KBM sekolah (${bounds.start} - ${bounds.end} WIB).`;
+            if (errEl) {
+                errEl.innerHTML = `<i class="ti ti-alert-circle mr-1"></i>${msg}`;
+                errEl.classList.remove('hidden');
+            }
+            jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+            jamKembali.value = '';
+
+            if (triggerAlert) {
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Di Luar Jadwal Sekolah',
+                    html: `Jam Kembali (<strong>${val} WIB</strong>) berada di luar batas jadwal KBM sekolah hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>).`,
+                    confirmButtonText: 'Pilih Jam Sesuai Jadwal'
+                });
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    if (jamKeluar) {
+        jamKeluar.addEventListener('change', function () {
+            validateJamKeluar(true, false);
+            if (jamKembali && jamKembali.value) {
+                validateJamKembali(true, false);
+            }
+        });
+    }
+
+    if (jamKembali) {
+        jamKembali.addEventListener('change', function () {
+            validateJamKembali(true, false);
+        });
+    }
 
     // =========================================================
     // INISIALISASI SELECT2 PENCARIAN SISWA (NIS / NAMA)
@@ -758,11 +1282,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             return $(`
                 <div class="py-1">
-                    <div class="font-bold text-gray-900 text-sm leading-tight">${nama}</div>
-                    <div class="text-xs text-gray-500 flex items-center gap-2 mt-1">
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 font-mono font-semibold text-[11px] border border-blue-100">NIS: ${nis}</span>
-                        <span class="text-gray-300">•</span>
-                        <span class="text-gray-600 font-medium">${kelas}</span>
+                    <div class="font-bold text-slate-900 text-sm leading-tight">${nama}</div>
+                    <div class="text-xs text-slate-500 flex items-center gap-2 mt-1">
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono font-semibold text-[11px] border border-blue-100">NIS: ${nis}</span>
+                        <span class="text-slate-300">•</span>
+                        <span class="text-slate-600 font-medium">${kelas}</span>
                     </div>
                 </div>
             `);
@@ -785,7 +1309,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 nama: data.nama || '',
                 nis: data.nis || '',
                 kelas: data.kelas || '',
-                jurusan: data.jurusan || ''
+                jurusan: data.jurusan || '',
+                no_telepon: data.no_telepon || ''
             };
 
             const infoNamaHeader = document.getElementById('infoNamaHeader');
@@ -799,8 +1324,20 @@ document.addEventListener('DOMContentLoaded', function () {
             if (infoNis) infoNis.textContent = selectedStudent.nis;
             if (infoKelas) infoKelas.textContent = selectedStudent.kelas;
             if (card) card.classList.remove('hidden');
+
+            // Auto-fill nomor WhatsApp siswa jika ada
+            if (noTeleponInput && (!noTeleponInput.value || noTeleponInput.dataset.autoFilled === 'true')) {
+                noTeleponInput.value = selectedStudent.no_telepon || '';
+                noTeleponInput.dataset.autoFilled = 'true';
+            }
         }
     });
+
+    if (noTeleponInput) {
+        noTeleponInput.addEventListener('input', function() {
+            delete noTeleponInput.dataset.autoFilled;
+        });
+    }
 
     // Event ketika siswa di-clear
     $('#siswa_select').on('select2:clear', function () {
@@ -808,9 +1345,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function resetSelectedStudent() {
-        selectedStudent = { id: '', nama: '', nis: '', kelas: '', jurusan: '' };
+        selectedStudent = { id: '', nama: '', nis: '', kelas: '', jurusan: '', no_telepon: '' };
         const card = document.getElementById('siswaInfoCard');
         if (card) card.classList.add('hidden');
+        if (noTeleponInput && noTeleponInput.dataset.autoFilled === 'true') {
+            noTeleponInput.value = '';
+            delete noTeleponInput.dataset.autoFilled;
+        }
     }
 
     const btnClearSiswa = document.getElementById('btnClearSiswa');
@@ -819,218 +1360,6 @@ document.addEventListener('DOMContentLoaded', function () {
             $('#siswa_select').val(null).trigger('change');
             resetSelectedStudent();
             $('#siswa_select').select2('open');
-        });
-    }
-
-    // =========================================================
-    // HELPER WAKTU & FORMATTER (TIMEZONE WIB ASIA/JAKARTA)
-    // =========================================================
-    function getWibNow() {
-        const now = new Date();
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        return new Date(utc + (3600000 * 7));
-    }
-
-    function formatTimeInput(dateObj) {
-        const h = String(dateObj.getHours()).padStart(2, '0');
-        const m = String(dateObj.getMinutes()).padStart(2, '0');
-        return `${h}:${m}`;
-    }
-
-    function timeToMinutes(timeStr) {
-        if (!timeStr) return null;
-        const parts = timeStr.split(':');
-        if (parts.length < 2) return null;
-        const hours = parseInt(parts[0], 10);
-        const minutes = parseInt(parts[1], 10);
-        if (isNaN(hours) || isNaN(minutes)) {
-            return null;
-        }
-        return (hours * 60) + minutes;
-    }
-
-    // =========================================================
-    // JADWAL & SLOT LOGIC
-    // =========================================================
-    function getScheduleSlots() {
-        const source = (Array.isArray(semuaSlotHariIni) && semuaSlotHariIni.length > 0)
-            ? semuaSlotHariIni
-            : Object.values(jadwalHariIni || {});
-
-        return source
-            .filter(slot => slot && slot.start && slot.end)
-            .map(slot => {
-                const start = String(slot.start).substring(0, 5);
-                const end = String(slot.end).substring(0, 5);
-                return {
-                    type: slot.type || 'kbm',
-                    label: slot.label || 'Jam',
-                    start: start,
-                    end: end,
-                    startMinutes: timeToMinutes(start),
-                    endMinutes: timeToMinutes(end)
-                };
-            })
-            .filter(slot => slot.startMinutes !== null && slot.endMinutes !== null && slot.endMinutes > slot.startMinutes)
-            .sort((a, b) => a.startMinutes - b.startMinutes);
-    }
-
-    function isTimeInsideSchedule(timeValue) {
-        const minutes = timeToMinutes(timeValue);
-        if (minutes === null) return false;
-        return getScheduleSlots().some(slot => minutes >= slot.startMinutes && minutes <= slot.endMinutes);
-    }
-
-    function getNextScheduleStart(minutes) {
-        const slots = getScheduleSlots();
-        for (const slot of slots) {
-            if (slot.startMinutes > minutes) {
-                return slot.start;
-            }
-        }
-        return null;
-    }
-
-    function updateTimeInputLimits() {
-        if (!jamKeluar || !jamKembali) return;
-
-        const nowWib = getWibNow();
-        const currentTime = formatTimeInput(nowWib);
-        const currentMinutes = timeToMinutes(currentTime);
-        const slots = getScheduleSlots();
-
-        if (!slots.length) return;
-
-        const scheduleStart = slots[0].startMinutes;
-        const scheduleEnd = slots[slots.length - 1].endMinutes;
-
-        let keluarMinMinutes = scheduleStart !== null ? scheduleStart : 0;
-        if (currentMinutes > keluarMinMinutes && currentMinutes < scheduleEnd) {
-            keluarMinMinutes = currentMinutes;
-        }
-
-        const keluarMinHours = Math.floor(keluarMinMinutes / 60);
-        const keluarMinMinute = keluarMinMinutes % 60;
-        jamKeluar.min = `${String(keluarMinHours).padStart(2, '0')}:${String(keluarMinMinute).padStart(2, '0')}`;
-        jamKeluar.max = slots[slots.length - 1].end;
-
-        // Batas Jam Kembali
-        if (jamKeluar.value) {
-            const kMin = timeToMinutes(jamKeluar.value);
-            if (kMin !== null) {
-                const nextMin = kMin + 1;
-                const nextH = Math.floor(nextMin / 60);
-                const nextM = nextMin % 60;
-                jamKembali.min = `${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`;
-            }
-        } else {
-            jamKembali.min = jamKeluar.min;
-        }
-        jamKembali.max = slots[slots.length - 1].end;
-    }
-
-    if (jamKeluar) {
-        jamKeluar.addEventListener('change', function () {
-            if (!this.value) {
-                updateTimeInputLimits();
-                return;
-            }
-
-            const nowWib = getWibNow();
-            const currentTime = formatTimeInput(nowWib);
-            const currentMinutes = timeToMinutes(currentTime);
-            const selMin = timeToMinutes(this.value);
-
-            // 1. Cek apakah jam yang dipilih sudah lewat
-            if (selMin !== null && selMin < currentMinutes) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Jam Tidak Valid',
-                    html: `Jam Keluar (<strong>${this.value} WIB</strong>) tidak dapat dipilih karena waktu tersebut sudah lewat.<br><span class="text-xs text-gray-500">Waktu saat ini: <strong>${currentTime} WIB</strong></span>`,
-                    confirmButtonColor: '#2563eb'
-                });
-                this.value = '';
-                updateTimeInputLimits();
-                return;
-            }
-
-            // 2. Cek apakah jam yang dipilih berada di dalam jadwal sekolah/istirahat
-            if (!isTimeInsideSchedule(this.value)) {
-                const nextStart = getNextScheduleStart(selMin);
-                let pesan = `Jam (<strong>${this.value} WIB</strong>) berada di luar jadwal sekolah yang aktif hari ini.`;
-                if (nextStart) {
-                    pesan += `<br><span class="text-xs text-blue-600">Disarankan memilih jam mulai slot berikutnya: <strong>${nextStart} WIB</strong>.</span>`;
-                } else {
-                    pesan += `<br><span class="text-xs text-gray-500">Silakan klik tombol <strong>Lihat Jadwal</strong> untuk melihat slot pelajaran & istirahat hari ini.</span>`;
-                }
-
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Di Luar Jadwal Sekolah',
-                    html: pesan,
-                    confirmButtonColor: '#2563eb'
-                });
-
-                if (nextStart) {
-                    this.value = nextStart;
-                } else {
-                    this.value = '';
-                }
-                updateTimeInputLimits();
-                return;
-            }
-
-            updateTimeInputLimits();
-        });
-    }
-
-    if (jamKembali) {
-        jamKembali.addEventListener('change', function () {
-            if (!this.value) {
-                updateTimeInputLimits();
-                return;
-            }
-
-            const keluarMin = timeToMinutes(jamKeluar?.value);
-            const kembaliMin = timeToMinutes(this.value);
-
-            // 1. Pastikan Jam Keluar sudah dipilih
-            if (!jamKeluar?.value || keluarMin === null) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Pilih Jam Keluar Dulu',
-                    text: 'Silakan tentukan Jam Keluar sebelum memilih Jam Kembali.',
-                    confirmButtonColor: '#2563eb'
-                });
-                this.value = '';
-                return;
-            }
-
-            // 2. Cek apakah jam kembali <= jam keluar
-            if (kembaliMin !== null && kembaliMin <= keluarMin) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Jam Kembali Tidak Valid',
-                    html: `Jam Kembali (<strong>${this.value} WIB</strong>) harus lebih besar daripada Jam Keluar (<strong>${jamKeluar.value} WIB</strong>).`,
-                    confirmButtonColor: '#2563eb'
-                });
-                this.value = '';
-                return;
-            }
-
-            // 3. Cek apakah jam kembali berada di luar jadwal
-            if (!isTimeInsideSchedule(this.value)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Di Luar Jadwal Sekolah',
-                    html: `Jam Kembali (<strong>${this.value} WIB</strong>) berada di luar jadwal sekolah yang aktif hari ini. Periksa tombol <strong>Lihat Jadwal</strong>.`,
-                    confirmButtonColor: '#2563eb'
-                });
-                this.value = '';
-                return;
-            }
-
-            updateTimeInputLimits();
         });
     }
 
@@ -1064,6 +1393,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function startSelfieCamera(facingMode = 'user') {
+        if (!selectedStudent.id) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Siswa Terlebih Dahulu',
+                text: 'Harap cari dan pilih siswa penerima dispensasi sebelum membuka kamera selfie.',
+                confirmButtonColor: '#2563eb'
+            }).then(() => {
+                $('#siswa_select').select2('open');
+            });
+            return;
+        }
+
         stopSelfieCamera();
         if (selfieErrorBox) selfieErrorBox.classList.add('hidden');
         if (selfieStandbyBox) selfieStandbyBox.classList.add('hidden');
@@ -1071,9 +1412,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (selfieCameraBox) selfieCameraBox.classList.remove('hidden');
         if (selfieCameraLoading) selfieCameraLoading.classList.remove('hidden');
 
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const isSecureEnv = (window.isSecureContext === true) || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !isSecureEnv) {
+            console.warn('getUserMedia live kamera tidak aktif atau tidak didukung pada konteks browser ini.');
+            stopSelfieCamera();
             if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
+            if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
             if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
+            if (fotoInput) {
+                fotoInput.click();
+            }
             return;
         }
 
@@ -1086,23 +1434,148 @@ document.addEventListener('DOMContentLoaded', function () {
             audio: false
         };
 
+        function attachStream(stream) {
+            selfieStream = stream;
+            if (selfieVideo) {
+                selfieVideo.srcObject = stream;
+                selfieVideo.onloadedmetadata = function () {
+                    selfieVideo.play().catch(function () {});
+                    if (selfieCameraLoading) selfieCameraLoading.classList.add('hidden');
+                };
+            }
+        }
+
         navigator.mediaDevices.getUserMedia(constraints)
-            .then(function (stream) {
-                selfieStream = stream;
-                if (selfieVideo) {
-                    selfieVideo.srcObject = stream;
-                    selfieVideo.onloadedmetadata = function () {
-                        selfieVideo.play().catch(function () {});
-                        if (selfieCameraLoading) selfieCameraLoading.classList.add('hidden');
-                    };
-                }
-            })
+            .then(attachStream)
             .catch(function (err) {
-                console.error('Kamera gagal diakses:', err);
-                stopSelfieCamera();
-                if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
-                if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
+                console.warn('Constraint ideal kamera gagal, mencoba fallback standard video:true', err);
+                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                    .then(attachStream)
+                    .catch(function (fallbackErr) {
+                        console.warn('Kamera live tidak dapat dibuka, mengalihkan ke kamera bawaan perangkat:', fallbackErr);
+                        stopSelfieCamera();
+                        if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
+                        if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
+                        if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
+
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Buka Kamera Perangkat',
+                            text: 'Live kamera tidak dapat diakses langsung pada browser ini. Silakan gunakan kamera bawaan perangkat Anda.',
+                            confirmButtonColor: '#2563eb',
+                            confirmButtonText: '<i class="ti ti-camera mr-1.5"></i> Buka Kamera'
+                        }).then(function (result) {
+                            if (result.isConfirmed && fotoInput) {
+                                fotoInput.click();
+                            }
+                        });
+                    });
             });
+    }
+
+    async function processImageFileAndWatermark(file) {
+        if (!file) return;
+
+        if (!selectedStudent.id) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Siswa Terlebih Dahulu',
+                text: 'Harap cari dan pilih siswa penerima dispensasi sebelum memproses foto verifikasi.',
+                confirmButtonColor: '#2563eb'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Memproses Foto...',
+            text: 'Membubuhkan watermark verifikasi identitas resmi.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const img = new Image();
+            const objectUrl = URL.createObjectURL(file);
+
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = objectUrl;
+            });
+            URL.revokeObjectURL(objectUrl);
+
+            let maxDim = 1280;
+            let width = img.naturalWidth || img.width || 640;
+            let height = img.naturalHeight || img.height || 480;
+
+            if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                } else {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const nowWib = getWibNow();
+            const pad = n => String(n).padStart(2, '0');
+            const dateStr = `${pad(nowWib.getDate())}/${pad(nowWib.getMonth() + 1)}/${nowWib.getFullYear()}`;
+            const timeStr = `${pad(nowWib.getHours())}:${pad(nowWib.getMinutes())}:${pad(nowWib.getSeconds())} WIB`;
+
+            const sName = selectedStudent.nama || 'SISWA DISPENSASI';
+            const sNis = selectedStudent.nis ? ` (${selectedStudent.nis})` : '';
+            const sKelas = selectedStudent.kelas || '';
+            const guruPiketName = @json(auth()->user()->name);
+
+            if (typeof window.drawDispensasiWatermark === 'function') {
+                window.drawDispensasiWatermark(ctx, canvas, [
+                    'DIDISPEN VERIFIKASI',
+                    `${sName}${sNis}`,
+                    `${sKelas} • GURU PIKET: ${guruPiketName} • ${dateStr} ${timeStr}`,
+                ]);
+            }
+
+            canvas.toBlob(function (blob) {
+                Swal.close();
+                if (!blob) {
+                    Swal.fire('Gagal Memproses Foto', 'Gagal memproses file foto selfie.', 'error');
+                    return;
+                }
+
+                const watermarkedFile = new File([blob], `selfie_guru_${Date.now()}.jpg`, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(watermarkedFile);
+                if (fotoInput) fotoInput.files = dataTransfer.files;
+
+                cleanupObjectUrl();
+                currentObjectUrl = URL.createObjectURL(blob);
+                if (selfiePreviewImg) selfiePreviewImg.src = currentObjectUrl;
+
+                if (selfieTimestampText) {
+                    selfieTimestampText.textContent = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB (${sName})`;
+                }
+
+                if (selfieStandbyBox) selfieStandbyBox.classList.add('hidden');
+                if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
+                if (selfieErrorBox) selfieErrorBox.classList.add('hidden');
+                if (selfiePreviewBox) selfiePreviewBox.classList.remove('hidden');
+            }, 'image/jpeg', 0.85);
+
+        } catch (e) {
+            Swal.close();
+            console.error('Error saat memproses watermark foto selfie:', e);
+            Swal.fire('Terjadi Kesalahan', 'Gagal memproses file gambar. Silakan coba lagi.', 'error');
+        }
     }
 
     if (btnStartSelfie) {
@@ -1111,9 +1584,28 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (btnRetrySelfie) {
-        btnRetrySelfie.addEventListener('click', function () {
-            startSelfieCamera(currentFacingModeSelfie);
+    if (btnFallbackNativeCamera) {
+        btnFallbackNativeCamera.addEventListener('click', function () {
+            if (!selectedStudent.id) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pilih Siswa Terlebih Dahulu',
+                    text: 'Harap cari dan pilih siswa penerima dispensasi sebelum membuka kamera.',
+                    confirmButtonColor: '#2563eb'
+                }).then(() => {
+                    $('#siswa_select').select2('open');
+                });
+                return;
+            }
+            if (fotoInput) fotoInput.click();
+        });
+    }
+
+    if (fotoInput) {
+        fotoInput.addEventListener('change', function (e) {
+            if (e.target.files && e.target.files[0]) {
+                processImageFileAndWatermark(e.target.files[0]);
+            }
         });
     }
 
@@ -1150,7 +1642,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             ctx.drawImage(selfieVideo, 0, 0, canvas.width, canvas.height);
 
-            // Reset transformasi agar tulisan watermark tidak terbalik (selalu terbaca normal)
+            // Reset transformasi agar watermark terbaca normal
             ctx.setTransform(1, 0, 0, 1, 0, 0);
 
             const nowWib = getWibNow();
@@ -1163,17 +1655,19 @@ document.addEventListener('DOMContentLoaded', function () {
             const sKelas = selectedStudent.kelas || '';
             const guruPiketName = @json(auth()->user()->name);
 
-            window.drawDispensasiWatermark(ctx, canvas, [
-                'DIDISPEN VERIFIKASI',
-                `${sName}${sNis}`,
-                `${sKelas} • GURU PIKET: ${guruPiketName} • ${dateStr} ${timeStr}`,
-            ]);
+            if (typeof window.drawDispensasiWatermark === 'function') {
+                window.drawDispensasiWatermark(ctx, canvas, [
+                    'DIDISPEN VERIFIKASI',
+                    `${sName}${sNis}`,
+                    `${sKelas} • GURU PIKET: ${guruPiketName} • ${dateStr} ${timeStr}`,
+                ]);
+            }
 
             canvas.toBlob(function (blob) {
                 if (!blob) return;
 
-                if (blob.size > 2048 * 1024) {
-                    Swal.fire('Foto Terlalu Besar', 'Ukuran foto selfie melebihi batas 2MB. Silakan ambil ulang.', 'warning');
+                if (blob.size > 5120 * 1024) {
+                    Swal.fire('Foto Terlalu Besar', 'Ukuran foto selfie melebihi batas 5MB. Silakan ambil ulang.', 'warning');
                     return;
                 }
 
@@ -1186,7 +1680,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 currentObjectUrl = URL.createObjectURL(blob);
                 if (selfiePreviewImg) selfiePreviewImg.src = currentObjectUrl;
 
-                const nowWib = getWibNow();
                 if (selfieTimestampText) {
                     selfieTimestampText.textContent = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB (${sName})`;
                 }
@@ -1234,12 +1727,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    window.bukaModalJadwal = function() {
+    function bukaModalJadwal() {
         if (!modalJadwal) return;
         if (modalJadwalHari) modalJadwalHari.textContent = formatHariTanggalWib();
 
         modalJadwal.classList.remove('hidden');
-        if (btnLihatJadwal) btnLihatJadwal.classList.add('hidden');
+        if (btnLihatJadwal) btnLihatJadwal.classList.add('lg:hidden');
         document.documentElement.classList.add('overflow-hidden');
         document.body.classList.add('overflow-hidden');
 
@@ -1251,7 +1744,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 modalJadwalContent.classList.add('opacity-100', 'scale-100', 'translate-y-0');
             }
         });
-    };
+    }
 
     function tutupModalJadwal() {
         if (!modalJadwal || modalJadwal.classList.contains('hidden')) return;
@@ -1266,17 +1759,22 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(function () {
             modalJadwal.classList.add('hidden');
             if (btnLihatJadwal) {
-                btnLihatJadwal.classList.remove('hidden');
-                btnLihatJadwal.classList.add('flex');
+                btnLihatJadwal.classList.remove('lg:hidden');
             }
             document.documentElement.classList.remove('overflow-hidden');
             document.body.classList.remove('overflow-hidden');
-            sessionStorage.setItem(JADWAL_MODAL_SESSION_KEY, '1');
         }, 200);
     }
 
     if (btnLihatJadwal) {
         btnLihatJadwal.addEventListener('click', function (e) {
+            e.preventDefault();
+            bukaModalJadwal();
+        });
+    }
+
+    if (btnLihatJadwalHeader) {
+        btnLihatJadwalHeader.addEventListener('click', function (e) {
             e.preventDefault();
             bukaModalJadwal();
         });
@@ -1306,9 +1804,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (charCounter) {
                 if (length < 10 || length > 500) {
                     charCounter.classList.remove('text-emerald-600');
-                    charCounter.classList.add('text-red-500');
+                    charCounter.classList.add('text-rose-500');
                 } else {
-                    charCounter.classList.remove('text-red-500');
+                    charCounter.classList.remove('text-rose-500');
                     charCounter.classList.add('text-emerald-600');
                 }
             }
@@ -1318,12 +1816,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // =========================================================
-    // VALIDASI FORM SUBMIT & LOADING STATE
+    // VALIDASI FORM SUBMIT & PRE-SUBMIT CONFIRMATION (SWEETALERT2)
     // =========================================================
     if (formDispensasi) {
         function resetLoadingState() {
             delete formDispensasi.dataset.submitting;
-            const alpineData = window.Alpine ? Alpine.$data(formDispensasi) : null;
+            const alpineData = getAlpineData();
             if (alpineData) {
                 alpineData.loading = false;
             }
@@ -1333,56 +1831,115 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         formDispensasi.addEventListener('submit', function (e) {
-            // Cek validitas bawaan form HTML5
-            if (!formDispensasi.checkValidity()) {
-                resetLoadingState();
-                return;
-            }
+            const alpineData = getAlpineData();
+            const isSampaiPulang = alpineData ? alpineData.sampaiPulang : false;
 
-            // Validasi Siswa
+            // 1. Validasi Siswa
             const siswaIdVal = $('#siswa_select').val();
             if (!siswaIdVal) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 resetLoadingState();
-                Swal.fire('Siswa Belum Dipilih', 'Silakan cari dan pilih siswa penerima dispensasi terlebih dahulu.', 'warning');
-                $('#siswa_select').select2('open');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Siswa Belum Dipilih',
+                    text: 'Silakan cari dan pilih siswa penerima dispensasi terlebih dahulu.',
+                    confirmButtonColor: '#2563eb'
+                }).then(() => {
+                    $('#siswa_select').select2('open');
+                });
                 return;
             }
 
-            // Validasi Jam Keluar
-            const nowWib = getWibNow();
-            const currentMinutes = (nowWib.getHours() * 60) + nowWib.getMinutes();
-            const keluarMinutes = timeToMinutes(jamKeluar?.value);
-            const kembaliMinutes = timeToMinutes(jamKembali?.value);
-
-            if (keluarMinutes === null || keluarMinutes < currentMinutes) {
+            // 2. Validasi Jam Keluar
+            if (!validateJamKeluar(true, true)) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 resetLoadingState();
-                Swal.fire('Jam Tidak Valid', 'Jam Keluar tidak boleh menggunakan waktu yang sudah lewat.', 'warning');
-                updateTimeInputLimits();
                 return;
             }
 
-            // Validasi Jam Kembali
-            if (kembaliMinutes === null || kembaliMinutes <= keluarMinutes) {
+            // 3. Validasi Jam Kembali
+            if (!isSampaiPulang && !validateJamKembali(true, true)) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 resetLoadingState();
-                Swal.fire('Jam Tidak Valid', 'Jam Kembali harus lebih besar dari Jam Keluar.', 'warning');
                 return;
             }
 
-            // Proteksi Double Submit
+            // 4. Validasi Foto Verifikasi (Opsional untuk guru tapi direkomendasikan)
+            if (!formDispensasi.checkValidity()) {
+                e.preventDefault();
+                formDispensasi.reportValidity();
+                resetLoadingState();
+                return;
+            }
+
+            // 5. Pre-submit Confirmation Modal
+            if (formDispensasi.dataset.confirmed !== 'true') {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                resetLoadingState();
+
+                const kepulanganInfo = isSampaiPulang
+                    ? `<span class="text-emerald-700 font-bold"><i class="ti ti-door-exit mr-1"></i>Sampai Pulang Sekolah (Bebas Check-In)</span>`
+                    : `<span>Jam Kembali: <b>${jamKembali?.value || '-'} WIB</b></span>`;
+
+                const namaSiswaText = selectedStudent.nama || 'Siswa Terpilih';
+                const nisText = selectedStudent.nis ? ` (NIS: ${selectedStudent.nis})` : '';
+                const kelasText = selectedStudent.kelas ? ` • ${selectedStudent.kelas}` : '';
+
+                Swal.fire({
+                    title: 'Buat & Setujui Dispensasi?',
+                    html: `
+                        <div class="text-left text-xs sm:text-sm text-slate-600 space-y-3">
+                            <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs">
+                                <div class="font-bold text-slate-900 text-sm mb-1">${namaSiswaText}${nisText}</div>
+                                <div class="text-blue-700 font-medium">${kelasText}</div>
+                            </div>
+                            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-xs space-y-1">
+                                <div>Jam Keluar: <b>${jamKeluar?.value || '-'} WIB</b></div>
+                                <div>${kepulanganInfo}</div>
+                            </div>
+                            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs leading-relaxed">
+                                <p class="font-bold mb-1 flex items-center gap-1.5 text-emerald-800">
+                                    <i class="ti ti-bolt text-emerald-600 text-sm"></i> PERSETUJUAN OTOMATIS:
+                                </p>
+                                <p class="text-emerald-800">
+                                    Dispensasi ini akan langsung berstatus <b>Disetujui</b> oleh Anda dan QR Code siap dipakai siswa untuk scan keluar di Satpam.
+                                </p>
+                            </div>
+                            <p class="text-slate-500 text-xs">Pastikan seluruh data dan foto verifikasi (jika ada) sudah benar sebelum diproses.</p>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2563eb',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: '<i class="ti ti-send mr-1.5"></i> Ya, Buat & Setujui Sekarang',
+                    cancelButtonText: 'Periksa Kembali',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'rounded-2xl shadow-xl border border-slate-200'
+                    }
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        formDispensasi.dataset.confirmed = 'true';
+                        formDispensasi.requestSubmit();
+                    } else {
+                        delete formDispensasi.dataset.confirmed;
+                        resetLoadingState();
+                    }
+                });
+                return;
+            }
+
             if (formDispensasi.dataset.submitting === 'true') {
                 e.preventDefault();
                 return;
             }
             formDispensasi.dataset.submitting = 'true';
 
-            // Aktifkan state loading Alpine
-            const alpineData = window.Alpine ? Alpine.$data(formDispensasi) : null;
             if (alpineData) {
                 alpineData.loading = true;
             }
@@ -1438,7 +1995,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     el.classList.remove('opacity-50', 'cursor-not-allowed');
                 });
             }
-            [btnStartSelfie, btnRetrySelfie, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie].forEach(function (b) {
+            [btnStartSelfie, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie, btnFallbackNativeCamera].forEach(function (b) {
                 if (b) {
                     b.disabled = false;
                     b.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -1457,7 +2014,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 el.classList.add('opacity-50', 'cursor-not-allowed');
             });
         }
-        [btnStartSelfie, btnRetrySelfie, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie].forEach(function (b) {
+        [btnStartSelfie, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie, btnFallbackNativeCamera].forEach(function (b) {
             if (b) {
                 b.disabled = true;
                 b.classList.add('opacity-50', 'cursor-not-allowed');
