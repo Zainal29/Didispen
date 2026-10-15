@@ -13,6 +13,8 @@ class DashboardController extends Controller
 {
     public function __invoke()
     {
+        \App\Services\DispensasiService::autoExpireOverdueDispensasi();
+
         /*
         |--------------------------------------------------------------------------
         | 1. Statistik Dashboard
