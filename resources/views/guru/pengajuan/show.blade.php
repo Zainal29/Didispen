@@ -140,59 +140,130 @@
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
                     <p class="text-gray-500 text-[10px] font-semibold uppercase mb-0.5">Tanggal Pelaksanaan</p>
                     <p class="font-semibold text-gray-900">
-                        {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('d M Y') }}
-                        @if($dispensasi->tanggal_izin && $dispensasi->tanggal_izin->isTomorrow())
-                            <span class="ml-1 text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">Besok</span>
+                        @if($dispensasi->durasi_hari > 1 && $dispensasi->tanggal_selesai)
+                            {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($dispensasi->tanggal_selesai)->translatedFormat('d M Y') }} <span class="ml-1 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">{{ $dispensasi->durasi_hari }} Hari</span>
+                        @else
+                            {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('d M Y') }}
+                            @if($dispensasi->tanggal_izin && $dispensasi->tanggal_izin->isTomorrow())
+                                <span class="ml-1 text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">Besok</span>
+                            @endif
                         @endif
                     </p>
                 </div>
             </div>
 
             @if($dispensasi->tipe_pengajuan === 'organisasi')
-                <div class="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                <div class="bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-white border border-indigo-200/90 rounded-2xl p-4 sm:p-5 shadow-xs">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="font-bold text-sm text-purple-900 flex items-center gap-2">
-                            <i class="fas fa-users text-purple-600"></i>
-                            Dispensasi Organisasi: {{ $dispensasi->nama_organisasi }}
-                        </span>
-                        <span class="text-xs bg-purple-200 text-purple-800 font-bold px-2 py-0.5 rounded-full">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-sm shadow-indigo-600/20 flex-shrink-0">
+                                <i class="fas fa-users text-sm"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Dispensasi Organisasi</span>
+                                <h4 class="text-sm sm:text-base font-extrabold text-gray-900 tracking-tight capitalize truncate">
+                                    {{ $dispensasi->nama_organisasi }}
+                                </h4>
+                            </div>
+                        </div>
+                        <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2.5 py-0.5 rounded-full border border-indigo-200">
                             Total: {{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa
                         </span>
                     </div>
 
                     <div class="space-y-1.5">
-                        <p class="text-[11px] font-bold uppercase text-purple-800">Daftar Anggota Rombongan:</p>
-                        <div class="bg-white rounded-lg border border-purple-100 divide-y divide-purple-50 max-h-48 overflow-y-auto">
-                            <div class="p-2 flex items-center justify-between text-xs">
-                                <div>
-                                    <span class="font-bold text-gray-900">1. {{ $dispensasi->siswa->nama_lengkap }}</span>
-                                    <span class="text-[10px] text-gray-400 font-mono ml-1">({{ $dispensasi->siswa->user->nis_nip ?? '-' }})</span>
+                        <p class="text-[11px] font-bold uppercase text-indigo-900">Daftar Anggota Rombongan:</p>
+                        <div class="bg-white rounded-xl border border-indigo-100 divide-y divide-gray-100 overflow-hidden shadow-xs">
+                            <div class="p-2.5 sm:px-3.5 text-xs hover:bg-gray-50 transition-colors">
+                                <div class="flex items-start sm:items-center justify-between gap-2.5 sm:gap-3">
+                                    <div class="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                                        <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5 sm:mt-0">
+                                            1
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <span class="font-bold text-gray-900 break-words leading-snug block">{{ $dispensasi->siswa->nama_lengkap }}</span>
+                                            <p class="text-[10px] text-gray-500 font-mono mt-0.5">NIS: {{ $dispensasi->siswa->user->nis_nip ?? '-' }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="hidden sm:flex items-center gap-2 flex-shrink-0">
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                            {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }}
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-700 font-bold border border-purple-200">
+                                            <i class="fas fa-crown text-[8px] text-purple-600"></i> Ketua
+                                        </span>
+                                    </div>
                                 </div>
-                                <span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded">Ketua</span>
+                                <div class="sm:hidden flex items-center gap-1.5 mt-2 pl-[34px]">
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                        {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-700 font-bold border border-purple-200">
+                                        <i class="fas fa-crown text-[8px] text-purple-600"></i> Ketua
+                                    </span>
+                                </div>
                             </div>
                             @foreach($dispensasi->anggotaSiswa as $idx => $ang)
-                            <div class="p-2 flex items-center justify-between text-xs">
-                                <div>
-                                    <span class="font-medium text-gray-800">{{ $idx + 2 }}. {{ $ang->nama_lengkap }}</span>
-                                    <span class="text-[10px] text-gray-400 font-mono ml-1">({{ $ang->user->nis_nip ?? $ang->nis_nip ?? '-' }})</span>
+                            <div class="p-2.5 sm:px-3.5 text-xs hover:bg-gray-50 transition-colors">
+                                <div class="flex items-start sm:items-center justify-between gap-2.5 sm:gap-3">
+                                    <div class="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                                        <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-[11px] flex-shrink-0 mt-0.5 sm:mt-0">
+                                            {{ $idx + 2 }}
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <span class="font-medium text-gray-800 break-words leading-snug block">{{ $ang->nama_lengkap }}</span>
+                                            <p class="text-[10px] text-gray-500 font-mono mt-0.5">NIS: {{ $ang->user->nis_nip ?? $ang->nis_nip ?? '-' }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="hidden sm:flex items-center gap-2 flex-shrink-0">
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                            {{ $ang->kelas?->nama_kelas ?? '-' }}
+                                        </span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+                                            Anggota
+                                        </span>
+                                    </div>
                                 </div>
-                                <span class="text-[11px] text-gray-500">{{ $ang->kelas?->nama_kelas ?? '-' }}</span>
+                                <div class="sm:hidden flex items-center gap-1.5 mt-2 pl-[34px]">
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                        {{ $ang->kelas?->nama_kelas ?? '-' }}
+                                    </span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+                                        Anggota
+                                    </span>
+                                </div>
                             </div>
                             @endforeach
                         </div>
                     </div>
 
                     @if($dispensasi->gurus && $dispensasi->gurus->count() > 0)
-                    <div class="space-y-1.5 pt-3 border-t border-purple-200/60 mt-3">
-                        <p class="text-[11px] font-bold uppercase text-purple-800">Guru Pembina Ekstrakurikuler / Organisasi ({{ $dispensasi->gurus->count() }} Guru):</p>
-                        <div class="bg-white rounded-lg border border-purple-100 divide-y divide-purple-50 max-h-36 overflow-y-auto">
+                    <div class="space-y-1.5 pt-3 border-t border-indigo-100 mt-3">
+                        <p class="text-[11px] font-bold uppercase text-indigo-900">Guru Pembina Ekstrakurikuler / Organisasi ({{ $dispensasi->gurus->count() }} Guru):</p>
+                        <div class="bg-white rounded-xl border border-indigo-100 divide-y divide-gray-100 overflow-hidden shadow-xs">
                             @foreach($dispensasi->gurus as $guruIdx => $guruPembina)
-                            <div class="p-2 flex items-center justify-between text-xs">
-                                <div>
-                                    <span class="font-bold text-gray-900">{{ $guruIdx + 1 }}. {{ $guruPembina->nama_lengkap }}</span>
-                                    <span class="text-[10px] text-gray-400 font-mono ml-1">({{ $guruPembina->nip ?? '-' }})</span>
+                            <div class="p-2.5 sm:px-3.5 text-xs hover:bg-gray-50 transition-colors">
+                                <div class="flex items-start sm:items-center justify-between gap-2.5 sm:gap-3">
+                                    <div class="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                                        <div class="w-7 h-7 rounded-lg bg-purple-100/80 text-purple-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 sm:mt-0">
+                                            <i class="fas fa-user-tie"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <span class="font-bold text-gray-900 break-words leading-snug block">{{ $guruIdx + 1 }}. {{ $guruPembina->nama_lengkap }}</span>
+                                            <p class="text-[10px] text-gray-500 font-mono mt-0.5 whitespace-nowrap">NIP: {{ $guruPembina->nip ?? '-' }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="hidden sm:block flex-shrink-0">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] text-purple-700 font-medium bg-purple-50 border border-purple-200 rounded-lg">
+                                            <i class="fas fa-book-open text-[9px]"></i> {{ $guruPembina->mata_pelajaran ?? '-' }}
+                                        </span>
+                                    </div>
                                 </div>
-                                <span class="text-[11px] text-purple-700 font-medium bg-purple-50 px-2 py-0.5 rounded">{{ $guruPembina->mata_pelajaran ?? '-' }}</span>
+                                <div class="sm:hidden mt-2 pl-[38px]">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] text-purple-700 font-medium bg-purple-50 border border-purple-200 rounded-md">
+                                        <i class="fas fa-book-open text-[8px]"></i> {{ $guruPembina->mata_pelajaran ?? '-' }}
+                                    </span>
+                                </div>
                             </div>
                             @endforeach
                         </div>
@@ -399,6 +470,38 @@
                         No. Telepon: <span class="font-mono font-semibold">{{ $dispensasi->siswa->no_telepon }}</span>
                     </p>
                     @endif
+                </div>
+            </div>
+            @endif
+
+            {{-- Peringatan Kadaluarsa Menunggu untuk Guru Piket --}}
+            @if($dispensasi->status === 'menunggu')
+            <div class="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl flex items-start gap-3.5 shadow-xs mb-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 border border-amber-200 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-base animate-pulse"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <h4 class="text-sm font-bold text-amber-900">Perhatian: Pengajuan Ini Akan Segera Kadaluarsa</h4>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300 self-start sm:self-auto">
+                            <i class="fas fa-hourglass-half text-[9px]"></i> Batas: {{ $dispensasi->getJamSelesaiKbmText() }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-amber-800 mt-1 leading-relaxed">
+                        Permohonan ini masih <strong>menunggu keputusan Guru Piket</strong> dan akan <strong>otomatis kadaluarsa</strong> saat jam pelajaran sekolah hari ini berakhir (pukul {{ $dispensasi->getJamSelesaiKbmText() }}). Segera selesaikan dengan menekan tombol <strong>Setujui & Generate QR</strong> atau <strong>Tolak</strong> di bawah ini.
+                    </p>
+                </div>
+            </div>
+            @elseif($dispensasi->status === 'kadaluarsa')
+            <div class="p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3.5 shadow-xs mb-3">
+                <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-calendar-xmark text-lg"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-bold text-orange-900">Dispensasi Kadaluarsa</h4>
+                    <p class="text-xs text-orange-800 mt-1 leading-relaxed">
+                        {{ $dispensasi->catatan_admin ?? 'Permohonan dispensasi ini telah kadaluarsa karena melewati batas waktu operasional KBM.' }}
+                    </p>
                 </div>
             </div>
             @endif

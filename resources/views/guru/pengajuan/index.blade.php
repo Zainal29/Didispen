@@ -67,6 +67,11 @@
                             <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
                             {{ $badge['text'] }}
                         </span>
+                        @if($item->isMenungguHariIni())
+                            <span class="block text-[10px] text-amber-600 font-medium mt-1">
+                                <i class="fas fa-hourglass-half mr-0.5"></i>Kadaluarsa {{ $item->getJamSelesaiKbmText() }}
+                            </span>
+                        @endif
                     </td>
                     <td class="px-6 py-4 text-right">
                         <a href="{{ route('guru.pengajuan.show', $item) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors">
@@ -101,10 +106,17 @@
                 @php
                     $badge = $item->status_badge;
                 @endphp
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border flex-shrink-0 {{ $badge['class'] }}">
-                    <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
-                    {{ $badge['text'] }}
-                </span>
+                <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border {{ $badge['class'] }}">
+                        <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                        {{ $badge['text'] }}
+                    </span>
+                    @if($item->isMenungguHariIni())
+                        <span class="text-[9px] text-amber-600 font-medium">
+                            <i class="fas fa-hourglass-half mr-0.5"></i>Batas {{ $item->getJamSelesaiKbmText() }}
+                        </span>
+                    @endif
+                </div>
             </div>
 
             <div class="space-y-1.5 mb-3 text-xs">
