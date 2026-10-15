@@ -81,6 +81,14 @@
             <script>
                 function initPengajuanForm() {
                     return {
+                        isDispensasiClosed: false,
+                        init() {
+                            const banner = document.getElementById('timeWarningBanner');
+                            if (banner && !banner.classList.contains('hidden')) {
+                                this.isDispensasiClosed = true;
+                                this.showGuruDropdown = false;
+                            }
+                        },
                         loading: false,
                         tipePengajuan: '{{ old('tipe_pengajuan', 'individu') }}',
                         sampaiPulang: {{ old('sampai_pulang') ? 'true' : 'false' }},
@@ -142,6 +150,7 @@
                         selectedAnggota: @json($oldAnggotaList ?? []),
 
                         loadSiswaByKelas() {
+                            if (this.isDispensasiClosed) return;
                             if (!this.selectedKelasId && this.searchQuery.trim().length < 2) {
                                 this.kelasSiswaList = [];
                                 return;
@@ -162,6 +171,7 @@
                             return this.selectedAnggota.some(a => a.id === id);
                         },
                         toggleAnggota(siswa) {
+                            if (this.isDispensasiClosed) return;
                             const idx = this.selectedAnggota.findIndex(a => a.id === siswa.id);
                             if (idx >= 0) {
                                 this.selectedAnggota.splice(idx, 1);
@@ -170,6 +180,7 @@
                             }
                         },
                         selectAllInKelas() {
+                            if (this.isDispensasiClosed) return;
                             this.kelasSiswaList.forEach(s => {
                                 if (!this.isAnggotaSelected(s.id)) {
                                     this.selectedAnggota.push(s);
@@ -177,10 +188,12 @@
                             });
                         },
                         unselectAllInKelas() {
+                            if (this.isDispensasiClosed) return;
                             const idsInList = this.kelasSiswaList.map(s => s.id);
                             this.selectedAnggota = this.selectedAnggota.filter(a => !idsInList.includes(a.id));
                         },
                         removeAnggota(id) {
+                            if (this.isDispensasiClosed) return;
                             this.selectedAnggota = this.selectedAnggota.filter(a => a.id !== id);
                         },
 
@@ -192,6 +205,7 @@
                         organisasiPembinaMap: @json($organisasiPembinaMap ?? []),
 
                         onOrganisasiChange(namaOrg) {
+                            if (this.isDispensasiClosed) return;
                             if (this.organisasiPembinaMap && this.organisasiPembinaMap[namaOrg]) {
                                 const defaultPem = this.organisasiPembinaMap[namaOrg];
                                 if (!this.selectedGurus.some(g => String(g.id) === String(defaultPem.id))) {
@@ -213,6 +227,7 @@
                             return this.selectedGurus.some(g => String(g.id) === String(id));
                         },
                         toggleGuru(guru) {
+                            if (this.isDispensasiClosed) return;
                             const idx = this.selectedGurus.findIndex(g => String(g.id) === String(guru.id));
                             if (idx >= 0) {
                                 this.selectedGurus.splice(idx, 1);
@@ -221,11 +236,13 @@
                             }
                         },
                         removeGuru(id) {
+                            if (this.isDispensasiClosed) return;
                             this.selectedGurus = this.selectedGurus.filter(g => String(g.id) !== String(id));
                         },
 
                         isKetua: {{ ($isKetuaOrganisasi || $isSuperAdmin) ? 'true' : 'false' }},
                         switchTipe(tipe) {
+                            if (this.isDispensasiClosed) return;
                             if (tipe === 'organisasi' && !this.isKetua) {
                                 if (typeof alertBukanKetua === 'function') {
                                     alertBukanKetua();
@@ -265,11 +282,16 @@
                 </select>
 
                 {{-- Pemilih Tipe Pengajuan: Individu vs Organisasi --}}
-                <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 shadow-xs">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 shadow-xs"
+                     :class="isDispensasiClosed ? 'opacity-60 cursor-not-allowed' : ''">
                     <div class="grid grid-cols-2 gap-1.5">
                         <button type="button"
                             @click="switchTipe('individu')"
-                            :class="tipePengajuan === 'individu' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80'"
+                            :disabled="isDispensasiClosed"
+                            :class="[
+                                tipePengajuan === 'individu' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80',
+                                isDispensasiClosed ? 'cursor-not-allowed pointer-events-none' : ''
+                            ]"
                             class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150">
                             <i class="ti ti-user text-sm sm:text-base" :class="tipePengajuan === 'individu' ? 'text-white' : 'text-slate-500'"></i>
                             <span>Dispensasi Pribadi</span>
@@ -278,7 +300,11 @@
                         @if($isKetuaOrganisasi || $isSuperAdmin)
                             <button type="button"
                                 @click="switchTipe('organisasi')"
-                                :class="tipePengajuan === 'organisasi' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80'"
+                                :disabled="isDispensasiClosed"
+                                :class="[
+                                    tipePengajuan === 'organisasi' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80',
+                                    isDispensasiClosed ? 'cursor-not-allowed pointer-events-none' : ''
+                                ]"
                                 class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150">
                                 <i class="ti ti-users text-sm sm:text-base" :class="tipePengajuan === 'organisasi' ? 'text-white' : 'text-slate-500'"></i>
                                 <span>Dispensasi Rombongan</span>
@@ -292,6 +318,7 @@
                         @else
                             <button type="button"
                                 @click="alertBukanKetua()"
+                                :disabled="isDispensasiClosed"
                                 class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-colors duration-150 bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-not-allowed border border-dashed border-slate-300"
                                 title="Hanya untuk Ketua Organisasi / Ekstra resmi">
                                 <i class="ti ti-lock text-sm text-slate-400"></i>
@@ -430,7 +457,8 @@
                         </div>
 
                         {{-- Tambah Anggota Rombongan (Filter Kelas + Multi Checklist + Search) --}}
-                        <div class="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 space-y-3.5">
+                        <div class="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 space-y-3.5"
+                             :class="isDispensasiClosed ? 'opacity-65' : ''">
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-800">
@@ -449,7 +477,9 @@
                                 <div>
                                     <select x-model="selectedKelasId"
                                         @change="loadSiswaByKelas()"
-                                        class="w-full min-h-[44px] px-3 rounded-xl border border-slate-300 bg-white text-base sm:text-sm font-medium text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
+                                        :disabled="isDispensasiClosed"
+                                        :class="isDispensasiClosed ? 'opacity-60 cursor-not-allowed bg-slate-100' : 'bg-white'"
+                                        class="w-full min-h-[44px] px-3 rounded-xl border border-slate-300 text-base sm:text-sm font-medium text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
                                         <option value="">-- Filter Siswa per Kelas --</option>
                                         @foreach($daftarKelas as $kelas)
                                             <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }} ({{ $kelas->jurusan?->singkatan ?? $kelas->jurusan?->nama_jurusan }})</option>
@@ -460,10 +490,12 @@
                                     <input type="text"
                                         x-model="searchQuery"
                                         @input.debounce.300ms="loadSiswaByKelas()"
+                                        :disabled="isDispensasiClosed"
+                                        :class="isDispensasiClosed ? 'opacity-60 cursor-not-allowed bg-slate-100' : 'bg-white'"
                                         placeholder="Cari Nama / NIS..."
-                                        class="w-full min-h-[44px] pl-9 pr-8 rounded-xl border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
+                                        class="w-full min-h-[44px] pl-9 pr-8 rounded-xl border border-slate-300 text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
                                     <i class="ti ti-search absolute left-3 top-3.5 text-slate-400 text-base"></i>
-                                    <button type="button" x-show="searchQuery.length > 0" @click="searchQuery = ''; loadSiswaByKelas();" class="absolute right-3 top-3 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-600">
+                                    <button type="button" x-show="searchQuery.length > 0 && !isDispensasiClosed" :disabled="isDispensasiClosed" @click="searchQuery = ''; loadSiswaByKelas();" class="absolute right-3 top-3 w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed">
                                         <i class="ti ti-x text-sm"></i>
                                     </button>
                                 </div>
@@ -477,10 +509,10 @@
                                         <span class="truncate" x-text="loadingKelasSiswa ? 'Memuat siswa...' : `Ditemukan ${kelasSiswaList.length} siswa`"></span>
                                     </div>
                                     <div class="flex items-center gap-1.5 shrink-0" x-show="kelasSiswaList.length > 0">
-                                        <button type="button" @click="selectAllInKelas()" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold hover:bg-blue-700 transition-colors shadow-2xs min-h-[32px]">
+                                        <button type="button" :disabled="isDispensasiClosed" @click="selectAllInKelas()" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold hover:bg-blue-700 transition-colors shadow-2xs min-h-[32px] disabled:opacity-40 disabled:cursor-not-allowed">
                                             Pilih Semua
                                         </button>
-                                        <button type="button" @click="unselectAllInKelas()" class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-300 transition-colors min-h-[32px]">
+                                        <button type="button" :disabled="isDispensasiClosed" @click="unselectAllInKelas()" class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-300 transition-colors min-h-[32px] disabled:opacity-40 disabled:cursor-not-allowed">
                                             Batal
                                         </button>
                                     </div>
@@ -493,13 +525,17 @@
 
                                 <div x-show="!loadingKelasSiswa && kelasSiswaList.length > 0" class="max-h-60 overflow-y-auto space-y-1.5 pr-1">
                                     <template x-for="siswa in kelasSiswaList" :key="siswa.id">
-                                        <label class="p-2.5 rounded-xl flex items-center justify-between gap-2.5 cursor-pointer border transition-all"
-                                            :class="isAnggotaSelected(siswa.id) ? 'bg-blue-50/70 border-blue-300' : 'bg-white border-slate-200/80 hover:border-slate-300'">
+                                        <label class="p-2.5 rounded-xl flex items-center justify-between gap-2.5 border transition-all"
+                                            :class="[
+                                                isAnggotaSelected(siswa.id) ? 'bg-blue-50/70 border-blue-300' : 'bg-white border-slate-200/80 hover:border-slate-300',
+                                                isDispensasiClosed ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
+                                            ]">
                                             <div class="flex items-center gap-2.5 min-w-0 flex-1">
                                                 <input type="checkbox"
                                                     :checked="isAnggotaSelected(siswa.id)"
+                                                    :disabled="isDispensasiClosed"
                                                     @change="toggleAnggota(siswa)"
-                                                    class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 shrink-0 cursor-pointer">
+                                                    class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 shrink-0 cursor-pointer disabled:cursor-not-allowed">
                                                 <div class="min-w-0 flex-1">
                                                     <p class="text-xs font-bold text-slate-900 truncate" x-text="siswa.nama"></p>
                                                     <p class="text-[10px] text-slate-500 truncate" x-text="`${siswa.nis ? siswa.nis + ' • ' : ''}${siswa.kelas}`"></p>
@@ -551,8 +587,9 @@
                                                 </div>
                                             </div>
                                             <button type="button"
+                                                :disabled="isDispensasiClosed"
                                                 @click="removeAnggota(anggota.id)"
-                                                class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center shrink-0 transition-colors"
+                                                class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center shrink-0 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
                                                 title="Hapus anggota">
                                                 <i class="ti ti-x text-sm"></i>
                                             </button>
@@ -564,7 +601,8 @@
                         </div>
 
                         {{-- Pemilihan Guru Pembina Ekstrakurikuler / Organisasi --}}
-                        <div class="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 space-y-3">
+                        <div class="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 space-y-3"
+                             :class="isDispensasiClosed ? 'opacity-65' : ''">
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
                                 <div class="min-w-0 flex-1">
                                     <label class="block text-xs font-bold text-slate-800 leading-snug">
@@ -584,38 +622,46 @@
                                 <div class="relative flex items-center">
                                     <input type="text"
                                         x-model="searchGuruQuery"
-                                        @focus="showGuruDropdown = true"
-                                        @click="showGuruDropdown = true"
+                                        :disabled="isDispensasiClosed"
+                                        @focus="if (!isDispensasiClosed) showGuruDropdown = true"
+                                        @click="if (!isDispensasiClosed) showGuruDropdown = true"
                                         placeholder="Cari guru pembina (Nama / NIP / Mata Pelajaran)..."
-                                        class="w-full min-h-[44px] pl-9 pr-20 rounded-xl border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
+                                        :class="isDispensasiClosed ? 'opacity-60 cursor-not-allowed bg-slate-100' : 'bg-white'"
+                                        class="w-full min-h-[44px] pl-9 pr-20 rounded-xl border border-slate-300 text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
                                     <i class="ti ti-search absolute left-3 text-slate-400 text-base pointer-events-none"></i>
 
                                     <div class="absolute right-2 flex items-center gap-1">
                                         {{-- Tombol Clear Query --}}
                                         <button type="button"
-                                            x-show="searchGuruQuery.length > 0"
+                                            x-show="searchGuruQuery.length > 0 && !isDispensasiClosed"
+                                            :disabled="isDispensasiClosed"
                                             @click.stop="searchGuruQuery = ''; showGuruDropdown = true"
-                                            class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                                            class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                             title="Hapus pencarian">
                                             <i class="ti ti-x text-sm"></i>
                                         </button>
 
                                         {{-- Tombol Toggle Buka/Tutup List --}}
                                         <button type="button"
-                                            @click.stop="showGuruDropdown = !showGuruDropdown"
-                                            class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                                            :title="showGuruDropdown ? 'Tutup daftar guru' : 'Buka daftar guru'">
+                                            :disabled="isDispensasiClosed"
+                                            @click.stop="if (!isDispensasiClosed) showGuruDropdown = !showGuruDropdown"
+                                            class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+                                            :class="isDispensasiClosed ? 'opacity-40 cursor-not-allowed pointer-events-none text-slate-400' : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50'"
+                                            :title="isDispensasiClosed ? 'Pengajuan dispensasi sedang ditutup' : (showGuruDropdown ? 'Tutup daftar guru' : 'Buka daftar guru')">
                                             <i class="ti text-sm transition-transform duration-200"
-                                               :class="showGuruDropdown ? 'ti-chevron-up text-blue-600' : 'ti-chevron-down'"></i>
+                                               :class="showGuruDropdown && !isDispensasiClosed ? 'ti-chevron-up text-blue-600' : 'ti-chevron-down'"></i>
                                         </button>
                                     </div>
                                 </div>
 
                                 {{-- Panel Pilihan Guru Pembina (In-Flow, No Clipping, No Blinking) --}}
-                                <div x-show="showGuruDropdown"
-                                    x-transition:enter="transition ease-out duration-150"
-                                    x-transition:enter-start="opacity-0 -translate-y-1"
-                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                <div x-show="showGuruDropdown && !isDispensasiClosed"
+                                    x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-200"
+                                    x-transition:enter-start="opacity-0 -translate-y-2 scale-[0.99]"
+                                    x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                    x-transition:leave-end="opacity-0 -translate-y-2 scale-[0.99]"
                                     x-cloak
                                     class="rounded-xl border border-blue-200 bg-slate-50/70 p-3 space-y-2.5">
 
@@ -625,8 +671,9 @@
                                             <span x-text="`Ditemukan ${filteredGurus().length} guru`"></span>
                                         </div>
                                         <button type="button"
+                                            :disabled="isDispensasiClosed"
                                             @click="showGuruDropdown = false"
-                                            class="text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white border border-blue-200 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors">
+                                            class="text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white border border-blue-200 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                                             <i class="ti ti-check mr-1"></i>Selesai Memilih
                                         </button>
                                     </div>
@@ -634,13 +681,17 @@
                                     {{-- Daftar Guru Hasil Pencarian / Semua Guru --}}
                                     <div class="max-h-60 overflow-y-auto space-y-1.5 pr-1" @mousedown.prevent>
                                         <template x-for="guru in filteredGurus()" :key="guru.id">
-                                            <div class="p-2.5 rounded-xl border flex items-center justify-between gap-2.5 cursor-pointer transition-all active:scale-[0.99]"
-                                                :class="isGuruSelected(guru.id) ? 'bg-blue-50 border-blue-300 shadow-2xs' : 'bg-white border-slate-200/80 hover:border-slate-300'"
-                                                @click="toggleGuru(guru)">
+                                            <div class="p-2.5 rounded-xl border flex items-center justify-between gap-2.5 transition-all"
+                                                :class="[
+                                                    isGuruSelected(guru.id) ? 'bg-blue-50 border-blue-300 shadow-2xs' : 'bg-white border-slate-200/80 hover:border-slate-300',
+                                                    isDispensasiClosed ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer active:scale-[0.99]'
+                                                ]"
+                                                @click="if (!isDispensasiClosed) toggleGuru(guru)">
                                                 <div class="flex items-center gap-2.5 min-w-0 flex-1">
                                                     <input type="checkbox"
                                                         :checked="isGuruSelected(guru.id)"
-                                                        class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-0 pointer-events-none shrink-0">
+                                                        :disabled="isDispensasiClosed"
+                                                        class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-0 pointer-events-none shrink-0 disabled:cursor-not-allowed">
                                                     <div class="min-w-0 flex-1">
                                                         <p class="text-xs font-bold text-slate-900 truncate" x-text="guru.nama"></p>
                                                         <p class="text-[10px] text-slate-500 truncate" x-text="`${guru.nip && guru.nip !== '-' ? guru.nip + ' • ' : ''}${guru.mata_pelajaran || 'Guru'}`"></p>
@@ -679,8 +730,9 @@
                                             </div>
                                         </div>
                                         <button type="button"
-                                            @click="removeGuru(guru.id)"
-                                            class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center shrink-0 transition-colors"
+                                            :disabled="isDispensasiClosed"
+                                            @click="if (!isDispensasiClosed) removeGuru(guru.id)"
+                                            class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center shrink-0 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
                                             title="Hapus guru pembina">
                                             <i class="ti ti-x text-sm"></i>
                                         </button>
@@ -2441,11 +2493,28 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        function updateAlpineDispensasiState(closed) {
+            const alpineEl = document.getElementById('formDispensasi');
+            if (alpineEl && window.Alpine) {
+                try {
+                    const data = Alpine.$data(alpineEl);
+                    if (data) {
+                        data.isDispensasiClosed = closed;
+                        if (closed) {
+                            data.showGuruDropdown = false;
+                        }
+                    }
+                } catch (e) {}
+            }
+        }
+
         if (isAllowed) {
             if (banner) banner.classList.add('hidden');
+            updateAlpineDispensasiState(false);
             if (formDispensasi) {
-                formDispensasi.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(function (el) {
+                formDispensasi.querySelectorAll('input, select, textarea, button').forEach(function (el) {
                     if (el.id === 'foto_verifikasi_input') return;
+                    if (el.id === 'btnLihatJadwalPageHeader') return;
                     el.disabled = false;
                     el.classList.remove('opacity-50', 'cursor-not-allowed');
                 });
@@ -2463,8 +2532,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (banner) banner.classList.remove('hidden');
         if (message) message.innerHTML = restrictionMsg;
 
+        updateAlpineDispensasiState(true);
+
         if (formDispensasi) {
-            formDispensasi.querySelectorAll('input, select, textarea, button[type="submit"]').forEach(function (el) {
+            formDispensasi.querySelectorAll('input, select, textarea, button').forEach(function (el) {
+                if (el.id === 'foto_verifikasi_input') return;
+                if (el.id === 'btnLihatJadwalPageHeader') return;
                 el.disabled = true;
                 el.classList.add('opacity-50', 'cursor-not-allowed');
             });

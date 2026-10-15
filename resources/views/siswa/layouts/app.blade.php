@@ -47,13 +47,65 @@
             -moz-osx-font-smoothing: grayscale;
             letter-spacing: -0.011em;
         }
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom slim & smooth scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Smooth page entrance animation */
+        @keyframes pageFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .page-enter {
+            animation: pageFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* FAB Active subtle breathing animation */
+        @keyframes softPulse {
+            0%, 100% {
+                box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+            }
+            50% {
+                box-shadow: 0 4px 22px rgba(37, 99, 235, 0.65);
+            }
+        }
+        .fab-active-glow {
+            animation: softPulse 2.8s ease-in-out infinite;
+        }
+
+        /* Smooth transitions for interactive controls */
+        button, a, input, select, textarea {
+            transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
         /* Sembunyikan bottom bar saat keyboard virtual HP terbuka agar tidak ikut terangkat ke atas input */
         body.keyboard-open .mobile-bottom-nav,
         body.keyboard-open #siswaBottomNav {
             opacity: 0 !important;
             pointer-events: none !important;
             transform: translateY(120%) !important;
-            transition: transform 0.2s ease, opacity 0.2s ease !important;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
         }
     </style>
 </head>
@@ -227,7 +279,7 @@
             </header>
 
             {{-- KONTEN (pb-32 sm:pb-36 lg:pb-6 agar tidak tertutup bottom nav di HP) --}}
-            <main class="flex-1 p-4 sm:p-6 pb-32 sm:pb-36 lg:pb-6">
+            <main class="flex-1 p-4 sm:p-6 pb-32 sm:pb-36 lg:pb-6 page-enter">
                 @include('components.alert')
                 @yield('content')
             </main>
@@ -248,14 +300,14 @@
             
             {{-- 1. Beranda --}}
             <a href="{{ route('siswa.dashboard') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors {{ request()->routeIs('siswa.dashboard') ? $mobOn : $mobOff }}">
+               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('siswa.dashboard') ? $mobOn : $mobOff }}">
                 <i class="ti ti-smart-home text-xl"></i>
                 <span class="text-[10px] font-semibold leading-tight tracking-tight">Beranda</span>
             </a>
 
             {{-- 2. Riwayat --}}
             <a href="{{ route('siswa.pengajuan.index') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors {{ $isRiwayatActive ? $mobOn : $mobOff }}">
+               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ $isRiwayatActive ? $mobOn : $mobOff }}">
                 <i class="ti ti-history text-xl"></i>
                 <span class="text-[10px] font-semibold leading-tight tracking-tight">Riwayat</span>
             </a>
@@ -264,7 +316,7 @@
             <div class="relative flex flex-col items-center justify-end h-full pb-1.5">
                 <a href="{{ route('siswa.pengajuan.create') }}"
                    aria-label="Buat Pengajuan Dispensasi"
-                   class="absolute -top-5 w-12 h-12 rounded-full text-white text-xl flex items-center justify-center border-4 border-slate-50 transition-all duration-200 active:scale-95 {{ $isCreateActive ? 'bg-blue-600 shadow-lg shadow-blue-500/35 ring-4 ring-blue-500/25 scale-105' : 'bg-blue-600 shadow-md hover:bg-blue-700' }}">
+                   class="absolute -top-5 w-12 h-12 rounded-full text-white text-xl flex items-center justify-center border-4 border-slate-50 transition-all duration-200 active:scale-95 {{ $isCreateActive ? 'bg-blue-600 shadow-lg shadow-blue-500/35 ring-4 ring-blue-500/25 scale-105 fab-active-glow' : 'bg-blue-600 shadow-md hover:bg-blue-700' }}">
                     <i class="ti ti-plus"></i>
                 </a>
                 <span class="text-[10px] leading-tight tracking-tight mt-auto {{ $isCreateActive ? 'font-bold text-blue-600' : 'font-semibold text-slate-700' }}">Buat</span>
@@ -272,7 +324,7 @@
 
             {{-- 4. Notifikasi (+badge) --}}
             <a href="{{ route('siswa.notifikasi.index') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors {{ request()->routeIs('siswa.notifikasi.*') ? $mobOn : $mobOff }}">
+               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('siswa.notifikasi.*') ? $mobOn : $mobOff }}">
                 <div class="relative">
                     <i class="ti ti-bell text-xl"></i>
                     @if($notif > 0)
@@ -287,7 +339,7 @@
             {{-- 5. Akun --}}
             <button type="button"
                     onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
-                    class="flex flex-col items-center justify-center gap-1 transition-colors {{ request()->routeIs('profil.*') ? $mobOn : $mobOff }}">
+                    class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('profil.*') ? $mobOn : $mobOff }}">
                 <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center">
                     <span class="text-[10px] font-bold text-slate-700">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                 </div>
