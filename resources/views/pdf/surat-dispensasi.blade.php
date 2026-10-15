@@ -204,7 +204,13 @@
             <tr>
                 <td class="label">Tanggal Pelaksanaan</td>
                 <td class="colon">:</td>
-                <td><strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('l, d F Y') }}</strong></td>
+                <td>
+                    @if($dispensasi->tanggal_selesai && $dispensasi->durasi_hari > 1)
+                        <strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin)->translatedFormat('d F Y') }} - {{ \Carbon\Carbon::parse($dispensasi->tanggal_selesai)->translatedFormat('d F Y') }} ({{ $dispensasi->durasi_hari }} hari)</strong>
+                    @else
+                        <strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('l, d F Y') }} (1 hari)</strong>
+                    @endif
+                </td>
             </tr>
             <tr>
                 <td class="label">Keperluan / Alasan</td>
@@ -226,6 +232,22 @@
                 </td>
             </tr>
         </table>
+
+        <div class="catatan-box" style="margin-top: 4px; margin-bottom: 12px; font-style: normal;">
+            <strong>Catatan Pelaksanaan:</strong> Dilaksanakan pada tanggal 
+            @if($dispensasi->tanggal_selesai && $dispensasi->durasi_hari > 1)
+                @php
+                    $startCarbon = \Carbon\Carbon::parse($dispensasi->tanggal_izin);
+                    $endCarbon = \Carbon\Carbon::parse($dispensasi->tanggal_selesai);
+                    $formatRentang = $startCarbon->isSameMonth($endCarbon)
+                        ? ($startCarbon->format('d') . ' - ' . $endCarbon->translatedFormat('d F Y'))
+                        : ($startCarbon->translatedFormat('d F') . ' - ' . $endCarbon->translatedFormat('d F Y'));
+                @endphp
+                <strong>{{ $formatRentang }} ({{ $dispensasi->durasi_hari }} hari)</strong>
+            @else
+                <strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('l, d F Y') }} (1 hari)</strong>
+            @endif
+        </div>
 
         <p style="font-weight: bold; margin: 10px 0 4px 0; font-size: 10.5pt;">Daftar Siswa Peserta Dispensasi:</p>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 10pt;" border="1" cellpadding="4">

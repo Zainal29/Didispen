@@ -22,15 +22,15 @@
     {{-- HEADER BERSIH & FORMAL (TANPA GRADIENT) --}}
     <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="flex items-start gap-3.5">
-            <div class="w-11 h-11 rounded-xl bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center flex-shrink-0 text-lg">
+            <div class="w-11 h-11 rounded-xl bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center flex-shrink-0 text-xl">
                 @if($role === 'siswa')
-                    <i class="fas fa-user-graduate text-blue-600"></i>
+                    <i class="ti ti-school text-blue-600"></i>
                 @elseif($role === 'guru')
-                    <i class="fas fa-user-shield text-indigo-600"></i>
+                    <i class="ti ti-shield text-indigo-600"></i>
                 @elseif($role === 'satpam')
-                    <i class="fas fa-shield-alt text-red-600"></i>
+                    <i class="ti ti-shield-check text-red-600"></i>
                 @else
-                    <i class="fas fa-user-cog text-slate-800"></i>
+                    <i class="ti ti-settings text-slate-800"></i>
                 @endif
             </div>
             <div>
@@ -54,11 +54,11 @@
             @if($video)
             <button type="button" onclick="openVideoModal('{{ $video->youtube_url }}', '{{ $video->title }}')"
                class="inline-flex items-center justify-center px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors active:scale-95 shadow-xs">
-                <i class="fab fa-youtube mr-1.5 text-sm"></i> Video Tutorial
+                <i class="ti ti-brand-youtube mr-1.5 text-base"></i> Video Tutorial
             </button>
             @endif
             <a href="#tanya-jawab" class="inline-flex items-center justify-center px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition-colors">
-                <i class="fas fa-question-circle mr-1.5 text-gray-500"></i> FAQ
+                <i class="ti ti-help mr-1.5 text-gray-500 text-base"></i> FAQ
             </a>
         </div>
     </div>
@@ -69,8 +69,8 @@
     @if($role === 'siswa')
         {{-- Ringkasan Alur --}}
         <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
-                <i class="fas fa-route"></i>
+            <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 text-base mt-0.5">
+                <i class="ti ti-route"></i>
             </div>
             <div class="text-xs text-blue-900 leading-relaxed">
                 <span class="font-bold">Alur Pengajuan Siswa:</span>
@@ -97,7 +97,7 @@
                     </ul>
                 </div>
                 <a href="{{ route('siswa.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors shadow-xs">
-                    Buat Pengajuan <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                    Buat Pengajuan <i class="ti ti-arrow-right ml-1.5 text-xs"></i>
                 </a>
             </div>
 
@@ -117,7 +117,7 @@
                     </ul>
                 </div>
                 <a href="{{ route('siswa.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
-                    Lihat Riwayat & QR <i class="fas fa-qrcode ml-1.5 text-[10px]"></i>
+                    Lihat Riwayat & QR <i class="ti ti-qrcode ml-1.5 text-xs"></i>
                 </a>
             </div>
 
@@ -136,7 +136,7 @@
                     </ul>
                 </div>
                 <div class="p-2.5 bg-gray-50 rounded-xl text-[11px] text-gray-600 font-medium border border-gray-200 text-center">
-                    <i class="fas fa-shield-alt text-amber-600 mr-1"></i>QR Code hanya berlaku untuk 1x sesi izin
+                    <i class="ti ti-shield-check text-amber-600 mr-1"></i>QR Code hanya berlaku untuk 1x sesi izin
                 </div>
             </div>
         </div>
@@ -148,8 +148,8 @@
     @if($role === 'guru')
         {{-- Ringkasan Alur --}}
         <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
-                <i class="fas fa-user-shield"></i>
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0 text-base mt-0.5">
+                <i class="ti ti-shield"></i>
             </div>
             <div class="text-xs text-indigo-900 leading-relaxed">
                 <span class="font-bold">Alur Kerja Guru Piket:</span>
@@ -163,7 +163,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-file-signature"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-file-pencil text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">1. Verifikasi Izin</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -173,7 +173,7 @@
                     </ol>
                 </div>
                 <a href="{{ route('guru.pengajuan.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors shadow-xs">
-                    Menu Verifikasi <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                    Menu Verifikasi <i class="ti ti-arrow-right ml-1.5 text-xs"></i>
                 </a>
             </div>
 
@@ -181,7 +181,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-print"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-printer text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">2. Cetak Struk 58mm</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -191,7 +191,7 @@
                     </ol>
                 </div>
                 <div class="p-2.5 bg-gray-50 rounded-xl text-[11px] text-gray-600 font-medium text-center border border-gray-200">
-                    <i class="fab fa-bluetooth-b mr-1 text-blue-600"></i>Mendukung Mini Printer Kasir 58mm
+                    <i class="ti ti-bluetooth mr-1 text-blue-600 text-sm"></i>Mendukung Mini Printer Kasir 58mm
                 </div>
             </div>
 
@@ -199,7 +199,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-plus-circle"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-circle-plus text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">3. Dispensasi Mandiri</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -209,7 +209,7 @@
                     </ol>
                 </div>
                 <a href="{{ route('guru.pengajuan.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
-                    Buat Mandiri <i class="fas fa-plus ml-1.5 text-[10px]"></i>
+                    Buat Mandiri <i class="ti ti-plus ml-1.5 text-xs"></i>
                 </a>
             </div>
 
@@ -217,7 +217,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-exchange-alt"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-arrows-left-right text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">4. Checklog & Tukar Jadwal</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -239,8 +239,8 @@
     @if($role === 'satpam')
         {{-- Ringkasan Alur --}}
         <div class="bg-red-50/70 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg bg-red-100 text-red-700 flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
-                <i class="fas fa-shield-alt"></i>
+            <div class="w-8 h-8 rounded-lg bg-red-100 text-red-700 flex items-center justify-center flex-shrink-0 text-base mt-0.5">
+                <i class="ti ti-shield-check"></i>
             </div>
             <div class="text-xs text-red-900 leading-relaxed">
                 <span class="font-bold">Alur Pemeriksaan Pos Gerbang:</span>
@@ -254,7 +254,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-qrcode"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-qrcode text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">1. Scan Keluar & Foto Gerbang</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -266,7 +266,7 @@
                     </ol>
                 </div>
                 <a href="{{ route('satpam.scan') }}" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors shadow-xs">
-                    Buka Scanner QR <i class="fas fa-camera ml-1.5 text-[10px]"></i>
+                    Buka Scanner QR <i class="ti ti-camera ml-1.5 text-xs"></i>
                 </a>
             </div>
 
@@ -274,7 +274,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-history"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-history text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">2. Scan Kembali & Cek Overdue</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -284,7 +284,7 @@
                     </ol>
                 </div>
                 <a href="{{ route('satpam.dashboard') }}#tab-keluar" class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
-                    Pantau Siswa Sedang Keluar <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+                    Pantau Siswa Sedang Keluar <i class="ti ti-arrow-right ml-1.5 text-xs"></i>
                 </a>
             </div>
 
@@ -292,7 +292,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-search"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-search text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">3. Verifikasi Manual & Kontak</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -301,7 +301,7 @@
                     </ol>
                 </div>
                 <div class="p-2.5 bg-gray-50 rounded-xl text-[11px] text-gray-600 font-medium border border-gray-200 text-center">
-                    <i class="fas fa-user-shield text-gray-500 mr-1"></i>Koordinasi Meja Piket & Pos Gerbang
+                    <i class="ti ti-shield text-gray-500 mr-1 text-sm"></i>Koordinasi Meja Piket & Pos Gerbang
                 </div>
             </div>
         </div>
@@ -313,8 +313,8 @@
     @if($role === 'admin')
         {{-- Ringkasan Alur --}}
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg bg-slate-800 text-white flex items-center justify-center flex-shrink-0 text-sm mt-0.5">
-                <i class="fas fa-user-cog"></i>
+            <div class="w-8 h-8 rounded-lg bg-slate-800 text-white flex items-center justify-center flex-shrink-0 text-base mt-0.5">
+                <i class="ti ti-settings"></i>
             </div>
             <div class="text-xs text-slate-800 leading-relaxed">
                 <span class="font-bold">Ruang Lingkup Administrator:</span>
@@ -328,7 +328,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-database"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-database text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">1. Master Data & Sesi</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -346,7 +346,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-cloud-arrow-down"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-download text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">2. SiPintu Gateway</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -355,7 +355,7 @@
                     </ol>
                 </div>
                 <a href="{{ route('admin.settings.index') }}" class="w-full inline-flex items-center justify-center px-3 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
-                    Pengaturan SiPintu <i class="fas fa-cog ml-1.5 text-[10px]"></i>
+                    Pengaturan SiPintu <i class="ti ti-settings ml-1.5 text-xs"></i>
                 </a>
             </div>
 
@@ -363,7 +363,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fab fa-whatsapp"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-brand-whatsapp text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">3. WhatsApp Template</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -372,7 +372,7 @@
                     </ol>
                 </div>
                 <a href="{{ route('admin.whatsapp-templates.index') }}" class="w-full inline-flex items-center justify-center px-3 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors">
-                    Template WhatsApp <i class="fab fa-whatsapp ml-1.5 text-xs"></i>
+                    Template WhatsApp <i class="ti ti-brand-whatsapp ml-1.5 text-xs"></i>
                 </a>
             </div>
 
@@ -380,7 +380,7 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-xs p-5 flex flex-col justify-between space-y-4 hover:border-gray-300 transition-colors">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2.5 border-b border-gray-100 pb-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="fas fa-shield-halved"></i></div>
+                        <div class="w-7 h-7 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs"><i class="ti ti-shield-check text-sm"></i></div>
                         <h3 class="font-bold text-gray-900 text-sm">4. Audit Log & Rekap</h3>
                     </div>
                     <ol class="space-y-1.5 text-xs text-gray-600 list-decimal list-inside leading-relaxed">
@@ -402,7 +402,7 @@
     <div id="tanya-jawab" class="bg-white rounded-2xl border border-gray-200 shadow-xs p-5 sm:p-6 space-y-3">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
             <h3 class="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
-                <i class="fas fa-question-circle text-gray-500"></i>Pertanyaan Umum (FAQ)
+                <i class="ti ti-help text-gray-500 text-lg"></i> Pertanyaan Umum (FAQ)
             </h3>
             <span class="text-[11px] text-gray-400 font-medium">Bantuan Cepat</span>
         </div>
@@ -412,7 +412,7 @@
             <div class="border border-gray-200 rounded-xl overflow-hidden">
                 <button type="button" @click="openFaq = openFaq === 1 ? null : 1" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
                     <span>Apakah Kode QR dispensasi bisa digunakan berulang kali?</span>
-                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 1 ? 'rotate-180 text-gray-700' : ''"></i>
+                    <i class="ti ti-chevron-down text-gray-400 text-sm transition-transform flex-shrink-0" :class="openFaq === 1 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
                 <div x-show="openFaq === 1" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
                     Tidak bisa. Kode QR didesain dengan prinsip <strong>Single-Use Lifecycle</strong>. Scan pertama di pos Satpam mencatat status <em>Keluar</em>. Scan kedua saat siswa tiba kembali mencatat status <em>Selesai</em>. Setelah berstatus selesai, kode QR tidak dapat digunakan lagi.
@@ -423,7 +423,7 @@
             <div class="border border-gray-200 rounded-xl overflow-hidden">
                 <button type="button" @click="openFaq = openFaq === 2 ? null : 2" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
                     <span>Bagaimana jika HP siswa mati / baterai habis saat di pos gerbang Satpam?</span>
-                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 2 ? 'rotate-180 text-gray-700' : ''"></i>
+                    <i class="ti ti-chevron-down text-gray-400 text-sm transition-transform flex-shrink-0" :class="openFaq === 2 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
                 <div x-show="openFaq === 2" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
                     Siswa cukup menyebutkan <strong>Nomor Surat Dispensasi, NIS, atau Nama Lengkap</strong> kepada petugas Satpam. Satpam memiliki fitur <strong>"Verifikasi Manual"</strong> di menu scan untuk mencari berkas izin dan mengonfirmasi keluar/kembali secara langsung. Selain itu, siswa juga bisa membawa struk thermal 58mm yang dicetak oleh Guru Piket.
@@ -434,7 +434,7 @@
             <div class="border border-gray-200 rounded-xl overflow-hidden">
                 <button type="button" @click="openFaq = openFaq === 3 ? null : 3" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
                     <span>Mengapa Satpam mengambil foto siswa di pos gerbang saat keluar?</span>
-                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 3 ? 'rotate-180 text-gray-700' : ''"></i>
+                    <i class="ti ti-chevron-down text-gray-400 text-sm transition-transform flex-shrink-0" :class="openFaq === 3 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
                 <div x-show="openFaq === 3" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
                     Pengambilan foto fisik di pos gerbang berfungsi sebagai validasi keamanan otentik (<em>anti-fraud</em>). Foto ini membuktikan bahwa siswa yang keluar benar-benar pemilik izin dengan atribut seragam lengkap, sekaligus mencegah peminjaman tiket QR oleh orang lain.
@@ -445,7 +445,7 @@
             <div class="border border-gray-200 rounded-xl overflow-hidden">
                 <button type="button" @click="openFaq = openFaq === 4 ? null : 4" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
                     <span>Bagaimana sistem mendeteksi siswa yang terlambat kembali (Overdue)?</span>
-                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 4 ? 'rotate-180 text-gray-700' : ''"></i>
+                    <i class="ti ti-chevron-down text-gray-400 text-sm transition-transform flex-shrink-0" :class="openFaq === 4 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
                 <div x-show="openFaq === 4" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
                     Sistem secara otomatis menghitung selisih waktu antara batas waktu kembali dengan jam aktual scan di gerbang. Jika melewati batas waktu, layar scanner Satpam menampilkan warna merah dengan rincian total menit keterlambatan, menandai dispensasi sebagai *terlambat*, dan mengirimkan notifikasi peringatan via WhatsApp.
@@ -456,7 +456,7 @@
             <div class="border border-gray-200 rounded-xl overflow-hidden">
                 <button type="button" @click="openFaq = openFaq === 5 ? null : 5" class="w-full p-3.5 text-left font-semibold text-gray-800 flex justify-between items-center bg-gray-50/70 hover:bg-gray-100 transition-colors">
                     <span>Bagaimana cara mencetak bukti izin ke Printer Bluetooth Thermal 58mm?</span>
-                    <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform flex-shrink-0" :class="openFaq === 5 ? 'rotate-180 text-gray-700' : ''"></i>
+                    <i class="ti ti-chevron-down text-gray-400 text-sm transition-transform flex-shrink-0" :class="openFaq === 5 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
                 <div x-show="openFaq === 5" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
                     Guru Piket cukup membuka permohonan yang telah disetujui, menyalakan Bluetooth di laptop/HP, lalu mengklik tombol <strong>"Cetak Bluetooth"</strong>. Browser Chrome/Edge akan memindai printer thermal kasir (ESC/POS 58mm) dan mencetak struk fisik lengkap dengan barcode/QR dalam hitungan detik tanpa perlu instalasi driver tambahan.
@@ -481,7 +481,7 @@
             <div class="bg-gray-50 px-4 py-3 flex items-center justify-between border-b border-gray-200">
                 <h3 class="text-base font-bold text-gray-900" id="videoModalTitle">Video Tutorial</h3>
                 <button type="button" onclick="closeVideoModal()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors" aria-label="Tutup Modal">
-                    <i class="fas fa-times text-lg"></i>
+                    <i class="ti ti-x text-lg"></i>
                 </button>
             </div>
 
