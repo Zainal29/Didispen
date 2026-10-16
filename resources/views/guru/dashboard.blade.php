@@ -38,10 +38,16 @@
             Panel Guru Piket DIDISPEN. Verifikasi permohonan dispensasi dan pantau aktivitas izin siswa hari ini secara real-time.
         </p>
         <div class="mt-3.5 flex flex-wrap items-center gap-2">
-            <a href="{{ route('guru.pengajuan.create') }}"
-               class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-xs active:scale-95 transition-all">
-                <i class="ti ti-plus mr-1.5"></i>Buat Dispensasi
-            </a>
+            @if($isSedangBertugasAktif)
+                <a href="{{ route('guru.pengajuan.create') }}"
+                   class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-xs active:scale-95 transition-all">
+                    <i class="ti ti-plus mr-1.5"></i>Buat Dispensasi
+                </a>
+            @else
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 text-white/90 text-xs font-semibold border border-white/15 cursor-default">
+                    <i class="ti ti-eye text-blue-200"></i>Mode Pemantau
+                </span>
+            @endif
             @if(!empty($incomingSwapCount) && $incomingSwapCount > 0)
                 <a href="{{ route('guru.piket.swap.incoming') }}"
                    class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-all">
@@ -51,6 +57,60 @@
         </div>
     </div>
 </div>
+
+{{-- STATUS BANNER: Sedang Bertugas Aktif vs Mode Pemantau --}}
+@if($isSedangBertugasAktif)
+    <div class="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-4.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-xs shrink-0">
+                <i class="ti ti-shield-check"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                        Sedang Bertugas Aktif
+                    </span>
+                    @if(!empty($infoPiket['jadwal']))
+                        <span class="text-xs font-bold text-slate-800">
+                            {{ $infoPiket['jadwal']->nama_sesi ? $infoPiket['jadwal']->nama_sesi.' ' : '' }}({{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} - {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB)
+                        </span>
+                    @endif
+                </div>
+                <p class="text-xs text-slate-600 mt-0.5">
+                    Anda memiliki wewenang penuh untuk menyetujui, menolak pengajuan dispensasi, dan menerbitkan dispensasi manual.
+                </p>
+            </div>
+        </div>
+    </div>
+@else
+    <div class="mb-4 bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-4.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center text-lg shrink-0">
+                <i class="ti ti-eye"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700 border border-slate-300">
+                        <i class="ti ti-eye text-xs"></i> Mode Pemantau (Read-Only)
+                    </span>
+                    @if(!empty($infoPiket['jadwal']) && $infoPiket['status_sesi'] === 'Akan Datang')
+                        <span class="text-xs font-medium text-slate-600">
+                            Sesi berikutnya: {{ $infoPiket['jadwal']->nama_sesi ? $infoPiket['jadwal']->nama_sesi.' ' : '' }}({{ substr($infoPiket['jadwal']->jam_mulai, 0, 5) }} - {{ substr($infoPiket['jadwal']->jam_selesai, 0, 5) }} WIB)
+                        </span>
+                    @else
+                        <span class="text-xs font-medium text-slate-500">
+                            Tidak ada sesi piket aktif untuk Anda saat ini
+                        </span>
+                    @endif
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Anda dapat memantau seluruh aktivitas dispensasi siswa secara real-time. Hak persetujuan dan pembuatan dispensasi dipegang oleh guru piket yang sedang bertugas.
+                </p>
+            </div>
+        </div>
+    </div>
+@endif
 
 {{-- SECTION GURU PIKET HARI INI --}}
 <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
@@ -153,15 +213,23 @@
                             ->filter()
                             ->take(2)
                             ->map(fn($part) => strtoupper(substr($part, 0, 1)))
-                            ->join('');
+                            ->implode('');
+                        $isMe = (auth()->user()?->guru?->id && auth()->user()->guru->id === $p['guru']->id);
                     @endphp
-                    <div class="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-all flex flex-col justify-between gap-2.5 shadow-2xs">
+                    <div class="p-3.5 rounded-xl border {{ $isMe ? 'border-blue-400 bg-blue-50/20 ring-1 ring-blue-300/30' : 'border-slate-200 bg-white' }} hover:border-slate-300 transition-all flex flex-col justify-between gap-2.5 shadow-2xs">
                         <div class="flex items-center gap-2.5 min-w-0">
-                            <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            <div class="w-9 h-9 rounded-xl {{ $isMe ? 'bg-blue-600 text-white' : 'bg-blue-50 border border-blue-100 text-blue-700' }} flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs">
                                 {{ $initials ?: 'GP' }}
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="font-bold text-sm text-slate-900 break-words">{{ $p['guru']->nama_lengkap }}</p>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <p class="font-bold text-sm text-slate-900 break-words">{{ $p['guru']->nama_lengkap }}</p>
+                                    @if($isMe)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200 shrink-0">
+                                            Anda
+                                        </span>
+                                    @endif
+                                </div>
                                 @if(!empty($p['is_pengganti']) && !empty($p['guru_resmi']))
                                     <p class="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
                                         <i class="ti ti-arrows-exchange text-xs"></i>
@@ -401,22 +469,28 @@ $cards = [
                         </a>
 
                             @if($item->status === 'menunggu')
-                                <form method="POST" action="{{ route('guru.pengajuan.approve', $item) }}" id="form-approve-{{ $item->id }}" class="inline">
-                                    @csrf
+                                @if($isSedangBertugasAktif)
+                                    <form method="POST" action="{{ route('guru.pengajuan.approve', $item) }}" id="form-approve-{{ $item->id }}" class="inline">
+                                        @csrf
+                                        <button type="button"
+                                                onclick="showApproveModal({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}', '{{ $item->nomor_surat }}')"
+                                                class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                                                title="Setujui">
+                                            <i class="ti ti-check mr-1.5 text-sm"></i>Setuju
+                                        </button>
+                                    </form>
                                     <button type="button"
-                                            onclick="showApproveModal({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}', '{{ $item->nomor_surat }}')"
-                                            class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                                            title="Setujui">
-                                        <i class="ti ti-check mr-1.5 text-sm"></i>Setuju
+                                            onclick="rejectDispensasi({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}')"
+                                            class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                                            title="Tolak">
+                                        <i class="ti ti-x mr-1.5 text-sm"></i>Tolak
                                     </button>
-                                </form>
-                            <button type="button"
-                                    onclick="rejectDispensasi({{ $item->id }}, '{{ addslashes($item->siswa->nama_lengkap) }}')"
-                                    class="inline-flex items-center justify-center px-3.5 py-2.5 min-h-[44px] bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                                    title="Tolak">
-                                <i class="ti ti-x mr-1.5 text-sm"></i>Tolak
-                            </button>
-                       @endif
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 cursor-not-allowed" title="Hanya guru piket aktif yang dapat menyetujui/menolak pengajuan ini">
+                                        <i class="ti ti-lock mr-1 text-xs"></i>Khusus Guru Piket
+                                    </span>
+                                @endif
+                           @endif
                     </div>
                 </div>
             </div>

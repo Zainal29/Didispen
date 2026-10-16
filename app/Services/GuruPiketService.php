@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Dispensasi;
 use App\Models\Guru;
 use App\Models\GuruChecklog;
 use App\Models\JadwalPiket;
@@ -329,6 +330,129 @@ class GuruPiketService
             'conflict' => false,
             'conflict_message' => null,
             'petugas' => $petugasDenganStatus,
+        ];
+    }
+
+    /**
+     * 7. Cek Apakah Guru Tertentu Sedang Bertugas Piket Aktif Saat Ini
+     * True jika:
+     * - Guru berstatus aktif
+     * - Terdapat sesi jadwal piket yang sedang berlangsung saat ini (bukan 'Akan Datang')
+     * - Guru terdaftar sebagai petugas aktual (resmi tanpa replacement, atau sebagai guru pengganti aktif)
+     * - Tidak terjadi conflict replacement
+     */
+    public function isGuruBertugasSaatIni(Guru $guru, CarbonInterface|string|null $datetime = null): bool
+    {
+        if (! $guru->status_aktif) {
+            return false;
+        }
+
+        $dt = $this->toCarbon($datetime);
+        $jadwalAktif = $this->getJadwalAktif($dt);
+
+        if (! $jadwalAktif) {
+            return false;
+        }
+
+        $petugasData = $this->getPetugasAktual($jadwalAktif, $dt);
+        if ($petugasData['conflict']) {
+            return false;
+        }
+
+        foreach ($petugasData['petugas'] as $p) {
+            if (isset($p['guru']) && $p['guru']->id === $guru->id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 8. Validasi Otorisasi Persetujuan / Penolakan Dispensasi oleh Guru
+     * Guru berhak memproses pengajuan dispensasi jika:
+     * - Profil guru aktif
+     * - Berstatus sedang bertugas pada sesi piket aktif saat ini (isGuruBertugasSaatIni)
+     * - Pengajuan dispensasi berstatus 'menunggu'
+     * Catatan: Pengajuan berstatus menunggu dari sesi sebelumnya yang belum sempat diproses (rollover)
+     * diizinkan untuk disetujui oleh guru piket yang sedang bertugas di sesi aktif saat ini agar siswa tidak terhambat.
+     *
+     * @return array{allowed: bool, reason: ?string}
+     */
+    public function canGuruApproveDispensasi(Guru $guru, Dispensasi $dispensasi, CarbonInterface|string|null $datetime = null): array
+    {
+        if (! $guru->status_aktif) {
+            return [
+                'allowed' => false,
+                'reason' => 'Status akun guru tidak aktif.',
+            ];
+        }
+
+        $dt = $this->toCarbon($datetime);
+        $jadwalAktif = $this->getJadwalAktif($dt);
+
+        if (! $jadwalAktif) {
+            return [
+                'allowed' => false,
+                'reason' => 'Tidak ada sesi jadwal piket yang sedang aktif saat ini. Anda berada dalam mode pemantau.',
+            ];
+        }
+
+        if (! $this->isGuruBertugasSaatIni($guru, $dt)) {
+            return [
+                'allowed' => false,
+                'reason' => 'Anda tidak memiliki wewenang untuk memproses pengajuan ini karena tidak sedang bertugas piket pada sesi aktif saat ini.',
+            ];
+        }
+
+        if ($dispensasi->status !== 'menunggu') {
+            return [
+                'allowed' => false,
+                'reason' => 'Pengajuan ini sudah diproses sebelumnya.',
+            ];
+        }
+
+        return [
+            'allowed' => true,
+            'reason' => null,
+        ];
+    }
+
+    /**
+     * 9. Validasi Otorisasi Pembuatan Dispensasi Manual oleh Guru
+     * Hanya guru yang sedang bertugas piket pada sesi aktif yang berhak membuat dispensasi manual.
+     *
+     * @return array{allowed: bool, reason: ?string}
+     */
+    public function canGuruCreateManualDispensasi(Guru $guru, CarbonInterface|string|null $datetime = null): array
+    {
+        if (! $guru->status_aktif) {
+            return [
+                'allowed' => false,
+                'reason' => 'Status akun guru tidak aktif.',
+            ];
+        }
+
+        $dt = $this->toCarbon($datetime);
+        $jadwalAktif = $this->getJadwalAktif($dt);
+
+        if (! $jadwalAktif) {
+            return [
+                'allowed' => false,
+                'reason' => 'Tidak ada sesi jadwal piket yang sedang aktif saat ini untuk membuat dispensasi manual.',
+            ];
+        }
+
+        if (! $this->isGuruBertugasSaatIni($guru, $dt)) {
+            return [
+                'allowed' => false,
+                'reason' => 'Pembuatan dispensasi manual hanya dapat dilakukan oleh guru piket yang sedang bertugas.',
+            ];
+        }
+
+        return [
+            'allowed' => true,
+            'reason' => null,
         ];
     }
 }
