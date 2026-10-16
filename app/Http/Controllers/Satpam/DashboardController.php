@@ -234,23 +234,26 @@ class DashboardController extends Controller
     //     return view('satpam.dispensasi-detail', compact('dispensasi'));
     // }
     public function showDetail(Dispensasi $dispensasi, WhatsappMessageService $waService)
-       {
-           $dispensasi->load([
-               'siswa.kelas.jurusan',
-               'siswa.user',
-               'guru',
-               'organisasi',
-               'anggotaSiswa.kelas.jurusan',
-               'anggotaSiswa.user',
-               'gurus',
-           ]);
+    {
+        \App\Services\DispensasiService::autoExpireOverdueDispensasi();
+        $dispensasi->refresh();
 
-           // ✅ HANYA 1 BARIS untuk generate link WA
-           $context = $waService->resolveContext($dispensasi);
-           $waLink = $waService->generateWaLink($dispensasi, $context);
+        $dispensasi->load([
+            'siswa.kelas.jurusan',
+            'siswa.user',
+            'guru',
+            'organisasi',
+            'anggotaSiswa.kelas.jurusan',
+            'anggotaSiswa.user',
+            'gurus',
+        ]);
 
-           return view('satpam.dispensasi-detail', compact('dispensasi', 'waLink'));
-       }
+        // ✅ HANYA 1 BARIS untuk generate link WA
+        $context = $waService->resolveContext($dispensasi);
+        $waLink = $waService->generateWaLink($dispensasi, $context);
+
+        return view('satpam.dispensasi-detail', compact('dispensasi', 'waLink'));
+    }
 
     public function markWaContacted(Dispensasi $dispensasi)
     {

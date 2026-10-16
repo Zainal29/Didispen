@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Services\GuruPiketService;
 
 class PengajuanController extends Controller
 {
@@ -26,9 +27,11 @@ class PengajuanController extends Controller
 
     public function __construct(
         private NotifikasiService $notifikasiService,
-        ?AuditLogService $auditLogService = null
+        ?AuditLogService $auditLogService = null,
+        private ?GuruPiketService $guruPiketService = null
     ) {
         $this->auditLogService = $auditLogService ?? app(AuditLogService::class);
+        $this->guruPiketService = $guruPiketService ?? app(GuruPiketService::class);
     }
 
     /**
@@ -46,8 +49,10 @@ class PengajuanController extends Controller
         }
 
         $pengajuan = $query->paginate(15);
+        $currentGuru = auth()->user()?->guru;
+        $isSedangBertugasAktif = $currentGuru ? $this->guruPiketService->isGuruBertugasSaatIni($currentGuru) : false;
 
-        return view('guru.pengajuan.index', compact('pengajuan'));
+        return view('guru.pengajuan.index', compact('pengajuan', 'isSedangBertugasAktif'));
     }
 
     /**
@@ -59,6 +64,10 @@ class PengajuanController extends Controller
         if (! $guru) {
             abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
         }
+
+        $authCheck = $this->guruPiketService->canGuruCreateManualDispensasi($guru);
+        $isSedangBertugasAktif = $authCheck['allowed'];
+        $kunciReason = $isSedangBertugasAktif ? null : ($authCheck['reason'] ?? 'Pembuatan dispensasi manual hanya dapat dilakukan oleh guru piket yang sedang bertugas.');
 
         $settings = [
             'start_time' => Setting::get('dispensasi_start_time', '07:00'),
@@ -74,7 +83,10 @@ class PengajuanController extends Controller
         $istirahatHariIni = TimeHelper::getIstirahatHari($dayOfWeek);
         $semuaSlotHariIni = TimeHelper::getSemuaSlotHari($dayOfWeek);
 
-        return view('guru.pengajuan.create', compact('settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni', 'istirahatHariIni', 'semuaSlotHariIni'));
+        return view('guru.pengajuan.create', compact(
+            'settings', 'maxJam', 'jadwalPelajaran', 'jadwalHariIni', 'istirahatHariIni', 'semuaSlotHariIni',
+            'isSedangBertugasAktif', 'kunciReason'
+        ));
     }
 
     /**
@@ -136,6 +148,12 @@ class PengajuanController extends Controller
 
         if (! $guru) {
             abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
+
+        $authCheck = $this->guruPiketService->canGuruCreateManualDispensasi($guru);
+        if (! $authCheck['allowed']) {
+            return redirect()->route('guru.dashboard')
+                ->with('error', $authCheck['reason'] ?? 'Pembuatan dispensasi manual hanya dapat dilakukan oleh guru piket yang sedang bertugas.');
         }
 
         /*
@@ -494,8 +512,10 @@ class PengajuanController extends Controller
         $dispensasi->refresh();
 
         $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru', 'anggotaSiswa.kelas.jurusan', 'anggotaSiswa.user']);
+        $currentGuru = auth()->user()?->guru;
+        $isSedangBertugasAktif = $currentGuru ? $this->guruPiketService->isGuruBertugasSaatIni($currentGuru) : false;
 
-        return view('guru.pengajuan.show', compact('dispensasi'));
+        return view('guru.pengajuan.show', compact('dispensasi', 'isSedangBertugasAktif'));
     }
 
     /**
@@ -506,6 +526,11 @@ class PengajuanController extends Controller
         $guru = auth()->user()->guru;
         if (! $guru) {
             abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
+
+        $authCheck = $this->guruPiketService->canGuruApproveDispensasi($guru, $dispensasi);
+        if (! $authCheck['allowed']) {
+            return back()->with('error', $authCheck['reason'] ?? 'Anda tidak memiliki wewenang untuk menyetujui pengajuan ini.');
         }
 
         $processed = DB::transaction(function () use ($dispensasi, $guru, $request) {
@@ -579,6 +604,11 @@ class PengajuanController extends Controller
         $guru = auth()->user()->guru;
         if (! $guru) {
             abort(403, 'Profil Guru tidak ditemukan. Silakan hubungi Administrator.');
+        }
+
+        $authCheck = $this->guruPiketService->canGuruApproveDispensasi($guru, $dispensasi);
+        if (! $authCheck['allowed']) {
+            return back()->with('error', $authCheck['reason'] ?? 'Anda tidak memiliki wewenang untuk menolak pengajuan ini.');
         }
 
         $validated = $request->validate([
