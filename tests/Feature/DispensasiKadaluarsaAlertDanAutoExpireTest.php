@@ -252,4 +252,98 @@ class DispensasiKadaluarsaAlertDanAutoExpireTest extends TestCase
         $dispensasi->refresh();
         $this->assertEquals('kadaluarsa', $dispensasi->status);
     }
+
+    /**
+     * 5. Dispensasi yang disetujui tapi jam kembali terlewati sebelum siswa scan keluar,
+     * otomatis menjadi KADALUARSA di tengah hari (meski jam KBM belum selesai).
+     */
+    public function test_dispensasi_disetujui_tanpa_scan_otomatis_kadaluarsa_saat_jam_kembali_terlewati_meski_kbm_belum_selesai(): void
+    {
+        // Pagi hari jam 09:00 WIB
+        Carbon::setTestNow(Carbon::parse('2026-10-14 09:00:00', 'Asia/Jakarta'));
+
+        $dispensasi = Dispensasi::create([
+            'siswa_id'            => $this->siswa->id,
+            'guru_id'             => $this->guru->id,
+            'nomor_surat'         => Dispensasi::generateNomorSurat(),
+            'kategori'            => 'izin',
+            'alasan'              => 'Keperluan fotokopi buku',
+            'tujuan'              => 'Fotokopi depan',
+            'tanggal_izin'        => '2026-10-14',
+            'jam_keluar'          => '09:00',
+            'jam_kembali'         => '09:03',
+            'batas_waktu_kembali' => Carbon::parse('2026-10-14 09:03:00', 'Asia/Jakarta'),
+            'status'              => 'disetujui',
+            'qr_token'            => 'token_test_realtime_disetujui',
+        ]);
+
+        // Pada 09:02 WIB: belum lewat batas kembali -> tetap disetujui
+        Carbon::setTestNow(Carbon::parse('2026-10-14 09:02:00', 'Asia/Jakarta'));
+        DispensasiService::autoExpireOverdueDispensasi();
+        $dispensasi->refresh();
+        $this->assertEquals('disetujui', $dispensasi->status);
+
+        // Majukan ke 09:05 WIB (KBM Rabu masih aktif sampai 15:10 WIB)
+        Carbon::setTestNow(Carbon::parse('2026-10-14 09:05:00', 'Asia/Jakarta'));
+        $affected = DispensasiService::autoExpireOverdueDispensasi();
+        $this->assertGreaterThanOrEqual(1, $affected);
+
+        $dispensasi->refresh();
+        $this->assertEquals('kadaluarsa', $dispensasi->status);
+        $this->assertStringContainsString('scan keluar', $dispensasi->catatan_admin);
+        $this->assertStringContainsString('09:03 WIB', $dispensasi->catatan_admin);
+        $this->assertEquals('Kadaluarsa (Tidak Scan Keluar)', $dispensasi->status_badge['text']);
+    }
+
+    /**
+     * 6. Jika batas kembali terlewati sebelum siswa scan keluar:
+     * - Halaman detail satpam menampilkan banner kadaluarsa dan menghapus tombol scan
+     * - Request verify satpam ditolak dengan 422
+     */
+    public function test_satpam_menolak_scan_keluar_ketika_jam_kembali_terlewati_dan_halaman_detail_menampilkan_banner_kadaluarsa(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-14 09:00:00', 'Asia/Jakarta'));
+
+        $dispensasi = Dispensasi::create([
+            'siswa_id'            => $this->siswa->id,
+            'guru_id'             => $this->guru->id,
+            'nomor_surat'         => Dispensasi::generateNomorSurat(),
+            'kategori'            => 'izin',
+            'alasan'              => 'Beli alat tulis',
+            'tujuan'              => 'Toko Buku',
+            'tanggal_izin'        => '2026-10-14',
+            'jam_keluar'          => '09:00',
+            'jam_kembali'         => '09:03',
+            'batas_waktu_kembali' => Carbon::parse('2026-10-14 09:03:00', 'Asia/Jakarta'),
+            'status'              => 'disetujui',
+            'qr_token'            => 'token_satpam_midday_test',
+        ]);
+
+        // Sekarang pukul 09:07 WIB
+        Carbon::setTestNow(Carbon::parse('2026-10-14 09:07:00', 'Asia/Jakarta'));
+
+        // Akses halaman detail satpam
+        $responseDetail = $this->actingAs($this->satpamUser)
+            ->get(route('satpam.dispensasi.detail', $dispensasi));
+
+        $responseDetail->assertOk();
+        $responseDetail->assertSee('Dispensasi Kadaluarsa');
+        $responseDetail->assertSee('Arahkan siswa kembali ke kelas / Guru Piket');
+        $responseDetail->assertDontSee('Scan QR Code untuk Keluar');
+
+        // Satpam scan QR di pos gerbang
+        $responseVerify = $this->actingAs($this->satpamUser)
+            ->postJson('/satpam/scan/verify', [
+                'qr_data' => json_encode(['token' => $dispensasi->qr_token]),
+            ]);
+
+        $responseVerify->assertStatus(422);
+        $responseVerify->assertJson([
+            'success' => false,
+        ]);
+        $this->assertStringContainsString('KADALUARSA', $responseVerify->json('message'));
+
+        $dispensasi->refresh();
+        $this->assertEquals('kadaluarsa', $dispensasi->status);
+    }
 }

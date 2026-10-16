@@ -79,6 +79,21 @@ class DispensasiAutoAndRejectTest extends TestCase
             'nis_nip'      => '555001',
             'status_aktif' => true,
         ]);
+
+        for ($hari = 1; $hari <= 7; $hari++) {
+            $jp = \App\Models\JadwalPiket::create([
+                'hari' => $hari,
+                'nama_sesi' => "Sesi Hari {$hari}",
+                'jam_mulai' => '00:00:00',
+                'jam_selesai' => '23:59:59',
+                'tanggal_mulai_berlaku' => '2026-01-01',
+                'is_active' => true,
+            ]);
+            \App\Models\JadwalPiketGuru::create([
+                'jadwal_piket_id' => $jp->id,
+                'guru_id' => $this->guru->id,
+            ]);
+        }
     }
 
     protected function tearDown(): void

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Dispensasi;
 use App\Models\Guru;
 use App\Models\GuruChecklog;
+use App\Models\JadwalPiket;
+use App\Models\JadwalPiketGuru;
 use App\Models\Jurusan;
 use App\Models\Kelas;
 use App\Models\Notifikasi;
@@ -27,6 +29,7 @@ class GuruModuleTest extends TestCase
     private Siswa $siswa;
     private Kelas $kelas;
     private Jurusan $jurusan;
+    private JadwalPiket $jadwal;
 
     protected function setUp(): void
     {
@@ -81,6 +84,21 @@ class GuruModuleTest extends TestCase
             'jurusan_id'   => $this->jurusan->id,
             'no_telepon'   => '081234567890',
             'status_aktif' => true,
+        ]);
+
+        // Setup Jadwal Piket Aktif pada hari Rabu (ISO 3) untuk Guru Penguji
+        $this->jadwal = JadwalPiket::create([
+            'hari' => 3,
+            'nama_sesi' => 'Sesi Pagi',
+            'jam_mulai' => '07:00:00',
+            'jam_selesai' => '15:00:00',
+            'tanggal_mulai_berlaku' => '2026-01-01',
+            'is_active' => true,
+        ]);
+
+        JadwalPiketGuru::create([
+            'jadwal_piket_id' => $this->jadwal->id,
+            'guru_id' => $this->guru->id,
         ]);
     }
 
@@ -768,7 +786,7 @@ class GuruModuleTest extends TestCase
             'status'      => 'menunggu',
         ]);
 
-        // Guru kedua dapat melihat daftar (shared queue)
+        // Guru kedua dapat melihat daftar (shared queue / mode pemantau)
         $responseIndex = $this->actingAs($guruUser2)
             ->get(route('guru.pengajuan.index'));
         $responseIndex->assertOk();
@@ -779,7 +797,17 @@ class GuruModuleTest extends TestCase
             ->get(route('guru.pengajuan.show', $dispensasi));
         $responseShow->assertOk();
 
-        // Guru kedua dapat menyetujui pengajuan tersebut
+        // Guru kedua yang belum bertugas piket ditolak saat mencoba menyetujui
+        $responseApproveDenied = $this->actingAs($guruUser2)
+            ->post(route('guru.pengajuan.approve', $dispensasi));
+        $responseApproveDenied->assertSessionHas('error');
+
+        // Ketika guru kedua ditugaskan ke jadwal piket aktif sesi ini, persetujuan diizinkan
+        JadwalPiketGuru::create([
+            'jadwal_piket_id' => $this->jadwal->id,
+            'guru_id' => $guru2->id,
+        ]);
+
         $responseApprove = $this->actingAs($guruUser2)
             ->post(route('guru.pengajuan.approve', $dispensasi));
         $responseApprove->assertRedirect(route('guru.pengajuan.index'));
