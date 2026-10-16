@@ -5,24 +5,24 @@
 @section('title', 'Buat Pengajuan Dispensasi')
 @section('content')
 
-<div class="max-w-3xl mx-auto pb-36 sm:pb-12">
+<div class="max-w-3xl mx-auto pb-36 sm:pb-12 w-full min-w-0">
     {{-- Header halaman --}}
     <div class="mb-5 sm:mb-6">
         <div class="flex items-center justify-between gap-3">
-            <div class="flex items-start gap-3">
+            <div class="flex items-start gap-3 min-w-0">
                 <div class="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shadow-xs">
                     <i class="ti ti-clipboard-check text-xl"></i>
                 </div>
-                <div class="min-w-0">
-                    <h1 class="text-base sm:text-xl font-bold tracking-tight text-slate-900">Form Pengajuan Dispensasi (Guru Piket)</h1>
+                <div class="min-w-0 flex-1">
+                    <h1 class="text-base sm:text-xl font-bold tracking-tight text-slate-900 truncate sm:whitespace-normal">Form Pengajuan Dispensasi (Guru Piket)</h1>
                     <p class="mt-0.5 text-xs sm:text-sm text-slate-500 leading-relaxed">Buat dan setujui permohonan dispensasi pribadi atas nama siswa secara langsung.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div class="p-4 sm:p-6 lg:p-7">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden w-full min-w-0">
+        <div class="p-3.5 sm:p-6 lg:p-7 w-full min-w-0">
             {{-- Error validasi --}}
             @if ($errors->any())
                 <div class="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
@@ -59,20 +59,52 @@
                 </div>
             </div>
 
-            {{-- Informasi penting Guru Piket --}}
-            <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50/70 p-4">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 shrink-0 rounded-xl bg-white border border-blue-200 text-blue-600 flex items-center justify-center shadow-xs">
-                        <i class="ti ti-bolt text-base"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-bold text-blue-900">Persetujuan Instan Guru Piket</p>
-                        <p class="mt-0.5 text-xs text-blue-700 leading-relaxed">
-                            Pengajuan yang dibuat langsung oleh <strong>Guru Piket</strong> akan langsung berstatus <strong>Disetujui</strong> dan QR Code siap dipindai oleh Satpam.
-                        </p>
+            @if (!($isSedangBertugasAktif ?? true))
+                {{-- Mode Pemantau Banner (Form Terkunci) --}}
+                <div class="mb-5 sm:mb-6 rounded-2xl border border-amber-200 bg-amber-50/95 p-3.5 sm:p-5 shadow-xs w-full min-w-0">
+                    <div class="flex items-start gap-3 sm:gap-3.5">
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center border border-amber-200 shadow-xs mt-0.5">
+                            <i class="ti ti-lock text-lg sm:text-xl"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-amber-900 leading-snug">Formulir Terkunci &mdash; Mode Pemantau</h3>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-amber-200 text-amber-900 shrink-0">
+                                    Hanya Baca
+                                </span>
+                            </div>
+                            <p class="mt-1 text-xs sm:text-sm text-amber-800 leading-relaxed break-words">
+                                {{ $kunciReason ?? 'Anda sedang tidak bertugas sebagai Guru Piket aktif pada sesi ini. Formulir ini terkunci dan hanya dapat diisi serta diajukan oleh Guru Piket yang sedang bertugas.' }}
+                            </p>
+                            <div class="mt-3.5 flex flex-col sm:flex-row gap-2">
+                                <a href="{{ route('guru.dashboard') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white transition-colors shadow-xs text-center">
+                                    <i class="ti ti-arrow-left"></i>
+                                    <span>Kembali ke Dashboard</span>
+                                </a>
+                                <a href="{{ route('guru.piket.swap.create') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 transition-colors shadow-xs text-center">
+                                    <i class="ti ti-arrows-left-right"></i>
+                                    <span>Ajukan Tukar Jadwal Piket</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @else
+                {{-- Informasi penting Guru Piket --}}
+                <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50/70 p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 shrink-0 rounded-xl bg-white border border-blue-200 text-blue-600 flex items-center justify-center shadow-xs">
+                            <i class="ti ti-bolt text-base"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-blue-900">Persetujuan Instan Guru Piket</p>
+                            <p class="mt-0.5 text-xs text-blue-700 leading-relaxed">
+                                Pengajuan yang dibuat langsung oleh <strong>Guru Piket</strong> akan langsung berstatus <strong>Disetujui</strong> dan QR Code siap dipindai oleh Satpam.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <form
                 x-data="{
@@ -90,7 +122,7 @@
                 action="{{ route('guru.pengajuan.store') }}"
                 enctype="multipart/form-data"
                 id="formDispensasi"
-                class="space-y-4 sm:space-y-5">
+                class="space-y-4 sm:space-y-5 w-full min-w-0">
                 @csrf
 
                 <input type="hidden" name="tipe_pengajuan" value="individu">
@@ -104,32 +136,34 @@
                     @endforeach
                 </select>
 
+                <fieldset @if(!($isSedangBertugasAktif ?? true)) disabled class="min-w-0 w-full p-0 m-0 border-0 space-y-4 sm:space-y-5 opacity-75 select-none pointer-events-none" @else class="min-w-0 w-full p-0 m-0 border-0 space-y-4 sm:space-y-5" @endif>
+
                 {{-- Section 1: Guru Piket Pembuat --}}
-                <section class="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden">
-                    <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                <section class="rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden w-full min-w-0">
+                    <div class="px-3.5 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-2.5 sm:gap-3 min-w-0">
+                        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                                 <i class="ti ti-user-shield text-base"></i>
                             </div>
-                            <div>
-                                <h2 class="text-sm font-bold text-slate-900">Guru Piket Pembuat</h2>
-                                <p class="text-[11px] text-slate-500">Tercatat sebagai verifikator resmi dispensasi ini.</p>
+                            <div class="min-w-0 flex-1">
+                                <h2 class="text-sm font-bold text-slate-900 truncate">Guru Piket Pembuat</h2>
+                                <p class="text-[11px] text-slate-500 truncate sm:whitespace-normal">Tercatat sebagai verifikator resmi dispensasi ini.</p>
                             </div>
                         </div>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
                         </span>
                     </div>
-                    <div class="p-4 sm:p-5 flex items-center gap-3.5">
-                        <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-xs">
+                    <div class="p-3.5 sm:p-5 flex items-center gap-3 sm:gap-3.5 min-w-0">
+                        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0">
                             {{ strtoupper(substr(auth()->user()->name ?? 'G', 0, 1)) }}
                         </div>
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             <p class="text-sm font-bold text-slate-900 truncate">{{ auth()->user()->name }}</p>
-                            <p class="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                                <span>Guru Piket</span>
-                                <span>•</span>
-                                <span class="font-mono">{{ auth()->user()->email }}</span>
+                            <p class="text-xs text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 min-w-0">
+                                <span class="shrink-0 font-medium">Guru Piket</span>
+                                <span class="shrink-0 text-slate-300">•</span>
+                                <span class="font-mono text-[11px] sm:text-xs text-slate-600 truncate max-w-full" title="{{ auth()->user()->email }}">{{ auth()->user()->email }}</span>
                             </p>
                         </div>
                     </div>
@@ -529,27 +563,47 @@
                         </div>
                     </div>
                 </section>
+                </fieldset>
 
                 {{-- Section 8: Aksi Submit & Batal --}}
-                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 sm:p-4">
-                    <div class="flex flex-col sm:flex-row gap-2.5">
-                        <button type="submit" id="submitBtn" :disabled="loading || isDispensasiClosed"
-                            class="order-1 sm:order-2 flex-1 min-h-[48px] inline-flex justify-center items-center px-5 rounded-xl text-sm font-bold text-white transition-all gap-2"
-                            :class="isDispensasiClosed ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm'">
-                            <i x-show="loading" class="ti ti-loader-2 animate-spin text-lg" aria-hidden="true" style="display: none;"></i>
-                            <i x-show="!loading && !isDispensasiClosed" class="ti ti-send text-lg" aria-hidden="true"></i>
-                            <i x-show="!loading && isDispensasiClosed" class="ti ti-ban text-lg text-slate-500" aria-hidden="true" style="display: none;"></i>
-                            <span x-text="loading ? 'Sedang Menyimpan Pengajuan...' : (isDispensasiClosed ? 'Pengajuan Dispensasi Sedang Ditutup' : 'Kirim Pengajuan (Disetujui)')">Kirim Pengajuan (Disetujui)</span>
-                        </button>
-                        <a href="{{ route('guru.pengajuan.index') }}" :class="{ 'pointer-events-none opacity-50': loading }"
-                            class="order-2 sm:order-1 sm:w-32 min-h-[48px] inline-flex justify-center items-center px-5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 transition-all">
-                            Batal
-                        </a>
-                    </div>
-                    <p class="mt-3 text-center text-[11px] text-slate-400 flex items-center justify-center gap-1">
-                        <i class="ti ti-lock text-xs"></i>
-                        <span>Pengajuan langsung diverifikasi dan surat dispensasi resmi siap dicetak.</span>
-                    </p>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 sm:p-4 w-full min-w-0">
+                    @if (!($isSedangBertugasAktif ?? true))
+                        <div class="flex flex-col sm:flex-row gap-2.5">
+                            <button type="button" disabled
+                                class="order-1 sm:order-2 flex-1 min-h-[48px] inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-200 text-slate-500 cursor-not-allowed shadow-none gap-2 text-center">
+                                <i class="ti ti-lock text-base sm:text-lg shrink-0"></i>
+                                <span class="break-words">Formulir Terkunci (Khusus Guru Piket Aktif)</span>
+                            </button>
+                            <a href="{{ route('guru.dashboard') }}"
+                                class="order-2 sm:order-1 sm:w-44 min-h-[48px] inline-flex justify-center items-center px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 transition-all text-center">
+                                <i class="ti ti-arrow-left mr-1.5 shrink-0"></i>
+                                Ke Dashboard
+                            </a>
+                        </div>
+                        <p class="mt-3 text-center text-[11px] text-amber-700 flex items-center justify-center gap-1">
+                            <i class="ti ti-info-circle text-xs shrink-0"></i>
+                            <span>Halaman ini hanya dapat dilihat (Mode Pemantau). Untuk mengajukan dispensasi, Anda harus bertugas sebagai Guru Piket aktif.</span>
+                        </p>
+                    @else
+                        <div class="flex flex-col sm:flex-row gap-2.5">
+                            <button type="submit" id="submitBtn" :disabled="loading || isDispensasiClosed"
+                                class="order-1 sm:order-2 flex-1 min-h-[48px] inline-flex justify-center items-center px-5 rounded-xl text-sm font-bold text-white transition-all gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+                                :class="isDispensasiClosed ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm'">
+                                <i x-show="loading" class="ti ti-loader-2 animate-spin text-lg" aria-hidden="true" style="display: none;"></i>
+                                <i x-show="!loading && !isDispensasiClosed" class="ti ti-send text-lg" aria-hidden="true"></i>
+                                <i x-show="!loading && isDispensasiClosed" class="ti ti-ban text-lg text-slate-500" aria-hidden="true" style="display: none;"></i>
+                                <span x-text="loading ? 'Sedang Menyimpan Pengajuan...' : (isDispensasiClosed ? 'Pengajuan Dispensasi Sedang Ditutup' : 'Kirim Pengajuan (Disetujui)')">Kirim Pengajuan (Disetujui)</span>
+                            </button>
+                            <a href="{{ route('guru.pengajuan.index') }}" :class="{ 'pointer-events-none opacity-50': loading }"
+                                class="order-2 sm:order-1 sm:w-32 min-h-[48px] inline-flex justify-center items-center px-5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 transition-all">
+                                Batal
+                            </a>
+                        </div>
+                        <p class="mt-3 text-center text-[11px] text-slate-400 flex items-center justify-center gap-1">
+                            <i class="ti ti-lock text-xs"></i>
+                            <span>Pengajuan langsung diverifikasi dan surat dispensasi resmi siap dicetak.</span>
+                        </p>
+                    @endif
                 </div>
             </form>
         </div>
@@ -2028,6 +2082,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const isExemptControl = function (el) {
             if (!el) return true;
+            if (el.tagName === 'BUTTON') return true;
             if (el.id === 'foto_verifikasi_input') return true;
             if (el.id === 'btnLihatJadwalHeader' || el.id === 'btnLihatJadwal') return true;
             return false;
@@ -2037,7 +2092,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (banner) banner.classList.add('hidden');
             updateAlpineDispensasiState(false);
             if (formDispensasi) {
-                formDispensasi.querySelectorAll('input, select, textarea, button').forEach(function (el) {
+                formDispensasi.querySelectorAll('input, select, textarea').forEach(function (el) {
                     if (isExemptControl(el)) return;
                     el.disabled = false;
                     el.classList.remove('opacity-60', 'opacity-50', 'cursor-not-allowed', 'bg-slate-100');
@@ -2045,6 +2100,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         el.classList.add('bg-white');
                     }
                 });
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('bg-white', 'bg-slate-100');
+                }
             }
             if (window.jQuery && $('#siswa_select').length) {
                 $('#siswa_select').prop('disabled', false);
@@ -2062,7 +2121,7 @@ document.addEventListener('DOMContentLoaded', function () {
             [btnStartSelfie, btnSnapSelfie, btnCancelSelfie, btnFlipSelfie, btnRetakeSelfie, btnFallbackNativeCamera].forEach(function (b) {
                 if (b) {
                     b.disabled = false;
-                    b.classList.remove('opacity-60', 'opacity-50', 'cursor-not-allowed');
+                    b.classList.remove('opacity-60', 'opacity-50', 'cursor-not-allowed', 'bg-white', 'bg-slate-100');
                 }
             });
             updateTimeInputLimits();
@@ -2075,12 +2134,16 @@ document.addEventListener('DOMContentLoaded', function () {
         updateAlpineDispensasiState(true);
 
         if (formDispensasi) {
-            formDispensasi.querySelectorAll('input, select, textarea, button').forEach(function (el) {
+            formDispensasi.querySelectorAll('input, select, textarea').forEach(function (el) {
                 if (isExemptControl(el)) return;
                 el.disabled = true;
                 el.classList.add('opacity-60', 'cursor-not-allowed', 'bg-slate-100');
                 el.classList.remove('bg-white');
             });
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.remove('bg-white');
+            }
         }
         if (window.jQuery && $('#siswa_select').length) {
             $('#siswa_select').prop('disabled', true);

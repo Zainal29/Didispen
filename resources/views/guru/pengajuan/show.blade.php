@@ -500,11 +500,11 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                         <h4 class="text-sm font-bold text-amber-900">Perhatian: Pengajuan Ini Akan Segera Kadaluarsa</h4>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300 self-start sm:self-auto">
-                            <i class="ti ti-hourglass-low text-xs"></i> Batas: {{ $dispensasi->getJamSelesaiKbmText() }}
+                            <i class="ti ti-hourglass-low text-xs"></i> Batas: {{ $dispensasi->getBatasWaktuExpiredText() }}
                         </span>
                     </div>
                     <p class="text-xs text-amber-800 mt-1 leading-relaxed">
-                        Permohonan ini masih <strong>menunggu keputusan Guru Piket</strong> dan akan <strong>otomatis kadaluarsa</strong> saat jam pelajaran sekolah hari ini berakhir (pukul {{ $dispensasi->getJamSelesaiKbmText() }}). Segera selesaikan dengan menekan tombol <strong>Setujui & Generate QR</strong> atau <strong>Tolak</strong> di bawah ini.
+                        Permohonan ini masih <strong>menunggu keputusan Guru Piket</strong> dan akan <strong>otomatis kadaluarsa</strong> jika batas waktu izin (pukul {{ $dispensasi->getBatasWaktuExpiredText() }}) terlewati. Segera selesaikan dengan menekan tombol <strong>Setujui & Generate QR</strong> atau <strong>Tolak</strong> di bawah ini.
                     </p>
                 </div>
             </div>
@@ -516,7 +516,7 @@
                 <div class="flex-1 min-w-0">
                     <h4 class="text-sm font-bold text-orange-900">Dispensasi Kadaluarsa</h4>
                     <p class="text-xs text-orange-800 mt-1 leading-relaxed">
-                        {{ $dispensasi->catatan_admin ?? 'Permohonan dispensasi ini telah kadaluarsa karena melewati batas waktu operasional KBM.' }}
+                        {{ $dispensasi->catatan_admin ?? 'Permohonan dispensasi ini telah kadaluarsa karena melewati batas waktu operasional izin.' }}
                     </p>
                 </div>
             </div>
@@ -526,29 +526,45 @@
 <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
 
     @if($dispensasi->status === 'menunggu')
-        <form method="POST" action="{{ route('guru.pengajuan.approve', $dispensasi) }}" class="flex-1">
-            @csrf
-            <button type="submit"
-                    data-confirm="Setujui dispensasi {{ $dispensasi->siswa->nama_lengkap }} dan generate QR Code?"
-                    class="w-full inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
-                <i class="ti ti-check mr-2"></i>Setujui & Generate QR
-            </button>
-        </form>
+        @if($isSedangBertugasAktif ?? false)
+            <form method="POST" action="{{ route('guru.pengajuan.approve', $dispensasi) }}" class="flex-1">
+                @csrf
+                <button type="submit"
+                        data-confirm="Setujui dispensasi {{ $dispensasi->siswa->nama_lengkap }} dan generate QR Code?"
+                        class="w-full inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+                    <i class="ti ti-check mr-2"></i>Setujui & Generate QR
+                </button>
+            </form>
 
-        <button onclick="rejectDispensasi()"
-                class="flex-1 inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
-            <i class="ti ti-x mr-2"></i>Tolak
-        </button>
+            <button onclick="rejectDispensasi()"
+                    class="flex-1 inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+                <i class="ti ti-x mr-2"></i>Tolak
+            </button>
+        @else
+            <div class="flex-1 px-4 py-3 min-h-[44px] rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
+                <i class="ti ti-info-circle text-amber-600 text-base flex-shrink-0"></i>
+                <span><strong>Mode Pemantau:</strong> Anda tidak sedang bertugas piket pada sesi aktif saat ini, sehingga tidak dapat menyetujui atau menolak pengajuan ini.</span>
+            </div>
+        @endif
     @elseif($dispensasi->status === 'disetujui' && empty($dispensasi->waktu_keluar_aktual))
         <div class="flex-1 flex flex-col sm:flex-row gap-2">
             <div class="flex-1 px-4 py-3 min-h-[44px] rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
                 <i class="ti ti-circle-check text-emerald-600 flex-shrink-0"></i>
                 <span>Disetujui. Menunggu scan keluar di Satpam.</span>
             </div>
-            <button onclick="rejectDispensasi('Batalkan Dispensasi', 'Alasan pembatalan (Siswa tidak jadi keluar / membatalkan izin):')"
-                    class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors whitespace-nowrap">
-                <i class="ti ti-ban mr-1.5"></i>Batalkan Dispensasi
-            </button>
+            @if($isSedangBertugasAktif ?? false)
+                <button onclick="rejectDispensasi('Batalkan Dispensasi', 'Alasan pembatalan (Siswa tidak jadi keluar / membatalkan izin):')"
+                        class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors whitespace-nowrap">
+                    <i class="ti ti-ban mr-1.5"></i>Batalkan Dispensasi
+                </button>
+            @endif
+        </div>
+    @elseif($dispensasi->status === 'kadaluarsa')
+        <div class="flex-1 px-4 py-3 min-h-[44px] rounded-lg bg-orange-50 border border-orange-200 text-xs text-orange-900 flex items-center gap-2">
+            <i class="ti ti-calendar-off text-orange-600 text-base flex-shrink-0"></i>
+            <span>
+                Status: <strong>Kadaluarsa</strong>. Siswa tidak dapat scan di pos satpam karena batas waktu izin telah terlewati.
+            </span>
         </div>
     @else
         <div class="flex-1 px-4 py-3 min-h-[44px] rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 flex items-center">
@@ -564,11 +580,13 @@
 
     {{-- Navigasi --}}
     <div class="flex flex-col sm:flex-row gap-2 sm:w-auto">
-        <a href="{{ route('guru.pengajuan.create') }}"
-           class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-            <i class="ti ti-plus mr-2"></i>
-            Buat Dispensasi Baru
-        </a>
+        @if($isSedangBertugasAktif ?? false)
+            <a href="{{ route('guru.pengajuan.create') }}"
+               class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <i class="ti ti-plus mr-2"></i>
+                Buat Dispensasi Baru
+            </a>
+        @endif
 
         <a href="{{ route('guru.pengajuan.index') }}"
            class="inline-flex justify-center items-center px-4 py-3 min-h-[44px] rounded-lg text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors">

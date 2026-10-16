@@ -27,9 +27,11 @@
                     <option value="kadaluarsa" {{ request('status') == 'kadaluarsa' ? 'selected' : '' }}>Kadaluarsa</option>
                 </select>
             </form>
-            <a href="{{ route('guru.pengajuan.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 min-h-[40px] bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex-shrink-0">
-                <i class="ti ti-plus mr-1.5"></i> Buat Pengajuan Baru
-            </a>
+            @if($isSedangBertugasAktif ?? false)
+                <a href="{{ route('guru.pengajuan.create') }}" class="inline-flex items-center justify-center px-4 py-2.5 min-h-[40px] bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex-shrink-0">
+                    <i class="ti ti-plus mr-1.5"></i> Buat Pengajuan Baru
+                </a>
+            @endif
         </div>
     </div>
 
