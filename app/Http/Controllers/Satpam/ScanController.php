@@ -32,6 +32,8 @@ class ScanController extends Controller
             'action'  => 'nullable|string', // 'check', 'keluar', 'kembali', 'confirm'
         ]);
 
+        \App\Services\DispensasiService::autoExpireOverdueDispensasi();
+
         $dispensasi = $scanService->parseQRData($request->qr_data);
 
         if (! $dispensasi) {
@@ -41,6 +43,7 @@ class ScanController extends Controller
             ], 404);
         }
 
+        $dispensasi->refresh();
         $dispensasi->loadMissing(['siswa.kelas.jurusan', 'siswa.user', 'guru', 'anggotaSiswa.kelas.jurusan', 'anggotaSiswa.user']);
 
         $today = now('Asia/Jakarta')->toDateString();
@@ -54,7 +57,14 @@ class ScanController extends Controller
             ], 422);
         }
 
-        if ($tglIzin < $today || $dispensasi->status === 'kadaluarsa') {
+        if ($dispensasi->status === 'kadaluarsa') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dispensasi ini sudah KADALUARSA: ' . ($dispensasi->catatan_admin ?: 'Batas waktu izin telah berakhir.') . ' dan tidak dapat diproses lagi.',
+            ], 422);
+        }
+
+        if ($tglIzin < $today) {
             return response()->json([
                 'success' => false,
                 'message' => 'Dispensasi ini sudah KADALUARSA (berlaku tanggal ' . \Carbon\Carbon::parse($tglIzin)->translatedFormat('l, d F Y') . ') dan tidak dapat diproses lagi.',
@@ -82,6 +92,31 @@ class ScanController extends Controller
         }
 
         $isSampaiPulang = (bool) ($dispensasi->sampai_pulang || stripos($dispensasi->jam_kembali ?? '', 'pulang') !== false);
+
+        // Cek jika batas waktu kembali sudah lewat sebelum siswa melakukan scan keluar
+        if ($dispensasi->status === 'disetujui' && empty($dispensasi->waktu_keluar_aktual) && ! $isSampaiPulang) {
+            $deadline = $dispensasi->batas_waktu_kembali
+                ?: \App\Helpers\TimeHelper::getBatasWaktuKembali($dispensasi->jam_kembali, $dispDate->dayOfWeek);
+
+            if ($deadline) {
+                $deadline = $deadline->copy()->setTimezone('Asia/Jakarta')
+                    ->setDate($dispDate->year, $dispDate->month, $dispDate->day);
+
+                if ($nowJakarta->greaterThan($deadline)) {
+                    $jamFormatted = $deadline->format('H:i');
+                    $dispensasi->update([
+                        'status' => 'kadaluarsa',
+                        'catatan_admin' => "Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga batas waktu kembali ({$jamFormatted} WIB) terlewati.",
+                    ]);
+                    \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($dispensasi);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Dispensasi ini sudah KADALUARSA karena batas waktu kembali ({$jamFormatted} WIB) telah terlewati sebelum siswa keluar sekolah.",
+                    ], 422);
+                }
+            }
+        }
 
         // MODE CHECK (Preview Data untuk Modal Konfirmasi)
         if ($request->action === 'check') {

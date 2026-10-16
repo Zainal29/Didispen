@@ -326,6 +326,27 @@ class Dispensasi extends Model
     }
 
     /**
+     * Batas waktu kadaluarsa efektif untuk dispensasi sebelum scan keluar (format HH:mm WIB)
+     */
+    public function getBatasWaktuExpiredText(): string
+    {
+        if (! $this->sampai_pulang) {
+            $deadline = $this->batas_waktu_kembali;
+            if (! $deadline && $this->jam_kembali) {
+                $dispDate = $this->tanggal_izin
+                    ? \Carbon\Carbon::parse($this->tanggal_izin, 'Asia/Jakarta')
+                    : ($this->created_at ? $this->created_at->copy()->setTimezone('Asia/Jakarta') : now('Asia/Jakarta'));
+                $deadline = \App\Helpers\TimeHelper::getBatasWaktuKembali($this->jam_kembali, $dispDate->dayOfWeek);
+            }
+            if ($deadline) {
+                return $deadline->format('H:i') . ' WIB';
+            }
+        }
+
+        return $this->getJamSelesaiKbmText();
+    }
+
+    /**
      * Cek apakah pengajuan status 'menunggu' berisiko kadaluarsa hari ini
      */
     public function isMenungguHariIni(): bool

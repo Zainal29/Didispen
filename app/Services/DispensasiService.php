@@ -296,39 +296,83 @@ class DispensasiService
             $isPastDay = $dateStr < $today;
             $isTodayKbmDone = ($dateStr === $today && TimeHelper::isKbmHariSelesai($now, $dispDate));
 
-            // Jika masih hari mendatang, atau hari ini tapi jam KBM belum selesai, skip
-            if (! $isPastDay && ! $isTodayKbmDone) {
+            // Jika tanggal izin di masa depan, jangan diproses
+            if ($dateStr > $today) {
                 continue;
             }
+
+            // Hitung batas waktu kembali jika bukan dispensasi sampai pulang
+            $deadline = null;
+            if (! $d->sampai_pulang) {
+                $deadline = $d->batas_waktu_kembali
+                    ?: TimeHelper::getBatasWaktuKembali($d->jam_kembali, $dispDate->dayOfWeek);
+
+                if ($deadline) {
+                    $deadline = $deadline->copy()->setTimezone('Asia/Jakarta')
+                        ->setDate($dispDate->year, $dispDate->month, $dispDate->day);
+                }
+            }
+
+            $isDeadlinePassed = $deadline && $now->greaterThan($deadline);
 
             // 1. Kasus 'menunggu': Tidak disetujui hingga jam KBM usai / lewat hari
             if ($d->status === 'menunggu') {
-                $d->update([
-                    'status' => 'kadaluarsa',
-                    'catatan_admin' => $d->catatan_admin ?? ($isPastDay
+                if (! $isPastDay && ! $isTodayKbmDone) {
+                    continue;
+                }
+
+                $reason = $d->catatan_admin;
+                if (! $reason) {
+                    $reason = $isPastDay
                         ? 'Kadaluarsa otomatis karena melewati tanggal izin.'
-                        : 'Kadaluarsa otomatis: Pengajuan tidak disetujui Guru Piket hingga jam KBM berakhir.'),
-                ]);
-                self::cleanupCompletedDispensasiFiles($d);
-                $affectedCount++;
-                continue;
-            }
+                        : 'Kadaluarsa otomatis: Pengajuan tidak disetujui Guru Piket hingga jam KBM berakhir.';
+                }
 
-            // 2. Kasus 'disetujui': Tidak kunjung scan keluar di pos gerbang hingga jam KBM usai / lewat hari
-            if ($d->status === 'disetujui' && empty($d->waktu_keluar_aktual)) {
                 $d->update([
                     'status' => 'kadaluarsa',
-                    'catatan_admin' => $d->catatan_admin ?? ($isPastDay
-                        ? 'Kadaluarsa otomatis karena tidak melakukan check-out pada tanggal izin.'
-                        : 'Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga jam KBM berakhir.'),
+                    'catatan_admin' => $reason,
                 ]);
                 self::cleanupCompletedDispensasiFiles($d);
                 $affectedCount++;
                 continue;
             }
 
-            // 3. Kasus 'keluar': Sudah keluar tapi tidak scan kembali hingga KBM usai / lewat hari
+            // 2. Kasus 'disetujui' (belum scan keluar):
+            // Expire jika: lewat hari, ATAU KBM usai hari ini, ATAU batas jam kembali sudah lewat hari ini
+            if ($d->status === 'disetujui' && empty($d->waktu_keluar_aktual)) {
+                if (! $isPastDay && ! $isTodayKbmDone && ! $isDeadlinePassed) {
+                    continue;
+                }
+
+                $reason = $d->catatan_admin;
+                if (! $reason) {
+                    if ($isPastDay) {
+                        $reason = 'Kadaluarsa otomatis karena tidak melakukan check-out pada tanggal izin.';
+                    } elseif ($isDeadlinePassed && $deadline) {
+                        $reason = 'Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga batas waktu kembali (' . $deadline->format('H:i') . ' WIB) terlewati.';
+                    } else {
+                        $reason = 'Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga jam KBM berakhir.';
+                    }
+                }
+
+                $d->update([
+                    'status' => 'kadaluarsa',
+                    'catatan_admin' => $reason,
+                ]);
+                self::cleanupCompletedDispensasiFiles($d);
+                $affectedCount++;
+                continue;
+            }
+
+            // 3. Kasus 'keluar':
+            // Siswa sedang berada di luar sekolah.
+            // Saat KBM belum usai dan belum lewat hari, siswa berstatus Terlambat (isOverdue) dan TIDAK dikadaluarsakan di tengah hari.
+            // Hanya ditutup saat KBM selesai atau lewat hari.
             if ($d->status === 'keluar') {
+                if (! $isPastDay && ! $isTodayKbmDone) {
+                    continue;
+                }
+
                 if ($d->sampai_pulang) {
                     $d->update([
                         'status' => 'selesai',
