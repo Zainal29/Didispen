@@ -40,6 +40,7 @@
                     'ditolak' => ['bg-rose-50 text-rose-700 border-rose-200', 'Ditolak'],
                     'keluar' => ['bg-sky-50 text-sky-700 border-sky-200', 'Sedang Keluar'],
                     'selesai' => ['bg-slate-100 text-slate-700 border-slate-200', 'Selesai'],
+                    'kadaluarsa' => ['bg-orange-50 text-orange-700 border-orange-200', 'Kadaluarsa'],
                 ];
                 $badge = $statusBadges[$dispensasi->status] ?? $statusBadges['menunggu'];
                 $isOverdue = $dispensasi->status === 'keluar' && $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
@@ -55,6 +56,24 @@
         </div>
     </div>
 </div>
+
+@if($dispensasi->status === 'kadaluarsa')
+<div class="mb-5 p-4 rounded-2xl bg-orange-50 border border-orange-200 text-orange-900 shadow-xs flex items-start gap-3.5">
+    <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 border border-orange-200">
+        <i class="ti ti-calendar-off text-xl"></i>
+    </div>
+    <div class="min-w-0 flex-1">
+        <h4 class="font-bold text-sm text-orange-950">Dispensasi Kadaluarsa</h4>
+        <p class="text-xs text-orange-800 mt-0.5 leading-relaxed">
+            {{ $dispensasi->catatan_admin ?: 'Batas waktu dispensasi telah terlewati. Dispensasi ini sudah tidak berlaku dan siswa tidak dapat scan keluar ataupun melanjutkan izin.' }}
+        </p>
+        <p class="text-xs text-orange-700 font-semibold mt-1.5 flex items-center gap-1">
+            <i class="ti ti-alert-triangle text-orange-600"></i>
+            Satpam diimbau untuk mengarahkan siswa kembali ke kelas atau menemui Guru Piket.
+        </p>
+    </div>
+</div>
+@endif
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
@@ -351,6 +370,20 @@
                                 <i class="ti ti-clock mr-1 text-xs"></i>{{ \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->isoFormat('D MMM Y, HH:mm') }} WIB
                             </p>
                         @endif
+                    </div>
+                @elseif($dispensasi->status === 'kadaluarsa')
+                    <div class="p-5 bg-orange-50/70 border border-orange-200 rounded-xl text-center">
+                        <div class="w-14 h-14 mx-auto rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3 shadow-2xs border border-orange-200">
+                            <i class="ti ti-calendar-off text-3xl"></i>
+                        </div>
+                        <p class="text-orange-900 font-bold text-sm">Dispensasi Kadaluarsa</p>
+                        <p class="text-orange-700 text-xs mt-1 leading-relaxed">
+                            {{ $dispensasi->catatan_admin ?: 'Batas waktu dispensasi telah terlewati. Dispensasi tidak dapat diproses lagi.' }}
+                        </p>
+                        <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-100/80 text-orange-900 text-xs font-semibold">
+                            <i class="ti ti-alert-triangle text-orange-600"></i>
+                            Arahkan siswa kembali ke kelas / Guru Piket
+                        </div>
                     </div>
                 @endif
             </div>

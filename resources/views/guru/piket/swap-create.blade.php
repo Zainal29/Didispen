@@ -96,8 +96,10 @@
                             <option value="{{ $j->id }}"
                                 {{ old('jadwal_piket_id', $selectedJadwalId) == $j->id ? 'selected' : '' }}>
                                 {{ $namaHari[$j->hari] ?? 'Hari '.$j->hari }}
-                                ({{ substr($j->jam_mulai, 0, 5) }}
-                                - {{ substr($j->jam_selesai, 0, 5) }})
+                                @if(!empty($j->nama_sesi))
+                                    — {{ $j->nama_sesi }}
+                                @endif
+                                ({{ substr($j->jam_mulai, 0, 5) }} - {{ substr($j->jam_selesai, 0, 5) }} WIB)
                             </option>
                         @endforeach
 

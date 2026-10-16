@@ -200,11 +200,11 @@
                             Pengajuan Ini Akan Segera Kadaluarsa
                         </h3>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 self-start sm:self-auto">
-                            <i class="ti ti-hourglass-empty text-xs"></i> Kadaluarsa: {{ $dispensasi->getJamSelesaiKbmText() }}
+                            <i class="ti ti-hourglass-empty text-xs"></i> Kadaluarsa: {{ $dispensasi->getBatasWaktuExpiredText() }}
                         </span>
                     </div>
                     <p class="text-xs text-amber-800 mt-1.5 leading-relaxed">
-                        Permohonan dispensasi Anda masih <strong>menunggu persetujuan</strong> dari Guru Piket. Pengajuan ini <strong>akan kadaluarsa</strong> jika tidak disetujui hingga jam KBM berakhir (pukul <strong>{{ $dispensasi->getJamSelesaiKbmText() }}</strong>). Segera temui Guru Piket di ruang piket untuk menyelesaikan proses permohonan.
+                        Permohonan dispensasi Anda masih <strong>menunggu persetujuan</strong> dari Guru Piket. Pengajuan ini <strong>akan kadaluarsa</strong> jika tidak disetujui hingga batas izin berakhir (pukul <strong>{{ $dispensasi->getBatasWaktuExpiredText() }}</strong>). Segera temui Guru Piket di ruang piket untuk menyelesaikan proses permohonan.
                     </p>
                     @if(!empty($popupEligible))
                     <div class="mt-3">
@@ -530,7 +530,7 @@
                             <p class="text-emerald-700 text-xs mb-3">Tunjukkan QR Code ini kepada petugas Satpam di pos gerbang untuk konfirmasi keluar.</p>
                             <div class="mb-3 py-1.5 px-3 bg-white/80 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center justify-center gap-1.5">
                                 <i class="ti ti-info-circle text-emerald-600"></i>
-                                <span>Scan keluar sebelum KBM berakhir (<strong>{{ $dispensasi->getJamSelesaiKbmText() }}</strong>).</span>
+                                <span>Scan keluar sebelum batas izin berakhir (<strong>{{ $dispensasi->getBatasWaktuExpiredText() }}</strong>).</span>
                             </div>
                             <div class="bg-white p-3 rounded-2xl inline-block border border-slate-200 shadow-sm">
                                 <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code" class="w-44 h-44 object-contain mx-auto">
@@ -628,7 +628,7 @@
                         <p class="text-amber-700 text-xs mb-2">QR Code akan tersedia setelah disetujui Guru Piket.</p>
                         <div class="mt-2 py-1.5 px-3 bg-amber-100/70 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center justify-center gap-1">
                             <i class="ti ti-hourglass-empty text-xs"></i>
-                            <span>Kadaluarsa pukul <strong>{{ $dispensasi->getJamSelesaiKbmText() }}</strong> jika belum disetujui.</span>
+                            <span>Kadaluarsa pukul <strong>{{ $dispensasi->getBatasWaktuExpiredText() }}</strong> jika belum disetujui.</span>
                         </div>
                     </div>
                 @endif
