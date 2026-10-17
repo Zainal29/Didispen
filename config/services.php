@@ -46,4 +46,11 @@ return [
         'student_sync_min_active_ratio' => (float) env('SIPINTU_STUDENT_SYNC_MIN_ACTIVE_RATIO', 0.5),
     ],
 
+    // config/services.php
+'whatsapp_bot' => [
+    'url'     => env('WA_BOT_URL', 'http://127.0.0.1:3789'),
+    'api_key' => env('WA_BOT_API_KEY', 'sipintu_wa_secret_key_2026'),
+    'enabled' => env('WA_BOT_ENABLED', true),
+],
+
 ];
