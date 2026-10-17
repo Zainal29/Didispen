@@ -59,6 +59,7 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
             'name' => 'Ketua OSIS',
             'email' => 'ketua@didispen.sch.id',
             'role' => 'siswa',
+            'is_superadmin' => true,
             'nis_nip' => '10001',
             'password' => Hash::make('password'),
         ]);

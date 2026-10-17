@@ -55,6 +55,7 @@ class DispensasiMultiGuruOrganisasiTest extends TestCase
             'email' => 'zainal@didispen.sch.id',
             'password' => Hash::make('password'),
             'role' => 'siswa',
+            'is_superadmin' => true,
             'nis_nip' => '4717',
         ]);
 

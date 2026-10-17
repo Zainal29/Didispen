@@ -1000,30 +1000,65 @@
         </div>
     </div>
 
+</div>
+
+@push('modals')
     {{-- Modal Preview Foto --}}
-    <div id="photoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-sm" onclick="closePhotoModal(event)">
-        <div class="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onclick="event.stopPropagation()">
-            <div class="w-full bg-white px-4 py-3 flex items-center justify-between border-b border-slate-200">
-                <h3 id="photoModalTitle" class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <i class="ti ti-photo text-blue-600 text-base"></i>
-                    <span>Preview Foto</span>
+    <div id="photoModal"
+         class="hidden fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md"
+         onclick="closePhotoModal(event)"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="photoModalTitle">
+        
+        <div class="relative flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-700/30"
+             onclick="event.stopPropagation()">
+            
+            {{-- Header Modal: Selalu terlihat & sticky di atas --}}
+            <div class="w-full bg-white px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between border-b border-slate-200 shrink-0">
+                <h3 id="photoModalTitle" class="text-sm font-bold text-slate-900 flex items-center gap-2 truncate pr-2">
+                    <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <i class="ti ti-photo text-base"></i>
+                    </span>
+                    <span class="truncate">Preview Foto</span>
                 </h3>
-                <button type="button" onclick="closePhotoModal()" class="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                <button type="button"
+                        onclick="closePhotoModal()"
+                        aria-label="Tutup Preview Foto"
+                        class="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 flex items-center justify-center transition-colors shrink-0">
                     <i class="ti ti-x text-lg"></i>
                 </button>
             </div>
-            <div class="p-3 bg-slate-950 flex items-center justify-center overflow-hidden">
-                <img id="photoModalImage" src="" alt="Preview Foto" class="max-w-full max-h-[70vh] w-auto h-auto object-contain rounded-lg">
+
+            {{-- Body Modal: Area Foto dengan latar gelap kontras tinggi --}}
+            <div class="relative p-2 sm:p-4 bg-slate-950 flex items-center justify-center overflow-auto flex-1 min-h-[200px] max-h-[calc(92dvh-115px)]">
+                <img id="photoModalImage"
+                     src=""
+                     alt="Preview Foto"
+                     class="max-w-full max-h-[70dvh] w-auto h-auto object-contain rounded-xl shadow-lg">
+            </div>
+
+            {{-- Footer Modal: Tombol Tutup & Panduan --}}
+            <div class="px-4 py-2.5 sm:px-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                <span class="text-[11px] text-slate-500 font-medium truncate pr-2 flex items-center gap-1">
+                    <i class="ti ti-info-circle text-xs text-slate-400"></i> Ketuk luar untuk menutup
+                </span>
+                <button type="button"
+                        onclick="closePhotoModal()"
+                        class="px-4 py-2 min-h-[36px] rounded-xl bg-white border border-slate-300 hover:bg-slate-100 active:bg-slate-200 text-slate-700 text-xs font-bold transition-colors shadow-2xs">
+                    Tutup
+                </button>
             </div>
         </div>
     </div>
-</div>
+@endpush
 
 @if($popupEligible)
+@push('modals')
 {{-- ============================================================ --}}
 {{-- MODAL: HUBUNGI GURU PIKET --}}
 {{-- ============================================================ --}}
-<div id="piketModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4">
+<div id="piketModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4">
     <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
         {{-- Header --}}
         <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
@@ -1184,6 +1219,7 @@
         </div>
     </div>
 </div>
+@endpush
 @endif
 
 @push('scripts')
@@ -1204,17 +1240,50 @@ function openPhotoModal(imageUrl, title = 'Preview Foto') {
 
     if (modal && modalImg) {
         modalImg.src = imageUrl;
-        if (modalTitle) modalTitle.querySelector('span').textContent = title;
+        if (modalTitle) {
+            const spanText = modalTitle.querySelector('span:last-child') || modalTitle.querySelector('span');
+            if (spanText) spanText.textContent = title;
+        }
         modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        // Sembunyikan bottom navigation bar agar tidak menutupi modal preview foto
+        const bottomNav = document.getElementById('siswaBottomNav');
+        if (bottomNav) {
+            bottomNav.classList.add('!hidden');
+        }
     }
 }
 
 function closePhotoModal(e) {
+    if (e && e.target && e.target.id !== 'photoModal' && !e.target.closest('button')) {
+        return;
+    }
+
     const modal = document.getElementById('photoModal');
     if (modal) {
         modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        const modalImg = document.getElementById('photoModalImage');
+        if (modalImg) modalImg.src = '';
+
+        // Tampilkan kembali bottom navigation bar
+        const bottomNav = document.getElementById('siswaBottomNav');
+        if (bottomNav) {
+            bottomNav.classList.remove('!hidden');
+        }
     }
 }
+
+// Tutup preview foto dengan tombol Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const photoModal = document.getElementById('photoModal');
+        if (photoModal && !photoModal.classList.contains('hidden')) {
+            closePhotoModal();
+        }
+    }
+});
 
 // ============================================================
 // HUBUNGI GURU PIKET — Countdown & Popup Logic
@@ -1274,6 +1343,9 @@ function openPiketPopup() {
     const modal = document.getElementById('piketModal');
     if (modal) {
         modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        const bottomNav = document.getElementById('siswaBottomNav');
+        if (bottomNav) bottomNav.classList.add('!hidden');
         _updatePiketCountdown();
     }
 }
@@ -1282,6 +1354,9 @@ function closePiketPopup() {
     const modal = document.getElementById('piketModal');
     if (modal) {
         modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        const bottomNav = document.getElementById('siswaBottomNav');
+        if (bottomNav) bottomNav.classList.remove('!hidden');
     }
 }
 
