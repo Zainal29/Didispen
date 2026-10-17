@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendBaileysWhatsAppJob;
+use App\Models\JadwalPiket;
 use App\Models\Setting;
 use App\Models\WhatsappLog;
 use App\Services\WhatsappMessageService;
@@ -52,12 +53,26 @@ class WhatsappBotController extends Controller
             'wa_notify_koordinator_piket'  => (bool) Setting::get('wa_notify_koordinator_piket', true),
             'wa_notify_siswa_terlambat'    => (bool) Setting::get('wa_notify_siswa_terlambat', true),
             'wa_notify_laporan_guru_piket' => (bool) Setting::get('wa_notify_laporan_guru_piket', true),
+            'wa_active_days'               => json_decode(Setting::get('wa_active_days', json_encode([1, 2, 3, 4, 5])), true) ?: [1, 2, 3, 4, 5],
         ];
 
         // Cek status koneksi & QR code ke microservice Baileys
         $botStatus = $this->fetchBotStatus();
 
-        return view('admin.whatsapp-bot.index', compact('logs', 'stats', 'botStatus', 'settings'));
+        // Matriks Agenda Pengiriman Bot Harian (Senin s.d. Jumat/Minggu)
+        $matriksData = JadwalPiket::with([
+            'koordinator',
+            'guru' => function ($q) {
+                $q->orderBy('nama_lengkap');
+            }
+        ])
+        ->where('is_active', true)
+        ->orderBy('hari')
+        ->orderBy('jam_mulai')
+        ->get()
+        ->groupBy('hari');
+
+        return view('admin.whatsapp-bot.index', compact('logs', 'stats', 'botStatus', 'settings', 'matriksData'));
     }
 
     /**
@@ -103,6 +118,11 @@ class WhatsappBotController extends Controller
         Setting::set('wa_notify_koordinator_piket', $request->boolean('wa_notify_koordinator_piket'));
         Setting::set('wa_notify_siswa_terlambat', $request->boolean('wa_notify_siswa_terlambat'));
         Setting::set('wa_notify_laporan_guru_piket', $request->boolean('wa_notify_laporan_guru_piket'));
+
+        if ($request->has('wa_active_days')) {
+            $activeDays = array_map('intval', (array) $request->input('wa_active_days'));
+            Setting::set('wa_active_days', json_encode(array_values($activeDays)));
+        }
 
         return back()->with('success', 'Pengaturan WhatsApp Bot berhasil diperbarui.');
     }

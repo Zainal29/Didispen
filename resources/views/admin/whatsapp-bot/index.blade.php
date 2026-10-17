@@ -330,6 +330,28 @@
                 </div>
             </div>
 
+            {{-- 4. Hari Operasional Aktif Pengiriman Bot --}}
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Hari Operasional Pengiriman Bot</h3>
+                        <p class="text-[11px] text-slate-500">Pilih hari kerja apa saja notifikasi otomatis guru piket & koordinator boleh dikirim.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
+                    @php
+                        $dayMap = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                        $activeDays = $settings['wa_active_days'] ?? [1, 2, 3, 4, 5];
+                    @endphp
+                    @foreach($dayMap as $dayNum => $dayName)
+                        <label class="p-3 rounded-xl border {{ in_array($dayNum, $activeDays) ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-white' }} hover:border-slate-300 cursor-pointer transition flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-800">{{ $dayName }}</span>
+                            <input type="checkbox" name="wa_active_days[]" value="{{ $dayNum }}" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked(in_array($dayNum, $activeDays))>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
             <div class="pt-2 flex justify-end">
                 <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-xs">
                     <i class="fas fa-save"></i>
@@ -337,6 +359,213 @@
                 </button>
             </div>
         </form>
+    </div>
+
+    {{-- MATRIKS AGENDA PENGIRIMAN BOT GURU PIKET (FORMAT RESMI SK SMK N 1 BANGSRI) --}}
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden" id="sectionMatriksPiket">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fas fa-calendar-check text-emerald-600"></i>
+                    Matriks Agenda Pengiriman Bot Guru Piket
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Jadwal penugasan guru piket harian dan alur pengiriman notifikasi otomatis WhatsApp per sesi.
+                </p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <i class="fas fa-check-circle text-emerald-600"></i>
+                    Format Matriks SK SMK N 1 Bangsri
+                </span>
+                <a href="{{ route('admin.jadwal-piket.index', ['view' => 'matriks']) }}" class="px-3 py-1 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold flex items-center gap-1 transition">
+                    <i class="fas fa-external-link-alt text-[10px]"></i>
+                    <span>Kelola Jadwal Piket</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6">
+            @php
+                $hariNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                $todayIso = now('Asia/Jakarta')->dayOfWeekIso;
+                $hariCounter = 1;
+                $waServiceHelper = app(\App\Services\WhatsappMessageService::class);
+            @endphp
+
+            @if(empty($matriksData) || $matriksData->isEmpty())
+                <div class="text-center py-8 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    <i class="fas fa-calendar-times text-3xl text-slate-400 mb-2"></i>
+                    <p class="text-sm font-semibold text-slate-700">Belum Ada Data Jadwal Piket Aktif</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Silakan tambahkan data sesi dan penugasan guru piket terlebih dahulu.</p>
+                </div>
+            @else
+                <div class="w-full overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-2xs touch-pan-x">
+                    <table class="w-full min-w-[960px] text-left text-xs text-slate-800 border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                                <th class="py-3 px-3 border-r border-slate-200 w-12 text-center whitespace-nowrap">No.</th>
+                                <th class="py-3 px-3 border-r border-slate-200 w-28 whitespace-nowrap">Hari</th>
+                                <th class="py-3 px-4 border-r border-slate-200 w-64 whitespace-nowrap">Koordinator Guru Piket</th>
+                                <th class="py-3 px-4 border-r border-slate-200 w-56 whitespace-nowrap">Pengaturan Sesi Piket</th>
+                                <th class="py-3 px-4 border-r border-slate-200 min-w-[200px]">Guru Piket Bertugas</th>
+                                <th class="py-3 px-4 border-r border-slate-200 w-48 whitespace-nowrap">No. HP Guru</th>
+                                <th class="py-3 px-3 text-center w-36 whitespace-nowrap bg-slate-100 z-10 border-l border-slate-200">Alur Notifikasi Bot</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            @foreach($matriksData as $hariNum => $sesiList)
+                                @php
+                                    $firstSesi = $sesiList->first();
+                                    $koordinator = $sesiList->pluck('koordinator')->filter()->first();
+                                    $totalSesi = $sesiList->count();
+                                    $isToday = ($hariNum == $todayIso);
+                                    $isDayActive = in_array($hariNum, $settings['wa_active_days'] ?? [1, 2, 3, 4, 5]);
+                                @endphp
+                                @foreach($sesiList as $idx => $sesi)
+                                    <tr class="hover:bg-slate-50/70 transition-colors {{ $idx === 0 ? 'border-t-2 border-slate-300' : '' }} {{ $isToday ? 'bg-emerald-50/30' : '' }}">
+                                        {{-- No. (Rowspan) --}}
+                                        @if($idx === 0)
+                                            <td rowspan="{{ $totalSesi }}" class="py-3 px-3 border-r border-slate-200 text-center font-bold align-top bg-slate-50/60 whitespace-nowrap">
+                                                {{ $hariCounter++ }}
+                                            </td>
+                                            {{-- Hari (Rowspan) --}}
+                                            <td rowspan="{{ $totalSesi }}" class="py-3 px-3 border-r border-slate-200 font-bold text-slate-900 align-top bg-slate-50/60 whitespace-nowrap">
+                                                <div class="flex flex-col gap-1">
+                                                    <span class="text-xs font-bold">{{ $hariNames[$hariNum] ?? 'Hari '.$hariNum }}</span>
+                                                    @if($isToday)
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white shadow-2xs">
+                                                            <i class="fas fa-calendar-day text-[9px]"></i> Hari Ini
+                                                        </span>
+                                                    @endif
+                                                    @if(!$isDayActive)
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-200 text-slate-600">
+                                                            Bot Nonaktif
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            {{-- Koordinator (Rowspan) --}}
+                                            <td rowspan="{{ $totalSesi }}" class="py-3 px-4 border-r border-slate-200 align-top bg-slate-50/60">
+                                                @if($koordinator)
+                                                    <div class="font-bold text-slate-900">{{ $koordinator->nama_lengkap }}</div>
+                                                    @php
+                                                        $koorWaLink = $waServiceHelper->generatePiketWaLink($koordinator, $firstSesi);
+                                                    @endphp
+                                                    @if($koorWaLink)
+                                                        <a href="{{ $koorWaLink }}" target="_blank" rel="noopener noreferrer"
+                                                           class="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-900 font-mono mt-1 px-2 py-0.5 rounded bg-emerald-100/60 hover:bg-emerald-200/60 border border-emerald-300 transition-colors whitespace-nowrap"
+                                                           title="Kirim pesan WhatsApp pengingat ke Koordinator">
+                                                            <i class="fab fa-whatsapp text-emerald-600"></i>
+                                                            <span class="font-semibold">{{ $koordinator->no_telepon }}</span>
+                                                        </a>
+                                                    @else
+                                                        <div class="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center whitespace-nowrap">
+                                                            <i class="fab fa-whatsapp text-slate-300 mr-1 text-xs"></i> {{ $koordinator->no_telepon ?? '-' }}
+                                                        </div>
+                                                    @endif
+                                                    <div class="mt-1.5 text-[10px] text-emerald-700 font-medium flex items-center gap-1">
+                                                        <i class="fas fa-shield-alt text-emerald-500 text-[10px]"></i>
+                                                        <span>Notifikasi: 1x sehari di sesi awal</span>
+                                                    </div>
+                                                @else
+                                                    <span class="text-slate-400 italic">Belum disetel</span>
+                                                @endif
+                                            </td>
+                                        @endif
+
+                                        {{-- Pengaturan Sesi Piket --}}
+                                        <td class="py-2.5 px-4 border-r border-slate-200 font-medium">
+                                            <div class="flex items-center gap-1.5 whitespace-nowrap">
+                                                <span class="font-bold text-emerald-800">{{ $sesi->nama_sesi ?? 'Sesi' }}</span>
+                                                <span class="text-[11px] text-slate-500 font-mono">({{ substr($sesi->jam_mulai, 0, 5) }} - {{ substr($sesi->jam_selesai, 0, 5) }})</span>
+                                            </div>
+                                            <div class="text-[10px] mt-0.5">
+                                                @if($sesi->is_active)
+                                                    <span class="text-emerald-700 font-semibold inline-flex items-center">
+                                                        <i class="fas fa-check-circle text-emerald-500 mr-1 text-[10px]"></i> Sesi Aktif
+                                                    </span>
+                                                @else
+                                                    <span class="text-slate-400 font-semibold inline-flex items-center">
+                                                        <i class="fas fa-times-circle text-slate-400 mr-1 text-[10px]"></i> Nonaktif
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </td>
+
+                                        {{-- Guru Piket Bertugas --}}
+                                        <td class="py-2.5 px-4 border-r border-slate-200">
+                                            @if($sesi->guru->isEmpty())
+                                                <span class="text-xs text-amber-600 italic">Belum ada guru piket</span>
+                                            @else
+                                                <ul class="space-y-1">
+                                                    @foreach($sesi->guru as $guru)
+                                                        <li class="flex items-center gap-1.5">
+                                                            <i class="fas fa-user-tie text-[10px] text-emerald-600"></i>
+                                                            <span class="font-medium text-slate-800">{{ $guru->nama_lengkap }}</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            @endif
+                                        </td>
+
+                                        {{-- No. HP --}}
+                                        <td class="py-2.5 px-4 border-r border-slate-200 whitespace-nowrap">
+                                            @if($sesi->guru->isEmpty())
+                                                <span class="text-slate-400">-</span>
+                                            @else
+                                                <ul class="space-y-1">
+                                                    @foreach($sesi->guru as $guru)
+                                                        @php
+                                                            $waLink = $waServiceHelper->generatePiketWaLink($guru, $sesi);
+                                                        @endphp
+                                                        <li>
+                                                            @if($waLink)
+                                                                <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer"
+                                                                   class="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-950 font-mono px-2 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                                                                   title="Hubungi Guru Piket via WhatsApp">
+                                                                    <i class="fab fa-whatsapp text-emerald-600"></i>
+                                                                    <span>{{ $guru->no_telepon }}</span>
+                                                                </a>
+                                                            @else
+                                                                <span class="text-[11px] font-mono text-slate-400">
+                                                                    <i class="fab fa-whatsapp text-slate-300 mr-0.5"></i> {{ $guru->no_telepon ?? '-' }}
+                                                                </span>
+                                                            @endif
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            @endif
+                                        </td>
+
+                                        {{-- Alur Notifikasi Bot --}}
+                                        <td class="py-2.5 px-3 text-center border-l border-slate-200">
+                                            @if(!$isDayActive)
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-slate-100 text-slate-500">
+                                                    <i class="fas fa-pause text-[9px]"></i> Hari Nonaktif
+                                                </span>
+                                            @elseif(!$settings['wa_notify_piket_bertugas'])
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                    <i class="fas fa-ban text-[9px]"></i> Notifikasi OFF
+                                                </span>
+                                            @else
+                                                <div class="flex flex-col items-center gap-0.5">
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                        <i class="fas fa-paper-plane text-[9px] text-emerald-600"></i>
+                                                        Otomatis {{ substr($sesi->jam_mulai, 0, 5) }} WIB
+                                                    </span>
+                                                    <span class="text-[10px] text-slate-500 font-mono">Setiap {{ $hariNames[$hariNum] ?? '' }}</span>
+                                                </div>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
     </div>
 
     {{-- KARTU STATISTIK PENGIRIMAN --}}

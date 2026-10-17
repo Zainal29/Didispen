@@ -14,31 +14,36 @@ class MonitorPiketDanTerlambat extends Command
 
     public function handle(GuruPiketService $piketService, WhatsappMessageService $waService): int
     {
-        // 1. CEK GURU PIKET & KOORDINATOR YANG BERTUGAS SAAT INI
-        $infoSesi = $piketService->getInformasiSesi();
+        // 1. CEK HARI OPERASIONAL AKTIF & SESI PIKET
+        $activeDays = json_decode(\App\Models\Setting::get('wa_active_days', json_encode([1, 2, 3, 4, 5])), true) ?: [1, 2, 3, 4, 5];
+        $todayDayOfWeek = now('Asia/Jakarta')->dayOfWeekIso;
 
-        if ($infoSesi['status_sesi'] === 'Berlangsung' && ! $infoSesi['conflict'] && $infoSesi['jadwal']) {
-            $jadwal = $infoSesi['jadwal'];
+        if (in_array($todayDayOfWeek, $activeDays)) {
+            $infoSesi = $piketService->getInformasiSesi();
 
-            // A. Notifikasi ke Guru Piket yang sedang bertugas
-            foreach ($infoSesi['petugas'] as $petugas) {
-                if ($petugas['status'] === 'Sedang Bertugas') {
-                    // Akan otomatis di-skip jika hari ini di sesi ini sudah dikirimi WA (via reference_key)
-                    $waService->notifyGuruPiketBertugas(
-                        $petugas['guru'],
+            if ($infoSesi['status_sesi'] === 'Berlangsung' && ! $infoSesi['conflict'] && $infoSesi['jadwal']) {
+                $jadwal = $infoSesi['jadwal'];
+
+                // A. Notifikasi ke Guru Piket yang sedang bertugas
+                foreach ($infoSesi['petugas'] as $petugas) {
+                    if ($petugas['status'] === 'Sedang Bertugas') {
+                        // Akan otomatis di-skip jika hari ini di sesi ini sudah dikirimi WA (via reference_key)
+                        $waService->notifyGuruPiketBertugas(
+                            $petugas['guru'],
+                            $jadwal,
+                            $petugas['is_pengganti']
+                        );
+                    }
+                }
+
+                // B. Notifikasi ke Koordinator Guru Piket hari ini (1x sehari di sesi pertama)
+                if ($jadwal->koordinator && $jadwal->koordinator->status_aktif) {
+                    $waService->notifyKoordinatorPiket(
+                        $jadwal->koordinator,
                         $jadwal,
-                        $petugas['is_pengganti']
+                        $infoSesi['petugas']
                     );
                 }
-            }
-
-            // B. Notifikasi ke Koordinator Guru Piket hari ini (jika ada)
-            if ($jadwal->koordinator && $jadwal->koordinator->status_aktif) {
-                $waService->notifyKoordinatorPiket(
-                    $jadwal->koordinator,
-                    $jadwal,
-                    $infoSesi['petugas']
-                );
             }
         }
 

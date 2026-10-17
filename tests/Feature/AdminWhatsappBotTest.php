@@ -99,6 +99,7 @@ class AdminWhatsappBotTest extends TestCase
             'wa_notify_koordinator_piket'  => '1',
             'wa_notify_siswa_terlambat'    => '1',
             'wa_notify_laporan_guru_piket' => '1',
+            'wa_active_days'               => ['1', '2', '3', '4', '5'],
         ]);
 
         $response->assertRedirect();
@@ -111,6 +112,7 @@ class AdminWhatsappBotTest extends TestCase
         $this->assertTrue((bool) Setting::get('wa_notify_koordinator_piket'));
         $this->assertTrue((bool) Setting::get('wa_notify_siswa_terlambat'));
         $this->assertTrue((bool) Setting::get('wa_notify_laporan_guru_piket'));
+        $this->assertEquals([1, 2, 3, 4, 5], json_decode(Setting::get('wa_active_days'), true));
     }
 
     public function test_admin_can_send_test_message(): void
