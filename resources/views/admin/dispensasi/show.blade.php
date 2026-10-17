@@ -126,22 +126,36 @@
         </div>
         @endif
         {{-- MODAL PREVIEW FOTO --}}
-        <div id="photoModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm" onclick="closePhotoModal(event)">
-            <div class="relative flex h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:h-[calc(100dvh-3rem)]" onclick="event.stopPropagation()">
+        <div id="photoModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md" onclick="closePhotoModal(event)">
+            <div class="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-700/30" onclick="event.stopPropagation()">
                 {{-- Header Modal --}}
-                <div class="w-full bg-white rounded-t-xl px-4 py-3 flex items-center justify-between border-b border-gray-200">
-                    <h3 id="photoModalTitle" class="min-w-0 text-sm font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-image text-blue-600"></i>
+                <div class="w-full bg-white px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between border-b border-gray-200 shrink-0">
+                    <h3 id="photoModalTitle" class="min-w-0 text-sm font-bold text-gray-900 flex items-center gap-2 truncate pr-2">
+                        <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <i class="fas fa-image text-sm"></i>
+                        </span>
                         <span class="truncate">Preview Foto</span>
                     </h3>
-                    <button onclick="closePhotoModal()" class="ml-3 w-11 h-11 flex-shrink-0 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors" aria-label="Tutup preview foto">
+                    <button onclick="closePhotoModal()" class="w-9 h-9 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 active:bg-gray-200 flex items-center justify-center transition-colors shrink-0" aria-label="Tutup preview foto">
                         <i class="fas fa-times text-base"></i>
                     </button>
                 </div>
 
                 {{-- Body Modal --}}
-                <div class="min-h-0 flex-1 w-full bg-gray-950 p-3 sm:p-5 flex items-center justify-center overflow-hidden">
-                    <img id="photoModalImage" src="" alt="Preview" class="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-lg">
+                <div class="min-h-0 flex-1 w-full bg-slate-950 p-2 sm:p-4 flex items-center justify-center overflow-auto max-h-[calc(92dvh-115px)]">
+                    <img id="photoModalImage" src="" alt="Preview" class="max-w-full max-h-[70dvh] w-auto h-auto object-contain rounded-xl shadow-lg">
+                </div>
+
+                {{-- Footer Modal --}}
+                <div class="px-4 py-2.5 sm:px-5 bg-gray-50 border-t border-gray-200 flex items-center justify-between shrink-0">
+                    <span class="text-[11px] text-gray-500 font-medium truncate pr-2 flex items-center gap-1">
+                        <i class="fas fa-info-circle text-xs text-gray-400"></i> Ketuk luar untuk menutup
+                    </span>
+                    <button type="button"
+                            onclick="closePhotoModal()"
+                            class="px-4 py-2 min-h-[36px] rounded-xl bg-white border border-gray-300 hover:bg-gray-100 active:bg-gray-200 text-gray-700 text-xs font-bold transition-colors shadow-2xs">
+                        Tutup
+                    </button>
                 </div>
             </div>
         </div>
@@ -392,7 +406,8 @@ function openPhotoModal(imageUrl, title) {
     const titleEl = document.getElementById('photoModalTitle');
 
     image.src = imageUrl;
-    titleEl.querySelector('span').textContent = title;
+    const titleSpan = titleEl.querySelector('span:last-child') || titleEl.querySelector('span');
+    if (titleSpan) titleSpan.textContent = title;
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 }

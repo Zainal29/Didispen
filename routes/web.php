@@ -122,6 +122,19 @@ Route::middleware(['auth'])->group(function () {
                 Route::resource('whatsapp-templates', Admin\WhatsappTemplateController::class)->except(['show', 'create', 'edit']);
                 Route::post('whatsapp-templates/preview', [Admin\WhatsappTemplateController::class, 'preview'])->name('whatsapp-templates.preview');
 
+               
+                // ✅ Bot Baileys & Log Pengiriman WhatsApp
+                Route::prefix('whatsapp-bot')->name('whatsapp-bot.')->group(function () {
+                    Route::get('/', [Admin\WhatsappBotController::class, 'index'])->name('index');
+                    Route::get('/status', [Admin\WhatsappBotController::class, 'statusAjax'])->name('status');
+                    Route::post('/settings', [Admin\WhatsappBotController::class, 'updateSettings'])->name('settings');
+                    Route::post('/disconnect', [Admin\WhatsappBotController::class, 'disconnect'])->name('disconnect');
+                    Route::post('/restart', [Admin\WhatsappBotController::class, 'restart'])->name('restart');
+                    Route::post('/send-test', [Admin\WhatsappBotController::class, 'sendTest'])->name('send-test');
+                    Route::post('/retry-all', [Admin\WhatsappBotController::class, 'retryAllFailed'])->name('retry-all');
+                    Route::post('/{log}/retry', [Admin\WhatsappBotController::class, 'retry'])->name('retry');
+                });
+
                 // test route untuk cek koneksi ke SiPintu Gateway
                 // Ubah dari Route::get menjadi Route::post
                  Route::post('sipintu/test-sync', [Admin\SipintuSyncController::class, 'testSync'])

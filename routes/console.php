@@ -4,6 +4,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
+
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
@@ -21,3 +22,5 @@ Schedule::command('dispensasi:cleanup-history')->dailyAt('00:00');
 
 // Backup otomatis pembersihan foto verifikasi & bukti untuk dispensasi yang sudah selesai
 Schedule::command('dispensasi:cleanup-foto')->dailyAt('02:00');
+
+Schedule::command('didispen:monitor-wa')->everyMinute();
