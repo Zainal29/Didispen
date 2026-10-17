@@ -24,18 +24,36 @@
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
+            {{-- Tombol Cepat ON / OFF Bot --}}
+            <form action="{{ route('admin.whatsapp-bot.toggle') }}" method="POST">
+                @csrf
+                @if($settings['wa_bot_enabled'])
+                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5 transition" title="Klik untuk mematikan bot">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <i class="fas fa-power-off"></i>
+                        <span>Bot: ON (Matikan)</span>
+                    </button>
+                @else
+                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold flex items-center gap-1.5 transition" title="Klik untuk menghidupkan bot">
+                        <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                        <i class="fas fa-power-off"></i>
+                        <span>Bot: OFF (Aktifkan)</span>
+                    </button>
+                @endif
+            </form>
+
             <form action="{{ route('admin.whatsapp-bot.restart') }}" method="POST" onsubmit="return confirm('Restart socket Baileys?')">
                 @csrf
                 <button type="submit" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
                     <i class="fas fa-sync-alt text-slate-500"></i>
-                    <span>Restart Bot</span>
+                    <span>Restart Socket</span>
                 </button>
             </form>
 
             <button type="button" onclick="document.getElementById('sectionSettings').scrollIntoView({ behavior: 'smooth' })"
                 class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-xs">
                 <i class="fas fa-cog"></i>
-                <span>Pengaturan Bot</span>
+                <span>Pengaturan</span>
             </button>
         </div>
     </div>
@@ -65,7 +83,13 @@
                 <p class="text-xs text-slate-500 mt-0.5">Tautkan akun WhatsApp sekolah untuk mengirim notifikasi secara otomatis.</p>
             </div>
 
-            <div id="liveStatusBadge">
+            <div id="liveStatusBadge" class="flex items-center gap-2 flex-wrap">
+                @if(!$settings['wa_bot_enabled'])
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300">
+                        <i class="fas fa-pause-circle text-amber-500"></i>
+                        Status: Dijeda (OFF)
+                    </span>
+                @endif
                 @if($botStatus['connected'])
                     <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>

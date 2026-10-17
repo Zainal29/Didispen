@@ -292,6 +292,50 @@ Bagian ini memetakan setiap aksi operasional pengguna (*Siswa*, *Guru Piket*, *S
 
 ---
 
+## 9. Penjelasan Fitur-Fitur DIDISPEN
+
+DIDISPEN adalah aplikasi untuk mengelola proses dispensasi siswa secara digital, mulai dari pengajuan, pemeriksaan oleh Guru Piket, hingga pencatatan siswa keluar dan kembali di pos gerbang. Setiap pengguna masuk ke panel sesuai perannya agar hanya dapat mengakses fitur yang diperlukan.
+
+### 9.1. Fitur untuk Siswa
+* **Dashboard dan riwayat pengajuan**: Siswa dapat melihat ringkasan dan perkembangan pengajuan dispensasi yang pernah dibuat, termasuk status menunggu, disetujui, atau ditolak.
+* **Pengajuan dispensasi**: Siswa mengisi kategori, alasan, tujuan, serta perkiraan jam keluar dan kembali. Pengajuan dapat dibuat untuk keperluan seperti sakit, izin pribadi, tugas dinas, atau lomba. Tersedia juga opsi pengajuan izin rombongan.
+* **Bukti pendukung dan verifikasi**: Siswa dapat melampirkan foto dokumen pendukung. Foto verifikasi yang diambil melalui kamera membantu Guru Piket dan petugas gerbang mencocokkan identitas siswa.
+* **Tiket dan QR Code**: Setelah pengajuan disetujui, siswa dapat membuka tiket dispensasi beserta QR Code untuk dipindai saat keluar dan kembali ke sekolah.
+* **Notifikasi dan komunikasi**: Siswa dapat membaca pemberitahuan terkait pengajuan dan menggunakan tautan WhatsApp untuk menghubungi Guru Piket.
+
+### 9.2. Fitur untuk Guru Piket
+* **Antrean verifikasi**: Guru melihat pengajuan yang menunggu, membuka detailnya, lalu memeriksa alasan, waktu izin, identitas, dan bukti pendukung.
+* **Persetujuan atau penolakan**: Guru dapat menyetujui pengajuan agar tiket dan QR Code diterbitkan, atau menolak dengan mencantumkan alasan supaya siswa mengetahui keputusan tersebut.
+* **Pengajuan dispensasi mandiri**: Guru dapat membuat dispensasi untuk siswa, misalnya ketika siswa perlu dibawa keluar untuk tugas sekolah.
+* **Pencetakan surat atau tiket**: Bukti dispensasi dapat dicetak sebagai PDF atau dikirim langsung ke printer thermal Bluetooth yang kompatibel.
+* **Pemindaian dan pencatatan tugas guru**: Fitur scan cadangan membantu proses pemeriksaan QR, sedangkan checklog digunakan untuk mencatat keberangkatan dan kepulangan guru saat bertugas di luar.
+* **Tukar jadwal piket**: Guru dapat mengajukan pertukaran jadwal dengan guru lain, lalu melihat dan merespons permintaan pertukaran yang masuk.
+* **Laporan**: Guru dapat melihat dan mengekspor rekap dispensasi dalam format PDF atau Excel.
+
+### 9.3. Fitur untuk Satpam
+* **Dashboard pos gerbang**: Satpam dapat memantau dispensasi hari ini, siswa yang sedang berada di luar, dan informasi Guru Piket yang bertugas.
+* **Pemindaian QR dan pencarian manual**: QR Code pada tiket dipindai untuk menemukan data dispensasi. Jika QR atau kamera tidak dapat digunakan, data juga dapat dicari dan diproses melalui konfirmasi manual.
+* **Konfirmasi keluar dan kembali**: Satpam memeriksa informasi siswa, mencatat waktu siswa keluar dan kembali, serta mengambil foto di pos sebagai bukti pemeriksaan.
+* **Pemantauan keterlambatan**: Sistem membandingkan waktu kembali dengan batas izin. Jika siswa terlambat, informasi keterlambatan ditampilkan agar Satpam dapat menindaklanjuti, termasuk menghubungi siswa melalui WhatsApp.
+
+### 9.4. Fitur untuk Administrator
+* **Dashboard statistik**: Menampilkan ringkasan dan grafik aktivitas dispensasi untuk membantu pemantauan operasional.
+* **Pengelolaan data**: Admin mengelola data siswa, guru, Satpam, kelas, jurusan, dan petugas piket.
+* **Pengaturan jadwal dan sistem**: Admin mengatur jadwal Guru Piket serta pengaturan operasional yang digunakan dalam proses dispensasi.
+* **Pemantauan seluruh pengajuan**: Admin dapat menelusuri detail dan status pengajuan untuk kebutuhan pengawasan dan tindak lanjut.
+* **Laporan**: Rekap data dispensasi dapat dilihat dan diunduh dalam format PDF atau Excel.
+* **Sinkronisasi SiPintu**: Admin dapat menyelaraskan data siswa dan guru dengan layanan SiPintu sekolah.
+* **Pengaturan pesan WhatsApp**: Admin mengelola template pesan dan melihat pratinjau pesan sebelum digunakan.
+* **Audit log dan video tutorial**: Audit log membantu menelusuri aktivitas yang tercatat di sistem, sementara video tutorial dapat dikelola untuk membantu pengguna memahami aplikasi.
+
+### 9.5. Fitur Umum
+* **Login dan akses sesuai peran**: Pengguna masuk menggunakan akun yang tersedia dan diarahkan ke fitur sesuai perannya. Integrasi SiPintu mendukung proses identitas sekolah.
+* **Profil dan keamanan sesi**: Pengguna dapat melihat profil; fitur profil juga menyediakan pengelolaan sesi perangkat, sementara pengaturan kata sandi tersedia bagi Admin sesuai hak aksesnya.
+* **Panduan penggunaan**: Halaman panduan menyediakan petunjuk berdasarkan peran pengguna dan FAQ agar alur penggunaan lebih mudah dipahami.
+* **Tampilan responsif**: Antarmuka dapat digunakan melalui ponsel maupun komputer, dengan fitur perangkat seperti kamera dan printer bergantung pada dukungan browser, izin, serta perangkat yang digunakan.
+
+---
+
 ## 📊 Matriks Ringkasan Cepat Teknologi (Untuk Ujian / Presentasi)
 
 | Nama Teknologi | Kategori | Pengertian Singkat | Peran / Fungsi Utama di Sistem |
@@ -314,3 +358,64 @@ Bagian ini memetakan setiap aksi operasional pengguna (*Siswa*, *Guru Piket*, *S
 
 ---
 *Dokumentasi ini disusun oleh Tim Pengembang DIDISPEN (By 3M) — SMK Negeri 1 Bangsri.*
+
+web bluetooth api 
+
+Web Bluetooth API adalah API pada browser yang memungkinkan website berkomunikasi langsung dengan perangkat Bluetooth di sekitar pengguna. Pada DIDISPEN, API ini digunakan untuk menghubungkan browser Chrome di HP Android dengan Mini Printer Thermal 58mm, kemudian mengirim data cetak dalam format ESC/POS melalui koneksi Bluetooth.
+
+Kalau dalam bentuk tabel:
+
+Komponen	Penjelasan
+Web Bluetooth API	API browser untuk berkomunikasi dengan perangkat Bluetooth
+Fungsi pada DIDISPEN	Menghubungkan browser dengan Mini Printer Thermal 58mm
+Protokol cetak	ESC/POS
+Alur	Website → Web Bluetooth API → Bluetooth → Printer Thermal
+Hasil	Bukti dispensasi dapat dicetak langsung tanpa PDF/driver printer
+Kalau ditanya "cara kerjanya bagaimana?"
+
+
+Ketika guru menekan tombol Hubungkan, browser menggunakan Web Bluetooth API untuk mencari dan menghubungkan perangkat printer RPP02 melalui Bluetooth. Setelah terhubung, sistem membuat data struk dalam format ESC/POS, kemudian data tersebut dikirim melalui Bluetooth ke characteristic printer yang memiliki akses write. Printer menerima data tersebut dan langsung mencetaknya pada kertas thermal 58mm.
+
+Versi singkat untuk tabel dokumentasi
+
+Saya lebih menyarankan kalimat ini:
+
+| Web Bluetooth API | Web Hardware API | API browser untuk komunikasi Bluetooth | Menghubungkan DIDISPEN dengan Mini Printer Thermal 58mm dan mengirim data cetak ESC/POS secara langsung
+Iya, sudah ada di Chrome. Kamu tidak perlu menginstal Web Bluetooth API sebagai library tambahan.
+
+Untuk sistem DIDISPEN:
+
+Chrome Android
+     ↓
+Web Bluetooth API
+     ↓
+Bluetooth Android
+     ↓
+RPP02
+     ↓
+Printer Thermal 58mm
+
+Jadi Web Bluetooth API adalah fitur/API bawaan browser, bukan sesuatu yang kamu buat sendiri.
+
+Yang kamu buat di Laravel/JavaScript adalah kode yang memanfaatkan API tersebut, misalnya:
+
+navigator.bluetooth.requestDevice({
+    acceptAllDevices: true,
+    optionalServices: [SERVICE_UUID]
+});
+
+Kode itu meminta Chrome untuk membuka akses Bluetooth dan memilih perangkat seperti RPP02.
+
+Yang perlu diperhatikan
+
+Walaupun API-nya sudah tersedia di Chrome, tidak berarti semua perangkat/browser pasti mendukungnya. Untuk DIDISPEN kamu perlu:
+
+Chrome Android yang mendukung Web Bluetooth
+halaman HTTPS
+Bluetooth aktif
+printer BLE seperti RPP02
+izin Bluetooth yang diperlukan oleh Android
+
+Jadi kalau untuk presentasi/interview, kamu bisa bilang:
+
+"Saya menggunakan Web Bluetooth API yang sudah disediakan oleh Chrome. Jadi saya tidak menggunakan library Bluetooth tambahan. JavaScript pada DIDISPEN memanfaatkan API tersebut untuk menghubungkan Chrome Android ke printer thermal BLE dan mengirim data ESC/POS secara langsung."

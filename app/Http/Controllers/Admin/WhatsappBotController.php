@@ -69,6 +69,19 @@ class WhatsappBotController extends Controller
     }
 
     /**
+     * Saklar Cepat (Quick Toggle) Master Bot ON / OFF
+     */
+    public function toggle()
+    {
+        $current = (bool) Setting::get('wa_bot_enabled', config('services.whatsapp_bot.enabled', true));
+        $newStatus = ! $current;
+        Setting::set('wa_bot_enabled', $newStatus);
+
+        $statusText = $newStatus ? 'diaktifkan (ON)' : 'dinonaktifkan (OFF)';
+        return back()->with('success', "Master WhatsApp Bot berhasil {$statusText}.");
+    }
+
+    /**
      * Simpan Pengaturan Bot WhatsApp ke Database Setting
      */
     public function updateSettings(Request $request)

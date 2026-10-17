@@ -171,4 +171,19 @@ class AdminWhatsappBotTest extends TestCase
     {
         $this->artisan('didispen:monitor-wa')->assertExitCode(0);
     }
+
+    public function test_admin_can_toggle_master_whatsapp_bot(): void
+    {
+        Setting::set('wa_bot_enabled', true);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.whatsapp-bot.toggle'));
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertFalse((bool) Setting::get('wa_bot_enabled'));
+
+        // Toggle kembali ke true
+        $response2 = $this->actingAs($this->admin)->post(route('admin.whatsapp-bot.toggle'));
+        $response2->assertRedirect();
+        $this->assertTrue((bool) Setting::get('wa_bot_enabled'));
+    }
 }

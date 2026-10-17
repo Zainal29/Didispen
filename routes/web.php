@@ -127,6 +127,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::prefix('whatsapp-bot')->name('whatsapp-bot.')->group(function () {
                     Route::get('/', [Admin\WhatsappBotController::class, 'index'])->name('index');
                     Route::get('/status', [Admin\WhatsappBotController::class, 'statusAjax'])->name('status');
+                    Route::post('/toggle', [Admin\WhatsappBotController::class, 'toggle'])->name('toggle');
                     Route::post('/settings', [Admin\WhatsappBotController::class, 'updateSettings'])->name('settings');
                     Route::post('/disconnect', [Admin\WhatsappBotController::class, 'disconnect'])->name('disconnect');
                     Route::post('/restart', [Admin\WhatsappBotController::class, 'restart'])->name('restart');
