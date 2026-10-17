@@ -32,6 +32,8 @@ Thumbs.db
 /public/terminul.php
 
 # WhatsApp Bot Baileys
+/whatsapp-bot
 /whatsapp-bot/node_modules
 /whatsapp-bot/auth_info_baileys
 /whatsapp-bot/.env
+
