@@ -14,19 +14,31 @@ class MonitorPiketDanTerlambat extends Command
 
     public function handle(GuruPiketService $piketService, WhatsappMessageService $waService): int
     {
-        // 1. CEK GURU PIKET YANG SEDANG BERTUGAS SAAT INI
+        // 1. CEK GURU PIKET & KOORDINATOR YANG BERTUGAS SAAT INI
         $infoSesi = $piketService->getInformasiSesi();
 
         if ($infoSesi['status_sesi'] === 'Berlangsung' && ! $infoSesi['conflict'] && $infoSesi['jadwal']) {
+            $jadwal = $infoSesi['jadwal'];
+
+            // A. Notifikasi ke Guru Piket yang sedang bertugas
             foreach ($infoSesi['petugas'] as $petugas) {
                 if ($petugas['status'] === 'Sedang Bertugas') {
                     // Akan otomatis di-skip jika hari ini di sesi ini sudah dikirimi WA (via reference_key)
                     $waService->notifyGuruPiketBertugas(
                         $petugas['guru'],
-                        $infoSesi['jadwal'],
+                        $jadwal,
                         $petugas['is_pengganti']
                     );
                 }
+            }
+
+            // B. Notifikasi ke Koordinator Guru Piket hari ini (jika ada)
+            if ($jadwal->koordinator && $jadwal->koordinator->status_aktif) {
+                $waService->notifyKoordinatorPiket(
+                    $jadwal->koordinator,
+                    $jadwal,
+                    $infoSesi['petugas']
+                );
             }
         }
 

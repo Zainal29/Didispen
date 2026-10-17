@@ -192,6 +192,45 @@ class WhatsappMessageService
     }
 
     /**
+     * Render pesan pengingat untuk Koordinator Guru Piket
+     */
+    public function renderKoordinatorPiketContent(string $content, \App\Models\Guru $koordinator, \App\Models\JadwalPiket $jadwal, array $petugasList = []): string
+    {
+        $namaHari = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+        $hariStr = is_numeric($jadwal->hari) ? ($namaHari[(int)$jadwal->hari] ?? 'Hari '.$jadwal->hari) : (string)$jadwal->hari;
+
+        $jamMulai = $jadwal->jam_mulai ? substr($jadwal->jam_mulai, 0, 5) : '-';
+        $jamSelesai = $jadwal->jam_selesai ? substr($jadwal->jam_selesai, 0, 5) : '-';
+
+        $petugasFormatted = [];
+        foreach ($petugasList as $p) {
+            $guruObj = is_array($p) ? ($p['guru'] ?? null) : $p;
+            if ($guruObj instanceof \App\Models\Guru) {
+                $nama = $guruObj->nama_lengkap ?? $guruObj->nama ?? 'Guru';
+                $status = (is_array($p) && !empty($p['is_pengganti'])) ? ' (Pengganti)' : '';
+                $petugasFormatted[] = "• {$nama}{$status}";
+            }
+        }
+        $daftarPetugasText = !empty($petugasFormatted) ? implode("\n", $petugasFormatted) : '• (Belum ada petugas terdaftar)';
+
+        $replacements = [
+            '{nama_koordinator}' => $koordinator->nama_lengkap ?? $koordinator->nama ?? 'Bapak/Ibu Koordinator',
+            '{hari}'             => $hariStr,
+            '{nama_sesi}'        => $jadwal->nama_sesi ?? 'Piket',
+            '{jam_mulai}'        => $jamMulai,
+            '{jam_selesai}'      => $jamSelesai,
+            '{daftar_petugas}'   => $daftarPetugasText,
+            '{tanggal}'          => now('Asia/Jakarta')->translatedFormat('d F Y'),
+        ];
+
+        return str_replace(
+            array_keys($replacements),
+            array_values($replacements),
+            $content
+        );
+    }
+
+    /**
      * Replace variabel {xxx} dengan data asli
      */
     private function renderContent(string $content, Dispensasi $dispensasi, string $context): string
@@ -499,7 +538,41 @@ class WhatsappMessageService
     }
 
     /**
-     * 2. Kirim Notifikasi WA ke Siswa yang Terlambat + Laporan ke Guru Piket yang Sedang Bertugas
+     * 2. Kirim Notifikasi WA ke Koordinator Guru Piket Hari Ini
+     */
+    public function notifyKoordinatorPiket(\App\Models\Guru $koordinator, \App\Models\JadwalPiket $jadwal, array $petugasList = []): void
+    {
+        if (! (bool) \App\Models\Setting::get('wa_notify_koordinator_piket', true)) {
+            return;
+        }
+
+        $today = now('Asia/Jakarta')->toDateString();
+        // Kunci unik agar Koordinator pada 1 sesi di tanggal yang sama hanya dikirimi 1x
+        $refKey = "piket_koor_{$jadwal->id}_guru_{$koordinator->id}_{$today}";
+
+        $templates = $this->getTemplates();
+        $content = $templates['pengingat-koordinator']
+            ?? $templates['pengingat_koordinator']
+            ?? null;
+
+        if (! $content) {
+            $content = "Halo Yth. Bapak/Ibu *{nama_koordinator}*,\n\nIzin mengingatkan bahwa Anda bertugas sebagai *Koordinator Guru Piket* pada hari ini:\nHari: *{hari}*, {tanggal}\nSesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n\nDaftar Petugas Piket:\n{daftar_petugas}\n\nMohon bantuan Bapak/Ibu untuk mengecek dan memastikan petugas piket telah berada di tempatnya agar pelayanan dispensasi siswa dapat berjalan tertib.\n\nTerima kasih atas kerjasamanya.\n- Admin DIDISPEN SMK N 1 Bangsri";
+        }
+
+        $pesan = $this->renderKoordinatorPiketContent($content, $koordinator, $jadwal, $petugasList);
+
+        $this->dispatchBaileysMessage(
+            rawPhone: $koordinator->no_telepon,
+            message: $pesan,
+            context: 'piket_koordinator',
+            userId: $koordinator->user_id,
+            recipientName: $koordinator->nama_lengkap,
+            referenceKey: $refKey
+        );
+    }
+
+    /**
+     * 3. Kirim Notifikasi WA ke Siswa yang Terlambat + Laporan ke Guru Piket yang Sedang Bertugas
      *
      * @param string $eventType 'overdue' (belum kembali & lewat batas) | 'returned_late' (sudah kembali tapi terlambat)
      */
