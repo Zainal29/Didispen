@@ -160,6 +160,13 @@
                     <i class="fab fa-whatsapp w-5 mr-3"></i> Template WA
                 </a>
 
+                {{-- ✅ TAMBAHKAN MENU BOT WA DI BAWAHNYA --}}
+                <a href="{{ route('admin.whatsapp-bot.index') }}"
+                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.whatsapp-bot.*') ? 'active' : '' }}">
+                    <i class="fas fa-robot w-5 mr-2 text-emerald-600"></i>
+                    <span>Bot & Log WhatsApp</span>
+                </a>
+
                 <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Sistem</p>
                 <a href="{{ route('admin.superadmin.index') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.superadmin.*') ? 'active' : '' }}">
