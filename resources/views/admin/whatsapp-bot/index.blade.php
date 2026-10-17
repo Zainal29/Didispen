@@ -153,10 +153,16 @@
                                 <p class="text-xs text-slate-500">Mempersiapkan QR Code...</p>
                             </div>
                         </div>
-                        <p class="text-[11px] text-slate-500 mt-2.5 flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                            <span>QR Code auto-refresh setiap beberapa detik</span>
-                        </p>
+                        <div class="mt-2.5 flex items-center justify-between w-64 px-1 text-[11px] text-slate-500">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span>Auto-refresh aktif</span>
+                            </span>
+                            <button type="button" onclick="pollBotStatus(true)" id="btnRefreshQr" class="text-emerald-700 hover:text-emerald-800 font-semibold flex items-center gap-1 transition">
+                                <i class="fas fa-sync-alt" id="iconRefreshQr"></i>
+                                <span>Muat Ulang QR</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="md:col-span-7 space-y-4">
@@ -276,17 +282,26 @@
             <div class="space-y-3 pt-2">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Pilihan Notifikasi Otomatis</h3>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {{-- Opsi A: Guru Piket Bertugas --}}
                     <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
                         <input type="checkbox" name="wa_notify_piket_bertugas" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_piket_bertugas'])>
                         <div class="space-y-1">
-                            <span class="block text-xs font-bold text-slate-900">Guru Piket Sedang Bertugas</span>
+                            <span class="block text-xs font-bold text-slate-900">Guru Piket Bertugas</span>
                             <span class="block text-[11px] text-slate-500 leading-normal">Kirim WA otomatis saat sesi piket dimulai ke nomor guru yang bertugas aktif.</span>
                         </div>
                     </label>
 
-                    {{-- Opsi B: Peringatan Siswa Terlambat --}}
+                    {{-- Opsi B: Koordinator Guru Piket --}}
+                    <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
+                        <input type="checkbox" name="wa_notify_koordinator_piket" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_koordinator_piket'])>
+                        <div class="space-y-1">
+                            <span class="block text-xs font-bold text-slate-900">Koordinator Guru Piket</span>
+                            <span class="block text-[11px] text-slate-500 leading-normal">Kirim WA otomatis ke Koordinator Piket hari ini untuk mengecek kehadiran petugas di pos.</span>
+                        </div>
+                    </label>
+
+                    {{-- Opsi C: Peringatan Siswa Terlambat --}}
                     <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
                         <input type="checkbox" name="wa_notify_siswa_terlambat" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_siswa_terlambat'])>
                         <div class="space-y-1">
@@ -295,7 +310,7 @@
                         </div>
                     </label>
 
-                    {{-- Opsi C: Laporan ke Guru Piket --}}
+                    {{-- Opsi D: Laporan ke Guru Piket --}}
                     <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
                         <input type="checkbox" name="wa_notify_laporan_guru_piket" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_laporan_guru_piket'])>
                         <div class="space-y-1">
@@ -489,8 +504,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let isPolling = true;
 
-    async function pollBotStatus() {
-        if (!isPolling) return;
+    window.pollBotStatus = async function(manual = false) {
+        if (!isPolling && !manual) return;
+
+        const icon = document.getElementById('iconRefreshQr');
+        if (manual && icon) icon.classList.add('fa-spin');
 
         try {
             const res = await fetch(statusUrl, {
@@ -513,8 +531,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (e) {
             renderOffline();
+        } finally {
+            if (manual && icon) {
+                setTimeout(() => icon.classList.remove('fa-spin'), 600);
+            }
         }
-    }
+    };
 
     function renderConnected(user) {
         stateConnected.classList.remove('hidden');
@@ -569,8 +591,8 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
-    // Interval polling setiap 4 detik
-    setInterval(pollBotStatus, 4000);
+    // Interval polling setiap 3 detik
+    setInterval(() => window.pollBotStatus(false), 3000);
 });
 </script>
 @endpush

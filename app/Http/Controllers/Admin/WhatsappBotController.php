@@ -49,6 +49,7 @@ class WhatsappBotController extends Controller
             'wa_bot_url'                   => Setting::get('wa_bot_url', config('services.whatsapp_bot.url', 'http://127.0.0.1:3789')),
             'wa_bot_api_key'               => Setting::get('wa_bot_api_key', config('services.whatsapp_bot.api_key', 'sipintu_wa_secret_key_2026')),
             'wa_notify_piket_bertugas'     => (bool) Setting::get('wa_notify_piket_bertugas', true),
+            'wa_notify_koordinator_piket'  => (bool) Setting::get('wa_notify_koordinator_piket', true),
             'wa_notify_siswa_terlambat'    => (bool) Setting::get('wa_notify_siswa_terlambat', true),
             'wa_notify_laporan_guru_piket' => (bool) Setting::get('wa_notify_laporan_guru_piket', true),
         ];
@@ -99,6 +100,7 @@ class WhatsappBotController extends Controller
         Setting::set('wa_bot_api_key', $validated['wa_bot_api_key']);
         Setting::set('wa_bot_enabled', $request->boolean('wa_bot_enabled'));
         Setting::set('wa_notify_piket_bertugas', $request->boolean('wa_notify_piket_bertugas'));
+        Setting::set('wa_notify_koordinator_piket', $request->boolean('wa_notify_koordinator_piket'));
         Setting::set('wa_notify_siswa_terlambat', $request->boolean('wa_notify_siswa_terlambat'));
         Setting::set('wa_notify_laporan_guru_piket', $request->boolean('wa_notify_laporan_guru_piket'));
 
