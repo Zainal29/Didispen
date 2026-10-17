@@ -98,7 +98,7 @@
                         <i class="fas fa-calendar-alt text-indigo-600 mr-1.5"></i>Variabel Pengingat Piket Guru:
                     </span>
                     <div class="flex flex-wrap gap-1.5">
-                        @foreach(['{nama_guru}', '{hari}', '{nama_sesi}', '{jam_mulai}', '{jam_selesai}', '{koordinator}', '{tanggal}'] as $var)
+                        @foreach(['{nama_guru}', '{hari}', '{nama_sesi}', '{jam_mulai}', '{jam_selesai}', '{koordinator}', '{nama_koordinator}', '{daftar_petugas}', '{tanggal}'] as $var)
                             <button type="button" onclick="insertVariable('{{ $var }}')" class="px-2 py-0.5 bg-white border border-indigo-200 text-indigo-700 font-mono text-[11px] rounded hover:bg-indigo-100 transition-colors">
                                 {{ $var }}
                             </button>

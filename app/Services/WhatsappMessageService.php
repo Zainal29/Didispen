@@ -547,8 +547,8 @@ class WhatsappMessageService
         }
 
         $today = now('Asia/Jakarta')->toDateString();
-        // Kunci unik agar Koordinator pada 1 sesi di tanggal yang sama hanya dikirimi 1x
-        $refKey = "piket_koor_{$jadwal->id}_guru_{$koordinator->id}_{$today}";
+        // Kunci unik harian agar Koordinator hanya dikirimi 1x sehari di sesi pertama
+        $refKey = "piket_koor_daily_guru_{$koordinator->id}_{$today}";
 
         $templates = $this->getTemplates();
         $content = $templates['pengingat-koordinator']

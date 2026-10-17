@@ -87,13 +87,15 @@ class WhatsappTemplateController extends Controller
             'link_web'        => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/'),
 
             // Variabel Guru / Piket
-            'nama_guru'   => 'Budi Santoso, S.Pd.',
-            'hari'        => 'Senin',
-            'nama_sesi'   => 'Sesi 1',
-            'jam_mulai'   => '07:00',
-            'jam_selesai' => '09:30',
-            'koordinator' => "Almu'idul 'Afwan, S.Pd.",
-            'tanggal'     => now()->translatedFormat('d F Y'),
+            'nama_guru'        => 'Budi Santoso, S.Pd.',
+            'hari'             => 'Senin',
+            'nama_sesi'        => 'Sesi 1',
+            'jam_mulai'        => '07:00',
+            'jam_selesai'      => '09:30',
+            'koordinator'      => "Almu'idul 'Afwan, S.Pd.",
+            'nama_koordinator' => "Almu'idul 'Afwan, S.Pd.",
+            'daftar_petugas'   => "• Akhmad Lutfianto\n• Fitria Diana Kumala Sari",
+            'tanggal'          => now()->translatedFormat('d F Y'),
         ];
 
         // Escape dulu sebelum replace agar aman
