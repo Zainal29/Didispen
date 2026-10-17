@@ -236,10 +236,9 @@ namespace App\Http\Controllers\Siswa;
 
         if ($tipePengajuan === 'organisasi') {
             $user = auth()->user();
-            $isAuthorizedKetua = $user->isSuperAdmin() || $siswa->isKetuaOrganisasi();
-            if (! $isAuthorizedKetua) {
+            if (! $user->isSuperAdmin()) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'tipe_pengajuan' => 'Akses ditolak: Hanya siswa yang terdaftar sebagai Ketua Organisasi resmi yang dapat mengajukan dispensasi organisasi.',
+                    'tipe_pengajuan' => 'Fitur dispensasi organisasi saat ini masih dalam pengerjaan cuy dan belum dapat digunakan.',
                 ]);
             }
         }
