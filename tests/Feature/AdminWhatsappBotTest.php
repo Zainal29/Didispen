@@ -186,4 +186,77 @@ class AdminWhatsappBotTest extends TestCase
         $response2->assertRedirect();
         $this->assertTrue((bool) Setting::get('wa_bot_enabled'));
     }
+
+    public function test_monitor_wa_sends_to_all_piket_teachers_in_session_and_proceeds_to_next_session(): void
+    {
+        Http::fake([
+            '*/send-message' => Http::response(['status' => 'success'], 200),
+        ]);
+
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 07:05:00', 'Asia/Jakarta')); // Senin, jam 07:05
+
+        // Buat 3 Guru untuk Sesi 1
+        $guru1User = User::create(['name' => 'Guru 1', 'email' => 'g1@test.com', 'password' => bcrypt('123'), 'role' => 'guru', 'nis_nip' => 'G01']);
+        $guru1 = \App\Models\Guru::create(['user_id' => $guru1User->id, 'nip' => 'G01', 'nama_lengkap' => 'Guru Satu', 'no_telepon' => '081211111111', 'status_aktif' => true]);
+
+        $guru2User = User::create(['name' => 'Guru 2', 'email' => 'g2@test.com', 'password' => bcrypt('123'), 'role' => 'guru', 'nis_nip' => 'G02']);
+        $guru2 = \App\Models\Guru::create(['user_id' => $guru2User->id, 'nip' => 'G02', 'nama_lengkap' => 'Guru Dua', 'no_telepon' => '081222222222', 'status_aktif' => true]);
+
+        $guru3User = User::create(['name' => 'Guru 3', 'email' => 'g3@test.com', 'password' => bcrypt('123'), 'role' => 'guru', 'nis_nip' => 'G03']);
+        $guru3 = \App\Models\Guru::create(['user_id' => $guru3User->id, 'nip' => 'G03', 'nama_lengkap' => 'Guru Tiga', 'no_telepon' => '081233333333', 'status_aktif' => true]);
+
+        // Buat 2 Guru untuk Sesi 2
+        $guru4User = User::create(['name' => 'Guru 4', 'email' => 'g4@test.com', 'password' => bcrypt('123'), 'role' => 'guru', 'nis_nip' => 'G04']);
+        $guru4 = \App\Models\Guru::create(['user_id' => $guru4User->id, 'nip' => 'G04', 'nama_lengkap' => 'Guru Empat', 'no_telepon' => '081244444444', 'status_aktif' => true]);
+
+        $guru5User = User::create(['name' => 'Guru 5', 'email' => 'g5@test.com', 'password' => bcrypt('123'), 'role' => 'guru', 'nis_nip' => 'G05']);
+        $guru5 = \App\Models\Guru::create(['user_id' => $guru5User->id, 'nip' => 'G05', 'nama_lengkap' => 'Guru Lima', 'no_telepon' => '081255555555', 'status_aktif' => true]);
+
+        // Sesi 1: Senin 07:00 - 09:30 (3 Guru)
+        $sesi1 = \App\Models\JadwalPiket::create([
+            'hari' => 1, // Senin
+            'nama_sesi' => 'Sesi 1 (Pagi)',
+            'jam_mulai' => '07:00:00',
+            'jam_selesai' => '09:30:00',
+            'tanggal_mulai_berlaku' => '2026-01-01',
+            'is_active' => true,
+        ]);
+        $sesi1->guru()->attach([$guru1->id, $guru2->id, $guru3->id]);
+
+        // Sesi 2: Senin 09:30 - 12:00 (2 Guru)
+        $sesi2 = \App\Models\JadwalPiket::create([
+            'hari' => 1, // Senin
+            'nama_sesi' => 'Sesi 2 (Siang)',
+            'jam_mulai' => '09:30:00',
+            'jam_selesai' => '12:00:00',
+            'tanggal_mulai_berlaku' => '2026-01-01',
+            'is_active' => true,
+        ]);
+        $sesi2->guru()->attach([$guru4->id, $guru5->id]);
+
+        // JALANKAN COMMAND PERTAMA KALI DI SESI 1 (07:05)
+        $this->artisan('didispen:monitor-wa')->assertExitCode(0);
+
+        // 1. Pastikan ketiga guru di Sesi 1 menerima notifikasi WA
+        $this->assertDatabaseHas('whatsapp_logs', ['phone' => '6281211111111', 'context' => 'piket_aktif']);
+        $this->assertDatabaseHas('whatsapp_logs', ['phone' => '6281222222222', 'context' => 'piket_aktif']);
+        $this->assertDatabaseHas('whatsapp_logs', ['phone' => '6281233333333', 'context' => 'piket_aktif']);
+        $this->assertEquals(3, WhatsappLog::where('context', 'piket_aktif')->count());
+
+        // 2. JALANKAN LAGI 5 MENIT KEMUDIAN DI SESI 1 (07:10) -> TIDAK BOLEH TERKIRIM ULANG / SPAM
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 07:10:00', 'Asia/Jakarta'));
+        $this->artisan('didispen:monitor-wa')->assertExitCode(0);
+        $this->assertEquals(3, WhatsappLog::where('context', 'piket_aktif')->count()); // Tetap 3!
+
+        // 3. MAJUKAN WAKTU KE SESI 2 (09:35) -> GURU SESI 2 HARUS MENERIMA NOTIFIKASI
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 09:35:00', 'Asia/Jakarta'));
+        $this->artisan('didispen:monitor-wa')->assertExitCode(0);
+
+        // Pastikan kedua guru di Sesi 2 sekarang juga menerima notifikasi WA
+        $this->assertDatabaseHas('whatsapp_logs', ['phone' => '6281244444444', 'context' => 'piket_aktif']);
+        $this->assertDatabaseHas('whatsapp_logs', ['phone' => '6281255555555', 'context' => 'piket_aktif']);
+        $this->assertEquals(5, WhatsappLog::where('context', 'piket_aktif')->count()); // Total jadi 5!
+
+        \Carbon\Carbon::setTestNow(); // Reset waktu
+    }
 }
