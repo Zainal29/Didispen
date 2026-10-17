@@ -240,11 +240,12 @@
                             this.selectedGurus = this.selectedGurus.filter(g => String(g.id) !== String(id));
                         },
 
+                        isSuperAdmin: {{ $isSuperAdmin ? 'true' : 'false' }},
                         isKetua: {{ ($isKetuaOrganisasi || $isSuperAdmin) ? 'true' : 'false' }},
                         switchTipe(tipe) {
-                            if (tipe === 'organisasi' && !this.isKetua) {
-                                if (typeof alertBukanKetua === 'function') {
-                                    alertBukanKetua();
+                            if (tipe === 'organisasi' && !this.isSuperAdmin) {
+                                if (typeof alertDalamPengerjaan === 'function') {
+                                    alertDalamPengerjaan();
                                 }
                                 return;
                             }
@@ -291,28 +292,25 @@
                             <span>Dispensasi Pribadi</span>
                         </button>
 
-                        @if($isKetuaOrganisasi || $isSuperAdmin)
+                        @if($isSuperAdmin)
                             <button type="button"
                                 @click="switchTipe('organisasi')"
                                 :class="tipePengajuan === 'organisasi' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80'"
                                 class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer">
                                 <i class="ti ti-users text-sm sm:text-base" :class="tipePengajuan === 'organisasi' ? 'text-white' : 'text-slate-500'"></i>
                                 <span>Dispensasi Rombongan</span>
-                                @if($organisasiDipimpin->isNotEmpty())
-                                    <span class="hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-bold ml-1"
-                                          :class="tipePengajuan === 'organisasi' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'">
-                                        Ketua
-                                    </span>
-                                @endif
+                                <span class="hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-bold ml-1 bg-amber-100 text-amber-800">
+                                    Super Admin
+                                </span>
                             </button>
                         @else
                             <button type="button"
-                                @click="alertBukanKetua()"
+                                @click="alertDalamPengerjaan()"
                                 class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-colors duration-150 bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-not-allowed border border-dashed border-slate-300"
-                                title="Hanya untuk Ketua Organisasi / Ekstra resmi">
+                                title="Fitur ini belum digunakan saat ini">
                                 <i class="ti ti-lock text-sm text-slate-400"></i>
                                 <span>Dispensasi Rombongan</span>
-                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 ml-1">Terkunci</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 font-semibold ml-1">Diabaikan</span>
                             </button>
                         @endif
                     </div>
@@ -2570,13 +2568,13 @@ document.addEventListener('DOMContentLoaded', function () {
     updateTimeInputLimits();
 });
 
-function alertBukanKetua() {
+function alertDalamPengerjaan() {
     Swal.fire({
-        icon: 'warning',
-        title: 'Akses Khusus Ketua Ekstra',
+        icon: 'info',
+        title: 'Masih Dalam Pengerjaan',
         html: '<div class="text-left text-xs space-y-2 text-slate-600">' +
-              '<p>Pengajuan <b>Dispensasi Organisasi / Rombongan</b> hanya dapat diajukan oleh siswa yang resmi terdaftar sebagai <b>Ketua Ekstrakurikuler / Organisasi</b> di sistem Didispen.</p>' +
-              '<p class="text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200">Jika Anda adalah ketua ekstra yang sah, silakan konfirmasi kepada <b>Super Admin</b> atau Kesiswaan untuk menetapkan akun Anda sebagai ketua di sistem.</p>' +
+              '<p class="text-sm font-bold text-slate-800">masih dalam pengerjaan cuy</p>' +
+              '<p class="text-slate-500 leading-relaxed">Fitur pengajuan <b>Dispensasi Organisasi / Rombongan</b> saat ini belum diaktifkan dan masih dalam tahap pengerjaan.</p>' +
               '</div>',
         confirmButtonColor: '#2563eb',
         confirmButtonText: 'Saya Mengerti',
@@ -2584,6 +2582,10 @@ function alertBukanKetua() {
             popup: 'rounded-2xl shadow-xl border border-slate-200'
         }
     });
+}
+
+function alertBukanKetua() {
+    alertDalamPengerjaan();
 }
 </script>
 @endpush
