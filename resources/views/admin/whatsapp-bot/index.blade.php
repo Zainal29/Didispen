@@ -163,6 +163,15 @@
                                 <span>Muat Ulang QR</span>
                             </button>
                         </div>
+                        <div class="mt-2 w-64 text-center">
+                            <form action="{{ route('admin.whatsapp-bot.disconnect') }}" method="POST" onsubmit="return confirm('QR Code belum muncul? Klik OK untuk menghapus cache sesi lama dan memaksa WhatsApp server mengirimkan QR Code baru.')">
+                                @csrf
+                                <button type="submit" class="text-[11px] text-slate-400 hover:text-rose-600 underline transition inline-flex items-center gap-1">
+                                    <i class="fas fa-redo-alt text-[10px]"></i>
+                                    <span>QR tidak kunjung muncul? Reset & Buat QR Baru</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
                     <div class="md:col-span-7 space-y-4">
