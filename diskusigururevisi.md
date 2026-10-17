@@ -1,5 +1,0 @@
-nah sekarang saya mau mendiskusikan bagian guru , unutk gurupiket yang sedang bertugas itu dia bisa setujui tolak kan nah untuk guru yang tidak di tigaskan sebagai guru piket atau guru yang tidak sendang bertugas hari ini tidak bisa dia hanya bisa sekedar melihat ya yang sudah tersetting sebagai gurupiket itu bisa setuju dan tolak tapiketika dia sedang bertugas di sesi.jamnya yang sudah di tentukan admin.di atur oleh admin. untuk guru yang tidak menjadi guru piket itu dia hanya melihat saja atau opsi saya nanti ketika guru login  dia diberi aturan2  ya dikasih modal lah nanti sistem mendeteksi adnta sekarang tidak sendang ertugas atau anda tidak memiliki jadwal piket anda sekarang hanya bisa melihat siswa anda : sebagai walikelas maupun tidak menjadi wali kelas . 
-
-nah tambahan unutk guru yang bertugas misal hari ini jumat guru sesi ada sesi kan itu sama seperti yang udah saya jelaskan bisa asal dia ada jadwal piket hari ini, unutk aturannya guru sesi 2 tidak bisa menyetujui pengajuan siswa yang dispen pada waktu sesi 1 dan seterusnya .
-
-gimana adakah pendapat dari kamu untuk diskusi kali ini?
