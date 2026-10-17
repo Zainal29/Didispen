@@ -115,6 +115,34 @@ class AdminWhatsappBotTest extends TestCase
         $this->assertEquals([1, 2, 3, 4, 5], json_decode(Setting::get('wa_active_days'), true));
     }
 
+    public function test_admin_can_uncheck_all_active_days_and_notifications(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('admin.whatsapp-bot.settings'), [
+            'wa_bot_url'     => 'http://127.0.0.1:3789',
+            'wa_bot_api_key' => 'new_secret_key_2026',
+            // Tanpa wa_bot_enabled, wa_notify_piket_bertugas, wa_active_days (semua diuncheck)
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertFalse(filter_var(Setting::get('wa_bot_enabled'), FILTER_VALIDATE_BOOLEAN));
+        $this->assertFalse(filter_var(Setting::get('wa_notify_piket_bertugas'), FILTER_VALIDATE_BOOLEAN));
+        $this->assertFalse(filter_var(Setting::get('wa_notify_koordinator_piket'), FILTER_VALIDATE_BOOLEAN));
+        $this->assertEquals([], json_decode(Setting::get('wa_active_days'), true));
+
+        // Pastikan saat load halaman index, nilainya tetap false / kosong
+        Http::fake([
+            '*/status' => Http::response(['online' => true, 'connected' => false], 200),
+        ]);
+
+        $viewResponse = $this->actingAs($this->admin)->get(route('admin.whatsapp-bot.index'));
+        $viewResponse->assertOk();
+        $settings = $viewResponse->viewData('settings');
+        $this->assertFalse($settings['wa_notify_piket_bertugas']);
+        $this->assertEquals([], $settings['wa_active_days']);
+    }
+
     public function test_admin_can_send_test_message(): void
     {
         \Illuminate\Support\Facades\Queue::fake();

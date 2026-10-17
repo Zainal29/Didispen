@@ -25,6 +25,9 @@ class Setting extends Model
      */
     public static function set(string $key, $value): void
     {
+        if (is_bool($value)) {
+            $value = $value ? '1' : '0';
+        }
         self::updateOrCreate(['key' => $key], ['value' => $value]);
         Cache::forget("settings.{$key}"); // Hapus cache agar nilai baru langsung terbaca
     }

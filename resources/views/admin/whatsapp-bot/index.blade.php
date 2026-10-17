@@ -625,12 +625,12 @@
                     <option value="failed" @selected(request('status') === 'failed')>Gagal (Failed)</option>
                 </select>
                 <select name="context" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs">
-                    <option value="">Semua Konteks</option>
-                    <option value="piket_aktif" @selected(request('context') === 'piket_aktif')>Guru Piket Aktif</option>
-                    <option value="siswa_terlambat_overdue" @selected(request('context') === 'siswa_terlambat_overdue')>Siswa Overdue</option>
-                    <option value="siswa_terlambat_returned_late" @selected(request('context') === 'siswa_terlambat_returned_late')>Siswa Kembali Terlambat</option>
-                    <option value="siswa_terlambat_not_returned" @selected(request('context') === 'siswa_terlambat_not_returned')>Siswa Tidak Kembali</option>
+                    <option value="">Semua Kategori</option>
+                    <option value="piket_bertugas" @selected(request('context') === 'piket_bertugas')>Guru Piket Bertugas</option>
+                    <option value="piket_koordinator" @selected(request('context') === 'piket_koordinator')>Koordinator Guru Piket</option>
+                    <option value="overdue" @selected(request('context') === 'overdue')>Peringatan Siswa Terlambat</option>
                     <option value="laporan_piket_overdue" @selected(request('context') === 'laporan_piket_overdue')>Laporan ke Guru Piket</option>
+                    <option value="returned_late" @selected(request('context') === 'returned_late')>Siswa Kembali Terlambat</option>
                     <option value="test_admin" @selected(request('context') === 'test_admin')>Uji Coba Admin</option>
                 </select>
                 <button type="submit" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition">
@@ -674,9 +674,31 @@
                                 <div class="text-xs text-slate-500 font-mono">{{ $log->phone ?? 'Nomor Kosong' }}</div>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-100 text-slate-700 font-mono font-semibold">
-                                    {{ $log->context }}
-                                </span>
+                                @if($log->context === 'piket_bertugas')
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-blue-100 text-blue-800 font-semibold">
+                                        <i class="fas fa-calendar-check mr-0.5 text-[9px]"></i> Piket Bertugas
+                                    </span>
+                                @elseif($log->context === 'piket_koordinator')
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-purple-100 text-purple-800 font-semibold">
+                                        <i class="fas fa-user-shield mr-0.5 text-[9px]"></i> Koordinator Piket
+                                    </span>
+                                @elseif($log->context === 'overdue' || str_contains($log->context, 'overdue'))
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-rose-100 text-rose-800 font-semibold">
+                                        <i class="fas fa-clock mr-0.5 text-[9px]"></i> Siswa Terlambat
+                                    </span>
+                                @elseif($log->context === 'laporan_piket_overdue')
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-amber-100 text-amber-800 font-semibold">
+                                        <i class="fas fa-exclamation-triangle mr-0.5 text-[9px]"></i> Laporan Guru Piket
+                                    </span>
+                                @elseif($log->context === 'test_admin')
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-100 text-slate-700 font-semibold">
+                                        <i class="fas fa-vial mr-0.5 text-[9px]"></i> Tes Admin
+                                    </span>
+                                @else
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-100 text-slate-700 font-mono font-semibold">
+                                        {{ $log->context }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 max-w-md">
                                 <div class="text-xs text-slate-700 whitespace-pre-line line-clamp-2" title="{{ $log->message }}">

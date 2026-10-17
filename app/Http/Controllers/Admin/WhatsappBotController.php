@@ -44,16 +44,19 @@ class WhatsappBotController extends Controller
             'failed'  => WhatsappLog::where('status', 'failed')->count(),
         ];
 
+        $rawActiveDays = Setting::get('wa_active_days');
+        $activeDays = $rawActiveDays !== null ? (json_decode($rawActiveDays, true) ?? []) : [1, 2, 3, 4, 5];
+
         // Konfigurasi saat ini dari Database (fallback ke config/services.php)
         $settings = [
-            'wa_bot_enabled'               => (bool) Setting::get('wa_bot_enabled', config('services.whatsapp_bot.enabled', true)),
+            'wa_bot_enabled'               => filter_var(Setting::get('wa_bot_enabled', config('services.whatsapp_bot.enabled', true)), FILTER_VALIDATE_BOOLEAN),
             'wa_bot_url'                   => Setting::get('wa_bot_url', config('services.whatsapp_bot.url', 'http://127.0.0.1:3789')),
             'wa_bot_api_key'               => Setting::get('wa_bot_api_key', config('services.whatsapp_bot.api_key', 'sipintu_wa_secret_key_2026')),
-            'wa_notify_piket_bertugas'     => (bool) Setting::get('wa_notify_piket_bertugas', true),
-            'wa_notify_koordinator_piket'  => (bool) Setting::get('wa_notify_koordinator_piket', true),
-            'wa_notify_siswa_terlambat'    => (bool) Setting::get('wa_notify_siswa_terlambat', true),
-            'wa_notify_laporan_guru_piket' => (bool) Setting::get('wa_notify_laporan_guru_piket', true),
-            'wa_active_days'               => json_decode(Setting::get('wa_active_days', json_encode([1, 2, 3, 4, 5])), true) ?: [1, 2, 3, 4, 5],
+            'wa_notify_piket_bertugas'     => filter_var(Setting::get('wa_notify_piket_bertugas', '1'), FILTER_VALIDATE_BOOLEAN),
+            'wa_notify_koordinator_piket'  => filter_var(Setting::get('wa_notify_koordinator_piket', '1'), FILTER_VALIDATE_BOOLEAN),
+            'wa_notify_siswa_terlambat'    => filter_var(Setting::get('wa_notify_siswa_terlambat', '1'), FILTER_VALIDATE_BOOLEAN),
+            'wa_notify_laporan_guru_piket' => filter_var(Setting::get('wa_notify_laporan_guru_piket', '1'), FILTER_VALIDATE_BOOLEAN),
+            'wa_active_days'               => $activeDays,
         ];
 
         // Cek status koneksi & QR code ke microservice Baileys
@@ -89,9 +92,9 @@ class WhatsappBotController extends Controller
      */
     public function toggle()
     {
-        $current = (bool) Setting::get('wa_bot_enabled', config('services.whatsapp_bot.enabled', true));
+        $current = filter_var(Setting::get('wa_bot_enabled', config('services.whatsapp_bot.enabled', true)), FILTER_VALIDATE_BOOLEAN);
         $newStatus = ! $current;
-        Setting::set('wa_bot_enabled', $newStatus);
+        Setting::set('wa_bot_enabled', $newStatus ? '1' : '0');
 
         $statusText = $newStatus ? 'diaktifkan (ON)' : 'dinonaktifkan (OFF)';
         return back()->with('success', "Master WhatsApp Bot berhasil {$statusText}.");
@@ -113,16 +116,15 @@ class WhatsappBotController extends Controller
 
         Setting::set('wa_bot_url', rtrim($validated['wa_bot_url'], '/'));
         Setting::set('wa_bot_api_key', $validated['wa_bot_api_key']);
-        Setting::set('wa_bot_enabled', $request->boolean('wa_bot_enabled'));
-        Setting::set('wa_notify_piket_bertugas', $request->boolean('wa_notify_piket_bertugas'));
-        Setting::set('wa_notify_koordinator_piket', $request->boolean('wa_notify_koordinator_piket'));
-        Setting::set('wa_notify_siswa_terlambat', $request->boolean('wa_notify_siswa_terlambat'));
-        Setting::set('wa_notify_laporan_guru_piket', $request->boolean('wa_notify_laporan_guru_piket'));
+        Setting::set('wa_bot_enabled', $request->boolean('wa_bot_enabled') ? '1' : '0');
+        Setting::set('wa_notify_piket_bertugas', $request->boolean('wa_notify_piket_bertugas') ? '1' : '0');
+        Setting::set('wa_notify_koordinator_piket', $request->boolean('wa_notify_koordinator_piket') ? '1' : '0');
+        Setting::set('wa_notify_siswa_terlambat', $request->boolean('wa_notify_siswa_terlambat') ? '1' : '0');
+        Setting::set('wa_notify_laporan_guru_piket', $request->boolean('wa_notify_laporan_guru_piket') ? '1' : '0');
 
-        if ($request->has('wa_active_days')) {
-            $activeDays = array_map('intval', (array) $request->input('wa_active_days'));
-            Setting::set('wa_active_days', json_encode(array_values($activeDays)));
-        }
+        // Simpan wa_active_days bahkan jika semua hari dicopot centangnya ([])
+        $activeDays = array_map('intval', (array) $request->input('wa_active_days', []));
+        Setting::set('wa_active_days', json_encode(array_values($activeDays)));
 
         return back()->with('success', 'Pengaturan WhatsApp Bot berhasil diperbarui.');
     }

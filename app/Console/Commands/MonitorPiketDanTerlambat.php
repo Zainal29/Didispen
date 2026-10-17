@@ -15,7 +15,8 @@ class MonitorPiketDanTerlambat extends Command
     public function handle(GuruPiketService $piketService, WhatsappMessageService $waService): int
     {
         // 1. CEK HARI OPERASIONAL AKTIF & SESI PIKET
-        $activeDays = json_decode(\App\Models\Setting::get('wa_active_days', json_encode([1, 2, 3, 4, 5])), true) ?: [1, 2, 3, 4, 5];
+        $rawActiveDays = \App\Models\Setting::get('wa_active_days');
+        $activeDays = $rawActiveDays !== null ? (json_decode($rawActiveDays, true) ?? []) : [1, 2, 3, 4, 5];
         $todayDayOfWeek = now('Asia/Jakarta')->dayOfWeekIso;
 
         if (in_array($todayDayOfWeek, $activeDays)) {
