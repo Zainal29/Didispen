@@ -152,23 +152,32 @@ class OrganisasiKetuaDispensasiTest extends TestCase
         $response->assertSee('Ketua PRAMUKA');
     }
 
-    public function test_form_create_pengajuan_shows_lock_for_siswa_biasa(): void
+    public function test_form_create_pengajuan_shows_diabaikan_badge_for_siswa_biasa(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-10-14 08:30:00', 'Asia/Jakarta'));
 
         $response = $this->actingAs($this->biasaUser)->get(route('siswa.pengajuan.create'));
         $response->assertOk();
-        $response->assertSee('Terkunci');
+        $response->assertSee('Diabaikan');
     }
 
-    public function test_form_create_pengajuan_shows_unlocked_for_siswa_ketua(): void
+    public function test_form_create_pengajuan_shows_diabaikan_badge_for_siswa_ketua(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-10-14 08:30:00', 'Asia/Jakarta'));
 
         $respKetua = $this->actingAs($this->ketuaUser)->get(route('siswa.pengajuan.create'));
         $respKetua->assertOk();
-        $respKetua->assertSee('Dispensasi Organisasi');
-        $respKetua->assertSee('Pramuka Gudep');
+        $respKetua->assertSee('Diabaikan');
+    }
+
+    public function test_form_create_pengajuan_shows_superadmin_badge_for_superadmin(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-14 08:30:00', 'Asia/Jakarta'));
+
+        $this->ketuaUser->update(['is_superadmin' => true]);
+        $respSuper = $this->actingAs($this->ketuaUser)->get(route('siswa.pengajuan.create'));
+        $respSuper->assertOk();
+        $respSuper->assertSee('Super Admin');
     }
 
     public function test_siswa_biasa_cannot_submit_dispensasi_organisasi(): void
@@ -190,11 +199,36 @@ class OrganisasiKetuaDispensasiTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('tipe_pengajuan');
+        $this->assertStringContainsString('masih dalam pengerjaan cuy', session('errors')->first('tipe_pengajuan'));
     }
 
-    public function test_siswa_ketua_can_submit_dispensasi_organisasi_and_saves_organisasi_id(): void
+    public function test_siswa_ketua_cannot_submit_dispensasi_organisasi(): void
     {
         Carbon::setTestNow('2026-10-14 08:30:00');
+
+        $respKetua = $this->actingAs($this->ketuaUser)->post(route('siswa.pengajuan.store'), [
+            'tipe_pengajuan' => 'organisasi',
+            'nama_organisasi' => 'Pramuka Gudep',
+            'tanggal_izin' => '2026-10-14',
+            'kategori' => 'keperluan_sekolah',
+            'alasan' => 'Mengikuti lomba pramuka se-kabupaten',
+            'tujuan' => 'Alun-alun Jepara',
+            'lokasi' => 'Jepara',
+            'no_telepon' => '081234567890',
+            'jam_keluar' => '09:00',
+            'jam_kembali' => '12:00',
+            'foto_verifikasi' => UploadedFile::fake()->image('selfie.jpg'),
+        ]);
+
+        $respKetua->assertSessionHasErrors('tipe_pengajuan');
+        $this->assertStringContainsString('masih dalam pengerjaan cuy', session('errors')->first('tipe_pengajuan'));
+    }
+
+    public function test_superadmin_can_submit_dispensasi_organisasi_for_testing(): void
+    {
+        Carbon::setTestNow('2026-10-14 08:30:00');
+
+        $this->ketuaUser->update(['is_superadmin' => true]);
 
         $response = $this->actingAs($this->ketuaUser)->post(route('siswa.pengajuan.store'), [
             'tipe_pengajuan' => 'organisasi',

@@ -58,6 +58,7 @@ class DispensasiOrganisasiDurasiDanPembinaTest extends TestCase
             'email' => 'denis@didispen.sch.id',
             'password' => Hash::make('password'),
             'role' => 'siswa',
+            'is_superadmin' => true,
             'nis_nip' => '4853',
         ]);
 
