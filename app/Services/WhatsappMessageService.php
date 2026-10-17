@@ -417,4 +417,168 @@ class WhatsappMessageService
     {
         return "Halo Pak/Bu {nama_guru},\n\nSaya {nama_siswa} dari kelas {kelas}, jurusan {jurusan}.\n\nSaya ingin menghubungi Bapak/Ibu selaku Guru Piket karena saat ini Bapak/Ibu sedang tidak berada di tempat.\n\nBerikut informasi pengajuan saya:\n\nNama: {nama_siswa}\nNIS: {nis}\nKelas: {kelas}\nJurusan: {jurusan}\n\nNomor Surat: {nomor_surat}\nKeperluan: {kategori}\nAlasan: {alasan}\nTujuan: {tujuan}\nLokasi: {lokasi}\nJam Keluar: {jam_keluar}\nJam Kembali: {jam_kembali}\n\nMohon dapat membantu menindaklanjuti pengajuan saya melalui DIDISPEN.\n\nWebsite DIDISPEN:\n{link_web}\n\nTerima kasih, Pak/Bu.";
     }
+
+    /**
+     * =========================================================================
+     * INTEGRASI BOT BAILEYS (PENGIRIMAN OTOMATIS VIA QUEUE)
+     * =========================================================================
+     */
+
+    /**
+     * Dispatch pengiriman pesan WhatsApp ke Queue Baileys dengan proteksi duplikasi
+     */
+    public function dispatchBaileysMessage(
+        ?string $rawPhone,
+        string $message,
+        string $context,
+        ?int $userId = null,
+        ?string $recipientName = null,
+        ?string $referenceKey = null
+    ): ?\App\Models\WhatsappLog {
+        $botEnabled = (bool) \App\Models\Setting::get('wa_bot_enabled', config('services.whatsapp_bot.enabled', true));
+        if (! $botEnabled) {
+            return null;
+        }
+
+        // Cegah pengiriman ganda jika referenceKey sudah pernah dikirim
+        if ($referenceKey && \App\Models\WhatsappLog::where('reference_key', $referenceKey)->whereIn('status', ['pending', 'sent'])->exists()) {
+            return null;
+        }
+
+        $formattedPhone = self::formatPhoneNumber($rawPhone);
+
+        $log = \App\Models\WhatsappLog::create([
+            'user_id'        => $userId,
+            'recipient_name' => $recipientName,
+            'phone'          => $formattedPhone,
+            'context'        => $context,
+            'reference_key'  => $referenceKey,
+            'message'        => $message,
+            'status'         => $formattedPhone ? 'pending' : 'failed',
+            'error_message'  => $formattedPhone ? null : 'Nomor telepon pengguna kosong atau tidak valid.',
+        ]);
+
+        if ($formattedPhone) {
+            \App\Jobs\SendBaileysWhatsAppJob::dispatch($log->id);
+        }
+
+        return $log;
+    }
+
+    /**
+     * 1. Kirim Notifikasi WA ke Guru Piket yang Sedang Bertugas Aktif
+     */
+    public function notifyGuruPiketBertugas(\App\Models\Guru $guru, \App\Models\JadwalPiket $jadwal, bool $isPengganti = false): void
+    {
+        if (! (bool) \App\Models\Setting::get('wa_notify_piket_bertugas', true)) {
+            return;
+        }
+
+        $today = now('Asia/Jakarta')->toDateString();
+        // Kunci unik agar 1 guru pada 1 sesi di tanggal yang sama hanya dikirimi 1x saat sesi dimulai
+        $refKey = "piket_aktif_{$jadwal->id}_guru_{$guru->id}_{$today}";
+
+        $templates = $this->getTemplates();
+        $content = $templates['pengingat-piket'] ?? $templates['pengingat_piket'] ?? null;
+
+        if (! $content) {
+            $statusPeran = $isPengganti ? 'Guru Piket Pengganti' : 'Guru Piket Resmi';
+            $content = "📋 *PEMBERITAHUAN TUGAS PIKET (DIDISPEN)*\n\nHalo Yth. Bapak/Ibu *{nama_guru}*,\n\nSaat ini sesi piket Anda telah *AKTIF / SEDANG BERLANGSUNG* sebagai *{$statusPeran}*:\n📅 Hari/Tanggal: *{hari}, {tanggal}*\n⏰ Sesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n👤 Koordinator: {koordinator}\n\nSistem akan mengirimkan notifikasi otomatis ke nomor ini apabila ada pengajuan dispensasi atau siswa yang terlambat kembali.\n\nSelamat bertugas!\n- Sistem DIDISPEN SMKN 1 Bangsri";
+        }
+
+        $pesan = $this->renderPiketContent($content, $guru, $jadwal);
+
+        $this->dispatchBaileysMessage(
+            rawPhone: $guru->no_telepon,
+            message: $pesan,
+            context: 'piket_aktif',
+            userId: $guru->user_id,
+            recipientName: $guru->nama_lengkap,
+            referenceKey: $refKey
+        );
+    }
+
+    /**
+     * 2. Kirim Notifikasi WA ke Siswa yang Terlambat + Laporan ke Guru Piket yang Sedang Bertugas
+     *
+     * @param string $eventType 'overdue' (belum kembali & lewat batas) | 'returned_late' (sudah kembali tapi terlambat)
+     */
+    public function notifySiswaTerlambatDanGuruPiket(Dispensasi $dispensasi, string $eventType = 'overdue'): void
+    {
+        $dispensasi->loadMissing(['siswa.kelas.jurusan', 'siswa.user', 'guru']);
+        $siswa = $dispensasi->siswa;
+        if (! $siswa) {
+            return;
+        }
+
+        // A. KIRIM WA KE SISWA (jika diaktifkan di Pengaturan)
+        if ((bool) \App\Models\Setting::get('wa_notify_siswa_terlambat', true)) {
+            $templates = $this->getTemplates();
+            $contentSiswa = $templates['terlambat'] ?? $this->getDefaultContent('terlambat');
+            $pesanSiswa = $this->renderContent($contentSiswa, $dispensasi, 'terlambat');
+
+            $this->dispatchBaileysMessage(
+                rawPhone: $siswa->no_telepon,
+                message: $pesanSiswa,
+                context: "siswa_terlambat_{$eventType}",
+                userId: $siswa->user_id,
+                recipientName: $siswa->nama_lengkap,
+                referenceKey: "disp_{$dispensasi->id}_siswa_{$eventType}"
+            );
+        }
+
+        // B. KIRIM LAPORAN KE GURU PIKET AKTIF (jika diaktifkan di Pengaturan)
+        if ((bool) \App\Models\Setting::get('wa_notify_laporan_guru_piket', true)) {
+            $piketService = app(GuruPiketService::class);
+            $infoSesi = $piketService->getInformasiSesi();
+
+            $daftarGuruPiket = collect();
+
+            if ($infoSesi['status_sesi'] === 'Berlangsung' && ! $infoSesi['conflict']) {
+                foreach ($infoSesi['petugas'] as $p) {
+                    // Kirim ke guru piket yang statusnya 'Sedang Bertugas' atau 'Sudah Kembali'
+                    if (in_array($p['status'], ['Sedang Bertugas', 'Sudah Kembali'])) {
+                        $daftarGuruPiket->push($p['guru']);
+                    }
+                }
+            }
+
+            // Jika tidak ada sesi berlangsung / semua sedang keluar, fallback ke guru yang menyetujui dispensasi ini
+            if ($daftarGuruPiket->isEmpty() && $dispensasi->guru && $dispensasi->guru->status_aktif) {
+                $daftarGuruPiket->push($dispensasi->guru);
+            }
+
+            $durasiTerlambat = $dispensasi->getLateDurationText(false) ?: 'Baru saja melewati batas waktu';
+            $kelasNama = $siswa->kelas?->nama_kelas ?? '-';
+            $statusKet = $eventType === 'returned_late'
+                ? "Sudah kembali di pos satpam pada pukul " . ($dispensasi->waktu_kembali_aktual?->format('H:i') ?? now()->format('H:i')) . " WIB (Terlambat {$durasiTerlambat})"
+                : "Masih berada di luar sekolah & melewati batas waktu kembali ({$durasiTerlambat})";
+
+            foreach ($daftarGuruPiket->unique('id') as $guruPiket) {
+                $pesanGuru = "🚨 *LAPORAN SISWA TERLAMBAT (DIDISPEN)*\n\n"
+                    . "Yth. Petugas Piket (*{$guruPiket->nama_lengkap}*),\n"
+                    . "Terdapat siswa yang tercatat *TERLAMBAT KEMBALI* dari izin dispensasi:\n\n"
+                    . "👤 Nama: *{$siswa->nama_lengkap}*\n"
+                    . "🏫 Kelas: {$kelasNama}\n"
+                    . "📄 No. Surat: {$dispensasi->nomor_surat}\n"
+                    . "📍 Tujuan: " . ($dispensasi->tujuan ?? $dispensasi->lokasi ?? '-') . "\n"
+                    . "⏰ Batas Kembali: {$dispensasi->jam_kembali} WIB\n"
+                    . "⚠️ Status: *{$statusKet}*\n\n"
+                    . "Mohon pantauan dan tindak lanjut dari Bapak/Ibu Guru Piket.\n"
+                    . "- Sistem DIDISPEN";
+
+                $this->dispatchBaileysMessage(
+                    rawPhone: $guruPiket->no_telepon,
+                    message: $pesanGuru,
+                    context: "laporan_piket_{$eventType}",
+                    userId: $guruPiket->user_id,
+                    recipientName: $guruPiket->nama_lengkap,
+                    referenceKey: "disp_{$dispensasi->id}_guru_{$guruPiket->id}_{$eventType}"
+                );
+            }
+        }
+    }
+
 }
+
+

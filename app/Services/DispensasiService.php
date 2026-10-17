@@ -186,7 +186,7 @@ class DispensasiService
         }
     }
 
-    public function konfirmasiKembali(Dispensasi $dispensasi, $satpamId): void
+   public function konfirmasiKembali(Dispensasi $dispensasi, $satpamId): void
     {
         if ($dispensasi->status !== 'keluar') {
             throw new \InvalidArgumentException('Dispensasi harus dalam status keluar untuk dikonfirmasi kembali.');
@@ -241,6 +241,16 @@ class DispensasiService
             $message,
             route('siswa.pengajuan.show', $dispensasi->id, false)
         );
+
+        // ✅ TARUH DI SINI: Kirim WA otomatis ke Siswa & Guru Piket jika kembali terlambat
+        if ($isLate) {
+            try {
+                app(\App\Services\WhatsappMessageService::class)
+                    ->notifySiswaTerlambatDanGuruPiket($dispensasi, 'returned_late');
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Gagal dispatch WA terlambat saat konfirmasiKembali: ' . $e->getMessage());
+            }
+        }
 
         $this->auditLogService->log($satpamId, 'konfirmasi_kembali', 'dispensasi', $dispensasi->id);
     }
@@ -386,7 +396,7 @@ class DispensasiService
                         'catatan_admin' => $d->catatan_admin ?? 'Kadaluarsa otomatis: Siswa tidak melakukan scan kembali hingga KBM berakhir (Tidak Kembali).',
                     ]);
 
-                    // Kirim notifikasi jika ada user siswa
+                   // Kirim notifikasi jika ada user siswa
                     try {
                         if ($d->siswa?->user_id) {
                             $notif = app(\App\Services\NotifikasiService::class);
@@ -396,6 +406,10 @@ class DispensasiService
                                 route('siswa.pengajuan.show', $d->id)
                             );
                         }
+
+                        // ✅ TAMBAHKAN INI: Kirim WA via Baileys saat ditutup otomatis karena tidak kembali
+                        app(\App\Services\WhatsappMessageService::class)
+                            ->notifySiswaTerlambatDanGuruPiket($d, 'not_returned');
                     } catch (\Throwable $e) {
                         // ignore notification failure
                     }
