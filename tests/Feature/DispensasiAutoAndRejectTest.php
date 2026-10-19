@@ -438,7 +438,7 @@ class DispensasiAutoAndRejectTest extends TestCase
             'alasan'      => 'Uji threshold dinamis',
             'tujuan'      => 'Dinas',
             'jam_keluar'  => 'Jam Pelajaran ke-1',
-            'jam_kembali' => 'Jam Pelajaran ke-5',
+            'jam_kembali' => 'Jam Pelajaran ke-10',
             'status'      => 'menunggu',
             'created_at'  => Carbon::now('Asia/Jakarta'),
         ]);
@@ -473,7 +473,7 @@ class DispensasiAutoAndRejectTest extends TestCase
             'alasan'      => 'Uji hari Jumat',
             'tujuan'      => 'Masjid',
             'jam_keluar'  => 'Jam Pelajaran ke-1',
-            'jam_kembali' => 'Jam Pelajaran ke-2',
+            'jam_kembali' => 'Jam Pelajaran ke-8',
             'status'      => 'menunggu',
             'created_at'  => Carbon::now('Asia/Jakarta'),
         ]);
@@ -496,7 +496,7 @@ class DispensasiAutoAndRejectTest extends TestCase
             'alasan'      => 'Uji hari Sabtu',
             'tujuan'      => 'Eskul',
             'jam_keluar'  => 'Jam Pelajaran ke-1',
-            'jam_kembali' => 'Jam Pelajaran ke-2',
+            'jam_kembali' => 'Jam Pelajaran ke-10',
             'status'      => 'menunggu',
             'created_at'  => Carbon::now('Asia/Jakarta'),
         ]);
@@ -519,7 +519,7 @@ class DispensasiAutoAndRejectTest extends TestCase
             'alasan'      => 'Uji hari Minggu',
             'tujuan'      => 'Latihan',
             'jam_keluar'  => 'Jam Pelajaran ke-1',
-            'jam_kembali' => 'Jam Pelajaran ke-2',
+            'jam_kembali' => 'Jam Pelajaran ke-10',
             'status'      => 'menunggu',
             'created_at'  => Carbon::now('Asia/Jakarta'),
         ]);

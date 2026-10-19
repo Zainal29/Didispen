@@ -346,4 +346,43 @@ class DispensasiKadaluarsaAlertDanAutoExpireTest extends TestCase
         $dispensasi->refresh();
         $this->assertEquals('kadaluarsa', $dispensasi->status);
     }
+
+    /**
+     * 7. Dispensasi status 'menunggu' otomatis kadaluarsa jika tidak disetujui
+     * Guru Piket dalam durasi 20 menit sejak pengajuan dibuat.
+     */
+    public function test_dispensasi_menunggu_otomatis_kadaluarsa_setelah_20_menit(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-19 12:45:00', 'Asia/Jakarta'));
+
+        $dispensasi = Dispensasi::create([
+            'siswa_id'            => $this->siswa->id,
+            'nomor_surat'         => Dispensasi::generateNomorSurat(),
+            'kategori'            => 'izin',
+            'alasan'              => 'Fotokopi materi ujian',
+            'tujuan'              => 'Fotokopi depan',
+            'tanggal_izin'        => '2026-10-19',
+            'jam_keluar'          => '12:50',
+            'jam_kembali'         => '14:00',
+            'batas_waktu_kembali' => Carbon::parse('2026-10-19 14:00:00', 'Asia/Jakarta'),
+            'status'              => 'menunggu',
+        ]);
+
+        // Pada 13:00 (15 menit sejak diajukan, masih di bawah 20 menit) -> tetap menunggu
+        Carbon::setTestNow(Carbon::parse('2026-10-19 13:00:00', 'Asia/Jakarta'));
+        DispensasiService::autoExpireOverdueDispensasi();
+        $dispensasi->refresh();
+        $this->assertEquals('menunggu', $dispensasi->status);
+
+        // Pada 13:06 (21 menit sejak diajukan: 12:45 + 20 menit = 13:05) -> harus otomatis kadaluarsa
+        Carbon::setTestNow(Carbon::parse('2026-10-19 13:06:00', 'Asia/Jakarta'));
+        $affected = DispensasiService::autoExpireOverdueDispensasi();
+        $this->assertGreaterThanOrEqual(1, $affected);
+
+        $dispensasi->refresh();
+        $this->assertEquals('kadaluarsa', $dispensasi->status);
+        $this->assertStringContainsString('20 menit', $dispensasi->catatan_admin);
+        $this->assertStringContainsString('13:05 WIB', $dispensasi->catatan_admin);
+        $this->assertStringContainsString('tidak disetujui Guru Piket', $dispensasi->catatan_admin);
+    }
 }
