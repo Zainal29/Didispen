@@ -54,10 +54,10 @@
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                         <p class="font-bold">Pengajuan Menunggu Persetujuan Guru Piket</p>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
-                            <i class="fas fa-hourglass-half text-[10px]"></i> Kadaluarsa: {{ $dispensasi->getJamSelesaiKbmText() }}
+                            <i class="fas fa-hourglass-half text-[10px]"></i> Kadaluarsa: {{ $dispensasi->getBatasWaktuExpiredText() }}
                         </span>
                     </div>
-                    <p class="text-amber-800 mt-1">Pengajuan ini belum disetujui dan akan otomatis berubah menjadi <strong>Kadaluarsa</strong> saat jam KBM sekolah hari ini berakhir (pukul {{ $dispensasi->getJamSelesaiKbmText() }}).</p>
+                    <p class="text-amber-800 mt-1">Pengajuan ini belum disetujui dan akan otomatis berubah menjadi <strong>Kadaluarsa</strong> jika tidak disetujui hingga {{ $dispensasi->sampai_pulang ? 'jam KBM sekolah hari ini berakhir' : 'batas waktu izin' }} (pukul {{ $dispensasi->getBatasWaktuExpiredText() }}).</p>
                 </div>
             </div>
         @elseif($dispensasi->status === 'kadaluarsa')

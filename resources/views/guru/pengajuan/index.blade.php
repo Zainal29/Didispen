@@ -89,7 +89,7 @@
                         </span>
                         @if($item->isMenungguHariIni())
                             <span class="block text-[10px] text-amber-600 font-medium mt-1">
-                                <i class="ti ti-hourglass-low mr-0.5"></i>Kadaluarsa {{ $item->getJamSelesaiKbmText() }}
+                                <i class="ti ti-hourglass-low mr-0.5"></i>Kadaluarsa {{ $item->getBatasWaktuExpiredText() }}
                             </span>
                         @endif
                     </td>
@@ -147,7 +147,7 @@
                     </span>
                     @if($item->isMenungguHariIni())
                         <span class="text-[9px] text-amber-600 font-medium">
-                            <i class="ti ti-hourglass-low mr-0.5"></i>Batas {{ $item->getJamSelesaiKbmText() }}
+                            <i class="ti ti-hourglass-low mr-0.5"></i>Batas {{ $item->getBatasWaktuExpiredText() }}
                         </span>
                     @endif
                 </div>

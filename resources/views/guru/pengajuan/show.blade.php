@@ -479,6 +479,20 @@
                         </div>
                     </div>
                 </div>
+                @elseif($dispensasi->isReturnedEarly())
+                <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-5">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                            <i class="ti ti-clock-check text-xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-bold text-emerald-900">Kembali Lebih Awal</h4>
+                            <p class="text-xs text-emerald-800 mt-1 leading-relaxed">
+                                Siswa telah kembali ke sekolah pada pukul {{ $dispensasi->waktu_kembali_aktual?->format('H:i') }} WIB (lebih awal dari batas waktu {{ $dispensasi->batas_waktu_kembali?->format('H:i') }} WIB).
+                            </p>
+                        </div>
+                    </div>
+                </div>
                 @endif
             @endif
 

@@ -298,8 +298,13 @@ class QRScanService
             ];
         }
 
-        $isLate = $dispensasi->batas_waktu_kembali
-            && now()->greaterThan($dispensasi->batas_waktu_kembali);
+        $toleransiMenit = Dispensasi::TOLERANSI_KETERLAMBATAN_MENIT;
+        $batasToleransi = $dispensasi->batas_waktu_kembali
+            ? $dispensasi->batas_waktu_kembali->copy()->addMinutes($toleransiMenit)
+            : null;
+
+        $isLate = $batasToleransi && now()->greaterThan($batasToleransi);
+        $isEarly = $dispensasi->batas_waktu_kembali && now()->lessThan($dispensasi->batas_waktu_kembali);
 
         /*
          * Setelah status menjadi 'selesai', file fisik (QR code, foto verifikasi,
@@ -360,7 +365,9 @@ class QRScanService
 
         $message = $isLate
             ? 'Siswa berhasil dicatat KEMBALI. PERINGATAN: Terlambat dari batas waktu!'
-            : 'Siswa berhasil dicatat KEMBALI (Tepat Waktu).';
+            : ($isEarly
+                ? 'Siswa berhasil dicatat KEMBALI (Lebih Awal).'
+                : 'Siswa berhasil dicatat KEMBALI (Tepat Waktu).');
 
         return [
             'success' => true,

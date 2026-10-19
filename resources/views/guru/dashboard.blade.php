@@ -24,6 +24,9 @@
 }
 </style>
 
+{{-- ============ MODAL & BANNER PERINGATAN KEAMANAN AKUN ============ --}}
+@include('components.security-modal')
+
 {{-- HERO SECTION - Format modern, responsive seperti siswa --}}
 <div class="relative overflow-hidden bg-blue-600 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs text-white border border-blue-700">
     <div class="relative z-10">
