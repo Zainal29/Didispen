@@ -4,7 +4,9 @@
     $isDefaultPassword = $user && $user->isDefaultPassword();
     $phone = $user ? $user->getPhoneNumber() : null;
     $hasPhone = !empty($phone);
-    $sipintuUrl = config('services.sipintu.url') ?: config('services.sipintu.base_url') ?: 'https://sipintu.smkn1bangsri.sch.id';
+    $baseSipintu = rtrim(config('services.sipintu.url') ?: config('services.sipintu.base_url') ?: 'https://sipintu.smkn1bangsri.sch.id', '/');
+    $roleHash = ($user && $user->isGuru()) ? '#guru' : '#siswa';
+    $sipintuUrl = str_contains($baseSipintu, '#') ? $baseSipintu : $baseSipintu . $roleHash;
 @endphp
 
 @if($needsUpdate)
