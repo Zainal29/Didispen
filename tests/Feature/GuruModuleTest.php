@@ -781,8 +781,8 @@ class GuruModuleTest extends TestCase
             'kategori'    => 'izin',
             'alasan'      => 'Pengajuan siswa yang dapat dilihat semua guru',
             'tujuan'      => 'Klinik',
-            'jam_keluar'  => 'Jam Pelajaran ke-1',
-            'jam_kembali' => 'Jam Pelajaran ke-2',
+            'jam_keluar'  => 'Jam Pelajaran ke-3',
+            'jam_kembali' => 'Jam Pelajaran ke-4',
             'status'      => 'menunggu',
         ]);
 
