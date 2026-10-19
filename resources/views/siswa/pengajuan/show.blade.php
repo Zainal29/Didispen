@@ -469,7 +469,7 @@
                     @endif
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 sm:gap-4 mt-4 pt-4 border-t border-slate-100">
+                <div class="grid grid-cols-2 {{ $dispensasi->waktu_kembali_aktual ? 'sm:grid-cols-3' : '' }} gap-3 sm:gap-4 mt-4 pt-4 border-t border-slate-100">
                     <div class="bg-blue-50/60 rounded-xl p-3 sm:p-3.5 border border-blue-100">
                         <p class="text-[10px] font-bold text-blue-700 uppercase mb-1 flex items-center gap-1">
                             <i class="ti ti-clock"></i> Jam Keluar
@@ -482,7 +482,7 @@
                     </div>
                     <div class="bg-amber-50/60 rounded-xl p-3 sm:p-3.5 border border-amber-100">
                         <p class="text-[10px] font-bold text-amber-700 uppercase mb-1 flex items-center gap-1">
-                            <i class="ti ti-clock"></i> Jam Kembali
+                            <i class="ti ti-clock"></i> {{ $dispensasi->sampai_pulang ? 'Jam Kembali' : 'Batas Kembali' }}
                         </p>
                         @if($dispensasi->sampai_pulang)
                             <p class="font-bold text-purple-900 text-sm">Sampai Pulang</p>
@@ -495,6 +495,23 @@
                             @endif
                         @endif
                     </div>
+                    @if($dispensasi->waktu_kembali_aktual)
+                        <div class="col-span-2 sm:col-span-1 {{ $dispensasi->isReturnedLate() ? 'bg-rose-50/60 border-rose-100' : 'bg-emerald-50/60 border-emerald-100' }} rounded-xl p-3 sm:p-3.5 border">
+                            <p class="text-[10px] font-bold {{ $dispensasi->isReturnedLate() ? 'text-rose-700' : 'text-emerald-700' }} uppercase mb-1 flex items-center gap-1">
+                                <i class="ti ti-door-enter"></i> Kembali Aktual
+                            </p>
+                            <p class="font-bold {{ $dispensasi->isReturnedLate() ? 'text-rose-900' : 'text-emerald-900' }} text-sm">
+                                {{ \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->format('H:i') }} WIB
+                            </p>
+                            @if($dispensasi->isReturnedLate())
+                                <p class="text-rose-700 text-xs mt-1 flex items-center gap-1"><i class="ti ti-alert-triangle text-[11px]"></i>Terlambat {{ $dispensasi->getLateDurationText(true) }}</p>
+                            @elseif($dispensasi->isReturnedEarly())
+                                <p class="text-emerald-700 text-xs mt-1 flex items-center gap-1"><i class="ti ti-clock-check text-[11px]"></i>Kembali Lebih Awal</p>
+                            @else
+                                <p class="text-emerald-700 text-xs mt-1 flex items-center gap-1"><i class="ti ti-check text-[11px]"></i>Tepat Waktu</p>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 @if($dispensasi->dibuat_manual_oleh_guru)
@@ -985,8 +1002,12 @@
                             <div class="flex-1 min-w-0">
                                 <p class="text-xs font-bold text-slate-900">Dikonfirmasi Kembali oleh Satpam</p>
                                 <p class="text-[11px] text-slate-500">{{ \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                                @if($dispensasi->is_warned)
-                                    <p class="text-[11px] text-rose-600 font-bold mt-0.5 flex items-center gap-1"><i class="ti ti-alert-circle text-xs"></i>Tercatat Terlambat</p>
+                                @if($dispensasi->is_warned || $dispensasi->isReturnedLate())
+                                    <p class="text-[11px] text-rose-600 font-bold mt-0.5 flex items-center gap-1"><i class="ti ti-alert-circle text-xs"></i>Tercatat Terlambat {{ $dispensasi->getLateDurationText(true) ? '(' . $dispensasi->getLateDurationText(true) . ')' : '' }}</p>
+                                @elseif($dispensasi->isReturnedEarly())
+                                    <p class="text-[11px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1"><i class="ti ti-clock-check text-xs"></i>Kembali Lebih Awal</p>
+                                @else
+                                    <p class="text-[11px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1"><i class="ti ti-circle-check text-xs"></i>Tepat Waktu</p>
                                 @endif
                             </div>
                         </div>

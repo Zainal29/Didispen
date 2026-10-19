@@ -76,8 +76,10 @@
                         <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Tidak Kembali</span>
                     @elseif($dispensasi->isReturnedLate())
                         <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200">Selesai (Terlambat)</span>
+                    @elseif($dispensasi->isReturnedEarly())
+                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Selesai (Lebih Awal)</span>
                     @else
-                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Selesai</span>
+                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Selesai (Tepat Waktu)</span>
                     @endif
                 @elseif($status === 'dihubungi')
                     <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">Dihubungi</span>

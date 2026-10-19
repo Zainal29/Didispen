@@ -3,6 +3,9 @@
 @section('page-title', 'Dashboard Siswa')
 @section('content')
 
+{{-- ============ MODAL & BANNER PERINGATAN KEAMANAN AKUN ============ --}}
+@include('components.security-modal')
+
 {{-- ============ HERO BANNER (CLEAN TABLER BLUE, RESPONSIVE) ============ --}}
 <div class="relative overflow-hidden bg-blue-600 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs text-white border border-blue-700">
     <div class="relative z-10">
@@ -43,7 +46,7 @@
                         Pengajuan Menunggu Persetujuan Guru Piket
                     </h3>
                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold border border-amber-200">
-                        <i class="ti ti-hourglass-low text-[11px]"></i> Kadaluarsa: {{ $dispensasiMenunggu->getJamSelesaiKbmText() }}
+                        <i class="ti ti-hourglass-low text-[11px]"></i> Kadaluarsa: {{ $dispensasiMenunggu->getBatasWaktuExpiredText() }}
                     </span>
                     @if(!empty($piketEligible))
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-200">
@@ -59,7 +62,7 @@
                     @endif
                 </div>
                 <p class="text-xs text-amber-900 leading-relaxed">
-                    Pengajuan <span class="font-mono font-semibold text-slate-800">#{{ $dispensasiMenunggu->nomor_surat }}</span> Anda <strong>akan segera kadaluarsa</strong> jika tidak disetujui hingga jam KBM usai (pukul <strong>{{ $dispensasiMenunggu->getJamSelesaiKbmText() }}</strong>). Segera temui Guru Piket di ruang piket untuk menyelesaikan prosesnya.
+                    Pengajuan <span class="font-mono font-semibold text-slate-800">#{{ $dispensasiMenunggu->nomor_surat }}</span> Anda <strong>akan segera kadaluarsa</strong> jika tidak disetujui hingga {{ $dispensasiMenunggu->sampai_pulang ? 'jam KBM usai' : 'batas izin berakhir' }} (pukul <strong>{{ $dispensasiMenunggu->getBatasWaktuExpiredText() }}</strong>). Segera temui Guru Piket di ruang piket untuk menyelesaikan prosesnya.
                 </p>
             </div>
         </div>
@@ -70,7 +73,7 @@
                     onclick="openPiketDashboardModal()"
                     class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all">
                 <i class="ti ti-brand-whatsapp text-sm"></i>
-                <span>Hubungi Guru Piket</span>
+                <span>Hubungi Guru Piket Via WhatsApp</span>
             </button>
             @endif
             <a href="{{ route('siswa.pengajuan.show', $dispensasiMenunggu) }}"
@@ -94,7 +97,7 @@
                     <i class="ti ti-brand-whatsapp text-base"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-slate-900">Hubungi Guru Piket</h3>
+                    <h3 class="text-sm font-bold text-slate-900">Hubungi Guru Piket Via WhatsApp</h3>
                     <p class="text-[11px] text-slate-500">Daftar Guru Piket yang sedang bertugas pada sesi ini</p>
                 </div>
             </div>

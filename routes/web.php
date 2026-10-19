@@ -11,6 +11,7 @@ use App\Http\Controllers\OAuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Satpam\DashboardController;
 use App\Http\Controllers\Satpam\ScanController;
+use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\Siswa;
 use App\Http\Controllers\Siswa\CetakController;
 use App\Http\Controllers\Siswa\NotifikasiController;
@@ -43,6 +44,11 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->
 // GROUP AUTHENTICATED (Semua User Login)
 // ==========================================
 Route::middleware(['auth'])->group(function () {
+    Route::get('/keamanan/lengkapi-profil', [SecurityController::class, 'showPrompt'])->name('security.prompt');
+    Route::post('/keamanan/lengkapi-profil', [SecurityController::class, 'updateProfile'])->name('security.update');
+    Route::post('/keamanan/cek-sipintu', [SecurityController::class, 'checkSipintuStatus'])->name('security.check-sipintu');
+
+
 
     // ==========================================
     // PROFIL (Shared Layout, Logic Berbeda per Role)
