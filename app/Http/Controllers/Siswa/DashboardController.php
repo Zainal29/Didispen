@@ -123,7 +123,7 @@ class DashboardController extends Controller
         $hubungiError = null;
 
         if ($dispensasiMenunggu) {
-            $expiredAt = $dispensasiMenunggu->created_at->copy()->addMinutes(6);
+            $expiredAt = $dispensasiMenunggu->created_at->copy()->addMinutes(Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT);
             $now = now('Asia/Jakarta');
 
             if ($now->lt($expiredAt)) {

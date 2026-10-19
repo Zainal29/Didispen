@@ -624,8 +624,8 @@ namespace App\Http\Controllers\Siswa;
 
     if ($dispensasi->status === 'menunggu') {
         $expiredAt = $dispensasi->created_at
-        ->copy()
-        ->addMinutes(6);
+            ->copy()
+            ->addMinutes(Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT);
 
     $now = now('Asia/Jakarta');
 
@@ -768,7 +768,7 @@ public function hubungiGuruPiket(\Illuminate\Http\Request $request, Dispensasi $
 
     $expiredAt = $dispensasi->created_at
         ->copy()
-        ->addMinutes(6);
+        ->addMinutes(Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT);
 
     if (! now('Asia/Jakarta')->lt($expiredAt)) {
         return redirect()

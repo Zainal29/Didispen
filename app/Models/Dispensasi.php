@@ -127,6 +127,16 @@ class Dispensasi extends Model
     }
 
     /**
+     * Toleransi keterlambatan scan kembali di pos gerbang dalam menit (antrean / buffer)
+     */
+    public const TOLERANSI_KETERLAMBATAN_MENIT = 5;
+
+    /**
+     * Durasi batas waktu pengajuan berstatus 'menunggu' disetujui Guru Piket (20 menit sejak diajukan)
+     */
+    public const DURASI_KADALUARSA_MENUNGGU_MENIT = 20;
+
+    /**
      * Cek apakah saat ini sedang keluar dan melewati batas waktu (Overdue)
      */
     public function isOverdue(): bool
@@ -141,7 +151,22 @@ class Dispensasi extends Model
     }
 
     /**
-     * Cek apakah dispensasi berstatus 'selesai' namun kembali melewati batas waktu
+     * Cek apakah dispensasi berstatus 'selesai' dan kembali lebih awal sebelum batas jam yang ditentukan
+     */
+    public function isReturnedEarly(): bool
+    {
+        if ($this->sampai_pulang) {
+            return false;
+        }
+
+        return $this->status === 'selesai'
+            && $this->batas_waktu_kembali !== null
+            && $this->waktu_kembali_aktual !== null
+            && $this->waktu_kembali_aktual->lessThan($this->batas_waktu_kembali);
+    }
+
+    /**
+     * Cek apakah dispensasi berstatus 'selesai' namun kembali melewati batas waktu + toleransi
      */
     public function isReturnedLate(): bool
     {
@@ -152,7 +177,9 @@ class Dispensasi extends Model
         return $this->status === 'selesai'
             && $this->batas_waktu_kembali !== null
             && $this->waktu_kembali_aktual !== null
-            && $this->waktu_kembali_aktual->greaterThan($this->batas_waktu_kembali);
+            && $this->waktu_kembali_aktual->greaterThan(
+                $this->batas_waktu_kembali->copy()->addMinutes(self::TOLERANSI_KETERLAMBATAN_MENIT)
+            );
     }
 
     /**
@@ -250,6 +277,15 @@ class Dispensasi extends Model
                 ];
             }
 
+            if ($this->isReturnedEarly()) {
+                return [
+                    'text' => 'Selesai (Kembali Lebih Awal)',
+                    'class' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                    'dot' => 'bg-emerald-500',
+                    'is_late' => false,
+                ];
+            }
+
             return [
                 'text' => 'Selesai (Tepat Waktu)',
                 'class' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -294,7 +330,7 @@ class Dispensasi extends Model
                     ? 'Kadaluarsa (Tidak Kembali)'
                     : (($this->catatan_admin && str_contains($this->catatan_admin, 'scan keluar'))
                         ? 'Kadaluarsa (Tidak Scan Keluar)'
-                        : 'Kadaluarsa'),
+                        : 'Kadaluarsa (Tidak minta Acc)'),
                 'class' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
                     ? 'bg-rose-100 text-rose-800 border-rose-200'
                     : 'bg-orange-100 text-orange-800 border-orange-200',
@@ -330,6 +366,13 @@ class Dispensasi extends Model
      */
     public function getBatasWaktuExpiredText(): string
     {
+        if ($this->status === 'menunggu') {
+            $createdAt = $this->created_at
+                ? $this->created_at->copy()->setTimezone('Asia/Jakarta')
+                : now('Asia/Jakarta');
+            return $createdAt->addMinutes(self::DURASI_KADALUARSA_MENUNGGU_MENIT)->format('H:i') . ' WIB';
+        }
+
         if (! $this->sampai_pulang) {
             $deadline = $this->batas_waktu_kembali;
             if (! $deadline && $this->jam_kembali) {

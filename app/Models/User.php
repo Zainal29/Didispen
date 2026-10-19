@@ -22,6 +22,8 @@ class User extends Authenticatable
         'nis_nip',
         'external_id',
         'sipintu_last_synced_at',
+        'password_changed_at', 
+        'no_wa',               
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -29,6 +31,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'password_changed_at' => 'datetime',
             'email_verified_at' => 'datetime',
             'is_superadmin' => 'boolean',
             'sipintu_last_synced_at' => 'datetime',
@@ -74,6 +77,39 @@ class User extends Authenticatable
     public function isSiswa(): bool
     {
         return $this->role === 'siswa';
+    }
+
+    /**
+     * Cek apakah user masih menggunakan password bawaan 'password'
+     */
+    public function isDefaultPassword(): bool
+    {
+        if ($this->password_changed_at !== null) {
+            return false;
+        }
+
+        return \Illuminate\Support\Facades\Hash::check('password', $this->password);
+    }
+
+    /**
+     * Ambil nomor WhatsApp / telepon yang tersedia (dari users.no_wa atau relasi siswa/guru)
+     */
+    public function getPhoneNumber(): ?string
+    {
+        return $this->no_wa ?: ($this->siswa?->no_telepon ?: $this->guru?->no_telepon);
+    }
+
+    /**
+     * Cek apakah user perlu melengkapi keamanan (ganti password default & isi No WA)
+     */
+    public function needsSecurityUpdate(): bool
+    {
+        // Hanya berlaku untuk siswa dan guru (admin biasanya mandiri)
+        if (! in_array($this->role, ['siswa', 'guru'], true)) {
+            return false;
+        }
+
+        return $this->isDefaultPassword() || empty($this->getPhoneNumber());
     }
 
     public function unreadNotifikasi(): HasMany
