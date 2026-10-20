@@ -42,5 +42,6 @@ Thumbs.db
 !/README.md
 /*.pdf
 /*.zip
-
-
+/DIDISPEN_Sosialisasi_Alur_dan_Fitur.pptx
+/generate_pdf.php
+/generate_presentation.py
