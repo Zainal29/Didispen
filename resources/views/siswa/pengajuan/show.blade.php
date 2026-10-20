@@ -12,9 +12,9 @@
                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nomor Surat</p>
                 <div class="flex items-center gap-2 flex-wrap">
                     <h1 class="text-base sm:text-xl font-bold text-slate-900 font-mono tracking-tight">{{ $dispensasi->nomor_surat }}</h1>
-                    @if($dispensasi->isOrganisasi())
+                    @if($dispensasi->isRombongan())
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                            <i class="ti ti-users text-xs"></i> {{ $dispensasi->nama_organisasi }}
+                            <i class="ti ti-users text-xs"></i> Dispensasi Rombongan
                         </span>
                         @if(auth()->user()->siswa && auth()->user()->siswa->id !== $dispensasi->siswa_id)
                             <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
@@ -242,33 +242,29 @@
                         <i class="ti ti-file-text text-slate-400 text-base"></i>Informasi Dispensasi
                     </h3>
                     <span class="text-xs font-bold text-slate-500 font-mono">
-                        @if($dispensasi->durasi_hari > 1 && $dispensasi->tanggal_selesai)
-                            {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($dispensasi->tanggal_selesai)->translatedFormat('d M Y') }} ({{ $dispensasi->durasi_hari }} Hari)
-                        @else
-                            {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('d M Y') }}
-                        @endif
+                        {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('d M Y') }}
                     </span>
                 </div>
 
-                @if($dispensasi->tipe_pengajuan === 'organisasi')
+                @if($dispensasi->isRombongan())
                 <div class="mb-5 bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs">
-                    {{-- Header Organisasi --}}
+                    {{-- Header Rombongan --}}
                     <div class="flex items-start justify-between gap-2.5 mb-3">
                         <div class="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                             <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shadow-sm shrink-0 mt-0.5">
                                 <i class="ti ti-users"></i>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-blue-600 block leading-tight">Dispensasi Organisasi</span>
+                                <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-blue-600 block leading-tight">Dispensasi Rombongan</span>
                                 <h4 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight capitalize leading-snug mt-0.5 break-words">
-                                    {{ $dispensasi->nama_organisasi }}
+                                    {{ $dispensasi->siswa->nama_lengkap }} & Rombongan
                                 </h4>
                             </div>
                         </div>
                         <div class="shrink-0">
                             @if($dispensasi->siswa_id === auth()->user()->siswa?->id)
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white shadow-xs whitespace-nowrap">
-                                    <i class="ti ti-crown text-xs"></i> <span class="hidden sm:inline">Anda: </span>Ketua
+                                    <i class="ti ti-crown text-xs"></i> <span class="hidden sm:inline">Anda: </span>Pemohon
                                 </span>
                             @else
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-200 text-slate-700 whitespace-nowrap">
@@ -390,51 +386,6 @@
                             @endforeach
                         </div>
                     </div>
-
-                    {{-- Guru Pembina Ekstrakurikuler --}}
-                    @if($dispensasi->gurus && $dispensasi->gurus->count() > 0)
-                    <div class="mt-4 pt-4 border-t border-slate-200">
-                        <div class="flex items-center justify-between gap-2 mb-2 flex-wrap sm:flex-nowrap">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5 leading-snug min-w-0">
-                                <i class="ti ti-school text-blue-600 text-sm shrink-0"></i><span class="break-words">Guru Pembina Ekstrakurikuler / Organisasi</span>
-                            </span>
-                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shrink-0 whitespace-nowrap">
-                                {{ $dispensasi->gurus->count() }} Guru
-                            </span>
-                        </div>
-                        <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-xs">
-                            @foreach($dispensasi->gurus as $guruIdx => $guruPembina)
-                            <div class="p-3 sm:px-4 text-xs hover:bg-slate-50 transition-colors">
-                                <div class="flex items-start sm:items-center justify-between gap-2.5 sm:gap-3">
-                                    <div class="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                                        <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 sm:mt-0 border border-blue-100">
-                                            <i class="ti ti-user-circle text-base"></i>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="font-bold text-slate-900 leading-snug break-words">{{ $guruPembina->nama_lengkap }}</p>
-                                            <p class="text-[11px] text-slate-500 font-mono mt-0.5 whitespace-nowrap">NIP: {{ $guruPembina->nip ?? '-' }}</p>
-                                        </div>
-                                    </div>
-
-                                    {{-- Desktop Badge --}}
-                                    <div class="hidden sm:block flex-shrink-0">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                            <i class="ti ti-book-2 text-xs"></i> {{ $guruPembina->mata_pelajaran ?? 'Pembina' }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {{-- Mobile Badge --}}
-                                <div class="sm:hidden mt-2 pl-[42px]">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                        <i class="ti ti-book-2 text-[10px]"></i> {{ $guruPembina->mata_pelajaran ?? 'Pembina' }}
-                                    </span>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
                 </div>
                 @endif
 
@@ -782,12 +733,12 @@
         {{-- Kolom Kanan: Data Siswa & Guru & Timeline --}}
         <div class="space-y-4">
             {{-- Data Siswa / Pemohon --}}
-            @if($dispensasi->isOrganisasi())
-                {{-- Card 1: Data Pemohon (Ketua) --}}
+            @if($dispensasi->isRombongan())
+                {{-- Card 1: Data Pemohon (PIC) --}}
                 <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
                     <h3 class="text-sm font-bold text-slate-900 mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
-                        <span class="flex items-center gap-1.5"><i class="ti ti-crown text-amber-600"></i>Data Pemohon (Ketua)</span>
-                        <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Ketua Rombongan</span>
+                        <span class="flex items-center gap-1.5"><i class="ti ti-crown text-amber-600"></i>Data Pemohon (PIC)</span>
+                        <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pemohon</span>
                     </h3>
                     <div class="space-y-3">
                         <div>

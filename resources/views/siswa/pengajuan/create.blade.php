@@ -86,51 +86,18 @@
                             const banner = document.getElementById('timeWarningBanner');
                             if (banner && !banner.classList.contains('hidden')) {
                                 this.isDispensasiClosed = true;
-                                this.showGuruDropdown = false;
                             }
                         },
                         loading: false,
                         tipePengajuan: '{{ old('tipe_pengajuan', 'individu') }}',
                         sampaiPulang: {{ old('sampai_pulang') ? 'true' : 'false' }},
                         tanggalIzin: '{{ old('tanggal_izin', now('Asia/Jakarta')->toDateString()) }}',
-                        tanggalSelesai: '{{ old('tanggal_selesai', old('tanggal_izin', now('Asia/Jakarta')->toDateString())) }}',
 
                         get pilihanTanggal() {
                             const today = '{{ now('Asia/Jakarta')->toDateString() }}';
                             return this.tanggalIzin > today ? 'custom' : 'hari_ini';
                         },
 
-                        // Durasi Hari
-                        durasiHari() {
-                            if (!this.tanggalIzin) return 1;
-                            const start = new Date(this.tanggalIzin + 'T00:00:00');
-                            const end = new Date((this.tanggalSelesai || this.tanggalIzin) + 'T00:00:00');
-                            if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
-                                return 1;
-                            }
-                            const diffTime = end.getTime() - start.getTime();
-                            return Math.round(diffTime / (1000 * 3600 * 24)) + 1;
-                        },
-                        maxDate: '{{ now('Asia/Jakarta')->endOfMonth()->toDateString() }}',
-                        onTanggalMulaiChange() {
-                            if (this.tanggalIzin > this.maxDate) {
-                                this.tanggalIzin = this.maxDate;
-                            }
-                            if (!this.tanggalSelesai || this.tanggalSelesai < this.tanggalIzin) {
-                                this.tanggalSelesai = this.tanggalIzin;
-                            }
-                            if (this.tanggalSelesai > this.maxDate) {
-                                this.tanggalSelesai = this.maxDate;
-                            }
-                        },
-                        onTanggalSelesaiChange() {
-                            if (this.tanggalSelesai > this.maxDate) {
-                                this.tanggalSelesai = this.maxDate;
-                            }
-                            if (this.tanggalSelesai < this.tanggalIzin) {
-                                this.tanggalSelesai = this.tanggalIzin;
-                            }
-                        },
                         formatTanggalIndo(dateStr) {
                             if (!dateStr) return '-';
                             try {
@@ -142,7 +109,7 @@
                             }
                         },
 
-                        // Anggota Siswa (Filter Kelas + Multi Checklist)
+                        // Anggota Siswa Rombongan (Filter Kelas + Multi Checklist)
                         selectedKelasId: '',
                         searchQuery: '',
                         kelasSiswaList: [],
@@ -197,63 +164,8 @@
                             this.selectedAnggota = this.selectedAnggota.filter(a => a.id !== id);
                         },
 
-                        // Guru Pembina Ekstra / Organisasi
-                        daftarGuru: @json($daftarGuru ?? []),
-                        searchGuruQuery: '',
-                        showGuruDropdown: false,
-                        selectedGurus: @json($oldGurusList ?? []),
-                        organisasiPembinaMap: @json($organisasiPembinaMap ?? []),
-
-                        onOrganisasiChange(namaOrg) {
-                            if (this.isDispensasiClosed) return;
-                            if (this.organisasiPembinaMap && this.organisasiPembinaMap[namaOrg]) {
-                                const defaultPem = this.organisasiPembinaMap[namaOrg];
-                                if (!this.selectedGurus.some(g => String(g.id) === String(defaultPem.id))) {
-                                    this.selectedGurus.unshift(defaultPem);
-                                }
-                            }
-                        },
-                        filteredGurus() {
-                            const q = this.searchGuruQuery.trim().toLowerCase();
-                            return this.daftarGuru.filter(g => {
-                                if (!q) return true;
-                                const nama = (g.nama || '').toLowerCase();
-                                const nip = (g.nip || '').toLowerCase();
-                                const mapel = (g.mata_pelajaran || '').toLowerCase();
-                                return nama.includes(q) || nip.includes(q) || mapel.includes(q);
-                            }).slice(0, 5);
-                        },
-                        isGuruSelected(id) {
-                            return this.selectedGurus.some(g => String(g.id) === String(id));
-                        },
-                        toggleGuru(guru) {
-                            if (this.isDispensasiClosed) return;
-                            const idx = this.selectedGurus.findIndex(g => String(g.id) === String(guru.id));
-                            if (idx >= 0) {
-                                this.selectedGurus.splice(idx, 1);
-                            } else {
-                                this.selectedGurus.push(guru);
-                            }
-                        },
-                        removeGuru(id) {
-                            if (this.isDispensasiClosed) return;
-                            this.selectedGurus = this.selectedGurus.filter(g => String(g.id) !== String(id));
-                        },
-
-                        isSuperAdmin: {{ $isSuperAdmin ? 'true' : 'false' }},
-                        isKetua: {{ ($isKetuaOrganisasi || $isSuperAdmin) ? 'true' : 'false' }},
                         switchTipe(tipe) {
-                            if (tipe === 'organisasi' && !this.isSuperAdmin) {
-                                if (typeof alertDalamPengerjaan === 'function') {
-                                    alertDalamPengerjaan();
-                                }
-                                return;
-                            }
                             this.tipePengajuan = tipe;
-                            if (tipe === 'individu') {
-                                this.tanggalIzin = '{{ now('Asia/Jakarta')->toDateString() }}';
-                                this.tanggalSelesai = '{{ now('Asia/Jakarta')->toDateString() }}';
-                            }
                         }
                     };
                 }
@@ -270,7 +182,6 @@
 
                 <input type="hidden" name="tipe_pengajuan" :value="tipePengajuan">
                 <input type="hidden" name="tanggal_izin" :value="tanggalIzin">
-                <input type="hidden" name="tanggal_selesai" :value="tanggalSelesai">
 
                 {{-- Hidden fallback select untuk kompatibilitas test slot jadwal --}}
                 <select name="_jam_reference" class="hidden" style="display:none;" aria-hidden="true" tabindex="-1">
@@ -281,7 +192,7 @@
                     @endforeach
                 </select>
 
-                {{-- Pemilih Tipe Pengajuan: Individu vs Organisasi --}}
+                {{-- Pemilih Tipe Pengajuan: Individu vs Rombongan --}}
                 <div class="tipe-pengajuan-selector rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 shadow-xs">
                     <div class="grid grid-cols-2 gap-1.5">
                         <button type="button"
@@ -292,32 +203,18 @@
                             <span>Dispensasi Pribadi</span>
                         </button>
 
-                        @if($isSuperAdmin)
-                            <button type="button"
-                                @click="switchTipe('organisasi')"
-                                :class="tipePengajuan === 'organisasi' ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80'"
-                                class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer">
-                                <i class="ti ti-users text-sm sm:text-base" :class="tipePengajuan === 'organisasi' ? 'text-white' : 'text-slate-500'"></i>
-                                <span>Dispensasi Rombongan</span>
-                                <span class="hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-bold ml-1 bg-amber-100 text-amber-800">
-                                    Super Admin
-                                </span>
-                            </button>
-                        @else
-                            <button type="button"
-                                @click="alertDalamPengerjaan()"
-                                class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-colors duration-150 bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-not-allowed border border-dashed border-slate-300"
-                                title="Fitur ini belum digunakan saat ini">
-                                <i class="ti ti-lock text-sm text-slate-400"></i>
-                                <span>Dispensasi Rombongan</span>
-                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 font-semibold ml-1">Diabaikan</span>
-                            </button>
-                        @endif
+                        <button type="button"
+                            @click="switchTipe('rombongan')"
+                            :class="(tipePengajuan === 'rombongan' || tipePengajuan === 'organisasi') ? 'bg-blue-600 text-white shadow-xs' : 'bg-transparent text-slate-700 hover:bg-white/80'"
+                            class="flex items-center justify-center gap-2 min-h-[44px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer">
+                            <i class="ti ti-users text-sm sm:text-base" :class="(tipePengajuan === 'rombongan' || tipePengajuan === 'organisasi') ? 'text-white' : 'text-slate-500'"></i>
+                            <span>Dispensasi Rombongan</span>
+                        </button>
                     </div>
                 </div>
 
-                {{-- Section Spesial Organisasi & Rombongan (Muncul jika tipe == organisasi) --}}
-                <section x-show="tipePengajuan === 'organisasi'" x-cloak
+                {{-- Section Spesial Rombongan (Muncul jika tipe == rombongan) --}}
+                <section x-show="tipePengajuan === 'rombongan' || tipePengajuan === 'organisasi'" x-cloak
                     class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
                     <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="flex items-center gap-2.5 min-w-0">
@@ -325,8 +222,8 @@
                                 <i class="ti ti-users text-base"></i>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <h2 class="text-sm font-bold text-slate-900 leading-snug">Pengajuan Kolektif Organisasi / Rombongan</h2>
-                                <p class="text-[11px] text-slate-500 leading-normal">1 surat dispensasi resmi untuk seluruh rombongan & ekstrakurikuler.</p>
+                                <h2 class="text-sm font-bold text-slate-900 leading-snug">Pengajuan Dispensasi Rombongan</h2>
+                                <p class="text-[11px] text-slate-500 leading-normal">Pilih siswa anggota yang akan dimasukkan ke dalam surat dispensasi rombongan.</p>
                             </div>
                         </div>
                         <span class="inline-flex items-center gap-1 self-start sm:self-auto rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-[10px] font-bold shrink-0 whitespace-nowrap">
@@ -335,113 +232,6 @@
                     </div>
 
                     <div class="p-4 sm:p-5 space-y-4">
-                        {{-- Nama Organisasi / Kegiatan --}}
-                        <div>
-                            <label for="nama_organisasi" class="block text-xs font-bold text-slate-800 mb-1.5">
-                                <i class="ti ti-sitemap text-blue-600 mr-1"></i>Nama Organisasi / Kegiatan / Tim <span class="text-rose-500">*</span>
-                            </label>
-
-                            @if($isSuperAdmin)
-                                <select name="nama_organisasi" id="nama_organisasi"
-                                    @change="onOrganisasiChange($event.target.value)"
-                                    :required="tipePengajuan === 'organisasi'"
-                                    class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm font-medium text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
-                                    <option value="">-- Pilih Organisasi / Ekstra (Mode Super Admin) --</option>
-                                    @foreach($semuaOrganisasi as $org)
-                                        <option value="{{ $org->nama_organisasi }}" {{ old('nama_organisasi') == $org->nama_organisasi ? 'selected' : '' }}>
-                                            {{ $org->nama_organisasi }} {{ $org->singkatan ? "({$org->singkatan})" : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @elseif($organisasiDipimpin->count() > 1)
-                                <select name="nama_organisasi" id="nama_organisasi"
-                                    @change="onOrganisasiChange($event.target.value)"
-                                    :required="tipePengajuan === 'organisasi'"
-                                    class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm font-medium text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
-                                    <option value="">-- Pilih Organisasi Yang Anda Pimpin --</option>
-                                    @foreach($organisasiDipimpin as $org)
-                                        <option value="{{ $org->nama_organisasi }}" {{ old('nama_organisasi', $organisasiDipimpin->first()->nama_organisasi) == $org->nama_organisasi ? 'selected' : '' }}>
-                                            {{ $org->nama_organisasi }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @elseif($organisasiDipimpin->count() === 1)
-                                <div class="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                                    <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
-                                        <i class="ti ti-sitemap"></i>
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <p class="text-xs sm:text-sm font-bold text-slate-900 break-words">{{ $organisasiDipimpin->first()->nama_organisasi }}</p>
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 shrink-0">Ketua</span>
-                                        </div>
-                                        <p class="text-[11px] text-slate-500 mt-0.5">Terkunci otomatis sesuai jabatan Ketua resmi Anda.</p>
-                                    </div>
-                                    <input type="hidden" name="nama_organisasi" id="nama_organisasi" value="{{ $organisasiDipimpin->first()->nama_organisasi }}">
-                                </div>
-                            @else
-                                <input type="text" name="nama_organisasi" id="nama_organisasi"
-                                    value="{{ old('nama_organisasi') }}"
-                                    placeholder="Contoh: OSIS, Pramuka, PMR, dll."
-                                    :required="tipePengajuan === 'organisasi'"
-                                    class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
-                            @endif
-
-                            @error('nama_organisasi') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        {{-- Tanggal & Durasi Pelaksanaan (Unified Date Range & Duration) --}}
-                        <div class="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 space-y-3">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-800">
-                                    <i class="ti ti-calendar-event text-blue-600 mr-1.5"></i>Jadwal & Durasi Pelaksanaan Dispensasi <span class="text-rose-500">*</span>
-                                </label>
-                                <p class="text-[11px] text-slate-500 mt-0.5">Tentukan tanggal mulai dan selesai kegiatan dispensasi organisasi (khusus bulan berjalan: {{ now('Asia/Jakarta')->isoFormat('MMMM Y') }}).</p>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <span class="block text-[11px] font-bold text-slate-600 mb-1">Tanggal Mulai <span class="text-rose-500">*</span></span>
-                                    <input type="date"
-                                        x-model="tanggalIzin"
-                                        @change="onTanggalMulaiChange()"
-                                        min="{{ now('Asia/Jakarta')->toDateString() }}"
-                                        max="{{ now('Asia/Jakarta')->endOfMonth()->toDateString() }}"
-                                        class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
-                                </div>
-                                <div>
-                                    <span class="block text-[11px] font-bold text-slate-600 mb-1">Tanggal Selesai <span class="text-rose-500">*</span></span>
-                                    <input type="date"
-                                        x-model="tanggalSelesai"
-                                        @change="onTanggalSelesaiChange()"
-                                        :min="tanggalIzin"
-                                        max="{{ now('Asia/Jakarta')->endOfMonth()->toDateString() }}"
-                                        class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
-                                </div>
-                            </div>
-
-                            {{-- Ringkasan Durasi Hari --}}
-                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <div class="flex items-center gap-2.5 min-w-0">
-                                    <div class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shrink-0 shadow-xs">
-                                        <i class="ti ti-calendar-check"></i>
-                                    </div>
-                                    <div class="min-w-0 text-xs">
-                                        <span class="text-slate-600">Durasi Kegiatan: </span>
-                                        <strong class="text-slate-900 font-bold" x-text="`${durasiHari()} Hari`">1 Hari</strong>
-                                        <span class="text-slate-500 text-[11px] ml-1" x-text="`(${formatTanggalIndo(tanggalIzin)} s/d ${formatTanggalIndo(tanggalSelesai)})`"></span>
-                                    </div>
-                                </div>
-                                <span x-show="durasiHari() > 1" class="self-start sm:self-auto inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white shadow-xs">
-                                    Multi-Hari
-                                </span>
-                            </div>
-
-                            <p class="text-[11px] text-slate-500 flex items-start gap-1.5 pt-0.5">
-                                <i class="ti ti-info-circle text-blue-500 mt-0.5 shrink-0 text-xs"></i>
-                                <span>Guru piket dapat memproses dan menyetujui pengajuan sebelum tanggal pelaksanaan dimulai. QR Code aktif saat jadwal pelaksanaan dimulai.</span>
-                            </p>
-                        </div>
 
                         {{-- Tambah Anggota Rombongan (Filter Kelas + Multi Checklist + Search) --}}
                         <div class="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 space-y-3.5"
@@ -583,152 +373,6 @@
                                             <input type="hidden" name="anggota_ids[]" :value="anggota.id">
                                         </div>
                                     </template>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Pemilihan Guru Pembina Ekstrakurikuler / Organisasi --}}
-                        <div class="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 space-y-3"
-                             :class="isDispensasiClosed ? 'opacity-65' : ''">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
-                                <div class="min-w-0 flex-1">
-                                    <label class="block text-xs font-bold text-slate-800 leading-snug">
-                                        <i class="ti ti-school text-blue-600 mr-1.5"></i>Guru Pembina Ekstrakurikuler / Organisasi
-                                    </label>
-                                    <p class="text-[11px] text-slate-500 mt-0.5">Otomatis terisi dari data sekolah. Anda dapat menambah pembina lain atau menggantinya.</p>
-                                </div>
-                                <span class="inline-flex self-start sm:self-auto items-center px-2.5 py-1 rounded-full text-xs font-bold transition-colors shrink-0 whitespace-nowrap"
-                                      :class="selectedGurus.length > 0 ? 'bg-blue-50 border border-blue-200 text-blue-700' : 'bg-slate-100 border border-slate-200 text-slate-600'"
-                                      x-text="`${selectedGurus.length} Pembina Terpilih`">
-                                    0 Pembina Terpilih
-                                </span>
-                            </div>
-
-                            {{-- Search Bar & Selector Guru Pembina --}}
-                            <div class="space-y-2">
-                                <div class="relative flex items-center">
-                                    <input type="text"
-                                        x-model="searchGuruQuery"
-                                        :disabled="isDispensasiClosed"
-                                        @focus="if (!isDispensasiClosed) showGuruDropdown = true"
-                                        @click="if (!isDispensasiClosed) showGuruDropdown = true"
-                                        placeholder="Cari guru pembina (Nama / NIP / Mata Pelajaran)..."
-                                        :class="isDispensasiClosed ? 'opacity-60 cursor-not-allowed bg-slate-100' : 'bg-white'"
-                                        class="w-full min-h-[44px] pl-9 pr-20 rounded-xl border border-slate-300 text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-colors">
-                                    <i class="ti ti-search absolute left-3 text-slate-400 text-base pointer-events-none"></i>
-
-                                    <div class="absolute right-2 flex items-center gap-1">
-                                        {{-- Tombol Clear Query --}}
-                                        <button type="button"
-                                            x-show="searchGuruQuery.length > 0 && !isDispensasiClosed"
-                                            :disabled="isDispensasiClosed"
-                                            @click.stop="searchGuruQuery = ''; showGuruDropdown = true"
-                                            class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                                            title="Hapus pencarian">
-                                            <i class="ti ti-x text-sm"></i>
-                                        </button>
-
-                                        {{-- Tombol Toggle Buka/Tutup List --}}
-                                        <button type="button"
-                                            :disabled="isDispensasiClosed"
-                                            @click.stop="if (!isDispensasiClosed) showGuruDropdown = !showGuruDropdown"
-                                            class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
-                                            :class="isDispensasiClosed ? 'opacity-40 cursor-not-allowed pointer-events-none text-slate-400' : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50'"
-                                            :title="isDispensasiClosed ? 'Pengajuan dispensasi sedang ditutup' : (showGuruDropdown ? 'Tutup daftar guru' : 'Buka daftar guru')">
-                                            <i class="ti text-sm transition-transform duration-200"
-                                               :class="showGuruDropdown && !isDispensasiClosed ? 'ti-chevron-up text-blue-600' : 'ti-chevron-down'"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- Panel Pilihan Guru Pembina (In-Flow, No Clipping, No Blinking) --}}
-                                <div x-show="showGuruDropdown && !isDispensasiClosed"
-                                    x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-200"
-                                    x-transition:enter-start="opacity-0 -translate-y-2 scale-[0.99]"
-                                    x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                                    x-transition:leave="transition ease-in duration-150"
-                                    x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                                    x-transition:leave-end="opacity-0 -translate-y-2 scale-[0.99]"
-                                    x-cloak
-                                    class="rounded-xl border border-blue-200 bg-slate-50/70 p-3 space-y-2.5">
-
-                                    <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
-                                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                                            <i class="ti ti-list-search text-blue-600 text-sm"></i>
-                                            <span x-text="`Ditemukan ${filteredGurus().length} guru`"></span>
-                                        </div>
-                                        <button type="button"
-                                            :disabled="isDispensasiClosed"
-                                            @click="showGuruDropdown = false"
-                                            class="text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white border border-blue-200 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                                            <i class="ti ti-check mr-1"></i>Selesai Memilih
-                                        </button>
-                                    </div>
-
-                                    {{-- Daftar Guru Hasil Pencarian / Semua Guru --}}
-                                    <div class="max-h-60 overflow-y-auto space-y-1.5 pr-1" @mousedown.prevent>
-                                        <template x-for="guru in filteredGurus()" :key="guru.id">
-                                            <div class="p-2.5 rounded-xl border flex items-center justify-between gap-2.5 transition-all"
-                                                :class="[
-                                                    isGuruSelected(guru.id) ? 'bg-blue-50 border-blue-300 shadow-2xs' : 'bg-white border-slate-200/80 hover:border-slate-300',
-                                                    isDispensasiClosed ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer active:scale-[0.99]'
-                                                ]"
-                                                @click="if (!isDispensasiClosed) toggleGuru(guru)">
-                                                <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                                                    <input type="checkbox"
-                                                        :checked="isGuruSelected(guru.id)"
-                                                        :disabled="isDispensasiClosed"
-                                                        class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-0 pointer-events-none shrink-0 disabled:cursor-not-allowed">
-                                                    <div class="min-w-0 flex-1">
-                                                        <p class="text-xs font-bold text-slate-900 break-words leading-tight" x-text="guru.nama"></p>
-                                                        <p class="text-[10px] text-slate-500 truncate mt-0.5" x-text="`${guru.nip && guru.nip !== '-' ? guru.nip + ' • ' : ''}${guru.mata_pelajaran || 'Guru'}`"></p>
-                                                    </div>
-                                                </div>
-                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
-                                                    :class="isGuruSelected(guru.id) ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'"
-                                                    x-text="isGuruSelected(guru.id) ? '✓ Terpilih' : '+ Pilih'">
-                                                </span>
-                                            </div>
-                                        </template>
-
-                                        {{-- State ketika pencarian tidak menemukan hasil --}}
-                                        <div x-show="filteredGurus().length === 0" class="py-5 text-center text-xs text-slate-500">
-                                            <i class="ti ti-search-off text-xl text-slate-400 mb-1 inline-block"></i>
-                                            <p>Tidak ada guru pembina yang cocok dengan "<span class="font-semibold text-slate-700" x-text="searchGuruQuery"></span>"</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- List Pembina Terpilih --}}
-                            <div class="space-y-1.5 pt-1">
-                                <template x-for="(guru, index) in selectedGurus" :key="guru.id">
-                                    <div class="p-2.5 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-2 hover:border-slate-300 transition-colors">
-                                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                                            <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
-                                                <i class="ti ti-school text-sm"></i>
-                                            </div>
-                                            <div class="min-w-0 flex-1">
-                                                <div class="flex items-center gap-1.5 flex-wrap">
-                                                    <p class="text-xs font-bold text-slate-900 break-words leading-tight" x-text="guru.nama"></p>
-                                                    <span class="rounded bg-blue-100 text-blue-800 text-[9px] font-bold px-1.5 py-0.5 shrink-0">Pembina</span>
-                                                </div>
-                                                <p class="text-[10px] text-slate-500 truncate mt-0.5" x-text="`${guru.nip && guru.nip !== '-' ? guru.nip + ' • ' : ''}${guru.mata_pelajaran || '-'}`"></p>
-                                            </div>
-                                        </div>
-                                        <button type="button"
-                                            :disabled="isDispensasiClosed"
-                                            @click="if (!isDispensasiClosed) removeGuru(guru.id)"
-                                            class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center shrink-0 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
-                                            title="Hapus guru pembina">
-                                            <i class="ti ti-x text-sm"></i>
-                                        </button>
-                                        <input type="hidden" name="guru_ids[]" :value="guru.id">
-                                    </div>
-                                </template>
-
-                                <div x-show="selectedGurus.length === 0" class="p-3 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-400">
-                                    <i class="ti ti-info-circle mr-1 text-slate-400"></i>Belum ada guru pembina yang dipilih. Ketik nama guru di atas untuk menambahkan.
                                 </div>
                             </div>
                         </div>
@@ -2319,7 +1963,7 @@ document.addEventListener('DOMContentLoaded', function () {
         formDispensasi.addEventListener('submit', function (e) {
             const alpineData = getAlpineData();
             const isSampaiPulang = alpineData ? alpineData.sampaiPulang : false;
-            const isOrganisasi = alpineData ? alpineData.tipePengajuan === 'organisasi' : false;
+            const isRombongan = alpineData ? (alpineData.tipePengajuan === 'rombongan' || alpineData.tipePengajuan === 'organisasi') : false;
 
             if (!validateJamKeluar(true, true)) {
                 e.preventDefault();
@@ -2335,17 +1979,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            if (isOrganisasi) {
-                const namaOrgInput = document.getElementById('nama_organisasi') || formDispensasi.querySelector('[name="nama_organisasi"]');
-                const namaOrg = namaOrgInput?.value?.trim();
-                if (!namaOrg) {
+            if (isRombongan) {
+                const anggotaCount = alpineData?.selectedAnggota?.length || 0;
+                if (anggotaCount < 1) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
                     resetLoadingState();
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Data Belum Lengkap',
-                        text: 'Nama Organisasi / Kegiatan / Tim wajib diisi.',
+                        title: 'Anggota Rombongan Kosong',
+                        text: 'Pilih minimal 1 siswa anggota rombongan untuk pengajuan dispensasi rombongan.',
                         confirmButtonColor: '#2563eb'
                     });
                     return;
@@ -2385,17 +2028,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.stopImmediatePropagation();
                 resetLoadingState();
 
-                const pembinaCount = alpineData?.selectedGurus?.length || 0;
-                const pembinaText = pembinaCount > 0
-                    ? `<div class="mt-1 text-blue-700">Pembina: <b>${alpineData.selectedGurus.map(g => g.nama).join(', ')}</b></div>`
-                    : '<div class="mt-1 text-slate-400 italic">Belum memilih guru pembina</div>';
-
-                const namaOrgVal = (document.getElementById('nama_organisasi') || formDispensasi.querySelector('[name="nama_organisasi"]'))?.value || 'Organisasi';
-                const orgInfo = isOrganisasi
+                const orgInfo = isRombongan
                     ? `<div class="p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs">
-                         <span class="font-bold"><i class="ti ti-users mr-1"></i>Dispensasi Rombongan:</span> ${namaOrgVal}<br>
+                         <span class="font-bold"><i class="ti ti-users mr-1"></i>Dispensasi Rombongan</span><br>
                          <span class="text-blue-700">Total Siswa: <b>${(alpineData.selectedAnggota?.length || 0) + 1} Orang</b> (1 Pemohon + ${alpineData.selectedAnggota?.length || 0} Anggota)</span>
-                         ${pembinaText}
                        </div>`
                     : '';
 
@@ -2567,26 +2203,6 @@ document.addEventListener('DOMContentLoaded', function () {
     setInterval(checkDispensasiTime, 60000);
     updateTimeInputLimits();
 });
-
-function alertDalamPengerjaan() {
-    Swal.fire({
-        icon: 'info',
-        title: 'Masih Dalam Pengerjaan',
-        html: '<div class="text-left text-xs space-y-2 text-slate-600">' +
-              '<p class="text-sm font-bold text-slate-800">masih dalam pengerjaan cuy</p>' +
-              '<p class="text-slate-500 leading-relaxed">Fitur pengajuan <b>Dispensasi Organisasi / Rombongan</b> saat ini belum diaktifkan dan masih dalam tahap pengerjaan.</p>' +
-              '</div>',
-        confirmButtonColor: '#2563eb',
-        confirmButtonText: 'Saya Mengerti',
-        customClass: {
-            popup: 'rounded-2xl shadow-xl border border-slate-200'
-        }
-    });
-}
-
-function alertBukanKetua() {
-    alertDalamPengerjaan();
-}
 </script>
 @endpush
 @endsection

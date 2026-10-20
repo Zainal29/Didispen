@@ -134,10 +134,6 @@
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ (request()->routeIs('admin.guru.index') || request()->routeIs('admin.guru.create') || request()->routeIs('admin.guru.edit')) ? 'active' : '' }}">
                     <i class="fas fa-chalkboard-teacher w-5 mr-3"></i> Guru
                 </a>
-                <a href="{{ route('admin.organisasi.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.organisasi.*') ? 'active' : '' }}">
-                    <i class="fas fa-users-rectangle w-5 mr-3"></i> Ekstrakurikuler
-                </a>
                 <a href="{{ route('admin.guru.checklog') }}"
                    class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.guru.checklog') ? 'active' : '' }}">
                     <i class="fas fa-id-card-alt w-5 mr-3"></i> Izin Guru

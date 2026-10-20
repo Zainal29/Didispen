@@ -95,8 +95,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('superadmin/{user}', [Admin\SuperAdminController::class, 'destroy'])->name('superadmin.destroy');
                 Route::get('api/superadmin/search-siswa', [Admin\SuperAdminController::class, 'searchSiswa'])->name('superadmin.search-siswa');
                 Route::resource('guru', Admin\GuruController::class)->only(['index', 'store', 'update', 'destroy']);
-                Route::resource('organisasi', Admin\OrganisasiController::class)->except(['create', 'show']);
-                Route::get('api/cari-siswa-ketua', [Admin\OrganisasiController::class, 'cariSiswa'])->name('api.cari-siswa-ketua');
                 Route::resource('piket', GuruPiketController::class)->only(['index', 'store', 'update', 'destroy']);
                 Route::patch('jadwal-piket/{jadwal}/toggle', [Admin\JadwalPiketController::class, 'toggle'])->name('jadwal-piket.toggle');
                 Route::resource('jadwal-piket', Admin\JadwalPiketController::class)->parameters(['jadwal-piket' => 'jadwal']);

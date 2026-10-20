@@ -575,7 +575,7 @@ class PengajuanController extends Controller
                 try {
                     $this->notifikasiService->send(
                         $anggota->user_id,
-                        "Dispensasi Rombongan ({$processed->nomor_surat} - {$processed->nama_organisasi}) telah DISETUJUI oleh Guru Piket.",
+                        "Dispensasi Rombongan ({$processed->nomor_surat}) telah DISETUJUI oleh Guru Piket.",
                         route('siswa.pengajuan.show', $processed->id)
                     );
                 } catch (\Throwable $e) {}

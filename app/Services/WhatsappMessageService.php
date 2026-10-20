@@ -173,15 +173,18 @@ class WhatsappMessageService
         $jamSelesai = $jadwal->jam_selesai ? substr($jadwal->jam_selesai, 0, 5) : '-';
         $koordinatorNama = $jadwal->koordinator?->nama_lengkap ?? '-';
 
+        $leadMinutes = (int) \App\Models\Setting::get('wa_piket_reminder_minutes', 15);
+        $menitPengingat = $leadMinutes > 0 ? "{$leadMinutes} menit" : "sesaat";
+
         $replacements = [
-            '{nama_guru}'   => $guru->nama_lengkap ?? $guru->nama ?? 'Bapak/Ibu Guru',
-            '{hari}'        => $hariStr,
-            '{nama_sesi}'   => $jadwal->nama_sesi ?? 'Piket',
-            '{jam_mulai}'   => $jamMulai,
-            '{jam_selesai}' => $jamSelesai,
-            '{koordinator}' => $koordinatorNama,
-            
-            '{tanggal}'     => now()->translatedFormat('d F Y'),
+            '{nama_guru}'       => $guru->nama_lengkap ?? $guru->nama ?? 'Bapak/Ibu Guru',
+            '{hari}'            => $hariStr,
+            '{nama_sesi}'       => $jadwal->nama_sesi ?? 'Piket',
+            '{jam_mulai}'       => $jamMulai,
+            '{jam_selesai}'     => $jamSelesai,
+            '{koordinator}'     => $koordinatorNama,
+            '{menit_pengingat}' => $menitPengingat,
+            '{tanggal}'         => now()->translatedFormat('d F Y'),
         ];
 
         return str_replace(
@@ -505,7 +508,7 @@ class WhatsappMessageService
     }
 
     /**
-     * 1. Kirim Notifikasi WA ke Guru Piket yang Sedang Bertugas Aktif
+     * 1. Kirim Notifikasi WA ke Guru Piket yang Bertugas (15 menit sebelum sesi atau saat sesi aktif)
      */
     public function notifyGuruPiketBertugas(\App\Models\Guru $guru, \App\Models\JadwalPiket $jadwal, bool $isPengganti = false): void
     {
@@ -514,7 +517,7 @@ class WhatsappMessageService
         }
 
         $today = now('Asia/Jakarta')->toDateString();
-        // Kunci unik agar 1 guru pada 1 sesi di tanggal yang sama hanya dikirimi 1x saat sesi dimulai
+        // Kunci unik agar 1 guru pada 1 sesi di tanggal yang sama hanya dikirimi 1x
         $refKey = "piket_aktif_{$jadwal->id}_guru_{$guru->id}_{$today}";
 
         $templates = $this->getTemplates();
@@ -522,7 +525,7 @@ class WhatsappMessageService
 
         if (! $content) {
             $statusPeran = $isPengganti ? 'Guru Piket Pengganti' : 'Guru Piket Resmi';
-            $content = "📋 *PEMBERITAHUAN TUGAS PIKET (DIDISPEN)*\n\nHalo Yth. Bapak/Ibu *{nama_guru}*,\n\nSaat ini sesi piket Anda telah *AKTIF / SEDANG BERLANGSUNG* sebagai *{$statusPeran}*:\n📅 Hari/Tanggal: *{hari}, {tanggal}*\n⏰ Sesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n👤 Koordinator: {koordinator}\n\nSistem akan mengirimkan notifikasi otomatis ke nomor ini apabila ada pengajuan dispensasi atau siswa yang terlambat kembali.\n\nSelamat bertugas!\n- Sistem DIDISPEN SMKN 1 Bangsri";
+            $content = "📋 *PENGINGAT JADWAL PIKET (DIDISPEN)*\n\nHalo Yth. Bapak/Ibu *{nama_guru}*,\n\nMengingatkan jadwal piket Anda hari ini sebagai *{$statusPeran}*:\n📅 Hari/Tanggal: *{hari}, {tanggal}*\n⏰ Sesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n👤 Koordinator: {koordinator}\n\nPengingat ini dikirimkan {menit_pengingat} sebelum sesi dimulai. Mohon untuk bersiap dan hadir di pos piket untuk memantau kehadiran serta dispensasi siswa.\n\nSelamat bertugas!\n- Sistem DIDISPEN SMKN 1 Bangsri";
         }
 
         $pesan = $this->renderPiketContent($content, $guru, $jadwal);
@@ -534,6 +537,127 @@ class WhatsappMessageService
             userId: $guru->user_id,
             recipientName: $guru->nama_lengkap,
             referenceKey: $refKey
+        );
+    }
+
+    /**
+     * Kirim Notifikasi WA ke Guru Pengganti saat ada permohonan pergantian piket baru
+     */
+    public function notifyGuruPenggantiSwap(\App\Models\PertukaranJadwalPiket $swap): void
+    {
+        if (! (bool) \App\Models\Setting::get('wa_notify_piket_swap', true)) {
+            return;
+        }
+
+        $swap->loadMissing(['guruPengganti', 'guruAsal', 'jadwalPiket']);
+        $guruPengganti = $swap->guruPengganti;
+        $guruAsal = $swap->guruAsal;
+        $jadwal = $swap->jadwalPiket;
+
+        if (! $guruPengganti || ! $guruPengganti->status_aktif) {
+            return;
+        }
+
+        $templates = $this->getTemplates();
+        $content = $templates['permintaan-tukar-piket'] ?? null;
+
+        if (! $content) {
+            $content = "📋 *PERMINTAAN PENGGANTIAN JADWAL PIKET (DIDISPEN)*\n\nHalo Yth. Bapak/Ibu *{nama_guru_pengganti}*,\n\nBapak/Ibu *{nama_guru_asal}* mengajukan permohonan agar Anda berkenan menjadi Guru Pengganti untuk jadwal piket beliau pada:\n\n📅 Hari/Tanggal: *{hari}, {tanggal}*\n⏰ Sesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n📝 Alasan: _{alasan}_\n\nSilakan buka tautan berikut untuk meninjau dan merespon permohonan ini:\n{link_persetujuan}\n\nTerima kasih atas kerjasamanya.\n- Sistem DIDISPEN SMKN 1 Bangsri";
+        }
+
+        $namaHari = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+        $tanggalObj = $swap->tanggal instanceof \Carbon\CarbonInterface
+            ? $swap->tanggal
+            : \Carbon\Carbon::parse($swap->tanggal, 'Asia/Jakarta');
+        $hariStr = $namaHari[$tanggalObj->dayOfWeekIso] ?? 'Hari ' . $tanggalObj->dayOfWeekIso;
+
+        $linkPersetujuan = '-';
+        try {
+            $linkPersetujuan = route('guru.piket.swap.incoming');
+        } catch (\Throwable) {
+            $linkPersetujuan = url('/guru/piket/swap/incoming');
+        }
+
+        $replacements = [
+            '{nama_guru_pengganti}' => $guruPengganti->nama_lengkap ?? 'Bapak/Ibu Guru',
+            '{nama_guru_asal}'      => $guruAsal?->nama_lengkap ?? 'Guru Pemohon',
+            '{hari}'                => $hariStr,
+            '{tanggal}'             => $tanggalObj->translatedFormat('d F Y'),
+            '{nama_sesi}'           => $jadwal?->nama_sesi ?? 'Sesi Piket',
+            '{jam_mulai}'           => $jadwal?->jam_mulai ? substr($jadwal->jam_mulai, 0, 5) : '-',
+            '{jam_selesai}'         => $jadwal?->jam_selesai ? substr($jadwal->jam_selesai, 0, 5) : '-',
+            '{alasan}'              => $swap->alasan ?: '-',
+            '{link_persetujuan}'    => $linkPersetujuan,
+            '{link_web}'            => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/'),
+        ];
+
+        $pesan = str_replace(array_keys($replacements), array_values($replacements), $content);
+
+        $this->dispatchBaileysMessage(
+            rawPhone: $guruPengganti->no_telepon,
+            message: $pesan,
+            context: 'piket_swap_request',
+            userId: $guruPengganti->user_id,
+            recipientName: $guruPengganti->nama_lengkap,
+            referenceKey: "swap_req_{$swap->id}"
+        );
+    }
+
+    /**
+     * Kirim Notifikasi WA ke Guru Asal terkait hasil respon permohonan pertukaran piket (disetujui/ditolak)
+     */
+    public function notifyGuruAsalSwapResult(\App\Models\PertukaranJadwalPiket $swap, string $statusText = 'disetujui'): void
+    {
+        if (! (bool) \App\Models\Setting::get('wa_notify_piket_swap_result', true)) {
+            return;
+        }
+
+        $swap->loadMissing(['guruPengganti', 'guruAsal', 'jadwalPiket']);
+        $guruAsal = $swap->guruAsal;
+        $guruPengganti = $swap->guruPengganti;
+        $jadwal = $swap->jadwalPiket;
+
+        if (! $guruAsal || ! $guruAsal->status_aktif) {
+            return;
+        }
+
+        $templates = $this->getTemplates();
+        $content = $templates['hasil-tukar-piket'] ?? null;
+
+        if (! $content) {
+            $content = "📢 *STATUS PERMINTAAN PENGGANTIAN PIKET (DIDISPEN)*\n\nHalo Yth. Bapak/Ibu *{nama_guru_asal}*,\n\nPermintaan penggantian jadwal piket Anda untuk tanggal *{tanggal}* ({nama_sesi}) telah *{status_persetujuan}* oleh Bapak/Ibu *{nama_guru_pengganti}*.\n\n{catatan_tambahan}\n\nWebsite DIDISPEN:\n{link_web}\n\nTerima kasih.\n- Sistem DIDISPEN SMKN 1 Bangsri";
+        }
+
+        $namaHari = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+        $tanggalObj = $swap->tanggal instanceof \Carbon\CarbonInterface
+            ? $swap->tanggal
+            : \Carbon\Carbon::parse($swap->tanggal, 'Asia/Jakarta');
+        $hariStr = $namaHari[$tanggalObj->dayOfWeekIso] ?? 'Hari ' . $tanggalObj->dayOfWeekIso;
+
+        $catatanTambahan = $swap->catatan ? "Catatan dari Guru Pengganti:\n_{$swap->catatan}_\n" : "";
+
+        $replacements = [
+            '{nama_guru_asal}'      => $guruAsal->nama_lengkap ?? 'Bapak/Ibu Guru',
+            '{nama_guru_pengganti}' => $guruPengganti?->nama_lengkap ?? 'Guru Pengganti',
+            '{status_persetujuan}'  => strtoupper($statusText),
+            '{catatan_tambahan}'    => $catatanTambahan,
+            '{hari}'                => $hariStr,
+            '{tanggal}'             => $tanggalObj->translatedFormat('d F Y'),
+            '{nama_sesi}'           => $jadwal?->nama_sesi ?? 'Sesi Piket',
+            '{jam_mulai}'           => $jadwal?->jam_mulai ? substr($jadwal->jam_mulai, 0, 5) : '-',
+            '{jam_selesai}'         => $jadwal?->jam_selesai ? substr($jadwal->jam_selesai, 0, 5) : '-',
+            '{link_web}'            => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/'),
+        ];
+
+        $pesan = str_replace(array_keys($replacements), array_values($replacements), $content);
+
+        $this->dispatchBaileysMessage(
+            rawPhone: $guruAsal->no_telepon,
+            message: $pesan,
+            context: 'piket_swap_result',
+            userId: $guruAsal->user_id,
+            recipientName: $guruAsal->nama_lengkap,
+            referenceKey: "swap_res_{$swap->id}_{$swap->status}"
         );
     }
 

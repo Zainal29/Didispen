@@ -11,10 +11,10 @@
         <div>
             <div class="flex items-center gap-2 mb-1.5 flex-wrap">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100">Surat Dispensasi</span>
-                @if($dispensasi->isOrganisasi())
+                @if($dispensasi->isRombongan())
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
                         <i class="ti ti-users text-xs"></i>
-                        <span>Dispensasi Organisasi: {{ $dispensasi->nama_organisasi ?? 'Organisasi' }}</span>
+                        <span>Dispensasi Rombongan</span>
                     </span>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                         Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)
@@ -453,8 +453,8 @@
             </div>
         </div>
 
-        {{-- Jika Dispensasi Organisasi, Tampilkan Daftar Anggota Rombongan --}}
-        @if($dispensasi->isOrganisasi())
+        {{-- Jika Dispensasi Rombongan, Tampilkan Daftar Anggota Rombongan --}}
+        @if($dispensasi->isRombongan())
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold text-slate-900 flex items-center uppercase tracking-wider">
@@ -464,9 +464,6 @@
                     {{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa
                 </span>
             </div>
-            <p class="text-xs text-slate-600 font-medium mb-3">
-                Dispensasi untuk organisasi <strong class="text-slate-900">{{ $dispensasi->nama_organisasi }}</strong>
-            </p>
             <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
                 <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
                     <div class="min-w-0 flex-1">
@@ -474,7 +471,7 @@
                         <p class="text-[10px] text-slate-500 font-mono">{{ $dispensasi->siswa->user?->nis_nip ?? '-' }} • {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }}</p>
                     </div>
                     <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-rose-100 text-rose-700 border border-rose-200 flex-shrink-0">
-                        Ketua
+                        Pemohon (PIC)
                     </span>
                 </div>
                 @forelse($dispensasi->anggotaSiswa as $idx => $anggota)
@@ -490,39 +487,6 @@
                 @empty
                     <p class="text-xs text-slate-500 italic p-2">Tidak ada anggota tambahan.</p>
                 @endforelse
-            </div>
-        </div>
-        @endif
-
-        {{-- Guru Pembina (Khusus Dispen Organisasi / jika data pembina tersedia) --}}
-        @if($dispensasi->gurus && $dispensasi->gurus->count() > 0)
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-bold text-slate-900 flex items-center uppercase tracking-wider">
-                    <i class="ti ti-tie text-rose-600 mr-2 text-lg"></i>Guru Pembina
-                </h3>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                    {{ $dispensasi->gurus->count() }} Guru
-                </span>
-            </div>
-            <p class="text-xs text-slate-500 font-medium mb-3">
-                Guru Pembina penanggung jawab kegiatan:
-            </p>
-            <div class="space-y-2.5">
-                @foreach($dispensasi->gurus as $pembina)
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                        <p class="font-bold text-slate-900 text-sm leading-snug">{{ $pembina->nama_lengkap }}</p>
-                        <div class="flex items-center gap-2 text-[11px] text-slate-500 mt-1 flex-wrap">
-                            @if($pembina->nip)
-                                <span class="font-mono text-slate-600">NIP: {{ $pembina->nip }}</span>
-                            @endif
-                            @if($pembina->mata_pelajaran)
-                                @if($pembina->nip)<span class="text-slate-300">•</span>@endif
-                                <span>{{ $pembina->mata_pelajaran }}</span>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
             </div>
         </div>
         @endif

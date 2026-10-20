@@ -287,17 +287,39 @@
                 </div>
             </div>
 
-            {{-- 3. Saklar Notifikasi Otomatis Spesifik --}}
+            {{-- 3. Pengaturan Waktu Pengingat Sesi Piket (Per Sesi) --}}
+            <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/40 space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <label for="wa_piket_reminder_minutes" class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-clock text-emerald-600"></i>
+                            Waktu Pengingat Sebelum Sesi Piket Dimulai
+                        </label>
+                        <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                            Notifikasi WhatsApp dikirimkan per sesi sebelum jam mulai sesi piket (contoh: diisi <strong>15</strong> menit, maka pesan Sesi 1 dikirim jam 06:45, Sesi 2 dikirim jam 09:15, dst).
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <input type="number" name="wa_piket_reminder_minutes" id="wa_piket_reminder_minutes"
+                            value="{{ old('wa_piket_reminder_minutes', $settings['wa_piket_reminder_minutes'] ?? 15) }}"
+                            min="0" max="120" required
+                            class="w-24 px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold text-center focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition bg-white shadow-2xs">
+                        <span class="text-xs font-bold text-slate-700">Menit sebelum sesi</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 4. Saklar Notifikasi Otomatis Spesifik --}}
             <div class="space-y-3 pt-2">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Pilihan Notifikasi Otomatis</h3>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {{-- Opsi A: Guru Piket Bertugas --}}
                     <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
                         <input type="checkbox" name="wa_notify_piket_bertugas" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_piket_bertugas'])>
                         <div class="space-y-1">
-                            <span class="block text-xs font-bold text-slate-900">Guru Piket Bertugas</span>
-                            <span class="block text-[11px] text-slate-500 leading-normal">Kirim WA otomatis saat sesi piket dimulai ke nomor guru yang bertugas aktif.</span>
+                            <span class="block text-xs font-bold text-slate-900">Guru Piket Bertugas (Per Sesi)</span>
+                            <span class="block text-[11px] text-slate-500 leading-normal">Kirim WA otomatis beberapa menit sebelum sesi dimulai ke guru yang bertugas aktif.</span>
                         </div>
                     </label>
 
@@ -306,11 +328,29 @@
                         <input type="checkbox" name="wa_notify_koordinator_piket" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_koordinator_piket'])>
                         <div class="space-y-1">
                             <span class="block text-xs font-bold text-slate-900">Koordinator Guru Piket</span>
-                            <span class="block text-[11px] text-slate-500 leading-normal">Kirim WA otomatis ke Koordinator Piket hari ini untuk mengecek kehadiran petugas di pos.</span>
+                            <span class="block text-[11px] text-slate-500 leading-normal">Kirim WA otomatis ke Koordinator Piket 1x sehari di sesi awal untuk mengecek kehadiran pos.</span>
                         </div>
                     </label>
 
-                    {{-- Opsi C: Peringatan Siswa Terlambat --}}
+                    {{-- Opsi C: Permintaan Tukar Piket (ke Guru Pengganti) --}}
+                    <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
+                        <input type="checkbox" name="wa_notify_piket_swap" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_piket_swap'])>
+                        <div class="space-y-1">
+                            <span class="block text-xs font-bold text-slate-900">Permintaan Tukar Piket</span>
+                            <span class="block text-[11px] text-slate-500 leading-normal">Kirim WA otomatis ke Guru Pengganti saat ada guru lain mengajukan pertukaran jadwal piket.</span>
+                        </div>
+                    </label>
+
+                    {{-- Opsi D: Hasil Respon Tukar Piket (ke Guru Asal) --}}
+                    <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
+                        <input type="checkbox" name="wa_notify_piket_swap_result" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_piket_swap_result'])>
+                        <div class="space-y-1">
+                            <span class="block text-xs font-bold text-slate-900">Hasil Respon Tukar Piket</span>
+                            <span class="block text-[11px] text-slate-500 leading-normal">Kirim WA otomatis hasil persetujuan/penolakan ke Guru Asal saat pertukaran direspon.</span>
+                        </div>
+                    </label>
+
+                    {{-- Opsi E: Peringatan Siswa Terlambat --}}
                     <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
                         <input type="checkbox" name="wa_notify_siswa_terlambat" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_siswa_terlambat'])>
                         <div class="space-y-1">
@@ -319,7 +359,7 @@
                         </div>
                     </label>
 
-                    {{-- Opsi D: Laporan ke Guru Piket --}}
+                    {{-- Opsi F: Laporan Rekap ke Guru Piket --}}
                     <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
                         <input type="checkbox" name="wa_notify_laporan_guru_piket" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_laporan_guru_piket'])>
                         <div class="space-y-1">
@@ -550,11 +590,21 @@
                                                 </span>
                                             @else
                                                 <div class="flex flex-col items-center gap-0.5">
+                                                    @php
+                                                        $remMinutes = (int) ($settings['wa_piket_reminder_minutes'] ?? 15);
+                                                        $waktuKirim = \Carbon\Carbon::parse($sesi->jam_mulai)->subMinutes($remMinutes)->format('H:i');
+                                                    @endphp
                                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                                                         <i class="fas fa-paper-plane text-[9px] text-emerald-600"></i>
-                                                        Otomatis {{ substr($sesi->jam_mulai, 0, 5) }} WIB
+                                                        Otomatis {{ $waktuKirim }} WIB
                                                     </span>
-                                                    <span class="text-[10px] text-slate-500 font-mono">Setiap {{ $hariNames[$hariNum] ?? '' }}</span>
+                                                    <span class="text-[10px] text-slate-500 font-mono">
+                                                        @if($remMinutes > 0)
+                                                            H-{{ $remMinutes }} mnt sebelum sesi
+                                                        @else
+                                                            Saat sesi dimulai
+                                                        @endif
+                                                    </span>
                                                 </div>
                                             @endif
                                         </td>

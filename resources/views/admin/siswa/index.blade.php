@@ -131,13 +131,6 @@
                                         <i class="fas fa-shield-halved text-[9px] text-purple-600"></i> Super Admin
                                     </span>
                                 @endif
-                                @if($s->organisasiDipimpin && $s->organisasiDipimpin->isNotEmpty())
-                                    @foreach($s->organisasiDipimpin as $org)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs" title="Ketua Resmi: {{ $org->nama_organisasi }}">
-                                            <i class="fas fa-crown text-[9px] text-amber-500"></i> Ketua {{ $org->singkatan ?: $org->nama_organisasi }}
-                                        </span>
-                                    @endforeach
-                                @endif
                             </div>
                         </td>
 

@@ -156,7 +156,7 @@ class ScanController extends Controller
                     'id' => $dispensasi->id,
                     'nomor_surat' => $dispensasi->nomor_surat,
                     'tipe_pengajuan' => $dispensasi->tipe_pengajuan,
-                    'nama_organisasi' => $dispensasi->nama_organisasi,
+                    'nama_organisasi' => null,
                     'tanggal_izin' => $tglIzin,
                     'status' => $dispensasi->status,
                     'status_note' => $statusNote,
@@ -213,7 +213,7 @@ class ScanController extends Controller
                             try {
                                 $this->notifikasiService->send(
                                     $anggota->user_id,
-                                    "Dispensasi Rombongan ({$dispensasi->nomor_surat} - {$dispensasi->nama_organisasi}) telah diverifikasi KELUAR oleh Satpam.",
+                                    "Dispensasi Rombongan ({$dispensasi->nomor_surat}) telah diverifikasi KELUAR oleh Satpam.",
                                     route('siswa.pengajuan.show', $dispensasi->id)
                                 );
                             } catch (\Throwable $e) {}

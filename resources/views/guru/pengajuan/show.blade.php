@@ -25,12 +25,9 @@
                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nomor Surat</p>
                 <div class="flex items-center gap-2 flex-wrap">
                     <h1 class="text-base sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">{{ $dispensasi->nomor_surat }}</h1>
-                    @if($dispensasi->isOrganisasi())
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                            <i class="ti ti-users text-xs"></i> {{ $dispensasi->nama_organisasi }}
-                        </span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                            Dispensasi Organisasi ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)
+                    @if($dispensasi->isRombongan())
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            <i class="ti ti-users text-xs mr-1"></i> Dispensasi Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)
                         </span>
                     @else
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
@@ -170,19 +167,15 @@
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
                     <p class="text-gray-500 text-[10px] font-semibold uppercase mb-0.5">Tanggal Pelaksanaan</p>
                     <p class="font-semibold text-gray-900">
-                        @if($dispensasi->durasi_hari > 1 && $dispensasi->tanggal_selesai)
-                            {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($dispensasi->tanggal_selesai)->translatedFormat('d M Y') }} <span class="ml-1 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">{{ $dispensasi->durasi_hari }} Hari</span>
-                        @else
-                            {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('d M Y') }}
-                            @if($dispensasi->tanggal_izin && $dispensasi->tanggal_izin->isTomorrow())
-                                <span class="ml-1 text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">Besok</span>
-                            @endif
+                        {{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('d M Y') }}
+                        @if($dispensasi->tanggal_izin && $dispensasi->tanggal_izin->isTomorrow())
+                            <span class="ml-1 text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">Besok</span>
                         @endif
                     </p>
                 </div>
             </div>
 
-            @if($dispensasi->tipe_pengajuan === 'organisasi')
+            @if($dispensasi->isRombongan())
                 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs">
                     <div class="flex items-start justify-between gap-2.5 mb-3">
                         <div class="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
@@ -190,9 +183,9 @@
                                 <i class="ti ti-users"></i>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-blue-600 block leading-tight">Dispensasi Organisasi</span>
-                                <h4 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight capitalize leading-snug mt-0.5 break-words">
-                                    {{ $dispensasi->nama_organisasi }}
+                                <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-blue-600 block leading-tight">Dispensasi Rombongan</span>
+                                <h4 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight leading-snug mt-0.5 break-words">
+                                    {{ $dispensasi->siswa->nama_lengkap }} & Rombongan
                                 </h4>
                             </div>
                         </div>
@@ -266,39 +259,6 @@
                             @endforeach
                         </div>
                     </div>
-
-                    @if($dispensasi->gurus && $dispensasi->gurus->count() > 0)
-                    <div class="space-y-2 pt-3 border-t border-slate-200 mt-3">
-                        <p class="text-[11px] font-bold uppercase text-slate-800 tracking-wider">Guru Pembina Ekstrakurikuler / Organisasi ({{ $dispensasi->gurus->count() }} Guru):</p>
-                        <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-xs">
-                            @foreach($dispensasi->gurus as $guruIdx => $guruPembina)
-                            <div class="p-2.5 sm:px-3.5 text-xs hover:bg-slate-50 transition-colors">
-                                <div class="flex items-start sm:items-center justify-between gap-2.5 sm:gap-3">
-                                    <div class="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                                        <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 sm:mt-0">
-                                            <i class="ti ti-user"></i>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <span class="font-bold text-slate-900 break-words leading-snug block">{{ $guruIdx + 1 }}. {{ $guruPembina->nama_lengkap }}</span>
-                                            <p class="text-[10px] text-slate-500 font-mono mt-0.5 whitespace-nowrap">NIP: {{ $guruPembina->nip ?? '-' }}</p>
-                                        </div>
-                                    </div>
-                                    <div class="hidden sm:block flex-shrink-0">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] text-blue-700 font-medium bg-blue-50 border border-blue-200 rounded-lg">
-                                            <i class="ti ti-book text-[10px]"></i> {{ $guruPembina->mata_pelajaran ?? '-' }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="sm:hidden mt-2 pl-[38px]">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] text-blue-700 font-medium bg-blue-50 border border-blue-200 rounded-md">
-                                        <i class="ti ti-book text-[10px]"></i> {{ $guruPembina->mata_pelajaran ?? '-' }}
-                                    </span>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
                 </div>
             @endif
 

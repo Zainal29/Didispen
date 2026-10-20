@@ -95,8 +95,11 @@ class AdminWhatsappBotTest extends TestCase
             'wa_bot_url'                   => 'http://127.0.0.1:3789',
             'wa_bot_api_key'               => 'new_secret_key_2026',
             'wa_bot_enabled'               => '1',
+            'wa_piket_reminder_minutes'    => '20',
             'wa_notify_piket_bertugas'     => '1',
             'wa_notify_koordinator_piket'  => '1',
+            'wa_notify_piket_swap'         => '1',
+            'wa_notify_piket_swap_result'  => '1',
             'wa_notify_siswa_terlambat'    => '1',
             'wa_notify_laporan_guru_piket' => '1',
             'wa_active_days'               => ['1', '2', '3', '4', '5'],
@@ -108,8 +111,11 @@ class AdminWhatsappBotTest extends TestCase
         $this->assertEquals('http://127.0.0.1:3789', Setting::get('wa_bot_url'));
         $this->assertEquals('new_secret_key_2026', Setting::get('wa_bot_api_key'));
         $this->assertTrue((bool) Setting::get('wa_bot_enabled'));
+        $this->assertEquals(20, (int) Setting::get('wa_piket_reminder_minutes'));
         $this->assertTrue((bool) Setting::get('wa_notify_piket_bertugas'));
         $this->assertTrue((bool) Setting::get('wa_notify_koordinator_piket'));
+        $this->assertTrue((bool) Setting::get('wa_notify_piket_swap'));
+        $this->assertTrue((bool) Setting::get('wa_notify_piket_swap_result'));
         $this->assertTrue((bool) Setting::get('wa_notify_siswa_terlambat'));
         $this->assertTrue((bool) Setting::get('wa_notify_laporan_guru_piket'));
         $this->assertEquals([1, 2, 3, 4, 5], json_decode(Setting::get('wa_active_days'), true));
@@ -225,7 +231,8 @@ class AdminWhatsappBotTest extends TestCase
             '*/send-message' => Http::response(['status' => 'success'], 200),
         ]);
 
-        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 07:05:00', 'Asia/Jakarta')); // Senin, jam 07:05
+        // Default setting: 15 menit sebelum sesi mulai
+        Setting::set('wa_piket_reminder_minutes', 15);
 
         // Buat 3 Guru untuk Sesi 1
         $guru1User = User::create(['name' => 'Guru 1', 'email' => 'g1@test.com', 'password' => bcrypt('123'), 'role' => 'guru', 'nis_nip' => 'G01']);
@@ -271,16 +278,22 @@ class AdminWhatsappBotTest extends TestCase
         ]);
         $sesi2->guru()->attach([$guru4->id, $guru5->id]);
 
-        // JALANKAN COMMAND PERTAMA KALI DI SESI 1 (07:05)
+        // A. CEK SEBELUM WINDOW (06:30) -> BELUM WAKTUNYA, TIDAK ADA WA TERKIRIM
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 06:30:00', 'Asia/Jakarta'));
+        $this->artisan('didispen:monitor-wa')->assertExitCode(0);
+        $this->assertEquals(0, WhatsappLog::where('context', 'piket_aktif')->count());
+
+        // B. TEPAT 15 MENIT SEBELUM SESI 1 (06:45) -> PENGINGAT SESI 1 TERKIRIM
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 06:45:00', 'Asia/Jakarta'));
         $this->artisan('didispen:monitor-wa')->assertExitCode(0);
 
-        // 1. Pastikan ketiga guru di Sesi 1 menerima notifikasi WA piket_aktif
+        // Pastikan ketiga guru di Sesi 1 menerima notifikasi WA piket_aktif
         $this->assertDatabaseHas('whatsapp_logs', ['phone' => '6281211111111', 'context' => 'piket_aktif']);
         $this->assertDatabaseHas('whatsapp_logs', ['phone' => '6281222222222', 'context' => 'piket_aktif']);
         $this->assertDatabaseHas('whatsapp_logs', ['phone' => '6281233333333', 'context' => 'piket_aktif']);
         $this->assertEquals(3, WhatsappLog::where('context', 'piket_aktif')->count());
 
-        // 2. Pastikan Koordinator juga menerima notifikasi khusus piket_koordinator
+        // Pastikan Koordinator juga menerima notifikasi khusus piket_koordinator
         $this->assertDatabaseHas('whatsapp_logs', [
             'phone' => '6281299999999',
             'context' => 'piket_koordinator',
@@ -290,14 +303,14 @@ class AdminWhatsappBotTest extends TestCase
         $this->assertStringContainsString('Pak Koordinator', $koorLog->message);
         $this->assertStringContainsString('Guru Satu', $koorLog->message);
 
-        // 3. JALANKAN LAGI 5 MENIT KEMUDIAN DI SESI 1 (07:10) -> TIDAK BOLEH TERKIRIM ULANG / SPAM
-        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 07:10:00', 'Asia/Jakarta'));
+        // C. JALANKAN LAGI SAAT SESI BERLANGSUNG (07:05 & 07:10) -> TIDAK DIKIRIM ULANG / DEDUPLIKASI
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 07:05:00', 'Asia/Jakarta'));
         $this->artisan('didispen:monitor-wa')->assertExitCode(0);
         $this->assertEquals(3, WhatsappLog::where('context', 'piket_aktif')->count()); // Tetap 3!
         $this->assertEquals(1, WhatsappLog::where('context', 'piket_koordinator')->count()); // Tetap 1!
 
-        // 4. MAJUKAN WAKTU KE SESI 2 (09:35) -> GURU SESI 2 HARUS MENERIMA NOTIFIKASI
-        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 09:35:00', 'Asia/Jakarta'));
+        // D. TEPAT 15 MENIT SEBELUM SESI 2 (09:15) -> GURU SESI 2 MENERIMA NOTIFIKASI
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 09:15:00', 'Asia/Jakarta'));
         $this->artisan('didispen:monitor-wa')->assertExitCode(0);
 
         // Pastikan kedua guru di Sesi 2 sekarang juga menerima notifikasi WA
@@ -307,4 +320,101 @@ class AdminWhatsappBotTest extends TestCase
 
         \Carbon\Carbon::setTestNow(); // Reset waktu
     }
+
+    public function test_swap_request_dispatches_whatsapp_to_replacement_teacher(): void
+    {
+        Http::fake([
+            '*/send-message' => Http::response(['status' => 'success'], 200),
+        ]);
+
+        Setting::set('wa_bot_enabled', true);
+        Setting::set('wa_notify_piket_swap', true);
+
+        $userA = User::create(['name' => 'Guru Asal', 'email' => 'asal@sch.id', 'role' => 'guru', 'nis_nip' => 'A01', 'password' => bcrypt('123')]);
+        $guruAsal = \App\Models\Guru::create(['user_id' => $userA->id, 'nip' => 'A01', 'nama_lengkap' => 'Guru Asal', 'no_telepon' => '081211111111', 'status_aktif' => true]);
+
+        $userB = User::create(['name' => 'Guru Pengganti', 'email' => 'pengganti@sch.id', 'role' => 'guru', 'nis_nip' => 'B01', 'password' => bcrypt('123')]);
+        $guruPengganti = \App\Models\Guru::create(['user_id' => $userB->id, 'nip' => 'B01', 'nama_lengkap' => 'Guru Pengganti', 'no_telepon' => '081299998888', 'status_aktif' => true]);
+
+        $jadwal = \App\Models\JadwalPiket::create([
+            'hari' => 1,
+            'nama_sesi' => 'Sesi 1',
+            'jam_mulai' => '07:00:00',
+            'jam_selesai' => '09:30:00',
+            'tanggal_mulai_berlaku' => '2026-01-01',
+            'tanggal_selesai_berlaku' => '2026-12-31',
+            'is_active' => true,
+        ]);
+        $jadwal->guru()->attach($guruAsal->id);
+
+        $swapService = app(\App\Services\GuruPiketSwapService::class);
+        $swap = $swapService->createSwapRequest($guruAsal, [
+            'jadwal_piket_id'   => $jadwal->id,
+            'guru_pengganti_id' => $guruPengganti->id,
+            'tanggal'           => '2026-09-28', // Senin
+            'alasan'            => 'Sedang ada tugas rapat luar sekolah',
+        ]);
+
+        $this->assertDatabaseHas('whatsapp_logs', [
+            'phone'   => '6281299998888',
+            'context' => 'piket_swap_request',
+            'status'  => 'sent',
+        ]);
+
+        $log = WhatsappLog::where('context', 'piket_swap_request')->first();
+        $this->assertNotNull($log);
+        $this->assertStringContainsString('Guru Pengganti', $log->message);
+        $this->assertStringContainsString('Guru Asal', $log->message);
+        $this->assertStringContainsString('Sedang ada tugas rapat luar sekolah', $log->message);
+    }
+
+    public function test_swap_acceptance_and_rejection_dispatch_whatsapp_to_original_teacher(): void
+    {
+        Http::fake([
+            '*/send-message' => Http::response(['status' => 'success'], 200),
+        ]);
+
+        Setting::set('wa_bot_enabled', true);
+        Setting::set('wa_notify_piket_swap_result', true);
+
+        $userA = User::create(['name' => 'Guru Asal', 'email' => 'asal2@sch.id', 'role' => 'guru', 'nis_nip' => 'A02', 'password' => bcrypt('123')]);
+        $guruAsal = \App\Models\Guru::create(['user_id' => $userA->id, 'nip' => 'A02', 'nama_lengkap' => 'Guru Asal', 'no_telepon' => '081277778888', 'status_aktif' => true]);
+
+        $userB = User::create(['name' => 'Guru Pengganti', 'email' => 'pengganti2@sch.id', 'role' => 'guru', 'nis_nip' => 'B02', 'password' => bcrypt('123')]);
+        $guruPengganti = \App\Models\Guru::create(['user_id' => $userB->id, 'nip' => 'B02', 'nama_lengkap' => 'Guru Pengganti', 'no_telepon' => '081299997777', 'status_aktif' => true]);
+
+        $jadwal = \App\Models\JadwalPiket::create([
+            'hari' => 1,
+            'nama_sesi' => 'Sesi 1',
+            'jam_mulai' => '07:00:00',
+            'jam_selesai' => '09:30:00',
+            'tanggal_mulai_berlaku' => '2026-01-01',
+            'tanggal_selesai_berlaku' => '2026-12-31',
+            'is_active' => true,
+        ]);
+        $jadwal->guru()->attach($guruAsal->id);
+
+        $swapService = app(\App\Services\GuruPiketSwapService::class);
+        $swap = $swapService->createSwapRequest($guruAsal, [
+            'jadwal_piket_id'   => $jadwal->id,
+            'guru_pengganti_id' => $guruPengganti->id,
+            'tanggal'           => '2026-09-28', // Senin
+            'alasan'            => 'Dinas luar',
+        ]);
+
+        // Accept swap
+        $swapService->acceptSwapRequest($swap, $userB);
+
+        $this->assertDatabaseHas('whatsapp_logs', [
+            'phone'   => '6281277778888',
+            'context' => 'piket_swap_result',
+            'status'  => 'sent',
+        ]);
+
+        $resultLog = WhatsappLog::where('context', 'piket_swap_result')->first();
+        $this->assertNotNull($resultLog);
+        $this->assertStringContainsString('DISETUJUI', $resultLog->message);
+        $this->assertStringContainsString('Guru Pengganti', $resultLog->message);
+    }
 }
+

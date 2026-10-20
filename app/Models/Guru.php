@@ -66,13 +66,4 @@ class Guru extends Model
         return $this->belongsToMany(JadwalPiket::class, 'jadwal_piket_guru', 'guru_id', 'jadwal_piket_id')
             ->withTimestamps();
     }
-
-    /**
-     * Relasi ke dispensasi rombongan/organisasi di mana guru bertindak sebagai pembina ekstra/organisasi
-     */
-    public function dispensasiOrganisasi(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
-    {
-        return $this->belongsToMany(Dispensasi::class, 'dispensasi_guru', 'guru_id', 'dispensasi_id')
-            ->withTimestamps();
-    }
 }

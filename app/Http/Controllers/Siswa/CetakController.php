@@ -57,7 +57,7 @@ class CetakController extends Controller
         ]);
 
         // 5. Generate dan download PDF
-        $dispensasi->load(['gurus', 'anggotaSiswa', 'siswa.kelas.jurusan', 'guru']);
+        $dispensasi->load(['anggotaSiswa', 'siswa.kelas.jurusan', 'guru']);
         $safeNomorSurat = str_replace(['/', '\\'], '-', $dispensasi->nomor_surat);
         $pdf = Pdf::loadView('pdf.surat-dispensasi', compact('dispensasi'));
 

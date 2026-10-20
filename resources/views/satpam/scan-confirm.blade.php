@@ -12,10 +12,10 @@
                 Verifikasi Dispensasi
             </h2>
             <div class="flex items-center gap-2 flex-wrap">
-                @if($dispensasi->isOrganisasi())
+                @if($dispensasi->isRombongan())
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
                         <i class="ti ti-users text-xs"></i>
-                        <span>{{ $dispensasi->nama_organisasi ?? 'Organisasi' }}</span>
+                        <span>Rombongan</span>
                     </span>
                 @else
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
@@ -78,7 +78,7 @@
             </div>
         </div>
 
-        @if($dispensasi->isOrganisasi())
+        @if($dispensasi->isRombongan())
         <div class="bg-purple-50/50 border border-purple-200 rounded-xl p-3.5 sm:p-4 mb-4">
             <div class="flex items-center justify-between mb-2.5">
                 <h3 class="text-xs sm:text-sm font-bold text-purple-950 flex items-center">
@@ -90,7 +90,7 @@
             </div>
             <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                 <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-purple-100 text-xs">
-                    <span class="font-bold text-slate-800">1. {{ $dispensasi->siswa->nama_lengkap }} (Ketua)</span>
+                    <span class="font-bold text-slate-800">1. {{ $dispensasi->siswa->nama_lengkap }} (Pemohon)</span>
                     <span class="text-slate-500 font-mono text-[11px]">{{ $dispensasi->siswa->kelas->nama_kelas ?? '-' }}</span>
                 </div>
                 @foreach($dispensasi->anggotaSiswa as $idx => $anggota)

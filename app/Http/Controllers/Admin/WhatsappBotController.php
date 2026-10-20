@@ -54,6 +54,9 @@ class WhatsappBotController extends Controller
             'wa_bot_api_key'               => Setting::get('wa_bot_api_key', config('services.whatsapp_bot.api_key', 'sipintu_wa_secret_key_2026')),
             'wa_notify_piket_bertugas'     => filter_var(Setting::get('wa_notify_piket_bertugas', '1'), FILTER_VALIDATE_BOOLEAN),
             'wa_notify_koordinator_piket'  => filter_var(Setting::get('wa_notify_koordinator_piket', '1'), FILTER_VALIDATE_BOOLEAN),
+            'wa_notify_piket_swap'         => filter_var(Setting::get('wa_notify_piket_swap', '1'), FILTER_VALIDATE_BOOLEAN),
+            'wa_notify_piket_swap_result'  => filter_var(Setting::get('wa_notify_piket_swap_result', '1'), FILTER_VALIDATE_BOOLEAN),
+            'wa_piket_reminder_minutes'    => (int) Setting::get('wa_piket_reminder_minutes', 15),
             'wa_notify_siswa_terlambat'    => filter_var(Setting::get('wa_notify_siswa_terlambat', '1'), FILTER_VALIDATE_BOOLEAN),
             'wa_notify_laporan_guru_piket' => filter_var(Setting::get('wa_notify_laporan_guru_piket', '1'), FILTER_VALIDATE_BOOLEAN),
             'wa_active_days'               => $activeDays,
@@ -106,19 +109,26 @@ class WhatsappBotController extends Controller
     public function updateSettings(Request $request)
     {
         $validated = $request->validate([
-            'wa_bot_url'     => 'required|url',
-            'wa_bot_api_key' => 'required|string|max:255',
+            'wa_bot_url'                => 'required|url',
+            'wa_bot_api_key'            => 'required|string|max:255',
+            'wa_piket_reminder_minutes' => 'nullable|integer|min:0|max:120',
         ], [
             'wa_bot_url.required' => 'URL Server Bot wajib diisi.',
             'wa_bot_url.url'      => 'Format URL Server Bot tidak valid.',
             'wa_bot_api_key.required' => 'API Key Server Bot wajib diisi.',
+            'wa_piket_reminder_minutes.integer' => 'Waktu pengingat harus berupa angka menit.',
+            'wa_piket_reminder_minutes.min'     => 'Waktu pengingat minimal 0 menit.',
+            'wa_piket_reminder_minutes.max'     => 'Waktu pengingat maksimal 120 menit.',
         ]);
 
         Setting::set('wa_bot_url', rtrim($validated['wa_bot_url'], '/'));
         Setting::set('wa_bot_api_key', $validated['wa_bot_api_key']);
         Setting::set('wa_bot_enabled', $request->boolean('wa_bot_enabled') ? '1' : '0');
+        Setting::set('wa_piket_reminder_minutes', (string) ($request->input('wa_piket_reminder_minutes', 15)));
         Setting::set('wa_notify_piket_bertugas', $request->boolean('wa_notify_piket_bertugas') ? '1' : '0');
         Setting::set('wa_notify_koordinator_piket', $request->boolean('wa_notify_koordinator_piket') ? '1' : '0');
+        Setting::set('wa_notify_piket_swap', $request->boolean('wa_notify_piket_swap') ? '1' : '0');
+        Setting::set('wa_notify_piket_swap_result', $request->boolean('wa_notify_piket_swap_result') ? '1' : '0');
         Setting::set('wa_notify_siswa_terlambat', $request->boolean('wa_notify_siswa_terlambat') ? '1' : '0');
         Setting::set('wa_notify_laporan_guru_piket', $request->boolean('wa_notify_laporan_guru_piket') ? '1' : '0');
 

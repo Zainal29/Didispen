@@ -294,10 +294,10 @@ function renderScanDetail(data) {
             ${photoHtml}
             <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-1.5 flex-wrap mb-1">
-                    ${data.tipe_pengajuan === 'organisasi' ? `
+                    ${(data.tipe_pengajuan === 'rombongan' || data.tipe_pengajuan === 'organisasi') ? `
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                             <i class="ti ti-users text-xs"></i>
-                            <span>${escapeHtml(data.nama_organisasi || 'Organisasi')}</span>
+                            <span>Rombongan</span>
                             <span class="text-[9px] bg-purple-200/70 text-purple-800 px-1 rounded-sm ml-0.5 font-mono">${data.total_rombongan || 1} siswa</span>
                         </span>
                     ` : `
@@ -333,12 +333,12 @@ function renderScanDetail(data) {
             </div>
         ` : ''}
 
-        ${data.tipe_pengajuan === 'organisasi' ? `
+        ${(data.tipe_pengajuan === 'rombongan' || data.tipe_pengajuan === 'organisasi') ? `
             <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs">
                 <div class="flex items-center justify-between mb-2">
                     <span class="font-bold text-purple-900 flex items-center gap-1.5">
                         <i class="ti ti-users text-purple-600 text-sm"></i>
-                        Dispensasi Rombongan: ${escapeHtml(data.nama_organisasi || 'Organisasi')}
+                        Dispensasi Rombongan
                     </span>
                     <span class="px-2 py-0.5 bg-purple-200 text-purple-800 text-[10px] font-bold rounded-full">
                         ${data.total_rombongan} Siswa
@@ -638,10 +638,10 @@ function manualVerify(e) {
                 }
 
                 let tagBadge = '';
-                if (d.is_organisasi) {
+                if (d.is_organisasi || d.tipe_pengajuan === 'rombongan') {
                     tagBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                         <i class="ti ti-users text-xs"></i>
-                        <span>${escapeHtml(d.nama_organisasi || 'Organisasi')}</span>
+                        <span>Rombongan</span>
                         <span class="text-[9px] bg-purple-200/70 text-purple-800 px-1 rounded-sm ml-0.5 font-mono">${d.total_rombongan} siswa</span>
                     </span>`;
                 } else {
@@ -652,16 +652,6 @@ function manualVerify(e) {
                 }
 
                 let pembinaHtml = '';
-                if (d.pembina_text) {
-                    pembinaHtml = `
-                        <div class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/90 text-xs">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                                <i class="ti ti-tie mr-1 text-slate-500"></i>Guru Pembina
-                            </span>
-                            <p class="font-bold text-slate-800">${escapeHtml(d.pembina_text)}</p>
-                        </div>
-                    `;
-                }
 
                 let actionSection = '';
                 if (d.status === 'disetujui') {

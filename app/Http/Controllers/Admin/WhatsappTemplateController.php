@@ -87,15 +87,21 @@ class WhatsappTemplateController extends Controller
             'link_web'        => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/'),
 
             // Variabel Guru / Piket
-            'nama_guru'        => 'Budi Santoso, S.Pd.',
-            'hari'             => 'Senin',
-            'nama_sesi'        => 'Sesi 1',
-            'jam_mulai'        => '07:00',
-            'jam_selesai'      => '09:30',
-            'koordinator'      => "Almu'idul 'Afwan, S.Pd.",
-            'nama_koordinator' => "Almu'idul 'Afwan, S.Pd.",
-            'daftar_petugas'   => "• Akhmad Lutfianto\n• Fitria Diana Kumala Sari",
-            'tanggal'          => now()->translatedFormat('d F Y'),
+            'nama_guru'           => 'Budi Santoso, S.Pd.',
+            'nama_guru_pengganti' => 'Siti Rahmawati, S.Pd.',
+            'nama_guru_asal'      => 'Budi Santoso, S.Pd.',
+            'hari'                => 'Senin',
+            'nama_sesi'           => 'Sesi 1',
+            'jam_mulai'           => '07:00',
+            'jam_selesai'         => '09:30',
+            'koordinator'         => "Almu'idul 'Afwan, S.Pd.",
+            'nama_koordinator'    => "Almu'idul 'Afwan, S.Pd.",
+            'daftar_petugas'      => "• Akhmad Lutfianto\n• Fitria Diana Kumala Sari",
+            'tanggal'             => now()->translatedFormat('d F Y'),
+            'menit_pengingat'     => '15 menit',
+            'link_persetujuan'    => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/') . '/guru/piket/swap/incoming',
+            'status_persetujuan'  => 'DISETUJUI',
+            'catatan_tambahan'    => 'Catatan: Siap menggantikan tugas piket.',
         ];
 
         // Escape dulu sebelum replace agar aman

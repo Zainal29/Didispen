@@ -15,8 +15,11 @@ use RuntimeException;
 class GuruPiketSwapService
 {
     public function __construct(
-        protected AuditLogService $auditLogService
-    ) {}
+        protected AuditLogService $auditLogService,
+        protected ?WhatsappMessageService $waService = null
+    ) {
+        $this->waService = $waService ?? app(WhatsappMessageService::class);
+    }
 
     /**
      * Membuat pengajuan tukar jadwal / penggantian piket oleh Guru Asal.
@@ -115,7 +118,7 @@ class GuruPiketSwapService
         }
 
         // 7. Simpan Pengajuan
-        return DB::transaction(function () use ($jadwal, $guruAsal, $guruPengganti, $tanggalStr, $alasan) {
+        $swap = DB::transaction(function () use ($jadwal, $guruAsal, $guruPengganti, $tanggalStr, $alasan) {
             $swap = PertukaranJadwalPiket::create([
                 'jadwal_piket_id' => $jadwal->id,
                 'guru_asal_id' => $guruAsal->id,
@@ -143,6 +146,15 @@ class GuruPiketSwapService
 
             return $swap;
         });
+
+        // 8. Kirim Notifikasi WA ke Guru Pengganti
+        try {
+            $this->waService->notifyGuruPenggantiSwap($swap);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Gagal mengirim WA pertukaran piket: " . $e->getMessage());
+        }
+
+        return $swap;
     }
 
     /**
@@ -177,7 +189,7 @@ class GuruPiketSwapService
             ]);
         }
 
-        return DB::transaction(function () use ($swap, $user) {
+        $result = DB::transaction(function () use ($swap, $user) {
             // Lock and check conflict: Pastikan belum ada replacement aktif lain untuk slot yang sama
             $activeCount = PertukaranJadwalPiket::where('jadwal_piket_id', $swap->jadwal_piket_id)
                 ->where('guru_asal_id', $swap->guru_asal_id)
@@ -212,6 +224,15 @@ class GuruPiketSwapService
 
             return $swap;
         });
+
+        // Kirim Notifikasi WA ke Guru Asal bahwa permohonan disetujui
+        try {
+            $this->waService->notifyGuruAsalSwapResult($result, 'disetujui');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Gagal mengirim WA hasil pertukaran piket: " . $e->getMessage());
+        }
+
+        return $result;
     }
 
     /**
@@ -238,7 +259,7 @@ class GuruPiketSwapService
             ]);
         }
 
-        return DB::transaction(function () use ($swap, $user, $catatan) {
+        $result = DB::transaction(function () use ($swap, $user, $catatan) {
             $old = $swap->toArray();
 
             $swap->update([
@@ -261,6 +282,15 @@ class GuruPiketSwapService
 
             return $swap;
         });
+
+        // Kirim Notifikasi WA ke Guru Asal bahwa permohonan ditolak
+        try {
+            $this->waService->notifyGuruAsalSwapResult($result, 'ditolak');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Gagal mengirim WA hasil pertukaran piket: " . $e->getMessage());
+        }
+
+        return $result;
     }
 
     /**

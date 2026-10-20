@@ -20,30 +20,45 @@ class MonitorPiketDanTerlambat extends Command
         $todayDayOfWeek = now('Asia/Jakarta')->dayOfWeekIso;
 
         if (in_array($todayDayOfWeek, $activeDays)) {
-            $infoSesi = $piketService->getInformasiSesi();
+            $leadMinutes = (int) \App\Models\Setting::get('wa_piket_reminder_minutes', 15);
+            $todayDateStr = now('Asia/Jakarta')->toDateString();
+            $now = now('Asia/Jakarta');
 
-            if ($infoSesi['status_sesi'] === 'Berlangsung' && ! $infoSesi['conflict'] && $infoSesi['jadwal']) {
-                $jadwal = $infoSesi['jadwal'];
+            // Ambil semua sesi jadwal piket untuk hari/tanggal ini
+            $jadwalHariIni = $piketService->getJadwalUntukTanggal($now);
 
-                // A. Notifikasi ke Guru Piket yang sedang bertugas
-                foreach ($infoSesi['petugas'] as $petugas) {
-                    if ($petugas['status'] === 'Sedang Bertugas') {
-                        // Akan otomatis di-skip jika hari ini di sesi ini sudah dikirimi WA (via reference_key)
-                        $waService->notifyGuruPiketBertugas(
-                            $petugas['guru'],
-                            $jadwal,
-                            $petugas['is_pengganti']
-                        );
+            foreach ($jadwalHariIni as $index => $jadwal) {
+                $sesiMulai = \Carbon\Carbon::parse("{$todayDateStr} {$jadwal->jam_mulai}", 'Asia/Jakarta');
+                $sesiSelesai = \Carbon\Carbon::parse("{$todayDateStr} {$jadwal->jam_selesai}", 'Asia/Jakarta');
+
+                $reminderStart = $sesiMulai->copy()->subMinutes($leadMinutes);
+
+                // Window pengiriman pengingat: dari (jam_mulai - leadMinutes) sampai jam_selesai
+                // Deduplikasi di WhatsappMessageService via referenceKey mencegah pengiriman ganda
+                if ($now->greaterThanOrEqualTo($reminderStart) && $now->lessThan($sesiSelesai)) {
+                    $petugasInfo = $piketService->getPetugasAktual($jadwal, $now);
+
+                    if (! $petugasInfo['conflict']) {
+                        // A. Notifikasi ke Guru Piket (Petugas Aktual: Resmi atau Pengganti yang disetujui)
+                        foreach ($petugasInfo['petugas'] as $petugas) {
+                            if ($petugas['guru'] && $petugas['guru']->status_aktif) {
+                                $waService->notifyGuruPiketBertugas(
+                                    $petugas['guru'],
+                                    $jadwal,
+                                    $petugas['is_pengganti']
+                                );
+                            }
+                        }
+
+                        // B. Notifikasi ke Koordinator Guru Piket hari ini (1x sehari di sesi pertama)
+                        if ($index === 0 && $jadwal->koordinator && $jadwal->koordinator->status_aktif) {
+                            $waService->notifyKoordinatorPiket(
+                                $jadwal->koordinator,
+                                $jadwal,
+                                $petugasInfo['petugas']
+                            );
+                        }
                     }
-                }
-
-                // B. Notifikasi ke Koordinator Guru Piket hari ini (1x sehari di sesi pertama)
-                if ($jadwal->koordinator && $jadwal->koordinator->status_aktif) {
-                    $waService->notifyKoordinatorPiket(
-                        $jadwal->koordinator,
-                        $jadwal,
-                        $infoSesi['petugas']
-                    );
                 }
             }
         }

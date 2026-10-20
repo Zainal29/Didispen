@@ -16,15 +16,15 @@ class Dispensasi extends Model
     protected $table = 'dispensasi';
 
     protected $fillable = [
-        'siswa_id', 'guru_id', 'nomor_surat', 'tipe_pengajuan', 'organisasi_id', 'nama_organisasi',
-        'kategori', 'alasan', 'tujuan', 'lokasi', 'tanggal_izin', 'tanggal_selesai', 'durasi_hari',
+        'siswa_id', 'guru_id', 'nomor_surat', 'tipe_pengajuan',
+        'kategori', 'alasan', 'tujuan', 'lokasi', 'tanggal_izin',
         'jam_keluar', 'jam_kembali', 'sampai_pulang', 'batas_waktu_kembali', 'status', 'catatan_admin',
         'approved_at', 'rejected_at',
         'qr_code', 'qr_token', 'print_count', 'max_print_limit', 'printed_at',
         'student_print_count', 'teacher_print_count', 'waktu_keluar_aktual', 'waktu_kembali_aktual',
         'satpam_keluar_id', 'satpam_kembali_id', 'is_warned', 'warned_at',
         'dibuat_manual_oleh_guru',
-        'foto_verifikasi', 'foto_bukti', 'foto_bukti_uploaded_at', // ✅ Hapus 'bukti_file'
+        'foto_verifikasi', 'foto_bukti', 'foto_bukti_uploaded_at',
     ];
 
 
@@ -81,13 +81,8 @@ class Dispensasi extends Model
         return $this->belongsTo(Guru::class, 'guru_id');
     }
 
-    public function organisasi(): BelongsTo
-    {
-        return $this->belongsTo(Organisasi::class, 'organisasi_id');
-    }
-
     /**
-     * Anggota rombongan untuk dispensasi organisasi
+     * Anggota rombongan untuk dispensasi rombongan
      */
     public function anggotaSiswa(): BelongsToMany
     {
@@ -95,19 +90,19 @@ class Dispensasi extends Model
     }
 
     /**
-     * Guru Pembina Ekstra / Organisasi yang dipilih untuk dispensasi rombongan
+     * Cek apakah tipe pengajuan adalah rombongan
      */
-    public function gurus(): BelongsToMany
+    public function isRombongan(): bool
     {
-        return $this->belongsToMany(Guru::class, 'dispensasi_guru', 'dispensasi_id', 'guru_id')->withTimestamps();
+        return $this->tipe_pengajuan === 'rombongan' || $this->tipe_pengajuan === 'organisasi';
     }
 
     /**
-     * Cek apakah tipe pengajuan adalah organisasi / rombongan
+     * Alias backward-compatible untuk isRombongan()
      */
     public function isOrganisasi(): bool
     {
-        return $this->tipe_pengajuan === 'organisasi';
+        return $this->isRombongan();
     }
 
     /**

@@ -53,24 +53,14 @@ class Siswa extends Model
         return $this->hasMany(Dispensasi::class);
     }
 
-    public function dispensasiOrganisasi(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function dispensasiRombongan(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Dispensasi::class, 'dispensasi_anggota', 'siswa_id', 'dispensasi_id')->withTimestamps();
     }
 
-    public function organisasiDipimpin(): HasMany
+    public function dispensasiOrganisasi(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasMany(Organisasi::class, 'ketua_siswa_id');
-    }
-
-    public function isKetuaOrganisasi(): bool
-    {
-        return $this->organisasiDipimpin()->where('status_aktif', true)->exists();
-    }
-
-    public function getDaftarOrganisasiDipimpinAttribute()
-    {
-        return $this->organisasiDipimpin()->where('status_aktif', true)->get();
+        return $this->dispensasiRombongan();
     }
 
     public function getNamaLengkapAttribute($value): string

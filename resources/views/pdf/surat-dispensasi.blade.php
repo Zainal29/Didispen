@@ -182,22 +182,15 @@
     <div class="content">
         <p style="margin-bottom: 8px;">Yang bertanda tangan di bawah ini, Guru Piket SMK Negeri 1 Bangsri menerangkan bahwa:</p>
 
-        @if($dispensasi->tipe_pengajuan === 'organisasi')
+        @if($dispensasi->isRombongan())
         <table class="table-data" style="margin-bottom: 12px;">
             <tr>
-                <td class="label">Organisasi / Ekskul</td>
+                <td class="label">Jenis Pengajuan</td>
                 <td class="colon">:</td>
-                <td><strong>{{ $dispensasi->nama_organisasi ?? 'Organisasi Sekolah' }}</strong></td>
+                <td><strong>Dispensasi Rombongan</strong></td>
             </tr>
-            @if($dispensasi->gurus && $dispensasi->gurus->count() > 0)
             <tr>
-                <td class="label">Guru Pembina</td>
-                <td class="colon">:</td>
-                <td>{{ $dispensasi->gurus->pluck('nama_lengkap')->join(', ') }}</td>
-            </tr>
-            @endif
-            <tr>
-                <td class="label">Penanggung Jawab / Ketua</td>
+                <td class="label">Penanggung Jawab / Pemohon</td>
                 <td class="colon">:</td>
                 <td>{{ $dispensasi->siswa->nama_lengkap }} ({{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }})</td>
             </tr>
@@ -205,11 +198,7 @@
                 <td class="label">Tanggal Pelaksanaan</td>
                 <td class="colon">:</td>
                 <td>
-                    @if($dispensasi->tanggal_selesai && $dispensasi->durasi_hari > 1)
-                        <strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin)->translatedFormat('d F Y') }} - {{ \Carbon\Carbon::parse($dispensasi->tanggal_selesai)->translatedFormat('d F Y') }} ({{ $dispensasi->durasi_hari }} hari)</strong>
-                    @else
-                        <strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('l, d F Y') }} (1 hari)</strong>
-                    @endif
+                    <strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('l, d F Y') }}</strong>
                 </td>
             </tr>
             <tr>
@@ -234,19 +223,7 @@
         </table>
 
         <div class="catatan-box" style="margin-top: 4px; margin-bottom: 12px; font-style: normal;">
-            <strong>Catatan Pelaksanaan:</strong> Dilaksanakan pada tanggal 
-            @if($dispensasi->tanggal_selesai && $dispensasi->durasi_hari > 1)
-                @php
-                    $startCarbon = \Carbon\Carbon::parse($dispensasi->tanggal_izin);
-                    $endCarbon = \Carbon\Carbon::parse($dispensasi->tanggal_selesai);
-                    $formatRentang = $startCarbon->isSameMonth($endCarbon)
-                        ? ($startCarbon->format('d') . ' - ' . $endCarbon->translatedFormat('d F Y'))
-                        : ($startCarbon->translatedFormat('d F') . ' - ' . $endCarbon->translatedFormat('d F Y'));
-                @endphp
-                <strong>{{ $formatRentang }} ({{ $dispensasi->durasi_hari }} hari)</strong>
-            @else
-                <strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('l, d F Y') }} (1 hari)</strong>
-            @endif
+            <strong>Catatan Pelaksanaan:</strong> Dilaksanakan pada tanggal <strong>{{ \Carbon\Carbon::parse($dispensasi->tanggal_izin ?? $dispensasi->created_at)->translatedFormat('l, d F Y') }}</strong>
         </div>
 
         <p style="font-weight: bold; margin: 10px 0 4px 0; font-size: 10.5pt;">Daftar Siswa Peserta Dispensasi:</p>

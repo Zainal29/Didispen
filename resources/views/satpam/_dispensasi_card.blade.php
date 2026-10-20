@@ -30,10 +30,10 @@
             <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                     <p class="font-mono font-semibold text-slate-700 text-xs">{{ $dispensasi->nomor_surat }}</p>
-                    @if($dispensasi->isOrganisasi())
+                    @if($dispensasi->isRombongan())
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                             <i class="ti ti-users text-xs"></i>
-                            <span>{{ $dispensasi->nama_organisasi ?? 'Organisasi' }}</span>
+                            <span>Rombongan</span>
                         </span>
                     @else
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">

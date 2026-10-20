@@ -84,12 +84,11 @@ class DashboardController extends Controller
 
             $query = trim($request->input('query'));
 
-            $dispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'organisasi', 'anggotaSiswa.kelas', 'gurus', 'guru'])
+            $dispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'anggotaSiswa.kelas', 'guru'])
                 ->whereIn('status', ['disetujui', 'keluar', 'selesai'])
                 ->where(function($q) use ($query) {
                     $q->where('nomor_surat', 'like', "%{$query}%")
                       ->orWhere('id', $query)
-                      ->orWhere('nama_organisasi', 'like', "%{$query}%")
                       ->orWhereHas('siswa', function($q2) use ($query) {
                           $q2->where('nama_lengkap', 'like', "%{$query}%")
                              ->orWhereHas('user', function($q3) use ($query) {
@@ -101,9 +100,6 @@ class DashboardController extends Controller
                              ->orWhereHas('user', function($q5) use ($query) {
                                  $q5->where('nis_nip', 'like', "%{$query}%");
                              });
-                      })
-                      ->orWhereHas('gurus', function($q6) use ($query) {
-                          $q6->where('nama_lengkap', 'like', "%{$query}%");
                       });
                 })
                 ->latest()
@@ -113,16 +109,13 @@ class DashboardController extends Controller
             if ($dispensasi->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dispensasi tidak ditemukan. Pastikan No. Surat, NIS, Nama, Organisasi, atau Pembina benar.'
+                    'message' => 'Dispensasi tidak ditemukan. Pastikan No. Surat, NIS, atau Nama benar.'
                 ], 404);
             }
 
             $results = $dispensasi->map(function($d) {
-                $isOrg = $d->isOrganisasi();
-                $namaOrg = $d->nama_organisasi ?? $d->organisasi?->nama_organisasi ?? 'Organisasi';
-                $totalSiswa = $isOrg ? ($d->anggotaSiswa->count() + 1) : 1;
-                $pembinas = $d->gurus->pluck('nama_lengkap')->all();
-                $pembinaText = !empty($pembinas) ? implode(', ', $pembinas) : null;
+                $isRombongan = $d->isRombongan();
+                $totalSiswa = $isRombongan ? ($d->anggotaSiswa->count() + 1) : 1;
 
                 $anggotaList = $d->anggotaSiswa->map(fn($a) => [
                     'nama' => $a->nama_lengkap,
@@ -134,12 +127,12 @@ class DashboardController extends Controller
                     'id' => $d->id,
                     'nomor_surat' => $d->nomor_surat,
                     'status' => $d->status,
-                    'tipe_pengajuan' => $d->tipe_pengajuan ?? ($isOrg ? 'organisasi' : 'individu'),
-                    'is_organisasi' => $isOrg,
-                    'nama_organisasi' => $namaOrg,
+                    'tipe_pengajuan' => $d->tipe_pengajuan ?? ($isRombongan ? 'rombongan' : 'individu'),
+                    'is_organisasi' => $isRombongan,
+                    'nama_organisasi' => $isRombongan ? 'Rombongan' : null,
                     'total_rombongan' => $totalSiswa,
-                    'pembinas' => $pembinas,
-                    'pembina_text' => $pembinaText,
+                    'pembinas' => [],
+                    'pembina_text' => null,
                     'guru_piket' => $d->guru?->nama_lengkap ?? null,
                     'siswa_nama' => $d->siswa?->nama_lengkap ?? 'Tidak Diketahui',
                     'siswa_nis' => $d->siswa?->user?->nis_nip ?? '-',
@@ -242,10 +235,8 @@ class DashboardController extends Controller
             'siswa.kelas.jurusan',
             'siswa.user',
             'guru',
-            'organisasi',
             'anggotaSiswa.kelas.jurusan',
             'anggotaSiswa.user',
-            'gurus',
         ]);
 
         // ✅ HANYA 1 BARIS untuk generate link WA

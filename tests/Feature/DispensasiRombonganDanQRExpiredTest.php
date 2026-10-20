@@ -18,12 +18,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
-class DispensasiOrganisasiDanQRExpiredTest extends TestCase
+class DispensasiRombonganDanQRExpiredTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected User $userKetua;
-    protected Siswa $siswaKetua;
+    protected User $userPemohon;
+    protected Siswa $siswaPemohon;
     protected User $userAnggota1;
     protected Siswa $siswaAnggota1;
     protected User $userAnggota2;
@@ -55,29 +55,23 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
             'jurusan_id' => $this->jurusan->id,
         ]);
 
-        $this->userKetua = User::create([
-            'name' => 'Ketua OSIS',
-            'email' => 'ketua@didispen.sch.id',
+        // Siswa biasa (bukan superadmin, bukan ketua)
+        $this->userPemohon = User::create([
+            'name' => 'Siswa Pemohon',
+            'email' => 'pemohon@didispen.sch.id',
             'role' => 'siswa',
-            'is_superadmin' => true,
+            'is_superadmin' => false,
             'nis_nip' => '10001',
             'password' => Hash::make('password'),
         ]);
 
-        $this->siswaKetua = Siswa::create([
-            'user_id' => $this->userKetua->id,
+        $this->siswaPemohon = Siswa::create([
+            'user_id' => $this->userPemohon->id,
             'kelas_id' => $this->kelas->id,
             'jurusan_id' => $this->jurusan->id,
-            'nama_lengkap' => 'Ketua OSIS',
+            'nama_lengkap' => 'Siswa Pemohon',
             'nis_nip' => '10001',
             'no_telepon' => '081234567890',
-            'status_aktif' => true,
-        ]);
-
-        \App\Models\Organisasi::create([
-            'nama_organisasi' => 'OSIS SMKN 1 Bangsri',
-            'singkatan' => 'OSIS',
-            'ketua_siswa_id' => $this->siswaKetua->id,
             'status_aktif' => true,
         ]);
 
@@ -126,11 +120,10 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
         ]);
     }
 
-    public function test_siswa_bisa_membuat_pengajuan_organisasi_dengan_anggota_unlimited(): void
+    public function test_semua_siswa_bisa_membuat_pengajuan_rombongan(): void
     {
-        $response = $this->actingAs($this->userKetua)->post(route('siswa.pengajuan.store'), [
-            'tipe_pengajuan' => 'organisasi',
-            'nama_organisasi' => 'OSIS SMKN 1 Bangsri',
+        $response = $this->actingAs($this->userPemohon)->post(route('siswa.pengajuan.store'), [
+            'tipe_pengajuan' => 'rombongan',
             'tanggal_izin' => '2026-10-12',
             'kategori' => 'keperluan_sekolah',
             'alasan' => 'Mempersiapkan acara peringatan hari besar nasional di aula.',
@@ -145,10 +138,9 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertRedirect(route('siswa.pengajuan.index'));
 
-        $dispensasi = Dispensasi::where('siswa_id', $this->siswaKetua->id)->first();
+        $dispensasi = Dispensasi::where('siswa_id', $this->siswaPemohon->id)->first();
         $this->assertNotNull($dispensasi);
-        $this->assertEquals('organisasi', $dispensasi->tipe_pengajuan);
-        $this->assertEquals('OSIS SMKN 1 Bangsri', $dispensasi->nama_organisasi);
+        $this->assertEquals('rombongan', $dispensasi->tipe_pengajuan);
         $this->assertCount(2, $dispensasi->anggotaSiswa);
         $this->assertTrue($dispensasi->anggotaSiswa->contains($this->siswaAnggota1->id));
         $this->assertTrue($dispensasi->anggotaSiswa->contains($this->siswaAnggota2->id));
@@ -157,13 +149,13 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
         $this->flushSession();
         $showResp = $this->actingAs($this->userAnggota1)->get(route('siswa.pengajuan.show', $dispensasi));
         $showResp->assertOk()
-            ->assertSee('OSIS SMKN 1 Bangsri')
+            ->assertSee('Dispensasi Rombongan')
             ->assertSee('Anggota 1');
     }
 
     public function test_siswa_bisa_mengajukan_dispensasi_sampai_pulang_tanpa_kena_overdue(): void
     {
-        $response = $this->actingAs($this->userKetua)->post(route('siswa.pengajuan.store'), [
+        $response = $this->actingAs($this->userPemohon)->post(route('siswa.pengajuan.store'), [
             'tipe_pengajuan' => 'individu',
             'kategori' => 'keperluan_sekolah',
             'sampai_pulang' => '1',
@@ -176,7 +168,7 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
 
         $response->assertSessionHasNoErrors();
 
-        $dispensasi = Dispensasi::where('siswa_id', $this->siswaKetua->id)->first();
+        $dispensasi = Dispensasi::where('siswa_id', $this->siswaPemohon->id)->first();
         $this->assertNotNull($dispensasi);
         $this->assertTrue((bool)$dispensasi->sampai_pulang);
         $this->assertEquals('Sampai Pulang Sekolah', $dispensasi->jam_kembali);
@@ -204,10 +196,10 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
     public function test_qr_code_expired_jika_discan_di_hari_berbeda_dari_tanggal_izin(): void
     {
         $dispensasi = Dispensasi::create([
-            'siswa_id' => $this->siswaKetua->id,
+            'siswa_id' => $this->siswaPemohon->id,
             'nomor_surat' => 'DISP-2026-TEST1',
             'kategori' => 'izin',
-            'alasan' => 'Urusan penting',
+            'alasan' => 'Urusan penting keluarga di rumah',
             'tujuan' => 'Rumah',
             'no_telepon' => '081234567890',
             'jam_keluar' => '09:00',
@@ -239,10 +231,10 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
     {
         // Dispensasi dibuat kemarin dan statusnya menunggu / disetujui tanpa checkout
         $dispensasiKemarin = Dispensasi::create([
-            'siswa_id' => $this->siswaKetua->id,
+            'siswa_id' => $this->siswaPemohon->id,
             'nomor_surat' => 'DISP-2026-TEST2',
             'kategori' => 'izin',
-            'alasan' => 'Urusan kemarin',
+            'alasan' => 'Urusan kemarin keluarga penting',
             'tujuan' => 'Rumah',
             'no_telepon' => '081234567890',
             'jam_keluar' => '09:00',
@@ -266,12 +258,11 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
     public function test_anggota_rombongan_bisa_mencetak_dokumen_pdf_dengan_daftar_nama_anggota(): void
     {
         $dispensasi = Dispensasi::create([
-            'siswa_id' => $this->siswaKetua->id,
+            'siswa_id' => $this->siswaPemohon->id,
             'nomor_surat' => 'DISP-2026-PDF1',
-            'tipe_pengajuan' => 'organisasi',
-            'nama_organisasi' => 'PMR WIRA',
+            'tipe_pengajuan' => 'rombongan',
             'kategori' => 'keperluan_sekolah',
-            'alasan' => 'Kegiatan donor darah PMI',
+            'alasan' => 'Kegiatan donor darah PMI gabungan',
             'tujuan' => 'PMI Cabang',
             'no_telepon' => '081234567890',
             'jam_keluar' => '08:00',
@@ -290,15 +281,14 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
         $response->assertHeader('content-type', 'application/pdf');
     }
 
-    public function test_satpam_bisa_memindai_dan_melihat_metadata_rombongan_organisasi(): void
+    public function test_satpam_bisa_memindai_dan_melihat_metadata_rombongan(): void
     {
         $dispensasi = Dispensasi::create([
-            'siswa_id' => $this->siswaKetua->id,
+            'siswa_id' => $this->siswaPemohon->id,
             'nomor_surat' => 'DISP-2026-SCAN1',
-            'tipe_pengajuan' => 'organisasi',
-            'nama_organisasi' => 'Pramuka Ambalan',
+            'tipe_pengajuan' => 'rombongan',
             'kategori' => 'keperluan_sekolah',
-            'alasan' => 'Giat persami kwarran',
+            'alasan' => 'Giat perlombaan sekolah',
             'tujuan' => 'Bumi Perkemahan',
             'no_telepon' => '081234567890',
             'jam_keluar' => '10:00',
@@ -306,22 +296,21 @@ class DispensasiOrganisasiDanQRExpiredTest extends TestCase
             'sampai_pulang' => true,
             'status' => 'disetujui',
             'tanggal_izin' => '2026-10-12',
-            'qr_token' => 'QR_PRAMUKA_123456789',
+            'qr_token' => 'QR_ROMBONGAN_123456789',
             'foto_verifikasi' => 'dummy.jpg',
         ]);
         $dispensasi->anggotaSiswa()->sync([$this->siswaAnggota1->id]);
 
         $this->flushSession();
         $response = $this->actingAs($this->userSatpam)->post(route('satpam.scan.verify'), [
-            'qr_data' => 'QR_PRAMUKA_123456789',
+            'qr_data' => 'QR_ROMBONGAN_123456789',
             'action' => 'check',
         ]);
 
         $response->assertOk();
         $json = $response->json();
         $this->assertTrue($json['success']);
-        $this->assertEquals('organisasi', $json['data']['tipe_pengajuan']);
-        $this->assertEquals('Pramuka Ambalan', $json['data']['nama_organisasi']);
+        $this->assertEquals('rombongan', $json['data']['tipe_pengajuan']);
         $this->assertTrue($json['data']['is_sampai_pulang']);
         $this->assertCount(1, $json['data']['anggota']);
         $this->assertEquals(2, $json['data']['total_rombongan']);
