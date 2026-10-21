@@ -267,6 +267,10 @@
 
         <!-- FOOTER (Dengan background tipis agar tetap terbaca jelas di atas foto) -->
         <div class="mt-4 text-center w-full text-[11px] text-slate-300 font-medium drop-shadow-sm">
+            Butuh bantuan? Hubungi kami sekarang!  <a href="https://wa.me/6289509507443"  class="text-white hover:underline">Muhammad Zainal Arief</a>
+            <a href="https://wa.me/62895396259831" class="text-white hover:underline">Muhammad Sabrian Nuh</a>
+            <a href="https://wa.me/6282325433087" class="text-white hover:underline">Maulana Fahri Oktavian</a>
+            <br>
             © 2026 DIDISPEN. Digawe 3M .
         </div>
     </div>

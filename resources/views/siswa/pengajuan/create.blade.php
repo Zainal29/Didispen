@@ -692,208 +692,43 @@
                             </label>
                         </div>
 
-                        @php
-                            $jamPilihanList = [
-                                '05' => '05:00 (05 Pagi / Subuh)',
-                                '06' => '06:00 (06 Pagi)',
-                                '07' => '07:00 (07 Pagi)',
-                                '08' => '08:00 (08 Pagi)',
-                                '09' => '09:00 (09 Pagi)',
-                                '10' => '10:00 (10 Pagi)',
-                                '11' => '11:00 (11 Siang)',
-                                '12' => '12:00 (12 Siang)',
-                                '13' => '13:00 (1 Siang / 13:00)',
-                                '14' => '14:00 (2 Siang / 14:00)',
-                                '15' => '15:00 (3 Sore / 15:00)',
-                                '16' => '16:00 (4 Sore / 16:00)',
-                                '17' => '17:00 (5 Sore / 17:00)',
-                                '18' => '18:00 (6 Sore / 18:00)',
-                                '19' => '19:00 (7 Malam / 19:00)',
-                                '20' => '20:00 (8 Malam / 20:00)',
-                            ];
-
-                            $oldKeluar = old('jam_keluar');
-                            if (is_numeric($oldKeluar) && isset($jadwalHariIni[$oldKeluar]['start'])) {
-                                $oldKeluar = $jadwalHariIni[$oldKeluar]['start'];
-                            }
-                            $oldKeluarHour = $oldKeluar && str_contains($oldKeluar, ':') ? explode(':', $oldKeluar)[0] : '';
-                            $oldKeluarMin  = $oldKeluar && str_contains($oldKeluar, ':') ? explode(':', $oldKeluar)[1] : '';
-
-                            $oldKembali = old('jam_kembali');
-                            if (is_numeric($oldKembali) && isset($jadwalHariIni[$oldKembali]['end'])) {
-                                $oldKembali = $jadwalHariIni[$oldKembali]['end'];
-                            }
-                            $oldKembaliHour = $oldKembali && str_contains($oldKembali, ':') ? explode(':', $oldKembali)[0] : '';
-                            $oldKembaliMin  = $oldKembali && str_contains($oldKembali, ':') ? explode(':', $oldKembali)[1] : '';
-                        @endphp
-
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {{-- Card Jam Keluar (Format 24 Jam) --}}
-                            <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5" id="cardJamKeluar">
-                                <div class="flex items-center justify-between gap-1 mb-2">
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                        Jam Keluar <span class="text-rose-500">*</span>
-                                    </label>
-                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-2 py-0.5 rounded-full">
-                                        <i class="ti ti-clock text-xs"></i> 24 Jam (WIB)
-                                    </span>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
+                                <label for="jamKeluar" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Jam Keluar <span class="text-rose-500">*</span></label>
+                                <div class="relative">
+                                    @php
+                                        $oldKeluar = old('jam_keluar');
+                                        if (is_numeric($oldKeluar) && isset($jadwalHariIni[$oldKeluar]['start'])) {
+                                            $oldKeluar = $jadwalHariIni[$oldKeluar]['start'];
+                                        }
+                                    @endphp
+                                    <input type="time" name="jam_keluar" id="jamKeluar" value="{{ $oldKeluar }}" required step="60"
+                                        class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base font-semibold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('jam_keluar') border-rose-500 @enderror">
                                 </div>
-
-                                {{-- Input Tersembunyi untuk Nilai Final HH:mm --}}
-                                <input type="hidden" name="jam_keluar" id="jamKeluar" value="{{ $oldKeluar }}">
-
-                                {{-- Dropdown Jam & Menit --}}
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label for="selectJamKeluarHour" class="block text-[11px] font-semibold text-slate-600 mb-1">
-                                            Jam (24 Jam)
-                                        </label>
-                                        <div class="relative">
-                                            <select id="selectJamKeluarHour"
-                                                class="w-full min-h-[44px] pl-3 pr-8 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer @error('jam_keluar') border-rose-500 @enderror">
-                                                <option value="">-- Pilih Jam --</option>
-                                                @foreach($jamPilihanList as $hVal => $hLabel)
-                                                    <option value="{{ $hVal }}" {{ $oldKeluarHour === $hVal ? 'selected' : '' }}>
-                                                        {{ $hLabel }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-500">
-                                                <i class="ti ti-chevron-down text-xs"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label for="selectJamKeluarMin" class="block text-[11px] font-semibold text-slate-600 mb-1">
-                                            Menit
-                                        </label>
-                                        <div class="relative">
-                                            <select id="selectJamKeluarMin"
-                                                class="w-full min-h-[44px] pl-3 pr-8 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer @error('jam_keluar') border-rose-500 @enderror">
-                                                <option value="">-- Menit --</option>
-                                                @for($m = 0; $m < 60; $m++)
-                                                    @php $mVal = sprintf('%02d', $m); @endphp
-                                                    <option value="{{ $mVal }}" {{ $oldKeluarMin === $mVal ? 'selected' : '' }}>
-                                                        :{{ $mVal }} Menit
-                                                    </option>
-                                                @endfor
-                                            </select>
-                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-500">
-                                                <i class="ti ti-chevron-down text-xs"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Pilihan Cepat Menit --}}
-                                <div class="mt-2.5 flex items-center gap-1.5 flex-wrap">
-                                    <span class="text-[10px] text-slate-500 font-medium mr-0.5">Menit cepat:</span>
-                                    <button type="button" class="btn-quick-minute-keluar px-2 py-1 text-[11px] font-bold rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-slate-700 hover:text-blue-700 transition-all shadow-2xs cursor-pointer" data-minute="00">:00</button>
-                                    <button type="button" class="btn-quick-minute-keluar px-2 py-1 text-[11px] font-bold rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-slate-700 hover:text-blue-700 transition-all shadow-2xs cursor-pointer" data-minute="15">:15</button>
-                                    <button type="button" class="btn-quick-minute-keluar px-2 py-1 text-[11px] font-bold rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-slate-700 hover:text-blue-700 transition-all shadow-2xs cursor-pointer" data-minute="30">:30</button>
-                                    <button type="button" class="btn-quick-minute-keluar px-2 py-1 text-[11px] font-bold rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-slate-700 hover:text-blue-700 transition-all shadow-2xs cursor-pointer" data-minute="45">:45</button>
-                                </div>
-
-                                {{-- Live Preview Badge --}}
-                                <div id="previewJamKeluar" class="mt-2 text-xs font-semibold text-slate-600">
-                                    <span class="text-slate-500 text-[11px] flex items-center gap-1">
-                                        <i class="ti ti-info-circle text-slate-400"></i> Format 24 Jam (contoh: 07:15 atau 13:30)
-                                    </span>
-                                </div>
-
                                 <div id="jamKeluarError" class="text-xs text-rose-600 font-semibold mt-1.5 hidden"></div>
                                 @error('jam_keluar') <p class="text-rose-600 text-xs mt-1.5 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p> @enderror
                             </div>
-
-                            {{-- Card Jam Kembali (Format 24 Jam) --}}
                             <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 relative overflow-hidden"
-                                id="cardJamKembali"
-                                :class="{ 'opacity-85 bg-slate-100/90': sampaiPulang }">
-                                <div class="flex items-center justify-between gap-1 mb-2">
-                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                        Jam Kembali <span class="text-rose-500" x-show="!sampaiPulang">*</span>
-                                    </label>
-                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-2 py-0.5 rounded-full" x-show="!sampaiPulang">
-                                        <i class="ti ti-clock text-xs"></i> 24 Jam (WIB)
-                                    </span>
-                                </div>
-
-                                {{-- Input Tersembunyi untuk Nilai Final HH:mm --}}
-                                <input type="hidden" name="jam_kembali" id="jamKembali" value="{{ $oldKembali }}"
-                                    :disabled="sampaiPulang">
-
-                                {{-- Dropdown Jam & Menit --}}
-                                <div class="grid grid-cols-2 gap-2" :class="{ 'pointer-events-none opacity-40': sampaiPulang }">
-                                    <div>
-                                        <label for="selectJamKembaliHour" class="block text-[11px] font-semibold text-slate-600 mb-1">
-                                            Jam (24 Jam)
-                                        </label>
-                                        <div class="relative">
-                                            <select id="selectJamKembaliHour"
-                                                :disabled="sampaiPulang"
-                                                class="w-full min-h-[44px] pl-3 pr-8 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer disabled:bg-slate-100 disabled:cursor-not-allowed @error('jam_kembali') border-rose-500 @enderror">
-                                                <option value="">-- Pilih Jam --</option>
-                                                @foreach($jamPilihanList as $hVal => $hLabel)
-                                                    <option value="{{ $hVal }}" {{ $oldKembaliHour === $hVal ? 'selected' : '' }}>
-                                                        {{ $hLabel }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-500">
-                                                <i class="ti ti-chevron-down text-xs"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label for="selectJamKembaliMin" class="block text-[11px] font-semibold text-slate-600 mb-1">
-                                            Menit
-                                        </label>
-                                        <div class="relative">
-                                            <select id="selectJamKembaliMin"
-                                                :disabled="sampaiPulang"
-                                                class="w-full min-h-[44px] pl-3 pr-8 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer disabled:bg-slate-100 disabled:cursor-not-allowed @error('jam_kembali') border-rose-500 @enderror">
-                                                <option value="">-- Menit --</option>
-                                                @for($m = 0; $m < 60; $m++)
-                                                    @php $mVal = sprintf('%02d', $m); @endphp
-                                                    <option value="{{ $mVal }}" {{ $oldKembaliMin === $mVal ? 'selected' : '' }}>
-                                                        :{{ $mVal }} Menit
-                                                    </option>
-                                                @endfor
-                                            </select>
-                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-500">
-                                                <i class="ti ti-chevron-down text-xs"></i>
-                                            </div>
-                                        </div>
+                                :class="{ 'opacity-80 bg-slate-100': sampaiPulang }">
+                                <label for="jamKembali" class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
+                                    Jam Kembali <span class="text-rose-500" x-show="!sampaiPulang">*</span>
+                                </label>
+                                @php
+                                    $oldKembali = old('jam_kembali');
+                                    if (is_numeric($oldKembali) && isset($jadwalHariIni[$oldKembali]['end'])) {
+                                        $oldKembali = $jadwalHariIni[$oldKembali]['end'];
+                                    }
+                                @endphp
+                                <div class="relative">
+                                    <input type="time" name="jam_kembali" id="jamKembali" value="{{ $oldKembali }}"
+                                        :required="!sampaiPulang"
+                                        :disabled="sampaiPulang"
+                                        step="60"
+                                        class="w-full min-h-[44px] px-3.5 rounded-xl border border-slate-300 bg-white text-base font-semibold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('jam_kembali') border-rose-500 @enderror">
+                                    <div x-show="sampaiPulang" class="absolute inset-0 flex items-center px-3.5 bg-emerald-50/90 border border-emerald-300 text-xs font-bold text-emerald-800 rounded-xl pointer-events-none">
+                                        <i class="ti ti-door-exit mr-2 text-emerald-600 text-base"></i> Sampai Pulang Sekolah (Bebas Check-In)
                                     </div>
                                 </div>
-
-                                {{-- Pilihan Cepat Durasi Izin --}}
-                                <div class="mt-2.5 flex items-center gap-1.5 flex-wrap" x-show="!sampaiPulang">
-                                    <span class="text-[10px] text-slate-500 font-medium mr-0.5">Durasi cepat:</span>
-                                    <button type="button" class="btn-quick-durasi px-2 py-1 text-[11px] font-bold rounded-lg border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 transition-all shadow-2xs cursor-pointer" data-duration="30">+30 Mnt</button>
-                                    <button type="button" class="btn-quick-durasi px-2 py-1 text-[11px] font-bold rounded-lg border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 transition-all shadow-2xs cursor-pointer" data-duration="60">+1 Jam</button>
-                                    <button type="button" class="btn-quick-durasi px-2 py-1 text-[11px] font-bold rounded-lg border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 transition-all shadow-2xs cursor-pointer" data-duration="120">+2 Jam</button>
-                                    <button type="button" class="btn-quick-durasi px-2 py-1 text-[11px] font-bold rounded-lg border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 transition-all shadow-2xs cursor-pointer" data-duration="180">+3 Jam</button>
-                                </div>
-
-                                {{-- Live Preview Badge --}}
-                                <div id="previewJamKembali" class="mt-2 text-xs font-semibold text-slate-600" x-show="!sampaiPulang">
-                                    <span class="text-slate-500 text-[11px] flex items-center gap-1">
-                                        <i class="ti ti-info-circle text-slate-400"></i> Format 24 Jam (contoh: 08:30 atau 14:00)
-                                    </span>
-                                </div>
-
-                                {{-- Overlay Mode Sampai Pulang --}}
-                                <div x-show="sampaiPulang" class="absolute inset-0 flex items-center px-4 bg-emerald-50/95 border-2 border-emerald-400 text-xs font-bold text-emerald-800 rounded-xl pointer-events-none z-10">
-                                    <i class="ti ti-door-exit mr-2.5 text-emerald-600 text-2xl shrink-0"></i>
-                                    <div>
-                                        <div class="text-sm font-extrabold text-emerald-900 leading-tight">Izin Sampai Jam Pulang Sekolah</div>
-                                        <div class="text-[11px] font-normal text-emerald-700 mt-0.5">Bebas check-in kembali (otomatis selesai saat KBM berakhir)</div>
-                                    </div>
-                                </div>
-
                                 <div id="jamKembaliError" class="text-xs text-rose-600 font-semibold mt-1.5 hidden"></div>
                                 @error('jam_kembali') <p class="text-rose-600 text-xs mt-1.5 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p> @enderror
                             </div>
@@ -1025,7 +860,7 @@
                             </div>
                         </div>
                     @else
-                        <div class="p-3 bg-slate-50 hover:bg-blue-50/50 rounded-xl border border-slate-200 transition-colors flex items-center justify-between gap-2">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <div class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-blue-600 flex items-center justify-center shrink-0 text-sm shadow-2xs">
                                     <i class="ti ti-school text-xs"></i>
@@ -1035,13 +870,6 @@
                             <div class="flex items-center gap-2 shrink-0">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-200/70 px-2 py-0.5 rounded-full hidden xs:inline">KBM</span>
                                 <span class="text-xs text-slate-900 font-mono font-bold">{{ $slot['start'] }} - {{ $slot['end'] }}</span>
-                                <button type="button"
-                                    class="btn-pilih-slot-jadwal px-2 py-1 text-[11px] font-bold text-blue-700 bg-blue-100/70 hover:bg-blue-600 hover:text-white rounded-lg transition-all cursor-pointer"
-                                    data-start="{{ $slot['start'] }}"
-                                    data-end="{{ $slot['end'] }}"
-                                    data-label="{{ $slot['label'] }}">
-                                    Pilih
-                                </button>
                             </div>
                         </div>
                     @endif
@@ -1107,12 +935,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const jamKeluar = document.getElementById('jamKeluar');
     const jamKembali = document.getElementById('jamKembali');
-    const selectJamKeluarHour = document.getElementById('selectJamKeluarHour');
-    const selectJamKeluarMin = document.getElementById('selectJamKeluarMin');
-    const selectJamKembaliHour = document.getElementById('selectJamKembaliHour');
-    const selectJamKembaliMin = document.getElementById('selectJamKembaliMin');
-    const previewJamKeluar = document.getElementById('previewJamKeluar');
-    const previewJamKembali = document.getElementById('previewJamKembali');
     const infoJam = document.getElementById('infoJam');
 
     const alasan = document.getElementById('alasan');
@@ -1295,50 +1117,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // =========================================================
     // VALIDASI WAKTU KELUAR & KEMBALI
     // =========================================================
-    function clearJamKeluarError() {
-        if (!jamKeluar) return;
-        jamKeluar.classList.remove('border-rose-500', 'bg-rose-50');
-        if (selectJamKeluarHour) selectJamKeluarHour.classList.remove('border-rose-500', 'bg-rose-50');
-        if (selectJamKeluarMin) selectJamKeluarMin.classList.remove('border-rose-500', 'bg-rose-50');
-    }
-
-    function markJamKeluarError() {
-        if (!jamKeluar) return;
-        jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
-        if (selectJamKeluarHour) selectJamKeluarHour.classList.add('border-rose-500', 'bg-rose-50');
-        if (selectJamKeluarMin) selectJamKeluarMin.classList.add('border-rose-500', 'bg-rose-50');
-    }
-
-    function resetJamKeluarValues() {
-        if (!jamKeluar) return;
-        jamKeluar.value = '';
-        if (selectJamKeluarHour) selectJamKeluarHour.value = '';
-        if (selectJamKeluarMin) selectJamKeluarMin.value = '';
-        updatePreviewKeluar();
-    }
-
-    function clearJamKembaliError() {
-        if (!jamKembali) return;
-        jamKembali.classList.remove('border-rose-500', 'bg-rose-50');
-        if (selectJamKembaliHour) selectJamKembaliHour.classList.remove('border-rose-500', 'bg-rose-50');
-        if (selectJamKembaliMin) selectJamKembaliMin.classList.remove('border-rose-500', 'bg-rose-50');
-    }
-
-    function markJamKembaliError() {
-        if (!jamKembali) return;
-        jamKembali.classList.add('border-rose-500', 'bg-rose-50');
-        if (selectJamKembaliHour) selectJamKembaliHour.classList.add('border-rose-500', 'bg-rose-50');
-        if (selectJamKembaliMin) selectJamKembaliMin.classList.add('border-rose-500', 'bg-rose-50');
-    }
-
-    function resetJamKembaliValues() {
-        if (!jamKembali) return;
-        jamKembali.value = '';
-        if (selectJamKembaliHour) selectJamKembaliHour.value = '';
-        if (selectJamKembaliMin) selectJamKembaliMin.value = '';
-        updatePreviewKembali();
-    }
-
     function validateJamKeluar(triggerAlert = true, isSubmitting = false) {
         if (!jamKeluar) return true;
         const val = jamKeluar.value ? jamKeluar.value.trim() : '';
@@ -1349,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', function () {
             errEl.classList.add('hidden');
             errEl.style.display = 'none';
         }
-        clearJamKeluarError();
+        jamKeluar.classList.remove('border-rose-500', 'bg-rose-50');
 
         if (!val) {
             if (isSubmitting) {
@@ -1359,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     errEl.classList.remove('hidden');
                     errEl.style.display = 'block';
                 }
-                markJamKeluarError();
+                jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
                 if (triggerAlert) {
                     showSingleAlert({
                         icon: 'warning',
@@ -1390,8 +1168,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKeluarError();
-            resetJamKeluarValues();
+            jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
+            jamKeluar.value = '';
             if (triggerAlert) {
                 showSingleAlert({
                     icon: 'warning',
@@ -1410,8 +1188,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKeluarError();
-            resetJamKeluarValues();
+            jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
+            jamKeluar.value = '';
 
             if (triggerAlert) {
                 showSingleAlert({
@@ -1433,8 +1211,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKeluarError();
-            resetJamKeluarValues();
+            jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
+            jamKeluar.value = '';
 
             if (triggerAlert) {
                 showSingleAlert({
@@ -1456,8 +1234,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKeluarError();
-            resetJamKeluarValues();
+            jamKeluar.classList.add('border-rose-500', 'bg-rose-50');
+            jamKeluar.value = '';
 
             if (triggerAlert) {
                 showSingleAlert({
@@ -1471,8 +1249,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
 
-        clearJamKeluarError();
-        updatePreviewKeluar();
         updateTimeInputLimits();
         return true;
     }
@@ -1488,7 +1264,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.add('hidden');
                 errEl.style.display = 'none';
             }
-            clearJamKembaliError();
+            jamKembali.classList.remove('border-rose-500', 'bg-rose-50');
             return true;
         }
 
@@ -1500,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', function () {
             errEl.classList.add('hidden');
             errEl.style.display = 'none';
         }
-        clearJamKembaliError();
+        jamKembali.classList.remove('border-rose-500', 'bg-rose-50');
 
         if (!val) {
             if (isSubmitting) {
@@ -1510,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     errEl.classList.remove('hidden');
                     errEl.style.display = 'block';
                 }
-                markJamKembaliError();
+                jamKembali.classList.add('border-rose-500', 'bg-rose-50');
                 if (triggerAlert) {
                     showSingleAlert({
                         icon: 'warning',
@@ -1542,8 +1318,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKembaliError();
-            resetJamKembaliValues();
+            jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+            jamKembali.value = '';
 
             if (triggerAlert) {
                 showSingleAlert({
@@ -1564,8 +1340,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKembaliError();
-            resetJamKembaliValues();
+            jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+            jamKembali.value = '';
 
             if (triggerAlert) {
                 showSingleAlert({
@@ -1585,8 +1361,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKembaliError();
-            resetJamKembaliValues();
+            jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+            jamKembali.value = '';
             if (triggerAlert) {
                 showSingleAlert({
                     icon: 'warning',
@@ -1605,8 +1381,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKembaliError();
-            resetJamKembaliValues();
+            jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+            jamKembali.value = '';
 
             if (triggerAlert) {
                 showSingleAlert({
@@ -1627,8 +1403,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKembaliError();
-            resetJamKembaliValues();
+            jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+            jamKembali.value = '';
 
             if (triggerAlert) {
                 showSingleAlert({
@@ -1649,8 +1425,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 errEl.classList.remove('hidden');
                 errEl.style.display = 'block';
             }
-            markJamKembaliError();
-            resetJamKembaliValues();
+            jamKembali.classList.add('border-rose-500', 'bg-rose-50');
+            jamKembali.value = '';
 
             if (triggerAlert) {
                 showSingleAlert({
@@ -1663,196 +1439,75 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
 
-        clearJamKembaliError();
-        updatePreviewKembali();
         updateTimeInputLimits();
         return true;
     }
 
-    // =========================================================
-    // SINKRONISASI PICKER WAKTU 24 JAM (WIB)
-    // =========================================================
-    function getIndonesianTimeDescription(h) {
-        const hourNum = parseInt(h, 10);
-        if (isNaN(hourNum)) return '';
-        if (hourNum >= 0 && hourNum <= 4) return 'Dini Hari';
-        if (hourNum >= 5 && hourNum <= 10) return `${hourNum} Pagi`;
-        if (hourNum === 11) return '11 Siang';
-        if (hourNum === 12) return '12 Siang';
-        if (hourNum >= 13 && hourNum <= 14) return `${hourNum - 12} Siang (${hourNum}:00)`;
-        if (hourNum >= 15 && hourNum <= 18) return `${hourNum - 12} Sore (${hourNum}:00)`;
-        return `${hourNum - 12} Malam (${hourNum}:00)`;
-    }
-
-    function updatePreviewKeluar() {
-        if (!previewJamKeluar) return;
-        const val = jamKeluar ? jamKeluar.value : '';
-        if (val && val.includes(':')) {
-            const [h, m] = val.split(':');
-            const desc = getIndonesianTimeDescription(h);
-            previewJamKeluar.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold text-xs border border-blue-200">
-                <i class="ti ti-clock-check text-blue-600"></i> Terpilih: <b>${val} WIB</b> <span class="font-medium text-blue-600 text-[11px]">(${desc})</span>
-            </span>`;
-        } else {
-            previewJamKeluar.innerHTML = `<span class="text-slate-500 text-[11px] flex items-center gap-1">
-                <i class="ti ti-info-circle text-slate-400"></i> Format 24 Jam (contoh: 07:15 atau 13:30)
-            </span>`;
-        }
-    }
-
-    function updatePreviewKembali() {
-        if (!previewJamKembali) return;
-        const val = jamKembali ? jamKembali.value : '';
-        if (val && val.includes(':')) {
-            const [h, m] = val.split(':');
-            const desc = getIndonesianTimeDescription(h);
-            previewJamKembali.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-xs border border-emerald-200">
-                <i class="ti ti-clock-check text-emerald-600"></i> Terpilih: <b>${val} WIB</b> <span class="font-medium text-emerald-600 text-[11px]">(${desc})</span>
-            </span>`;
-        } else {
-            previewJamKembali.innerHTML = `<span class="text-slate-500 text-[11px] flex items-center gap-1">
-                <i class="ti ti-info-circle text-slate-400"></i> Format 24 Jam (contoh: 08:30 atau 14:00)
-            </span>`;
-        }
-    }
-
-    function syncJamKeluarFromSelects(triggerValidation = true) {
-        if (!jamKeluar) return;
-        const h = selectJamKeluarHour ? selectJamKeluarHour.value : '';
-        let m = selectJamKeluarMin ? selectJamKeluarMin.value : '';
-
-        if (h && !m) {
-            m = '00';
-            if (selectJamKeluarMin) selectJamKeluarMin.value = '00';
-        }
-
-        if (h && m) {
-            jamKeluar.value = `${h}:${m}`;
-            updatePreviewKeluar();
-            if (triggerValidation) {
+    if (jamKeluar) {
+        jamKeluar.addEventListener('change', () => validateJamKeluar(true));
+        jamKeluar.addEventListener('blur', () => {
+            if (jamKeluar.value) validateJamKeluar(true);
+        });
+        jamKeluar.addEventListener('input', () => {
+            if (jamKeluar.value && jamKeluar.value.length === 5) {
                 validateJamKeluar(true);
-                if (jamKembali && jamKembali.value) {
-                    validateJamKembali(false);
-                }
             }
-        } else {
-            jamKeluar.value = '';
-            updatePreviewKeluar();
-        }
+        });
+        jamKeluar.addEventListener('click', function () {
+            const alpineData = getAlpineData();
+            const inputPilihanTanggal = document.querySelector('input[name="pilihan_tanggal"]');
+            const pilihanTanggal = (alpineData && alpineData.pilihanTanggal) || (inputPilihanTanggal ? inputPilihanTanggal.value : 'hari_ini');
+            const isAdvanceDate = Boolean(pilihanTanggal && pilihanTanggal !== 'hari_ini');
+            const nowWib = getWibNow();
+            const currentMinutes = (nowWib.getHours() * 60) + nowWib.getMinutes();
+            const currentTime = formatTimeInput(nowWib);
+            const bounds = getOperatingScheduleBounds();
+
+            if (!isAdvanceDate && currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+                this.blur();
+                this.value = '';
+                showSingleAlert({
+                    icon: 'warning',
+                    title: 'Jadwal Hari Ini Telah Berakhir',
+                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.<br>Anda tidak dapat memilih jam untuk hari ini yang sudah lewat.</span>`,
+                    confirmButtonText: 'Mengerti'
+                });
+            }
+        });
     }
 
-    function syncJamKembaliFromSelects(triggerValidation = true) {
-        if (!jamKembali) return;
-        const h = selectJamKembaliHour ? selectJamKembaliHour.value : '';
-        let m = selectJamKembaliMin ? selectJamKembaliMin.value : '';
-
-        if (h && !m) {
-            m = '00';
-            if (selectJamKembaliMin) selectJamKembaliMin.value = '00';
-        }
-
-        if (h && m) {
-            jamKembali.value = `${h}:${m}`;
-            updatePreviewKembali();
-            if (triggerValidation) {
+    if (jamKembali) {
+        jamKembali.addEventListener('change', () => validateJamKembali(true));
+        jamKembali.addEventListener('blur', () => {
+            if (jamKembali.value) validateJamKembali(true);
+        });
+        jamKembali.addEventListener('input', () => {
+            if (jamKembali.value && jamKembali.value.length === 5) {
                 validateJamKembali(true);
             }
-        } else {
-            jamKembali.value = '';
-            updatePreviewKembali();
-        }
-    }
-
-    if (selectJamKeluarHour) {
-        selectJamKeluarHour.addEventListener('change', () => syncJamKeluarFromSelects(true));
-    }
-    if (selectJamKeluarMin) {
-        selectJamKeluarMin.addEventListener('change', () => syncJamKeluarFromSelects(true));
-    }
-    if (selectJamKembaliHour) {
-        selectJamKembaliHour.addEventListener('change', () => syncJamKembaliFromSelects(true));
-    }
-    if (selectJamKembaliMin) {
-        selectJamKembaliMin.addEventListener('change', () => syncJamKembaliFromSelects(true));
-    }
-
-    document.querySelectorAll('.btn-quick-minute-keluar').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const min = this.dataset.minute;
-            if (selectJamKeluarMin) {
-                selectJamKeluarMin.value = min;
-                if (selectJamKeluarHour && !selectJamKeluarHour.value) {
-                    const bounds = getOperatingScheduleBounds();
-                    const defaultH = bounds.start.split(':')[0] || '07';
-                    selectJamKeluarHour.value = defaultH;
-                }
-                syncJamKeluarFromSelects(true);
-            }
         });
-    });
+        jamKembali.addEventListener('click', function () {
+            const alpineData = getAlpineData();
+            const inputPilihanTanggal = document.querySelector('input[name="pilihan_tanggal"]');
+            const pilihanTanggal = (alpineData && alpineData.pilihanTanggal) || (inputPilihanTanggal ? inputPilihanTanggal.value : 'hari_ini');
+            const isAdvanceDate = Boolean(pilihanTanggal && pilihanTanggal !== 'hari_ini');
+            const nowWib = getWibNow();
+            const currentMinutes = (nowWib.getHours() * 60) + nowWib.getMinutes();
+            const currentTime = formatTimeInput(nowWib);
+            const bounds = getOperatingScheduleBounds();
 
-    document.querySelectorAll('.btn-quick-durasi').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const duration = parseInt(this.dataset.duration, 10);
-            if (!jamKeluar || !jamKeluar.value) {
+            if (!isAdvanceDate && currentMinutes !== null && currentMinutes >= bounds.endMinutes) {
+                this.blur();
+                this.value = '';
                 showSingleAlert({
-                    icon: 'info',
-                    title: 'Pilih Jam Keluar Dahulu',
-                    text: 'Silakan tentukan Jam Keluar terlebih dahulu sebelum menggunakan tombol durasi cepat.'
+                    icon: 'warning',
+                    title: 'Jadwal Hari Ini Telah Berakhir',
+                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.</span>`,
+                    confirmButtonText: 'Mengerti'
                 });
-                return;
             }
-            const keluarMin = timeToMinutes(jamKeluar.value);
-            if (keluarMin === null) return;
-            const targetMin = keluarMin + duration;
-            const targetH = Math.floor(targetMin / 60);
-            const targetM = targetMin % 60;
-            const targetHStr = String(targetH).padStart(2, '0');
-            const targetMStr = String(targetM).padStart(2, '0');
-
-            if (selectJamKembaliHour) selectJamKembaliHour.value = targetHStr;
-            if (selectJamKembaliMin) selectJamKembaliMin.value = targetMStr;
-            syncJamKembaliFromSelects(true);
         });
-    });
-
-    // Helper untuk memilih slot langsung dari Modal Jadwal
-    document.querySelectorAll('.btn-pilih-slot-jadwal').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const start = this.dataset.start;
-            const end = this.dataset.end;
-            const label = this.dataset.label || '';
-
-            if (start && start.includes(':')) {
-                const [sh, sm] = start.split(':');
-                if (selectJamKeluarHour) selectJamKeluarHour.value = sh;
-                if (selectJamKeluarMin) selectJamKeluarMin.value = sm;
-                syncJamKeluarFromSelects(false);
-            }
-
-            if (end && end.includes(':')) {
-                const [eh, em] = end.split(':');
-                if (selectJamKembaliHour) selectJamKembaliHour.value = eh;
-                if (selectJamKembaliMin) selectJamKembaliMin.value = em;
-                syncJamKembaliFromSelects(true);
-            }
-
-            tutupModalJadwal();
-
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: `${label || 'Slot Jadwal'} (${start} - ${end} WIB) diterapkan.`,
-                showConfirmButton: false,
-                timer: 2500
-            });
-        });
-    });
-
-    // Inisialisasi tampilan preview pada awal render
-    updatePreviewKeluar();
-    updatePreviewKembali();
+    }
 
     // =========================================================
     // KAMERA SELFIE & VERIFIKASI IDENTITAS (1 TOMBOL TERPADU)
