@@ -504,6 +504,41 @@ public static function getWaktuAktual(
     }
 
     /**
+     * Mendapatkan waktu mulai izin keluar sebagai Carbon (format HH:mm atau jadwal ke-X)
+     */
+    public static function getWaktuMulaiKeluar(int|string|null $jamKeluar, ?int $dayOfWeek = null, ?Carbon $date = null): ?Carbon
+    {
+        if ($jamKeluar === null || $jamKeluar === '') {
+            return null;
+        }
+
+        $targetDate = $date ? $date->copy()->setTimezone('Asia/Jakarta') : Carbon::today('Asia/Jakarta');
+        $nilai = trim((string) $jamKeluar);
+
+        // Format waktu langsung (HH:MM atau HH:MM:SS)
+        if (preg_match('/^(\d{1,2}):(\d{2})(:00)?$/', $nilai, $m)) {
+            return $targetDate->copy()->setTime((int)$m[1], (int)$m[2], 0);
+        }
+
+        if ($dayOfWeek === null) {
+            $dayOfWeek = $targetDate->dayOfWeek;
+        }
+
+        $waktuAktual = self::getWaktuAktual($jamKeluar, $dayOfWeek);
+
+        if ($waktuAktual !== '-' && str_contains($waktuAktual, '-')) {
+            $parts = array_map('trim', explode('-', $waktuAktual, 2));
+            if (isset($parts[0]) && preg_match('/^\d{2}:\d{2}$/', $parts[0])) {
+                return $targetDate->copy()->setTimeFromTimeString($parts[0]);
+            }
+        } elseif (preg_match('/^\d{2}:\d{2}$/', $waktuAktual)) {
+            return $targetDate->copy()->setTimeFromTimeString($waktuAktual);
+        }
+
+        return null;
+    }
+
+    /**
      * Mendapatkan waktu selesai jam KBM terakhir pada tanggal/hari tertentu (Single Source of Truth)
      */
     public static function getWaktuSelesaiKbmTerakhir(?int $dayOfWeek = null, ?Carbon $date = null): ?Carbon

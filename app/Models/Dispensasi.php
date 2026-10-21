@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage; // ✅ TAMBAHKAN INI
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Dispensasi extends Model
@@ -132,6 +133,11 @@ class Dispensasi extends Model
     public const DURASI_KADALUARSA_MENUNGGU_MENIT = 20;
 
     /**
+     * Durasi batas waktu dispensasi berstatus 'disetujui' untuk scan keluar di pos gerbang (20 menit setelah disetujui)
+     */
+    public const DURASI_KADALUARSA_SCAN_KELUAR_MENIT = 20;
+
+    /**
      * Cek apakah saat ini sedang keluar dan melewati batas waktu (Overdue)
      */
     public function isOverdue(): bool
@@ -178,14 +184,22 @@ class Dispensasi extends Model
     }
 
     /**
-     * Cek apakah dispensasi berstatus 'selesai' tetapi tidak pernah melakukan scan kembali (auto-closed)
+     * Cek apakah dispensasi berstatus 'kadaluarsa' atau 'selesai' tetapi tidak pernah melakukan scan kembali
      */
     public function isNotReturned(): bool
     {
-        return $this->status === 'selesai'
+        return in_array($this->status, ['kadaluarsa', 'selesai'])
             && ! $this->sampai_pulang
             && $this->waktu_keluar_aktual !== null
             && $this->waktu_kembali_aktual === null;
+    }
+
+    /**
+     * Cek apakah dispensasi ini termasuk kategori terlambat (selesai terlambat, overdue, atau tidak scan kembali)
+     */
+    public function isTerlambat(): bool
+    {
+        return $this->isOverdue() || $this->isReturnedLate() || $this->isNotReturned();
     }
 
     /**
@@ -255,9 +269,9 @@ class Dispensasi extends Model
 
             if ($this->isNotReturned()) {
                 return [
-                    'text' => 'Selesai (Tidak Kembali)',
-                    'class' => 'bg-red-100 text-red-800 border-red-200',
-                    'dot' => 'bg-red-500',
+                    'text' => 'Kadaluarsa (Tidak Scan Kembali)',
+                    'class' => 'bg-rose-50 text-rose-700 border-2 border-rose-500 font-bold shadow-xs',
+                    'dot' => 'bg-rose-600',
                     'is_late' => true,
                 ];
             }
@@ -322,16 +336,20 @@ class Dispensasi extends Model
             ],
             'kadaluarsa' => [
                 'text' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
-                    ? 'Kadaluarsa (Tidak Kembali)'
-                    : (($this->catatan_admin && str_contains($this->catatan_admin, 'scan keluar'))
+                    ? 'Kadaluarsa (Tidak Scan Kembali)'
+                    : (($this->catatan_admin && (str_contains($this->catatan_admin, 'scan keluar') || str_contains($this->catatan_admin, 'check-out')))
                         ? 'Kadaluarsa (Tidak Scan Keluar)'
-                        : 'Kadaluarsa (Tidak minta Acc)'),
+                        : 'Kadaluarsa (Tidak Minta ACC)'),
                 'class' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
-                    ? 'bg-rose-100 text-rose-800 border-rose-200'
-                    : 'bg-orange-100 text-orange-800 border-orange-200',
+                    ? 'bg-rose-50 text-rose-700 border-2 border-rose-500 font-bold shadow-xs'
+                    : (($this->catatan_admin && (str_contains($this->catatan_admin, 'scan keluar') || str_contains($this->catatan_admin, 'check-out')))
+                        ? 'bg-orange-50 text-orange-800 border border-orange-300 font-semibold'
+                        : 'bg-amber-50 text-amber-800 border border-amber-300 font-semibold'),
                 'dot' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
-                    ? 'bg-rose-500'
-                    : 'bg-orange-500',
+                    ? 'bg-rose-600'
+                    : (($this->catatan_admin && (str_contains($this->catatan_admin, 'scan keluar') || str_contains($this->catatan_admin, 'check-out')))
+                        ? 'bg-orange-500'
+                        : 'bg-amber-500'),
                 'is_late' => (bool) ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual)),
             ],
             default => [
@@ -357,6 +375,58 @@ class Dispensasi extends Model
     }
 
     /**
+     * Batas waktu toleransi untuk scan keluar di pos gerbang setelah disetujui (maksimal 20 menit)
+     */
+    public function getBatasWaktuScanKeluar(): ?\Carbon\Carbon
+    {
+        if ($this->status !== 'disetujui' && empty($this->approved_at)) {
+            return null;
+        }
+
+        $dispDate = $this->tanggal_izin
+            ? \Carbon\Carbon::parse($this->tanggal_izin, 'Asia/Jakarta')
+            : ($this->created_at ? $this->created_at->copy()->setTimezone('Asia/Jakarta') : now('Asia/Jakarta'));
+
+        $approvedAt = $this->approved_at
+            ? $this->approved_at->copy()->setTimezone('Asia/Jakarta')
+            : ($this->updated_at ? $this->updated_at->copy()->setTimezone('Asia/Jakarta') : $dispDate);
+
+        // Titik awal jendela scan keluar:
+        // Jika izin dijadwalkan pada jam tertentu di hari ini (misal jam ke-4: 09:15),
+        // jendela scan keluar dimulai saat jam_keluar atau approved_at, mana yang lebih lambat
+        $jamMulaiKeluar = \App\Helpers\TimeHelper::getWaktuMulaiKeluar($this->jam_keluar, $dispDate->dayOfWeek, $dispDate);
+        $startWindow = $approvedAt->copy();
+        if ($jamMulaiKeluar && $jamMulaiKeluar->greaterThan($startWindow)) {
+            $startWindow = $jamMulaiKeluar->copy();
+        }
+
+        $batas20Menit = $startWindow->copy()->addMinutes(self::DURASI_KADALUARSA_SCAN_KELUAR_MENIT);
+
+        // Batas atas maksimal adalah batas_waktu_kembali (jika bukan sampai pulang) atau jam selesai KBM
+        $maxDeadline = null;
+        if (! $this->sampai_pulang) {
+            $maxDeadline = $this->batas_waktu_kembali;
+            if (! $maxDeadline && $this->jam_kembali) {
+                $maxDeadline = \App\Helpers\TimeHelper::getBatasWaktuKembali($this->jam_kembali, $dispDate->dayOfWeek);
+            }
+            if ($maxDeadline) {
+                $maxDeadline = $maxDeadline->copy()->setTimezone('Asia/Jakarta')
+                    ->setDate($dispDate->year, $dispDate->month, $dispDate->day);
+            }
+        }
+
+        if (! $maxDeadline) {
+            $maxDeadline = \App\Helpers\TimeHelper::getWaktuSelesaiKbmTerakhir($dispDate->dayOfWeek, $dispDate);
+        }
+
+        if ($maxDeadline && $batas20Menit->greaterThan($maxDeadline)) {
+            return $maxDeadline;
+        }
+
+        return $batas20Menit;
+    }
+
+    /**
      * Batas waktu kadaluarsa efektif untuk dispensasi sebelum scan keluar (format HH:mm WIB)
      */
     public function getBatasWaktuExpiredText(): string
@@ -366,6 +436,13 @@ class Dispensasi extends Model
                 ? $this->created_at->copy()->setTimezone('Asia/Jakarta')
                 : now('Asia/Jakarta');
             return $createdAt->addMinutes(self::DURASI_KADALUARSA_MENUNGGU_MENIT)->format('H:i') . ' WIB';
+        }
+
+        if ($this->status === 'disetujui' && empty($this->waktu_keluar_aktual)) {
+            $batasScanKeluar = $this->getBatasWaktuScanKeluar();
+            if ($batasScanKeluar) {
+                return $batasScanKeluar->format('H:i') . ' WIB';
+            }
         }
 
         if (! $this->sampai_pulang) {
@@ -398,6 +475,54 @@ class Dispensasi extends Model
             : ($this->created_at ? $this->created_at->copy()->setTimezone('Asia/Jakarta') : now('Asia/Jakarta'));
 
         return $date->toDateString() === now('Asia/Jakarta')->toDateString();
+    }
+
+    /**
+     * Scope untuk menyaring dispensasi yang terlambat (selesai terlambat, overdue, atau tidak scan kembali)
+     */
+    public function scopeTerlambat(Builder $query): Builder
+    {
+        $toleransi = self::TOLERANSI_KETERLAMBATAN_MENIT;
+        $driver = $query->getConnection()->getDriverName();
+        if ($driver === 'sqlite') {
+            $rawLateCondition = "datetime(waktu_kembali_aktual) > datetime(batas_waktu_kembali, '+{$toleransi} minutes')";
+        } else {
+            $rawLateCondition = "waktu_kembali_aktual > DATE_ADD(batas_waktu_kembali, INTERVAL {$toleransi} MINUTE)";
+        }
+
+        return $query->where(function (Builder $q) use ($rawLateCondition) {
+            // 1. Selesai Terlambat: Selesai, bukan sampai pulang, dan waktu_kembali_aktual > batas_waktu_kembali + toleransi
+            $q->where(function (Builder $sub) use ($rawLateCondition) {
+                $sub->where('status', 'selesai')
+                    ->where(function ($sp) {
+                        $sp->where('sampai_pulang', false)
+                           ->orWhereNull('sampai_pulang');
+                    })
+                    ->whereNotNull('batas_waktu_kembali')
+                    ->whereNotNull('waktu_kembali_aktual')
+                    ->whereRaw($rawLateCondition);
+            })
+            // 2. Sedang Keluar & Melewati Batas Waktu Kembali (Overdue)
+            ->orWhere(function (Builder $sub) {
+                $sub->where('status', 'keluar')
+                    ->where(function ($sp) {
+                        $sp->where('sampai_pulang', false)
+                           ->orWhereNull('sampai_pulang');
+                    })
+                    ->whereNotNull('batas_waktu_kembali')
+                    ->where('batas_waktu_kembali', '<', now('Asia/Jakarta'));
+            })
+            // 3. Kadaluarsa / Selesai tapi tidak pernah scan kembali
+            ->orWhere(function (Builder $sub) {
+                $sub->whereIn('status', ['kadaluarsa', 'selesai'])
+                    ->where(function ($sp) {
+                        $sp->where('sampai_pulang', false)
+                           ->orWhereNull('sampai_pulang');
+                    })
+                    ->whereNotNull('waktu_keluar_aktual')
+                    ->whereNull('waktu_kembali_aktual');
+            });
+        });
     }
 
     /**

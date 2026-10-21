@@ -370,9 +370,12 @@ class DispensasiService
             }
 
             // 2. Kasus 'disetujui' (belum scan keluar):
-            // Expire jika: lewat hari, ATAU KBM usai hari ini, ATAU batas jam kembali sudah lewat hari ini
+            // Expire jika: lewat hari, ATAU KBM usai hari ini, ATAU batas jam kembali sudah lewat hari ini, ATAU batas toleransi scan keluar (20 menit) terlewati
             if ($d->status === 'disetujui' && empty($d->waktu_keluar_aktual)) {
-                if (! $isPastDay && ! $isTodayKbmDone && ! $isDeadlinePassed) {
+                $batasScanKeluar = $d->getBatasWaktuScanKeluar();
+                $isBatasScanKeluarPassed = $batasScanKeluar && $now->greaterThan($batasScanKeluar);
+
+                if (! $isPastDay && ! $isTodayKbmDone && ! $isDeadlinePassed && ! $isBatasScanKeluarPassed) {
                     continue;
                 }
 
@@ -380,6 +383,8 @@ class DispensasiService
                 if (! $reason) {
                     if ($isPastDay) {
                         $reason = 'Kadaluarsa otomatis karena tidak melakukan check-out pada tanggal izin.';
+                    } elseif ($isBatasScanKeluarPassed && $batasScanKeluar) {
+                        $reason = 'Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang dalam batas waktu 20 menit setelah disetujui (' . $batasScanKeluar->format('H:i') . ' WIB).';
                     } elseif ($isDeadlinePassed && $deadline) {
                         $reason = 'Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang hingga batas waktu kembali (' . $deadline->format('H:i') . ' WIB) terlewati.';
                     } else {
