@@ -6,20 +6,80 @@
 @section('content')
 <div class="max-w-md mx-auto space-y-4">
 
-    {{-- Instruksi --}}
+    {{-- Instruksi & Tip Cepat --}}
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5 flex items-center space-x-3.5">
         <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center text-xl flex-shrink-0 shadow-2xs">
             <i class="ti ti-qrcode"></i>
         </div>
-        <div>
-            <h3 class="text-sm font-bold text-slate-900">Scan QR Dispensasi</h3>
+        <div class="flex-1 min-w-0">
+            <h3 class="text-sm font-bold text-slate-900">Scan QR Pos Gerbang</h3>
             <p class="text-xs text-slate-500 mt-0.5">Arahkan kamera ke QR Code pada layar HP siswa.</p>
+        </div>
+    </div>
+
+    {{-- ========================================================= --}}
+    {{-- PANEL KONTROL CEPAT POS GERBANG (SATPAM EXPRESS)         --}}
+    {{-- ========================================================= --}}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-3.5 space-y-2.5">
+        <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="ti ti-bolt text-amber-500 text-sm"></i> Kontrol Operasional Pos
+            </span>
+            <span id="quickModeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Mode Cepat Aktif
+            </span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center">
+            {{-- Toggle 1: Mode Cepat (Express Auto-Confirm) --}}
+            <button type="button"
+                    id="btnToggleExpress"
+                    onclick="toggleExpressMode()"
+                    class="p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-emerald-50 border-emerald-300 text-emerald-800 shadow-2xs">
+                <i class="ti ti-bolt text-base"></i>
+                <span class="text-[10px]">Mode Cepat</span>
+                <span id="labelExpress" class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-emerald-200/80 text-emerald-900">ON</span>
+            </button>
+
+            {{-- Toggle 2: Audio Beep --}}
+            <button type="button"
+                    id="btnToggleBeep"
+                    onclick="toggleBeepSound()"
+                    class="p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-blue-50 border-blue-300 text-blue-800 shadow-2xs">
+                <i id="iconBeep" class="ti ti-volume text-base"></i>
+                <span class="text-[10px]">Suara Beep</span>
+                <span id="labelBeep" class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-blue-200/80 text-blue-900">ON</span>
+            </button>
+
+            {{-- Toggle 3: Screen Wake Lock (Anti Layar Mati) --}}
+            <button type="button"
+                    id="btnToggleWakeLock"
+                    onclick="toggleWakeLock()"
+                    class="p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-amber-50 border-amber-300 text-amber-800 shadow-2xs">
+                <i id="iconWakeLock" class="ti ti-sun text-base"></i>
+                <span class="text-[10px]">Layar ON</span>
+                <span id="labelWakeLock" class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-amber-200/80 text-amber-900">ON</span>
+            </button>
+        </div>
+
+        <div id="wakeLockNotice" class="text-[10px] text-slate-500 flex items-center justify-between px-1">
+            <span class="flex items-center gap-1">
+                <i class="ti ti-sun text-amber-600 text-xs"></i>
+                <span id="wakeLockText">Anti Layar Mati aktif (layar tidak akan redup/terkunci).</span>
+            </span>
+            <span class="text-[9px] text-slate-400 font-mono">Baterai Friendly</span>
         </div>
     </div>
 
     {{-- Kamera --}}
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div class="relative bg-slate-950">
+            {{-- Floating Overlay Mode Satpam Express --}}
+            <div id="expressOverlay"
+                 class="absolute inset-x-3 top-3 z-30 hidden transition-all duration-300 pointer-events-none">
+                {{-- Dinamis diisi JS --}}
+            </div>
+
             <div id="reader" class="w-full"></div>
         </div>
         <div class="p-3.5 flex items-center justify-between border-t border-slate-200">
@@ -106,6 +166,230 @@ let isScanning = true;
 let isProcessing = false;
 let currentScannedQr = null;
 let autoCloseTimer = null;
+let expressResetTimer = null;
+
+// Konfigurasi Default dari Admin / Local Preference Perangkat
+let isExpressMode = localStorage.getItem('didispen_express_mode') !== null 
+    ? (localStorage.getItem('didispen_express_mode') === 'true') 
+    : {{ $defaultExpressMode ? 'true' : 'false' }};
+let isBeepSound = localStorage.getItem('didispen_beep_sound') !== null 
+    ? (localStorage.getItem('didispen_beep_sound') === 'true') 
+    : {{ $defaultBeepSound ? 'true' : 'false' }};
+let isWakeLockEnabled = localStorage.getItem('didispen_wake_lock') !== null 
+    ? (localStorage.getItem('didispen_wake_lock') === 'true') 
+    : {{ $defaultWakeLock ? 'true' : 'false' }};
+let wakeLockSentinel = null;
+
+// =========================================================================
+// 1. WEB AUDIO API SYNTHESIZER (Tanpa File Eksternal, 100% Reliabel & Instan)
+// =========================================================================
+const AudioHelper = {
+    ctx: null,
+    init() {
+        if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+        }
+    },
+    beepSuccess() {
+        if (!isBeepSound) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            // Nada Chime Manis (880Hz -> 1320Hz)
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(1320, now + 0.11);
+
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+
+            osc.start(now);
+            osc.stop(now + 0.16);
+        } catch (e) {
+            console.warn('Audio beep error:', e);
+        }
+    },
+    beepWarning() {
+        if (!isBeepSound) return;
+        try {
+            this.init();
+            if (!this.ctx) return;
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            // Nada Peringatan Turun Sawtooth (420Hz -> 260Hz)
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(420, now);
+            osc.frequency.linearRampToValueAtTime(260, now + 0.22);
+
+            gain.gain.setValueAtTime(0.28, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+
+            osc.start(now);
+            osc.stop(now + 0.22);
+        } catch (e) {
+            console.warn('Audio warning error:', e);
+        }
+    }
+};
+
+// =========================================================================
+// 2. SCREEN WAKE LOCK API (Anti Layar Mati di Pos Gerbang)
+// =========================================================================
+async function requestWakeLock() {
+    if ('wakeLock' in navigator && isWakeLockEnabled) {
+        try {
+            if (wakeLockSentinel) {
+                await wakeLockSentinel.release().catch(() => {});
+                wakeLockSentinel = null;
+            }
+            wakeLockSentinel = await navigator.wakeLock.request('screen');
+            wakeLockSentinel.addEventListener('release', () => {
+                updateWakeLockUI(false);
+            });
+            updateWakeLockUI(true);
+        } catch (err) {
+            console.warn('Wake Lock request error:', err);
+            updateWakeLockUI(false);
+        }
+    } else {
+        updateWakeLockUI(false);
+    }
+}
+
+function releaseWakeLock() {
+    if (wakeLockSentinel !== null) {
+        try { wakeLockSentinel.release(); } catch (e) {}
+        wakeLockSentinel = null;
+    }
+    updateWakeLockUI(false);
+}
+
+function updateWakeLockUI(isActive) {
+    const btn = document.getElementById('btnToggleWakeLock');
+    const icon = document.getElementById('iconWakeLock');
+    const label = document.getElementById('labelWakeLock');
+    const noticeText = document.getElementById('wakeLockText');
+    if (!btn || !label) return;
+
+    if (isWakeLockEnabled && isActive) {
+        btn.className = 'p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-amber-50 border-amber-300 text-amber-800 shadow-2xs';
+        icon.className = 'ti ti-sun text-base text-amber-600 animate-spin-slow';
+        label.className = 'text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-amber-200/80 text-amber-900';
+        label.textContent = 'ON';
+        if (noticeText) noticeText.textContent = 'Anti Layar Mati aktif (layar tidak akan redup/terkunci).';
+    } else if (isWakeLockEnabled && !isActive) {
+        btn.className = 'p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-amber-50/60 border-amber-200 text-amber-700';
+        label.textContent = 'STANDBY';
+        if (noticeText) noticeText.textContent = 'Standby (otomatis aktif saat halaman scanner terlihat).';
+    } else {
+        btn.className = 'p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-slate-50 border-slate-200 text-slate-500';
+        icon.className = 'ti ti-moon text-base text-slate-400';
+        label.className = 'text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-600';
+        label.textContent = 'OFF';
+        if (noticeText) noticeText.textContent = 'Mode Hemat Baterai (layar HP bisa redup otomatis).';
+    }
+}
+
+// Otomatis lepas / minta wake lock saat tab diminimize atau aktif kembali
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isWakeLockEnabled) {
+        requestWakeLock();
+    } else {
+        releaseWakeLock();
+    }
+});
+
+// =========================================================================
+// 3. TOGGLE KONTROL (Mode Cepat, Suara Beep, Layar Menyala)
+// =========================================================================
+function toggleExpressMode() {
+    AudioHelper.init();
+    isExpressMode = !isExpressMode;
+    localStorage.setItem('didispen_express_mode', isExpressMode);
+    updateExpressUI();
+}
+
+function updateExpressUI() {
+    const btn = document.getElementById('btnToggleExpress');
+    const label = document.getElementById('labelExpress');
+    const badge = document.getElementById('quickModeBadge');
+    if (!btn || !label) return;
+
+    if (isExpressMode) {
+        btn.className = 'p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-emerald-50 border-emerald-300 text-emerald-800 shadow-2xs';
+        label.className = 'text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-emerald-200/80 text-emerald-900';
+        label.textContent = 'ON';
+        if (badge) {
+            badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+            badge.textContent = 'Mode Cepat Aktif';
+        }
+    } else {
+        btn.className = 'p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-slate-50 border-slate-200 text-slate-500';
+        label.className = 'text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-600';
+        label.textContent = 'OFF';
+        if (badge) {
+            badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200';
+            badge.textContent = 'Mode Manual (Teliti)';
+        }
+    }
+}
+
+function toggleBeepSound() {
+    AudioHelper.init();
+    isBeepSound = !isBeepSound;
+    localStorage.setItem('didispen_beep_sound', isBeepSound);
+    updateBeepUI();
+    if (isBeepSound) {
+        AudioHelper.beepSuccess();
+    }
+}
+
+function updateBeepUI() {
+    const btn = document.getElementById('btnToggleBeep');
+    const icon = document.getElementById('iconBeep');
+    const label = document.getElementById('labelBeep');
+    if (!btn || !label) return;
+
+    if (isBeepSound) {
+        btn.className = 'p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-blue-50 border-blue-300 text-blue-800 shadow-2xs';
+        icon.className = 'ti ti-volume text-base';
+        label.className = 'text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-blue-200/80 text-blue-900';
+        label.textContent = 'ON';
+    } else {
+        btn.className = 'p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 bg-slate-50 border-slate-200 text-slate-500';
+        icon.className = 'ti ti-volume-off text-base text-slate-400';
+        label.className = 'text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-600';
+        label.textContent = 'OFF';
+    }
+}
+
+function toggleWakeLock() {
+    AudioHelper.init();
+    isWakeLockEnabled = !isWakeLockEnabled;
+    localStorage.setItem('didispen_wake_lock', isWakeLockEnabled);
+    if (isWakeLockEnabled) {
+        requestWakeLock();
+    } else {
+        releaseWakeLock();
+    }
+}
 
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -120,6 +404,9 @@ function setStatus(text, ok = true) {
     el.className = `inline-flex items-center text-[11px] font-semibold ${ok ? 'text-emerald-600' : 'text-amber-600'}`;
 }
 
+// =========================================================================
+// 4. SCAN SUCCESS HANDLER (Express vs Manual)
+// =========================================================================
 function onScanSuccess(decodedText) {
     if (!isScanning || isProcessing) return;
 
@@ -128,10 +415,152 @@ function onScanSuccess(decodedText) {
     currentScannedQr = decodedText;
 
     try { html5QrCode.pause(); } catch (e) {}
-    if (navigator.vibrate) navigator.vibrate(80);
 
-    showModalLoading();
-    checkQrData(decodedText);
+    // Unlock AudioContext jika belum aktif
+    AudioHelper.init();
+
+    if (isExpressMode) {
+        // Mode Satpam Express: Auto-Confirm tanpa harus memencet layar
+        processExpressScan(decodedText);
+    } else {
+        // Mode Manual: Buka Modal Verifikasi Detail
+        AudioHelper.beepSuccess();
+        if (navigator.vibrate) navigator.vibrate(80);
+        showModalLoading();
+        checkQrData(decodedText);
+    }
+}
+
+// Handler Khusus Mode Satpam Express (Auto-Confirm & Fast Feedback)
+function processExpressScan(code) {
+    AudioHelper.beepSuccess();
+    if (navigator.vibrate) navigator.vibrate([100, 60, 100]);
+
+    showExpressOverlayLoading();
+
+    fetch('{{ route("satpam.scan.verify") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ qr_data: code, action: 'auto' })
+    })
+    .then(async r => {
+        const data = await r.json().catch(() => null);
+        if (r.status === 429) {
+            return {
+                success: false,
+                message: 'Terlalu banyak permintaan scan. Mohon tunggu beberapa detik.'
+            };
+        }
+        if (!r.ok) {
+            return {
+                success: false,
+                message: (data && data.message) ? data.message : `QR Code tidak dapat diverifikasi (${r.status}).`
+            };
+        }
+        return data;
+    })
+    .then(data => {
+        if (data && data.success) {
+            renderExpressSuccess(data);
+        } else {
+            hideExpressOverlay();
+            AudioHelper.beepWarning();
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            renderScanError((data && data.message) ? data.message : 'QR Code tidak valid atau dispensasi tidak ditemukan.');
+        }
+    })
+    .catch(err => {
+        console.error('Express scan error:', err);
+        hideExpressOverlay();
+        AudioHelper.beepWarning();
+        renderScanError(err.message || 'Terjadi kesalahan jaringan.');
+    });
+}
+
+function showExpressOverlayLoading() {
+    const overlay = document.getElementById('expressOverlay');
+    if (!overlay) return;
+
+    overlay.className = 'absolute inset-x-3 top-3 z-30 block animate-in fade-in zoom-in-95 duration-200 pointer-events-none';
+    overlay.innerHTML = `
+        <div class="p-3 bg-slate-900/95 backdrop-blur-md text-white rounded-2xl border border-slate-700 shadow-2xl flex items-center gap-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-2 border-rose-500 border-t-transparent shrink-0"></div>
+            <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <i class="ti ti-bolt text-amber-400"></i> Mode Express Auto-Confirm
+                </p>
+                <p class="text-[11px] text-slate-300 truncate">Memverifikasi data dispensasi siswa...</p>
+            </div>
+        </div>
+    `;
+    setStatus('Express: Memverifikasi...', true);
+}
+
+function renderExpressSuccess(data) {
+    const overlay = document.getElementById('expressOverlay');
+    if (!overlay) return;
+
+    AudioHelper.beepSuccess();
+    if (navigator.vibrate) navigator.vibrate([150, 70, 150]);
+
+    const isKeluar = data.action === 'keluar';
+    const disp = data.data || {};
+    const namaSiswa = disp.siswa?.nama_lengkap || 'Siswa DIDISPEN';
+    const kelasSiswa = disp.siswa?.kelas?.nama_kelas || '';
+    const noSurat = disp.nomor_surat || '';
+
+    overlay.className = 'absolute inset-x-3 top-3 z-30 block animate-in fade-in zoom-in-95 duration-200 pointer-events-none';
+    overlay.innerHTML = `
+        <div class="p-3.5 bg-emerald-950/95 backdrop-blur-md text-white rounded-2xl border-2 border-emerald-500 shadow-2xl">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center shrink-0 text-xl font-bold">
+                    <i class="ti ${isKeluar ? 'ti-door-exit' : 'ti-door-enter'}"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="px-2 py-0.2 rounded-md bg-emerald-500 text-slate-950 text-[9px] font-extrabold uppercase tracking-wider">
+                            ${isKeluar ? 'BERHASIL KELUAR' : 'BERHASIL KEMBALI'}
+                        </span>
+                        <span class="text-[10px] font-mono text-emerald-200">${escapeHtml(noSurat)}</span>
+                    </div>
+                    <h4 class="text-xs font-bold text-white truncate mt-0.5">${escapeHtml(namaSiswa)}</h4>
+                    <p class="text-[10px] text-emerald-300 font-medium">${escapeHtml(kelasSiswa)}</p>
+                </div>
+            </div>
+            <div class="mt-2 pt-2 border-t border-emerald-800/80 flex items-center justify-between text-[10px] text-emerald-300">
+                <span class="flex items-center gap-1">
+                    <i class="ti ti-check text-emerald-400 font-bold"></i> Tercatat di sistem
+                </span>
+                <span class="font-bold text-white animate-pulse">Siap scan berikutnya...</span>
+            </div>
+        </div>
+    `;
+
+    setStatus(isKeluar ? 'Sukses: Siswa KELUAR tercatat' : 'Sukses: Siswa KEMBALI tercatat', true);
+
+    if (expressResetTimer) clearTimeout(expressResetTimer);
+    expressResetTimer = setTimeout(() => {
+        hideExpressOverlay();
+        currentScannedQr = null;
+        isProcessing = false;
+        isScanning = true;
+        if (html5QrCode) {
+            try { html5QrCode.resume(); } catch (e) {}
+        }
+        setStatus('Kamera aktif — siap scan');
+    }, 1800);
+}
+
+function hideExpressOverlay() {
+    const overlay = document.getElementById('expressOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.innerHTML = '';
+    }
 }
 
 // 1. Tampilkan loading di modal
@@ -691,12 +1120,12 @@ function manualVerify(e) {
 
                 html += `
                     <div class="border border-slate-200/90 rounded-2xl p-4 bg-white shadow-xs space-y-3">
-                        <div class="flex justify-between items-start gap-2 pb-2 border-b border-slate-100">
-                            <div class="flex items-center gap-2 flex-wrap min-w-0">
-                                <span class="font-mono font-bold text-xs text-slate-800">${escapeHtml(d.nomor_surat)}</span>
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1.5 sm:gap-2 pb-2 border-b border-slate-100">
+                            <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                                <span class="font-mono font-bold text-xs sm:text-sm text-slate-800 break-all">${escapeHtml(d.nomor_surat)}</span>
                                 ${tagBadge}
                             </div>
-                            <div class="flex-shrink-0">
+                            <div class="self-start sm:self-auto flex-shrink-0">
                                 ${statusBadge}
                             </div>
                         </div>
@@ -809,6 +1238,19 @@ function initScanner() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+    updateExpressUI();
+    updateBeepUI();
+    updateWakeLockUI(false);
+
+    if (isWakeLockEnabled) {
+        requestWakeLock();
+    }
+
+    // Inisialisasi audio helper pada interaksi pertama
+    document.addEventListener('click', function unlockAudio() {
+        AudioHelper.init();
+    }, { once: true });
+
     initScanner();
 });
 </script>

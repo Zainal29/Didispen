@@ -26,7 +26,7 @@
                     </span>
                 @endif
             </div>
-            <h1 class="text-xl sm:text-2xl font-bold font-mono tracking-tight text-slate-900">{{ $dispensasi->nomor_surat }}</h1>
+            <h1 class="text-xl sm:text-2xl font-bold font-mono tracking-tight text-slate-900 break-all">{{ $dispensasi->nomor_surat }}</h1>
             <p class="text-slate-500 text-xs mt-1.5 font-medium flex items-center">
                 <i class="ti ti-calendar mr-1.5 text-rose-600"></i>
                 Diajukan: {{ $dispensasi->created_at->isoFormat('dddd, D MMMM Y, HH:mm') }} WIB
@@ -509,7 +509,7 @@
                         <p class="text-rose-700 text-sm font-medium">{{ $dispensasi->rejected_at->isoFormat('D MMMM Y, HH:mm') }} WIB</p>
                     </div>
                     @endif
-                @elseif(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
+                @elseif(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai', 'kadaluarsa']))
                     @if($dispensasi->approved_at)
                     <div>
                         <p class="text-slate-400 text-[10px] font-bold uppercase mb-1 tracking-wider">{{ $dispensasi->dibuat_manual_oleh_guru ? 'Diterbitkan Pada' : 'Disetujui Pada' }}</p>
@@ -546,15 +546,23 @@
                         <p class="text-xs text-rose-600 mt-0.5">Alasan: {{ $dispensasi->catatan_admin }}</p>
                     @endif
                 </div>
-                @elseif(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']))
+                @endif
+                @if($dispensasi->approved_at)
                 <div class="relative pl-6">
                     <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-xs"></div>
                     <p class="text-xs font-bold text-slate-800">{{ $dispensasi->dibuat_manual_oleh_guru ? 'Dibuat Manual & Disetujui' : 'Disetujui Guru Piket' }}</p>
                     @if($dispensasi->guru)
                         <p class="text-[11px] text-slate-600 mt-0.5">Oleh: {{ $dispensasi->guru->nama_lengkap }}</p>
                     @endif
-                    @if($dispensasi->approved_at)
-                        <p class="text-[10px] text-slate-500 mt-0.5">{{ $dispensasi->approved_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                    <p class="text-[10px] text-slate-500 mt-0.5">{{ $dispensasi->approved_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                </div>
+                @endif
+                @if($dispensasi->status === 'kadaluarsa')
+                <div class="relative pl-6">
+                    <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-orange-500 border-2 border-white shadow-xs"></div>
+                    <p class="text-xs font-bold text-slate-800">Kadaluarsa</p>
+                    @if($dispensasi->catatan_admin)
+                        <p class="text-xs text-orange-600 mt-0.5">{{ $dispensasi->catatan_admin }}</p>
                     @endif
                 </div>
                 @endif

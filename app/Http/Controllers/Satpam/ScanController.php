@@ -19,7 +19,11 @@ class ScanController extends Controller
      */
     public function index()
     {
-        return view('satpam.scan');
+        return view('satpam.scan', [
+            'defaultExpressMode' => filter_var(\App\Models\Setting::get('satpam_express_mode', '1'), FILTER_VALIDATE_BOOLEAN),
+            'defaultBeepSound'   => filter_var(\App\Models\Setting::get('satpam_beep_sound', '1'), FILTER_VALIDATE_BOOLEAN),
+            'defaultWakeLock'    => filter_var(\App\Models\Setting::get('satpam_wake_lock', '1'), FILTER_VALIDATE_BOOLEAN),
+        ]);
     }
 
     /**
@@ -92,6 +96,24 @@ class ScanController extends Controller
         }
 
         $isSampaiPulang = (bool) ($dispensasi->sampai_pulang || stripos($dispensasi->jam_kembali ?? '', 'pulang') !== false);
+
+        // Cek batas waktu toleransi scan keluar (20 menit dari disetujui atau jam mulai izin)
+        if ($dispensasi->status === 'disetujui' && empty($dispensasi->waktu_keluar_aktual)) {
+            $batasScanKeluar = $dispensasi->getBatasWaktuScanKeluar();
+            if ($batasScanKeluar && $nowJakarta->greaterThan($batasScanKeluar)) {
+                $jamFormatted = $batasScanKeluar->format('H:i');
+                $dispensasi->update([
+                    'status' => 'kadaluarsa',
+                    'catatan_admin' => "Kadaluarsa otomatis: Siswa tidak melakukan scan keluar di pos gerbang dalam batas waktu 20 menit setelah disetujui ({$jamFormatted} WIB).",
+                ]);
+                \App\Services\DispensasiService::cleanupCompletedDispensasiFiles($dispensasi);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Dispensasi ini sudah KADALUARSA karena melewati batas waktu toleransi scan keluar ({$jamFormatted} WIB).",
+                ], 422);
+            }
+        }
 
         // Cek jika batas waktu kembali sudah lewat sebelum siswa melakukan scan keluar
         if ($dispensasi->status === 'disetujui' && empty($dispensasi->waktu_keluar_aktual) && ! $isSampaiPulang) {

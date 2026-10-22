@@ -26,10 +26,10 @@
 >
     {{-- Header Kartu --}}
     <div class="px-4 py-3.5 border-b border-slate-100 {{ $isOverdue ? 'bg-rose-50/60' : 'bg-white' }}">
-        <div class="flex justify-between items-start gap-2">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
             <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                    <p class="font-mono font-semibold text-slate-700 text-xs">{{ $dispensasi->nomor_surat }}</p>
+                <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                    <p class="font-mono font-bold text-slate-800 text-xs sm:text-sm tracking-tight break-all">{{ $dispensasi->nomor_surat }}</p>
                     @if($dispensasi->isRombongan())
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                             <i class="ti ti-users text-xs"></i>
@@ -58,7 +58,7 @@
                 </p>
             </div>
 
-            <div class="flex flex-col items-end gap-1.5">
+            <div class="flex flex-wrap sm:flex-col items-start sm:items-end gap-1.5 flex-shrink-0">
                 <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}"
                    class="inline-flex items-center justify-center w-8 h-8 min-h-[32px] bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-2xs transition-colors"
                    title="Lihat Detail Dispensasi">
