@@ -165,6 +165,13 @@
                                 </div>
                             </div>
 
+                            <div class="flex items-center justify-between text-xs pt-0.5">
+                                <label class="flex items-center gap-2 text-slate-600 hover:text-slate-800 cursor-pointer select-none">
+                                    <input type="checkbox" name="remember" value="1" checked class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer">
+                                    <span>Ingat saya di perangkat ini</span>
+                                </label>
+                            </div>
+
                             <button type="submit" :disabled="loading" class="w-full h-10 mt-1 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20">
                                 <i x-show="loading" class="fas fa-spinner fa-spin"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
@@ -197,6 +204,13 @@
                                 </div>
                             </div>
 
+                            <div class="flex items-center justify-between text-xs pt-0.5">
+                                <label class="flex items-center gap-2 text-slate-600 hover:text-slate-800 cursor-pointer select-none">
+                                    <input type="checkbox" name="remember" value="1" checked class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer">
+                                    <span>Ingat saya di perangkat ini</span>
+                                </label>
+                            </div>
+
                             <button type="submit" :disabled="loading" class="w-full h-10 mt-1 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20">
                                 <i x-show="loading" class="fas fa-spinner fa-spin"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
@@ -227,6 +241,13 @@
                                         <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                                     </button>
                                 </div>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs pt-0.5">
+                                <label class="flex items-center gap-2 text-slate-600 hover:text-slate-800 cursor-pointer select-none">
+                                    <input type="checkbox" name="remember" value="1" checked class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer">
+                                    <span>Ingat saya di perangkat ini</span>
+                                </label>
                             </div>
 
                             <button type="submit" :disabled="loading" class="w-full h-10 mt-1 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20">
@@ -349,6 +370,162 @@
         </div>
     </div>
 
+    <!-- FLOATING CHANGELOG BUTTON -->
+    <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-30">
+        <button type="button" 
+                @click="showChangelogModal = true"
+                class="group flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-900/90 hover:bg-slate-900 text-white border border-slate-700/80 shadow-lg shadow-black/30 backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 text-xs font-medium cursor-pointer"
+                title="Lihat Catatan Pembaruan Sistem">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            <i class="fas fa-clock-rotate-left text-blue-400 group-hover:rotate-[-30deg] transition-transform duration-200"></i>
+            <span class="text-slate-200 font-semibold hidden xs:inline sm:inline">Pembaruan</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-600/30 text-blue-300 border border-blue-500/30">v2.4</span>
+        </button>
+    </div>
+
+    <!-- MODAL CHANGELOG / CATATAN RILIS -->
+    <div x-show="showChangelogModal" 
+         x-cloak 
+         class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs"
+         style="display: none;">
+        
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[88vh]"
+             @click.away="showChangelogModal = false">
+            
+            <!-- HEADER -->
+            <div class="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-slate-850 to-blue-950 text-white flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                        <i class="fas fa-code-branch text-base"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-sm sm:text-base text-white">Catatan Pembaruan Sistem</h3>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 font-mono">v2.4.0</span>
+                        </div>
+                        <p class="text-slate-400 text-xs mt-0.5">Riwayat peningkatan fitur & stabilitas DIDISPEN</p>
+                    </div>
+                </div>
+                <button type="button" @click="showChangelogModal = false" class="w-8 h-8 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+
+            <!-- BODY LIST -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-5 text-xs text-slate-700">
+                
+                <!-- VERSI 2.4.0 -->
+                <div class="relative pl-6 border-l-2 border-blue-500 space-y-2.5">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-600 border-2 border-white shadow-xs"></div>
+                    
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-900 text-sm">Versi 2.4.0</span>
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Terbaru</span>
+                        </div>
+                        <span class="text-slate-600 text-[11px] font-medium">Oktober 2026</span>
+                    </div>
+
+                    <p class="text-slate-600 text-[11px] leading-relaxed">
+                        Peningkatan ketepatan waktu operasional pos satpam, otomatisasi status kadaluarsa, pencegahan penutupan dispensasi aktif di HP siswa, dan penyempurnaan responsivitas kartu.
+                    </p>
+
+                    <div class="space-y-2 pt-1">
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="fas fa-hourglass-half text-blue-600 mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Toleransi 20 Menit & Status Kadaluarsa Otomatis</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Siswa yang disetujui memiliki waktu toleransi 20 menit untuk scan keluar ke satpam sebelum izin berstatus kadaluarsa.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="fas fa-bell text-amber-600 mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Notifikasi Layar & Anti-Keluar HP Siswa</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Peringatan status bar dan pengingat kembali jika aplikasi di-minimize, serta dialog pencegah tutup tab saat izin masih berjalan.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="fas fa-shield-halved text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Mode Pos Satpam Express & Screen Wake Lock</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Penyimpanan login permanen akun satpam dan guru, mode scanner auto-confirm dengan audio beep, serta pencegah layar redup otomatis.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="fas fa-user-check text-indigo-600 mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Fitur Ingat Saya & Tampilan Responsif</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Kotak centang Ingat Saya di login, serta perbaikan badge status dan nomor surat di dashboard siswa, guru, dan satpam.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VERSI 2.3.0 -->
+                <div class="relative pl-6 border-l-2 border-slate-200 space-y-2">
+                    <div class="absolute -left-[7px] top-0.5 w-3 h-3 rounded-full bg-slate-400 border-2 border-white"></div>
+                    
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <span class="font-bold text-slate-800 text-xs">Versi 2.3.0</span>
+                        <span class="text-slate-600 text-[11px]">September 2026</span>
+                    </div>
+
+                    <div class="space-y-1.5 text-slate-600 text-[11px]">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-users text-purple-600 mt-0.5 flex-shrink-0"></i>
+                            <span>Dukungan Dispensasi Rombongan untuk izin kelompok dalam satu surat resmi.</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-print text-slate-600 mt-0.5 flex-shrink-0"></i>
+                            <span>Pencetakan struk bukti dispensasi via printer thermal bluetooth 58mm.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VERSI 2.2.0 -->
+                <div class="relative pl-6 border-l-2 border-slate-200 space-y-2">
+                    <div class="absolute -left-[7px] top-0.5 w-3 h-3 rounded-full bg-slate-400 border-2 border-white"></div>
+                    
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <span class="font-bold text-slate-800 text-xs">Versi 2.2.0</span>
+                        <span class="text-slate-600 text-[11px]">Agustus 2026</span>
+                    </div>
+
+                    <div class="space-y-1.5 text-slate-600 text-[11px]">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-comment-dots text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                            <span>Notifikasi WhatsApp otomatis kepada siswa saat pengajuan disetujui atau melewati batas waktu.</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-qrcode text-blue-600 mt-0.5 flex-shrink-0"></i>
+                            <span>Verifikasi QR Code terenkripsi untuk validasi pos gerbang satpam dan guru piket.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="p-3 sm:p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium truncate">
+                    <i class="fas fa-shield-check text-emerald-600"></i>
+                    <span class="truncate">Sistem Resmi SMK Negeri 1 Bangsri</span>
+                </div>
+                <button type="button" @click="showChangelogModal = false" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors shrink-0">
+                    Tutup
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- ALPINE JS -->
     <script>
         function loginForm() {
@@ -358,6 +535,7 @@
                 deferredPrompt: null,
                 isInstalled: false,
                 showGuideModal: false,
+                showChangelogModal: false,
                 activePlatform: 'android',
 
                 roles: [
