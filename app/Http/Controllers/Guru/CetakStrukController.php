@@ -22,6 +22,8 @@ class CetakStrukController extends Controller
             'siswa.user',
             'siswa.kelas.jurusan',
             'guru.user',
+            'anggotaSiswa.user',
+            'anggotaSiswa.kelas.jurusan',
         ]);
 
         $user = auth()->user();
@@ -65,9 +67,13 @@ class CetakStrukController extends Controller
 
         /*
          * Render Blade thermal ke PDF dengan lebar pas 58mm (164.41pt)
+         * Tinggi kertas disesuaikan dinamis jika ada rombongan siswa
          */
+        $totalAnggota = $dispensasi->isRombongan() ? $dispensasi->anggotaSiswa->count() : 0;
+        $paperHeight = max(500, 420 + ($totalAnggota * 35));
+
         $pdf = Pdf::loadView('pdf.struk-dispensasi-58mm', compact('dispensasi'));
-        $pdf->setPaper([0, 0, 164.41, 600], 'portrait');
+        $pdf->setPaper([0, 0, 164.41, $paperHeight], 'portrait');
         $pdfContent = $pdf->output();
 
         $tempDir = storage_path('app/temp');
@@ -180,6 +186,8 @@ class CetakStrukController extends Controller
             'siswa.user',
             'siswa.kelas.jurusan',
             'guru.user',
+            'anggotaSiswa.user',
+            'anggotaSiswa.kelas.jurusan',
         ]);
 
         $user = auth()->user();
@@ -326,11 +334,14 @@ class CetakStrukController extends Controller
          * Render PDF terlebih dahulu.
          * Jika Blade/DomPDF gagal, counter tidak berubah.
          */
+        $totalAnggota = $dispensasi->isRombongan() ? $dispensasi->anggotaSiswa->count() : 0;
+        $paperHeight = max(480, 400 + ($totalAnggota * 35));
+
         $pdf = Pdf::loadView(
             'pdf.struk-dispensasi-58mm',
             compact('dispensasi', 'qrBase64')
         )->setPaper(
-            [0, 0, 164.41, 480],
+            [0, 0, 164.41, $paperHeight],
             'portrait'
         );
 

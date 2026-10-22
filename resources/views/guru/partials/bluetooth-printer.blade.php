@@ -372,24 +372,34 @@
         ?? $dispensasi->user?->nis_nip
         ?? null;
 
-       $receiptData = [
-        'nomor_surat' => $dispensasi->nomor_surat ?? '-',
-        'nis' => $dispensasi->siswa?->user?->nis_nip ?? '-',
-        'nama' => $dispensasi->siswa?->nama_lengkap ?? '-',
-        'kelas' => $dispensasi->siswa?->kelas?->nama_kelas ?? '-',
-        'tujuan' => $dispensasi->tujuan ?? '-',
-        'lokasi' => $dispensasi->lokasi ?? '-',
-        'jam_keluar' => $waktuKeluar ?? '-',
-        'jam_kembali' => $waktuKembali ?? '-',
-        'nama_guru' => $namaGuru,
-        'nip_guru' => $nipGuru,
-        'tanggal' => now()->format('d/m/Y'),
-        'dicetak' => now()->format('d/m/Y H:i'),
-        'qr_token' => $dispensasi->qr_token ?? '',
+        $isRombongan = $dispensasi->isRombongan();
+        $totalAnggota = $isRombongan ? $dispensasi->anggotaSiswa->count() : 0;
 
-        'logo_url' => asset('images/logo-didispen1.png'),
-        'print_enabled' => in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']),
-    ];
+        $receiptData = [
+         'nomor_surat' => $dispensasi->nomor_surat ?? '-',
+         'is_rombongan' => $isRombongan,
+         'total_siswa' => $totalAnggota + 1,
+         'nis' => $dispensasi->siswa?->user?->nis_nip ?? '-',
+         'nama' => $dispensasi->siswa?->nama_lengkap ?? '-',
+         'kelas' => $dispensasi->siswa?->kelas?->nama_kelas ?? '-',
+         'tujuan' => $dispensasi->tujuan ?? '-',
+         'lokasi' => $dispensasi->lokasi ?? '-',
+         'jam_keluar' => $waktuKeluar ?? '-',
+         'jam_kembali' => $dispensasi->isSampaiPulang() ? 'Selesai KBM' : ($waktuKembali ?? '-'),
+         'nama_guru' => $namaGuru,
+         'nip_guru' => $nipGuru,
+         'tanggal' => now()->format('d/m/Y'),
+         'dicetak' => now()->format('d/m/Y H:i'),
+         'qr_token' => $dispensasi->qr_token ?? '',
+         'anggota' => $isRombongan ? $dispensasi->anggotaSiswa->map(fn($a) => [
+             'nama' => $a->nama_lengkap,
+             'nis' => $a->user?->nis_nip ?? '-',
+             'kelas' => $a->kelas?->nama_kelas ?? '-',
+         ])->values()->all() : [],
+
+         'logo_url' => asset('images/logo-didispen1.png'),
+         'print_enabled' => in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']),
+     ];
 @endphp
 
 <script>
@@ -990,14 +1000,37 @@
             textBytes('--------------------------------\n'),
             alignLeft(),
             printField('No. Surat', receiptData.nomor_surat),
+            ...(receiptData.is_rombongan ? [
+                printField('Tipe', 'Rombongan (' + receiptData.total_siswa + ' Siswa)'),
+                printField('Ketua', receiptData.nama),
+            ] : [
+                printField('Nama', receiptData.nama),
+            ]),
             printField('NIS', receiptData.nis),
-            printField('Nama', receiptData.nama),
             printField('Kelas', receiptData.kelas),
             printField('Tujuan', receiptData.tujuan),
             printField('Lokasi', receiptData.lokasi),
             printField('Jam', receiptData.jam_keluar + ' - ' + receiptData.jam_kembali),
             textBytes('--------------------------------\n')
         );
+
+        // 2b. Daftar Siswa Rombongan (Jika Dispensasi Rombongan)
+        if (receiptData.is_rombongan && receiptData.anggota && receiptData.anggota.length > 0) {
+            parts.push(
+                bold(true),
+                textBytes('ANGGOTA ROMBONGAN (' + receiptData.total_siswa + ' SISWA):\n'),
+                bold(false),
+                textBytes('1. ' + receiptData.nama + ' (Ketua)\n   ' + receiptData.kelas + ' - NIS: ' + receiptData.nis + '\n')
+            );
+            receiptData.anggota.forEach((ang, idx) => {
+                parts.push(
+                    textBytes((idx + 2) + '. ' + ang.nama + '\n   ' + ang.kelas + ' - NIS: ' + ang.nis + '\n')
+                );
+            });
+            parts.push(
+                textBytes('--------------------------------\n')
+            );
+        }
 
         // 3. QR Code Validasi Real-Time (untuk Scan Pos Satpam)
         if (receiptData.qr_token) {

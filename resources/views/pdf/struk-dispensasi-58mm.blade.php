@@ -238,15 +238,28 @@
             <td class="separator">:</td>
             <td class="value">{{ $dispensasi->nomor_surat ?? '-' }}</td>
         </tr>
+        @if($dispensasi->isRombongan())
         <tr>
-            <td class="label">NIS</td>
+            <td class="label">Tipe</td>
             <td class="separator">:</td>
-            <td class="value">{{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</td>
+            <td class="value">Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)</td>
         </tr>
+        <tr>
+            <td class="label">Ketua</td>
+            <td class="separator">:</td>
+            <td class="value">{{ $dispensasi->siswa?->nama_lengkap ?? '-' }}</td>
+        </tr>
+        @else
         <tr>
             <td class="label">Nama</td>
             <td class="separator">:</td>
             <td class="value">{{ $dispensasi->siswa?->nama_lengkap ?? '-' }}</td>
+        </tr>
+        @endif
+        <tr>
+            <td class="label">NIS</td>
+            <td class="separator">:</td>
+            <td class="value">{{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</td>
         </tr>
         <tr>
             <td class="label">Kelas</td>
@@ -266,9 +279,35 @@
         <tr>
             <td class="label">Jam</td>
             <td class="separator">:</td>
-            <td class="value">{{ $waktuKeluar ?? '-' }} - {{ $waktuKembali ?? '-' }}</td>
+            <td class="value">{{ $waktuKeluar ?? '-' }} - {{ $dispensasi->isSampaiPulang() ? 'Selesai KBM' : ($waktuKembali ?? '-') }}</td>
         </tr>
     </table>
+
+    {{-- DAFTAR SISWA ROMBONGAN --}}
+    @if($dispensasi->isRombongan() && $dispensasi->anggotaSiswa && $dispensasi->anggotaSiswa->count() > 0)
+        <div class="divider"></div>
+        <div style="font-weight: bold; font-size: 8px; margin: 2px 0 3px; text-align: left;">
+            ANGGOTA ROMBONGAN ({{ $dispensasi->anggotaSiswa->count() + 1 }} SISWA):
+        </div>
+        <table class="info-table" style="margin-top: 1px;">
+            <tr>
+                <td style="width: 14px; vertical-align: top; font-weight: bold;">1.</td>
+                <td style="vertical-align: top;">
+                    <strong>{{ $dispensasi->siswa?->nama_lengkap }}</strong> <span style="font-size: 7px; color: #444;">(Ketua)</span>
+                    <div style="font-size: 7px; color: #333;">{{ $dispensasi->siswa?->kelas?->nama_kelas ?? '-' }} &bull; NIS: {{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</div>
+                </td>
+            </tr>
+            @foreach($dispensasi->anggotaSiswa as $idx => $anggota)
+            <tr>
+                <td style="width: 14px; vertical-align: top; font-weight: bold;">{{ $idx + 2 }}.</td>
+                <td style="vertical-align: top;">
+                    <strong>{{ $anggota->nama_lengkap }}</strong>
+                    <div style="font-size: 7px; color: #333;">{{ $anggota->kelas?->nama_kelas ?? '-' }} &bull; NIS: {{ $anggota->user?->nis_nip ?? '-' }}</div>
+                </td>
+            </tr>
+            @endforeach
+        </table>
+    @endif
 
     <div class="divider"></div>
 

@@ -41,7 +41,8 @@ class PengajuanController extends Controller
     {
         \App\Services\DispensasiService::autoExpireOverdueDispensasi();
 
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru', 'anggotaSiswa'])
+            ->withCount('anggotaSiswa')
             ->latest();
 
         if ($request->filled('status')) {

@@ -52,7 +52,7 @@
             </div>
             <div>
                 <h3 class="text-sm font-bold text-gray-900">Verifikasi Manual</h3>
-                <p class="text-[11px] text-gray-500">Cari berdasarkan No. Surat, NIS, Nama Siswa, Organisasi, atau Pembina</p>
+                <p class="text-[11px] text-gray-500">Cari berdasarkan No. Surat, NIS, Nama Siswa, Rombongan, atau Pembina</p>
             </div>
         </div>
         <form onsubmit="manualVerify(event)" class="flex gap-2 pt-1">
@@ -60,7 +60,7 @@
             <input type="text"
                    id="manualCode"
                    required
-                   placeholder="Ketik No. Surat, NIS, Nama, Organisasi, Pembina..."
+                   placeholder="Ketik No. Surat, NIS, Nama, Rombongan, Pembina..."
                    class="flex-1 h-11 px-3.5 rounded-xl border border-gray-300 bg-white text-xs font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all">
             <button type="submit"
                     class="px-5 h-11 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shrink-0 shadow-sm flex items-center justify-center gap-1.5">
@@ -308,10 +308,10 @@ function renderScanDetail(data) {
             ${photoHtml}
             <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-1.5 flex-wrap mb-1">
-                    ${data.tipe_pengajuan === 'organisasi' ? `
+                    ${(data.tipe_pengajuan === 'rombongan' || data.tipe_pengajuan === 'organisasi' || data.is_organisasi) ? `
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                             <i class="ti ti-users text-xs"></i>
-                            <span>${escapeHtml(data.nama_organisasi || 'Organisasi')}</span>
+                            <span>Rombongan</span>
                             <span class="text-[9px] bg-purple-200/70 text-purple-800 px-1 rounded-sm ml-0.5 font-mono">${data.total_rombongan || 1} siswa</span>
                         </span>
                     ` : `
@@ -340,7 +340,7 @@ function renderScanDetail(data) {
             </div>
         ` : ''}
 
-        ${data.tipe_pengajuan === 'organisasi' && data.anggota && data.anggota.length > 0 ? `
+        ${(data.tipe_pengajuan === 'rombongan' || data.tipe_pengajuan === 'organisasi' || data.is_organisasi) && data.anggota && data.anggota.length > 0 ? `
             <div class="p-3 bg-purple-50/70 border border-purple-200 rounded-xl text-xs space-y-1.5">
                 <div class="flex items-center justify-between">
                     <span class="font-bold text-purple-950 flex items-center gap-1.5">
@@ -683,10 +683,10 @@ function manualVerify(e) {
                 }
 
                 let tagBadge = '';
-                if (d.is_organisasi) {
+                if (d.is_organisasi || d.tipe_pengajuan === 'rombongan' || d.tipe_pengajuan === 'organisasi') {
                     tagBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                         <i class="ti ti-users text-xs"></i>
-                        <span>${escapeHtml(d.nama_organisasi || 'Organisasi')}</span>
+                        <span>Rombongan</span>
                         <span class="text-[10px] bg-purple-200/70 text-purple-900 px-1.5 py-0.2 rounded font-mono">${d.total_rombongan} Siswa</span>
                     </span>`;
                 } else {
@@ -753,7 +753,7 @@ function manualVerify(e) {
                         <div class="pt-0.5">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <h4 class="font-bold text-slate-900 text-base leading-snug">${escapeHtml(d.siswa_nama)}</h4>
-                                ${d.is_organisasi ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">Ketua (Pemohon)</span>` : ''}
+                                ${(d.is_organisasi || d.tipe_pengajuan === 'rombongan') ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">Ketua (Pemohon)</span>` : ''}
                             </div>
                             <p class="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1.5 flex-wrap">
                                 <span class="font-mono text-slate-700 font-semibold flex items-center"><i class="ti ti-id text-slate-400 mr-1 text-sm"></i>${escapeHtml(d.siswa_nis)}</span>

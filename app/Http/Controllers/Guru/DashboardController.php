@@ -55,7 +55,8 @@ class DashboardController extends Controller
         ];
 
         // 2. QUERY DASAR DENGAN PENCARIAN
-        $baseQuery = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+        $baseQuery = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru', 'anggotaSiswa'])
+            ->withCount('anggotaSiswa')
             ->whereDate('created_at', $today);
 
         // Jika ada kata kunci pencarian, filter query-nya

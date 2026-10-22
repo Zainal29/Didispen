@@ -20,7 +20,8 @@ class LaporanController extends Controller
         }
 
         // Query dasar: hanya dispensasi yang diproses oleh guru yang login
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru', 'anggotaSiswa'])
+            ->withCount('anggotaSiswa')
             ->where('guru_id', $guru->id);
 
         // Fitur Filter

@@ -53,13 +53,14 @@
                 <tr class="hover:bg-slate-50/60 transition-colors">
                     <td class="px-6 py-4">
                         <span class="font-mono font-bold text-slate-900 text-xs">{{ $item->nomor_surat }}</span>
-                        @if($item->isOrganisasi())
-                            <div class="mt-1 flex items-center gap-1 flex-wrap">
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                    <i class="ti ti-users text-[10px] text-blue-600"></i> {{ $item->nama_organisasi }}
-                                </span>
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                    Organisasi
+                        @if($item->isRombongan())
+                            <div class="mt-1">
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                    <i class="ti ti-users text-[10px]"></i> Rombongan
+                                    @php $tot = ($item->anggota_siswa_count ?? $item->anggotaSiswa?->count() ?? 0) + 1; @endphp
+                                    @if($tot > 1)
+                                        <span class="bg-purple-200/70 text-purple-800 text-[9px] px-1 rounded-sm ml-0.5 font-mono">{{ $tot }} siswa</span>
+                                    @endif
                                 </span>
                             </div>
                         @else
@@ -117,16 +118,17 @@
     <div class="lg:hidden divide-y divide-slate-100">
         @forelse($pengajuan as $item)
         <div class="p-4 hover:bg-slate-50/70 transition-colors">
-            <div class="flex justify-between items-start gap-2 mb-2">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1.5 sm:gap-2 mb-2">
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1.5 flex-wrap mb-1">
-                        <p class="font-mono font-bold text-slate-900 text-xs">{{ $item->nomor_surat }}</p>
-                        @if($item->isOrganisasi())
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                <i class="ti ti-users text-[10px] text-blue-600"></i> {{ $item->nama_organisasi }}
-                            </span>
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                Organisasi
+                        <p class="font-mono font-bold text-slate-900 text-xs sm:text-sm tracking-tight break-all">{{ $item->nomor_surat }}</p>
+                        @if($item->isRombongan())
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                <i class="ti ti-users text-[10px]"></i> Rombongan
+                                @php $tot = ($item->anggota_siswa_count ?? $item->anggotaSiswa?->count() ?? 0) + 1; @endphp
+                                @if($tot > 1)
+                                    <span class="bg-purple-200/70 text-purple-800 text-[9px] px-1 rounded-sm ml-0.5 font-mono">{{ $tot }} siswa</span>
+                                @endif
                             </span>
                         @else
                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
@@ -140,7 +142,7 @@
                 @php
                     $badge = $item->status_badge;
                 @endphp
-                <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                <div class="flex flex-wrap sm:flex-col items-start sm:items-end gap-1 flex-shrink-0">
                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $badge['class'] }}">
                         <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
                         {{ $badge['text'] }}

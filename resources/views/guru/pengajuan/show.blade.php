@@ -24,7 +24,7 @@
             <div class="min-w-0">
                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nomor Surat</p>
                 <div class="flex items-center gap-2 flex-wrap">
-                    <h1 class="text-base sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">{{ $dispensasi->nomor_surat }}</h1>
+                    <h1 class="text-base sm:text-2xl font-bold text-slate-900 font-mono tracking-tight break-all">{{ $dispensasi->nomor_surat }}</h1>
                     @if($dispensasi->isRombongan())
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                             <i class="ti ti-users text-xs mr-1"></i> Dispensasi Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)

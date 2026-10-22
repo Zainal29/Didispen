@@ -127,13 +127,14 @@
                 <div class="flex justify-between items-start gap-2">
                     <div class="min-w-0">
                         <span class="font-mono font-bold text-slate-900 text-xs block">{{ $d->nomor_surat }}</span>
-                        @if($d->isOrganisasi())
-                            <div class="mt-0.5 flex items-center gap-1 flex-wrap">
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                    <i class="ti ti-users text-[10px] text-blue-600"></i> {{ $d->nama_organisasi }}
-                                </span>
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                    Organisasi
+                        @if($d->isRombongan())
+                            <div class="mt-0.5">
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                    <i class="ti ti-users text-[10px]"></i> Rombongan
+                                    @php $tot = ($d->anggota_siswa_count ?? $d->anggotaSiswa?->count() ?? 0) + 1; @endphp
+                                    @if($tot > 1)
+                                        <span class="bg-purple-200/70 text-purple-800 text-[9px] px-1 rounded-sm ml-0.5 font-mono">{{ $tot }} siswa</span>
+                                    @endif
                                 </span>
                             </div>
                         @else
@@ -197,13 +198,14 @@
                     <tr class="hover:bg-slate-50/60 transition-colors">
                         <td class="p-4 text-xs">
                             <span class="font-mono font-bold text-slate-900">{{ $d->nomor_surat }}</span>
-                            @if($d->isOrganisasi())
-                                <div class="mt-1 flex items-center gap-1 flex-wrap">
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                        <i class="ti ti-users text-[10px] text-blue-600"></i> {{ $d->nama_organisasi }}
-                                    </span>
-                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                        Organisasi
+                            @if($d->isRombongan())
+                                <div class="mt-1">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                        <i class="ti ti-users text-[10px]"></i> Rombongan
+                                        @php $tot = ($d->anggota_siswa_count ?? $d->anggotaSiswa?->count() ?? 0) + 1; @endphp
+                                        @if($tot > 1)
+                                            <span class="bg-purple-200/70 text-purple-800 text-[9px] px-1 rounded-sm ml-0.5 font-mono">{{ $tot }} siswa</span>
+                                        @endif
                                     </span>
                                 </div>
                             @else
