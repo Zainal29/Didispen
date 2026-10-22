@@ -65,32 +65,52 @@
         <!-- LOGIN CARD -->
         <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col lg:flex-row border border-slate-100">
 
-            <!-- LEFT PANEL: BRANDING -->
-            <div class="bg-blue-600 px-6 py-6 sm:px-8 sm:py-8 flex flex-col items-center justify-center text-center lg:w-5/12 relative overflow-hidden">
-                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle, #ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
+           <!-- LEFT PANEL: BRANDING -->
+<div class="bg-blue-600 px-6 py-6 sm:px-8 sm:py-8 flex flex-col items-center justify-center text-center lg:w-5/12 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle, #ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
 
-                <div class="relative z-10 flex flex-col items-center w-full">
-                    <div class="w-14 h-14 bg-white rounded-xl flex items-center justify-center mb-3 shadow-md">
-                        <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-10 h-10 object-contain" decoding="async">
-                    </div>
+    <div class="relative z-10 flex flex-col items-center w-full">
+        <div class="w-14 h-14 bg-white rounded-xl flex items-center justify-center mb-3 shadow-md">
+            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-10 h-10 object-contain" decoding="async">
+        </div>
 
-                    <h1 class="text-xl font-bold text-white mb-0.5">DIDISPEN</h1>
-                    <p class="text-blue-100 text-xs font-medium mb-4">Digital Dispensasi Pendidikan</p>
+        <!-- DIBAWAH INI ADALAH TULISAN DIDISPEN DAN TOMBOL YANG SUDAH DIGABUNGKAN -->
+<div class="relative w-full flex justify-center items-center mb-0.5">
+    <h1 class="text-xl font-bold text-white">DIDISPEN</h1>
+            
+            <!-- BADGE VERSI DIGESER KE KANAN TANPA MERUSAK POSISI TENGAH TEKS -->
+    <div class="absolute left-[calc(50%+4.5rem)] flex items-center">
+        <button type="button" 
+                @click="showChangelogModal = true"
+                class="group flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-900/90 hover:bg-slate-900 text-white border border-slate-700/80 shadow-md backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 text-[10px] font-medium cursor-pointer"
+                title="Lihat Catatan Pembaruan Sistem">
+            <span class="relative flex h-1.5 w-1.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
+            </span>
+            <span class="px-1 py-0.5 rounded-full text-[9px] font-mono font-bold bg-blue-600/30 text-blue-300 border border-blue-500/30">v2.4</span>
+        </button>
+    </div>
+</div>
 
-                    <div class="bg-white/10 rounded-xl p-3.5 border border-white/15 max-w-xs text-left">
-                        <i class="fas fa-quote-left text-blue-200 text-xs mb-1 block"></i>
-                        <p class="text-xs text-white/90 leading-relaxed">
-                            "Pelacakan informasi manajemen izin dan ketidakhadiran siswa kini lebih cepat, aman, dan terintegrasi."
-                        </p>
-                    </div>
 
-                    <div class="mt-4 flex items-center gap-4 text-white/80 text-[11px] font-medium">
-                        <div class="flex items-center gap-1"><i class="fas fa-shield-alt"></i> Aman</div>
-                        <div class="flex items-center gap-1"><i class="fas fa-bolt"></i> Cepat</div>
-                        <div class="flex items-center gap-1"><i class="fas fa-link"></i> Terintegrasi</div>
-                    </div>
-                </div>
-            </div>
+        <p class="text-blue-100 text-xs font-medium mb-4">Digital Dispensasi Pendidikan</p>
+
+        <div class="bg-white/10 rounded-xl p-3.5 border border-white/15 max-w-xs text-left">
+            <i class="fas fa-quote-left text-blue-200 text-xs mb-1 block"></i>
+            <p class="text-xs text-white/90 leading-relaxed">
+                "Pelacakan informasi manajemen izin dan ketidakhadiran siswa kini lebih cepat, aman, dan terintegrasi."
+            </p>
+        </div>
+
+        <div class="mt-4 flex items-center gap-4 text-white/80 text-[11px] font-medium">
+            <div class="flex items-center gap-1"><i class="fas fa-shield-alt"></i> Aman</div>
+            <div class="flex items-center gap-1"><i class="fas fa-bolt"></i> Cepat</div>
+            <div class="flex items-center gap-1"><i class="fas fa-link"></i> Terintegrasi</div>
+        </div>
+    </div>
+</div>
+
 
             <!-- RIGHT PANEL: FORM -->
             <div class="px-6 py-6 sm:px-8 sm:py-8 flex flex-col justify-center lg:w-7/12 bg-white">
@@ -371,20 +391,21 @@
     </div>
 
     <!-- FLOATING CHANGELOG BUTTON -->
-    <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-30">
-        <button type="button" 
-                @click="showChangelogModal = true"
-                class="group flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-900/90 hover:bg-slate-900 text-white border border-slate-700/80 shadow-lg shadow-black/30 backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 text-xs font-medium cursor-pointer"
-                title="Lihat Catatan Pembaruan Sistem">
-            <span class="relative flex h-2 w-2">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            <i class="fas fa-clock-rotate-left text-blue-400 group-hover:rotate-[-30deg] transition-transform duration-200"></i>
-            <span class="text-slate-200 font-semibold hidden xs:inline sm:inline">Pembaruan</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-600/30 text-blue-300 border border-blue-500/30">v2.4</span>
-        </button>
-    </div>
+<!-- <div class="fixed bottom-4 left-1/2 -translate-x-1/2  sm:bottom-6 z-50">
+    <button type="button" 
+            @click="showChangelogModal = true"
+            class="group flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-900/90 hover:bg-slate-900 text-white border border-slate-700/80 shadow-lg shadow-black/30 backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 text-xs font-medium cursor-pointer"
+            title="Lihat Catatan Pembaruan Sistem">
+        <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+        </span>
+        <i class="fas fa-clock-rotate-left text-blue-400 group-hover:rotate-[-30deg] transition-transform duration-200"></i>
+        <span class="text-slate-200 font-semibold hidden xs:inline sm:inline">Pembaruan</span>
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-600/30 text-blue-300 border border-blue-500/30">v2.4</span>
+    </button>
+</div> -->
+
 
     <!-- MODAL CHANGELOG / CATATAN RILIS -->
     <div x-show="showChangelogModal" 
