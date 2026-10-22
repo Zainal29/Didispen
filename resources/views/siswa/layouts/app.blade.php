@@ -441,6 +441,8 @@
     })();
     </script>
 
+    @include('components.siswa-anti-keluar')
+
     @stack('modals')
     @stack('scripts')
 

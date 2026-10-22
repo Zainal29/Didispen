@@ -11,7 +11,7 @@
             <div class="min-w-0">
                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nomor Surat</p>
                 <div class="flex items-center gap-2 flex-wrap">
-                    <h1 class="text-base sm:text-xl font-bold text-slate-900 font-mono tracking-tight">{{ $dispensasi->nomor_surat }}</h1>
+                    <h1 class="text-base sm:text-xl font-bold text-slate-900 font-mono tracking-tight break-all">{{ $dispensasi->nomor_surat }}</h1>
                     @if($dispensasi->isRombongan())
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                             <i class="ti ti-users text-xs"></i> Dispensasi Rombongan

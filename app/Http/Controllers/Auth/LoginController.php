@@ -361,9 +361,20 @@
             ]);
         }
 
+        $autoRememberSatpam = filter_var(\App\Models\Setting::get('satpam_auto_remember', '1'), FILTER_VALIDATE_BOOLEAN);
+        $autoRememberGuru   = filter_var(\App\Models\Setting::get('guru_auto_remember', '1'), FILTER_VALIDATE_BOOLEAN);
+
+        $shouldRemember = $request->boolean('remember');
+
+        if ($user->role === 'satpam' && $autoRememberSatpam) {
+            $shouldRemember = true;
+        } elseif ($user->role === 'guru' && $autoRememberGuru) {
+            $shouldRemember = true;
+        }
+
         Auth::login(
             $user,
-            $request->boolean('remember')
+            $shouldRemember
         );
 
         $request->session()->regenerate();
@@ -381,6 +392,7 @@
             null,
             [
                 'role' => $user->role,
+                'remember' => $shouldRemember,
             ]
         );
 
@@ -389,6 +401,12 @@
         | 11. REDIRECT
         |--------------------------------------------------------------------------
         */
+        if ($user->role === 'satpam') {
+            return redirect()->intended(
+                route('satpam.scan')
+            );
+        }
+
         return redirect()->intended(
             url("/{$user->role}/dashboard")
         );

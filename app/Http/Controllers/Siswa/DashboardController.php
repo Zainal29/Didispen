@@ -92,6 +92,9 @@ class DashboardController extends Controller
             'selesai' => (clone $statsBase)->where('status', 'selesai')->count(),
         ];
 
+        // Total pengajuan yang memiliki catatan keterlambatan
+        $totalTerlambat = (clone $statsBase)->terlambat()->count();
+
         // Pengajuan terbaru (5 terakhir)
         $pengajuanTerbaru = Dispensasi::with(['guru', 'siswa.kelas.jurusan', 'anggotaSiswa'])
             ->where(function ($q) use ($siswa) {
@@ -217,7 +220,8 @@ class DashboardController extends Controller
             'popupSecondsLeft',
             'hubungiGuru',
             'daftarGuruPiket',
-            'hubungiError'
+            'hubungiError',
+            'totalTerlambat'
         ));
     }
 }

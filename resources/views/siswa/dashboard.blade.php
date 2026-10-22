@@ -267,12 +267,12 @@
                 <h3 class="text-sm font-bold text-slate-900 flex items-center">
                     <i class="ti ti-circle-check text-emerald-600 mr-1.5 text-base"></i>Dispensasi Disetujui
                 </h3>
-                @if($dispensasiAktif->isOrganisasi())
-                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                        <i class="ti ti-users mr-1"></i>{{ $dispensasiAktif->nama_organisasi }}
+                @if($dispensasiAktif->isRombongan())
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                        <i class="ti ti-users mr-1"></i>Rombongan
                     </span>
                     @if(auth()->user()->siswa && auth()->user()->siswa->id !== $dispensasiAktif->siswa_id)
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">
                             Anggota Rombongan
                         </span>
                     @endif
@@ -345,9 +345,9 @@
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                     <h3 class="font-bold text-slate-900 text-sm">Anda Sedang di Luar Sekolah</h3>
-                    @if($dispensasiAktif->isOrganisasi())
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                            <i class="ti ti-users mr-1"></i>{{ $dispensasiAktif->nama_organisasi }}
+                    @if($dispensasiAktif->isRombongan())
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                            <i class="ti ti-users mr-1"></i>Rombongan
                         </span>
                     @endif
                 </div>
@@ -602,11 +602,21 @@ $cards = [
     @endforeach
 </div>
 
-{{-- SECONDARY BUTTON: SEMUA PENGAJUAN --}}
-<div class="mb-4">
+{{-- TOMBOL KEMBAR: SEMUA PENGAJUAN & PENGAJUAN TERLAMBAT --}}
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
     <a href="{{ route('siswa.pengajuan.index') }}"
-       class="filter-btn w-full px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all text-center shadow-xs">
+       class="filter-btn w-full px-3.5 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:scale-95 transition-all text-center shadow-xs">
         <i class="ti ti-layers-intersect mr-1.5 text-blue-600 text-sm"></i>Tampilkan Semua Pengajuan ({{ $stats['total'] ?? 0 }})
+    </a>
+    <a href="{{ route('siswa.pengajuan.index', ['status' => 'terlambat']) }}"
+       class="filter-btn w-full px-3.5 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border {{ ($totalTerlambat ?? 0) > 0 ? 'border-rose-200 bg-rose-50/80 text-rose-700 hover:bg-rose-100/80' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50' }} active:scale-95 transition-all text-center shadow-xs">
+        @if(($totalTerlambat ?? 0) > 0)
+            <i class="ti ti-alert-triangle mr-1.5 text-rose-600 text-sm"></i>
+            <span class="font-bold">Pengajuan Terlambat ({{ $totalTerlambat }})</span>
+        @else
+            <i class="ti ti-circle-check mr-1.5 text-emerald-600 text-sm"></i>
+            <span>Riwayat Terlambat (0)</span>
+        @endif
     </a>
 </div>
 
@@ -636,16 +646,16 @@ $cards = [
                                 $studentPrintCount < $maxPrint && $isWithinTime;
                 @endphp
                 <div class="p-4 sm:p-5 hover:bg-slate-50/70 transition-colors">
-                    <div class="flex justify-between items-start gap-3 mb-2">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-3 mb-2">
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <h4 class="font-mono font-bold text-slate-900 text-xs">{{ $pengajuan->nomor_surat }}</h4>
-                                @if($pengajuan->isOrganisasi())
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                        <i class="ti ti-users text-[10px]"></i> {{ $pengajuan->nama_organisasi }}
+                                <h4 class="font-mono font-bold text-slate-900 text-xs sm:text-sm tracking-tight break-all">{{ $pengajuan->nomor_surat }}</h4>
+                                @if($pengajuan->isRombongan())
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                        <i class="ti ti-users text-[10px]"></i> Rombongan
                                     </span>
                                     @if(auth()->user()->siswa && auth()->user()->siswa->id !== $pengajuan->siswa_id)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">
                                             Anggota Rombongan
                                         </span>
                                     @endif
@@ -663,10 +673,12 @@ $cards = [
                                 <span class="font-medium text-slate-700">Tujuan:</span> {{ $pengajuan->tujuan }}
                             </p>
                         </div>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold flex-shrink-0 border {{ $badge['class'] }}">
-                            <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
-                            {{ $badge['text'] }}
-                        </span>
+                        <div class="self-start sm:self-auto flex-shrink-0">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border {{ $badge['class'] }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                                {{ $badge['text'] }}
+                            </span>
+                        </div>
                     </div>
                     <div class="mt-3 flex gap-2">
                         <a href="{{ route('siswa.pengajuan.show', $pengajuan) }}"

@@ -28,6 +28,16 @@ namespace App\Http\Controllers\Siswa;
         // Jalankan auto-expire otomatis
         \App\Services\DispensasiService::autoExpireOverdueDispensasi();
 
+        $baseQuery = Dispensasi::where(function ($q) use ($siswa) {
+            $q->where('siswa_id', $siswa->id)
+              ->orWhereHas('anggotaSiswa', function ($a) use ($siswa) {
+                  $a->where('siswa.id', $siswa->id);
+              });
+        });
+
+        $totalTerlambatSiswa = (clone $baseQuery)->terlambat()->count();
+        $totalSemuaPengajuan = (clone $baseQuery)->count();
+
         $query = Dispensasi::with(['guru', 'siswa.kelas.jurusan', 'anggotaSiswa.kelas.jurusan'])
             ->where(function ($q) use ($siswa) {
                 $q->where('siswa_id', $siswa->id)
@@ -37,12 +47,20 @@ namespace App\Http\Controllers\Siswa;
             });
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'terlambat') {
+                $query->terlambat();
+            } else {
+                $query->where('status', $request->status);
+            }
         }
 
-        $pengajuan = $query->latest()->paginate(15);
+        $pengajuan = $query->latest()->paginate(15)->withQueryString();
 
-        return view('siswa.pengajuan.index', compact('pengajuan'));
+        return view('siswa.pengajuan.index', compact(
+            'pengajuan',
+            'totalTerlambatSiswa',
+            'totalSemuaPengajuan'
+        ));
     }
 
     /**
