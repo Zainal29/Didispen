@@ -316,4 +316,62 @@ class DispensasiRombonganDanQRExpiredTest extends TestCase
         $this->assertEquals(2, $json['data']['total_rombongan']);
         $this->assertEquals('ANGGOTA 1', $json['data']['anggota'][0]['nama_lengkap']);
     }
+
+    public function test_guru_melihat_tag_rombongan_dan_struk_menampilkan_siswa_rombongan(): void
+    {
+        $userGuru = User::create([
+            'name' => 'Guru Piket Test',
+            'email' => 'guru_piket_test@didispen.sch.id',
+            'role' => 'guru',
+            'nis_nip' => 'G1001',
+            'password' => Hash::make('password'),
+        ]);
+        $guru = \App\Models\Guru::create([
+            'user_id' => $userGuru->id,
+            'nama_lengkap' => 'Guru Piket Test, S.Pd',
+            'nip' => '198501012010011001',
+            'no_telepon' => '081234567899',
+            'status_aktif' => true,
+        ]);
+
+        $dispensasi = Dispensasi::create([
+            'siswa_id' => $this->siswaPemohon->id,
+            'guru_id' => $guru->id,
+            'nomor_surat' => 'DISP/20261021/ROMB01',
+            'tipe_pengajuan' => 'rombongan',
+            'kategori' => 'keperluan_sekolah',
+            'alasan' => 'Lomba Pramuka',
+            'tujuan' => 'Stadion Utama',
+            'lokasi' => 'Stadion',
+            'jam_keluar' => '08:00',
+            'jam_kembali' => '12:00',
+            'status' => 'disetujui',
+            'tanggal_izin' => '2026-10-12',
+            'qr_token' => 'QR_TEST_ROMBONGAN_999',
+        ]);
+        $dispensasi->anggotaSiswa()->sync([$this->siswaAnggota1->id, $this->siswaAnggota2->id]);
+
+        // 1. Cek tampilan index pengajuan guru
+        $resIndex = $this->actingAs($userGuru)->get(route('guru.pengajuan.index'));
+        $resIndex->assertOk();
+        $resIndex->assertSee('Rombongan');
+        $resIndex->assertDontSee('Organisasi');
+
+        // 2. Cek render Blade struk thermal 58mm
+        $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru.user', 'anggotaSiswa.user', 'anggotaSiswa.kelas.jurusan']);
+        $htmlStruk = view('pdf.struk-dispensasi-58mm', ['dispensasi' => $dispensasi])->render();
+
+        $this->assertStringContainsString('Rombongan (3 Siswa)', $htmlStruk);
+        $this->assertStringContainsString('ANGGOTA ROMBONGAN (3 SISWA):', $htmlStruk);
+        $this->assertStringContainsString($this->siswaPemohon->nama_lengkap, $htmlStruk);
+        $this->assertStringContainsString('(Ketua)', $htmlStruk);
+        $this->assertStringContainsString($this->siswaAnggota1->nama_lengkap, $htmlStruk);
+        $this->assertStringContainsString($this->siswaAnggota2->nama_lengkap, $htmlStruk);
+        $this->assertStringNotContainsString('Organisasi', $htmlStruk);
+
+        // 3. Cek export PDF thermal guru
+        $resPdf = $this->actingAs($userGuru)->get(route('guru.cetak-pdf', $dispensasi));
+        $resPdf->assertOk();
+        $resPdf->assertHeader('content-type', 'application/pdf');
+    }
 }
