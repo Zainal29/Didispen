@@ -42,6 +42,13 @@ class SettingsController extends Controller
 
     // Jadwal Jam Istirahat & Pembiasaan
     'jam_istirahat' => TimeHelper::getAllIstirahat(),
+
+    // Pengaturan Mode Satpam Express & Autentikasi
+    'satpam_auto_remember' => filter_var(Setting::get('satpam_auto_remember', '1'), FILTER_VALIDATE_BOOLEAN),
+    'guru_auto_remember'   => filter_var(Setting::get('guru_auto_remember', '1'), FILTER_VALIDATE_BOOLEAN),
+    'satpam_express_mode'  => filter_var(Setting::get('satpam_express_mode', '1'), FILTER_VALIDATE_BOOLEAN),
+    'satpam_beep_sound'    => filter_var(Setting::get('satpam_beep_sound', '1'), FILTER_VALIDATE_BOOLEAN),
+    'satpam_wake_lock'     => filter_var(Setting::get('satpam_wake_lock', '1'), FILTER_VALIDATE_BOOLEAN),
 ]);
     }
 
@@ -115,6 +122,13 @@ class SettingsController extends Controller
                     fn ($query) => $query->where('status_aktif', true)
                 ),
             ],
+
+            // Validasi Mode Satpam Express & Autentikasi
+            'satpam_auto_remember' => ['nullable'],
+            'guru_auto_remember'   => ['nullable'],
+            'satpam_express_mode'  => ['nullable'],
+            'satpam_beep_sound'    => ['nullable'],
+            'satpam_wake_lock'     => ['nullable'],
         ]);
 
         try {
@@ -134,6 +148,13 @@ class SettingsController extends Controller
                 'fallback_guru_piket_id',
                 $data['fallback_guru_piket_id'] ?? null
             );
+
+            // Simpan Pengaturan Mode Satpam Express & Autentikasi (Checkbox 1/0)
+            Setting::set('satpam_auto_remember', $request->has('satpam_auto_remember') ? '1' : '0');
+            Setting::set('guru_auto_remember', $request->has('guru_auto_remember') ? '1' : '0');
+            Setting::set('satpam_express_mode', $request->has('satpam_express_mode') ? '1' : '0');
+            Setting::set('satpam_beep_sound', $request->has('satpam_beep_sound') ? '1' : '0');
+            Setting::set('satpam_wake_lock', $request->has('satpam_wake_lock') ? '1' : '0');
             
             // 3. Simpan Jadwal Jam Pelajaran 5 Pola
             $jadwalPelajaran = [

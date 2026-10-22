@@ -36,7 +36,7 @@
             <div class="space-y-1">
                 <strong class="font-bold">Apa itu Fitur Super Admin (Dual-Role)?</strong>
                 <p class="text-xs text-purple-800 leading-relaxed">
-                    Siswa yang diberikan status <strong>Super Admin</strong> dapat mengakses <strong>Portal Siswa</strong> sekaligus <strong>Panel Administrator</strong> dengan akun yang sama. Selain itu, di formulir dispensasi siswa, akun Super Admin memiliki izin khusus untuk mengajukan dispensasi atas nama organisasi mana pun tanpa harus menjadi Ketua resmi.
+                    Siswa yang diberikan status <strong>Super Admin</strong> dapat mengakses <strong>Portal Siswa</strong> sekaligus <strong>Panel Administrator</strong> dengan akun yang sama. Selain itu, di formulir dispensasi siswa, akun Super Admin memiliki izin khusus untuk mengajukan dispensasi rombongan secara langsung.
                 </p>
             </div>
         </div>

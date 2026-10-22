@@ -109,9 +109,13 @@
                 <tr class="hover:bg-gray-50/60 transition-colors {{ $isTrashed ? 'bg-amber-50/30' : '' }}">
                     <td class="p-3.5 font-mono text-xs text-gray-600 font-semibold">
                         <div>{{ $d->nomor_surat }}</div>
-                        @if($d->isOrganisasi())
+                        @if($d->isRombongan())
                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 mt-1">
-                                <i class="fas fa-users text-[9px]"></i> {{ $d->nama_organisasi ?? 'Organisasi' }}
+                                <i class="fas fa-users text-[9px]"></i> Rombongan
+                                @php $tot = ($d->anggota_siswa_count ?? $d->anggotaSiswa?->count() ?? 0) + 1; @endphp
+                                @if($tot > 1)
+                                    <span class="bg-purple-200/80 text-purple-900 text-[9px] px-1 rounded-sm ml-0.5 font-mono">{{ $tot }} siswa</span>
+                                @endif
                             </span>
                         @else
                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200 mt-1">

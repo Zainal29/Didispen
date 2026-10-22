@@ -12,12 +12,9 @@
                 <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB</p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
-                @if($dispensasi->isOrganisasi())
+                @if($dispensasi->isRombongan())
                     <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1.5">
-                        <i class="fas fa-users"></i> {{ $dispensasi->nama_organisasi ?? 'Organisasi' }}
-                    </span>
-                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                        Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)
+                        <i class="fas fa-users"></i> Dispensasi Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)
                     </span>
                 @else
                     <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200 flex items-center gap-1.5">
@@ -281,6 +278,38 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Anggota Rombongan (Jika Tipe Rombongan) --}}
+            @if($dispensasi->isRombongan() && $dispensasi->anggotaSiswa->count() > 0)
+            <div class="md:col-span-2 bg-purple-50/50 p-4 rounded-xl border border-purple-200">
+                <div class="flex items-center justify-between mb-3 border-b border-purple-200 pb-2">
+                    <h4 class="font-bold text-purple-900 flex items-center gap-1.5 text-sm">
+                        <i class="fas fa-users text-purple-600"></i> Anggota Rombongan
+                    </h4>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-200 text-purple-800">
+                        {{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="p-2.5 rounded-lg bg-white border border-purple-100 flex items-center justify-between text-xs">
+                        <div class="min-w-0 pr-2">
+                            <p class="font-bold text-gray-900 truncate">1. {{ $dispensasi->siswa?->nama_lengkap }}</p>
+                            <p class="text-[11px] text-gray-500 font-mono">{{ $dispensasi->siswa?->kelas?->nama_kelas ?? '-' }} • NIS: {{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 shrink-0">Ketua</span>
+                    </div>
+                    @foreach($dispensasi->anggotaSiswa as $idx => $anggota)
+                    <div class="p-2.5 rounded-lg bg-white border border-purple-100 flex items-center justify-between text-xs">
+                        <div class="min-w-0 pr-2">
+                            <p class="font-bold text-gray-900 truncate">{{ $idx + 2 }}. {{ $anggota->nama_lengkap }}</p>
+                            <p class="text-[11px] text-gray-500 font-mono">{{ $anggota->kelas?->nama_kelas ?? '-' }} • NIS: {{ $anggota->user?->nis_nip ?? '-' }}</p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600 shrink-0">Anggota</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
         </div>
 
         {{-- TIMELINE STATUS (DIPERBAIKI: Menambahkan status "Menunggu Satpam") --}}

@@ -18,7 +18,8 @@ class DispensasiController extends Controller
 
         $arsipFilter = $request->get('arsip', 'aktif');
 
-        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru.user']);
+        $query = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru.user', 'anggotaSiswa'])
+            ->withCount('anggotaSiswa');
 
         if ($arsipFilter === 'arsip') {
             $query->onlyTrashed();
@@ -73,7 +74,7 @@ class DispensasiController extends Controller
         \App\Services\DispensasiService::autoExpireOverdueDispensasi();
 
         $dispensasi = Dispensasi::withTrashed()
-            ->with(['siswa.user', 'siswa.kelas.jurusan', 'guru.user'])
+            ->with(['siswa.user', 'siswa.kelas.jurusan', 'guru.user', 'anggotaSiswa.kelas.jurusan', 'anggotaSiswa.user'])
             ->findOrFail($id);
 
         return view('admin.dispensasi.show', compact('dispensasi'));

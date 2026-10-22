@@ -154,6 +154,111 @@
     </div>
 </div>
 
+            {{-- ========================================================= --}}
+            {{-- 4. MODE POS GERBANG (SATPAM EXPRESS) & AUTENTIKASI       --}}
+            {{-- ========================================================= --}}
+            <div class="p-5 border-t border-gray-100 bg-white">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-base font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-shield-alt text-rose-600 mr-2"></i>
+                        Mode Pos Gerbang (Satpam Express) & Autentikasi
+                    </h3>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <i class="fas fa-bolt text-rose-500 mr-1"></i> Express Ready
+                    </span>
+                </div>
+                <p class="text-sm text-gray-500 mb-5">
+                    Konfigurasi kemudahan operasional satpam di pos gerbang dan kenyamanan login bapak/ibu guru.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- 1. Login Permanen Satpam --}}
+                    <label class="relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all {{ $satpam_auto_remember ? 'bg-rose-50/40 border-rose-200 shadow-xs' : 'bg-gray-50 border-gray-200 hover:border-gray-300' }}">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="satpam_auto_remember" value="1" {{ $satpam_auto_remember ? 'checked' : '' }}
+                                   class="w-4 h-4 text-rose-600 border-gray-300 rounded focus:ring-rose-500">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <span class="font-bold text-gray-900 block flex items-center gap-1.5">
+                                <i class="fas fa-key text-rose-600 text-xs"></i>
+                                Login Permanen Satpam (Auto-Remember)
+                            </span>
+                            <span class="text-xs text-gray-500 leading-relaxed block mt-1">
+                                Akun satpam di HP pos gerbang otomatis diingat permanen. Tidak akan pernah logout sendiri meski HP dimatikan atau browser ditutup.
+                            </span>
+                        </div>
+                    </label>
+
+                    {{-- 2. Simpan Sesi / Ingat Akun Guru --}}
+                    <label class="relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all {{ $guru_auto_remember ? 'bg-blue-50/40 border-blue-200 shadow-xs' : 'bg-gray-50 border-gray-200 hover:border-gray-300' }}">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="guru_auto_remember" value="1" {{ $guru_auto_remember ? 'checked' : '' }}
+                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <span class="font-bold text-gray-900 block flex items-center gap-1.5">
+                                <i class="fas fa-user-check text-blue-600 text-xs"></i>
+                                Simpan Akun / Sesi Guru (Auto-Remember)
+                            </span>
+                            <span class="text-xs text-gray-500 leading-relaxed block mt-1">
+                                Akun guru otomatis disetel ingat login (Remember Me) saat masuk agar tidak sering ter-logout saat membuka web di kelas/ruang piket.
+                            </span>
+                        </div>
+                    </label>
+
+                    {{-- 3. Mode Satpam Express (Auto-Confirm) --}}
+                    <label class="relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all {{ $satpam_express_mode ? 'bg-emerald-50/40 border-emerald-200 shadow-xs' : 'bg-gray-50 border-gray-200 hover:border-gray-300' }}">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="satpam_express_mode" value="1" {{ $satpam_express_mode ? 'checked' : '' }}
+                                   class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <span class="font-bold text-gray-900 block flex items-center gap-1.5">
+                                <i class="fas fa-bolt text-emerald-600 text-xs"></i>
+                                Default Mode Cepat Scanner (Auto-Confirm)
+                            </span>
+                            <span class="text-xs text-gray-500 leading-relaxed block mt-1">
+                                Scanner otomatis menyetujui siswa keluar/kembali tanpa satpam harus memencet layar. Cocok untuk antrean gerbang yang ramai.
+                            </span>
+                        </div>
+                    </label>
+
+                    {{-- 4. Suara Beep Scanner --}}
+                    <label class="relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all {{ $satpam_beep_sound ? 'bg-indigo-50/40 border-indigo-200 shadow-xs' : 'bg-gray-50 border-gray-200 hover:border-gray-300' }}">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="satpam_beep_sound" value="1" {{ $satpam_beep_sound ? 'checked' : '' }}
+                                   class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <span class="font-bold text-gray-900 block flex items-center gap-1.5">
+                                <i class="fas fa-volume-up text-indigo-600 text-xs"></i>
+                                Audio Beep Scanner Pos
+                            </span>
+                            <span class="text-xs text-gray-500 leading-relaxed block mt-1">
+                                Scanner membunyikan nada BEEP sukses secara instan melalui Web Audio API setiap kali QR code siswa berhasil terbaca.
+                            </span>
+                        </div>
+                    </label>
+
+                    {{-- 5. Anti Layar Mati (Screen Wake Lock) --}}
+                    <label class="relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all md:col-span-2 {{ $satpam_wake_lock ? 'bg-amber-50/40 border-amber-200 shadow-xs' : 'bg-gray-50 border-gray-200 hover:border-gray-300' }}">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="satpam_wake_lock" value="1" {{ $satpam_wake_lock ? 'checked' : '' }}
+                                   class="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <span class="font-bold text-gray-900 block flex items-center gap-1.5">
+                                <i class="fas fa-sun text-amber-600 text-xs"></i>
+                                Anti Layar Mati Scanner (Screen Wake Lock)
+                            </span>
+                            <span class="text-xs text-gray-500 leading-relaxed block mt-1">
+                                Layar scanner pos tidak akan redup atau terkunci otomatis saat ditaruh di meja/stand pos gerbang. Satpam juga dapat mematikan toggle ini di halaman scanner untuk menghemat baterai saat HP tidak dicas.
+                            </span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
 
 
             {{-- ========================================== --}}
