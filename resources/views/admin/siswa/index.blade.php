@@ -4,51 +4,51 @@
 @section('page-title', 'Manajemen Data Siswa')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-5">
+    
     {{-- HEADER CARD --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 overflow-hidden">
         <div class="p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h3 class="text-xl font-bold text-gray-800 tracking-tight">Daftar Siswa</h3>
-                <p class="text-sm text-gray-500 mt-1">Kelola data siswa, kelas, dan jurusan dari SiPintu Gateway.</p>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="w-1.5 h-3.5 bg-blue-600 rounded-full"></span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Master Data</span>
+                </div>
+                <h3 class="text-xl font-extrabold text-slate-900 tracking-tight">Daftar Siswa</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Kelola data siswa, rombel kelas, dan integrasi SiPintu Gateway.</p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
                 {{-- Tombol Sync SiPintu --}}
                 <form action="{{ route('admin.sipintu.sync-siswa') }}" method="POST" class="flex items-center gap-2 w-full sm:w-auto"
-                      onsubmit="this.querySelectorAll('button').forEach(b => { b.disabled=true; b.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Memproses...'; });">
+                      onsubmit="this.querySelectorAll('button').forEach(b => { b.disabled=true; b.innerHTML='<i class=\'ti ti-loader-2 animate-spin\'></i> Sinkronisasi...'; });">
                     @csrf
-                    <button type="submit" class="flex-1 sm:flex-none min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
-                        <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Sinkronisasi</span><span class="sm:hidden">Sync</span>
+                    <button type="submit" class="flex-1 sm:flex-none min-h-[42px] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="ti ti-refresh text-base"></i>
+                        <span>Sinkron SiPintu</span>
                     </button>
                 </form>
-
-                {{-- Tombol Tambah --}}
-                <!-- <button onclick="openModal()" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
-                    <i class="fas fa-plus"></i> Tambah Siswa
-                </button> -->
             </div>
         </div>
 
         @include('components.alert')
 
         {{-- FILTER BAR --}}
-        <div class="px-5 sm:px-6 py-4 bg-gray-50/80 border-t border-b border-gray-100">
-            <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <div class="px-5 sm:px-6 py-4 bg-slate-50/50 border-t border-b border-slate-100">
+            <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-end">
                 <div class="md:col-span-4">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Cari Siswa</label>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cari Siswa</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-search text-sm"></i></span>
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="ti ti-search text-base"></i></span>
                         <input type="text" name="search" id="searchInput" value="{{ request('search') }}" placeholder="Nama, NIS, atau email..."
-                               class="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow">
+                               class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                     </div>
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Filter Kelas</label>
-                    <select name="kelas_id" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
-                        <option value="">-- Semua Kelas --</option>
-                        {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Menggunakan $kelasList sesuai Controller --}}
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Kelas</label>
+                    <select name="kelas_id" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
+                        <option value="">Semua Kelas</option>
                         @foreach($kelasList as $k)
                             <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
                         @endforeach
@@ -56,8 +56,8 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Hak Akses</label>
-                    <select name="role_filter" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Hak Akses</label>
+                    <select name="role_filter" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
                         <option value="">Semua Siswa</option>
                         <option value="superadmin" {{ request('role_filter') == 'superadmin' ? 'selected' : '' }}>Hanya Super Admin</option>
                         <option value="regular" {{ request('role_filter') == 'regular' ? 'selected' : '' }}>Siswa Biasa</option>
@@ -65,28 +65,20 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Urutkan</label>
-                    <select name="sort" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Urutan</label>
+                    <select name="sort" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
                         @foreach($sortable as $key => $label)
                             <option value="{{ $key }}" {{ $sort == $key ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="md:col-span-1.5">
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Arah</label>
-                    <select name="dir" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer">
-                        <option value="asc" {{ $dir == 'asc' ? 'selected' : '' }}>Naik</option>
-                        <option value="desc" {{ $dir == 'desc' ? 'selected' : '' }}>Turun</option>
-                    </select>
-                </div>
-
-                <div class="md:col-span-1.5 flex gap-2">
-                    <button type="submit" class="flex-1 min-h-[44px] px-3 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors flex items-center justify-center gap-1.5">
-                        <i class="fas fa-filter"></i> Cari
+                <div class="md:col-span-2 flex gap-1.5">
+                    <button type="submit" class="flex-1 min-h-[38px] px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i class="ti ti-filter text-sm"></i> Cari
                     </button>
-                    <a href="{{ route('admin.siswa.index') }}" class="min-h-[44px] min-w-[44px] px-3 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors flex items-center justify-center gap-1.5" title="Reset Filter">
-                        <i class="fas fa-undo"></i>
+                    <a href="{{ route('admin.siswa.index') }}" class="min-h-[38px] min-w-[38px] px-2.5 py-2 bg-white border border-slate-200 text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-50 text-xs font-semibold transition-colors flex items-center justify-center" title="Reset Filter">
+                        <i class="ti ti-rotate-2 text-base"></i>
                     </a>
                 </div>
             </form>
@@ -95,96 +87,94 @@
         {{-- TABLE AREA --}}
         <div class="overflow-x-auto min-w-0 w-full">
             <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                <thead class="bg-slate-50/80 text-[11px] uppercase text-slate-400 font-bold tracking-wider border-b border-slate-100">
                     <tr>
-                        <th class="p-4 border-b border-gray-100 min-w-[120px]">
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'nis_nip', 'dir' => ($sort == 'nis_nip' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-indigo-600 transition-colors flex items-center gap-1">
-                                NIS / NISN @if($sort == 'nis_nip')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }}"></i>@endif
+                        <th class="p-3.5 pl-5 min-w-[120px]">
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'nis_nip', 'dir' => ($sort == 'nis_nip' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-blue-600 transition-colors inline-flex items-center gap-1">
+                                NIS / NISN @if($sort == 'nis_nip')<i class="ti ti-arrow-narrow-{{ $dir == 'asc' ? 'up' : 'down' }} text-blue-600"></i>@endif
                             </a>
                         </th>
-                        <th class="p-4 border-b border-gray-100 min-w-[180px]">
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'nama_lengkap', 'dir' => ($sort == 'nama_lengkap' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-indigo-600 transition-colors flex items-center gap-1">
-                                Nama Lengkap @if($sort == 'nama_lengkap')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }}"></i>@endif
+                        <th class="p-3.5 min-w-[180px]">
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'nama_lengkap', 'dir' => ($sort == 'nama_lengkap' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-blue-600 transition-colors inline-flex items-center gap-1">
+                                Nama Lengkap @if($sort == 'nama_lengkap')<i class="ti ti-arrow-narrow-{{ $dir == 'asc' ? 'up' : 'down' }} text-blue-600"></i>@endif
                             </a>
                         </th>
-                        <th class="p-4 border-b border-gray-100 min-w-[100px]">Kelas</th>
-                        <th class="p-4 border-b border-gray-100 min-w-[140px]">Jurusan</th>
-                        <th class="p-4 border-b border-gray-100 min-w-[180px]">Email</th>
-                        <th class="p-4 border-b border-gray-100 min-w-[100px]">
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'dir' => ($sort == 'created_at' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-indigo-600 transition-colors flex items-center gap-1">
-                                Terdaftar @if($sort == 'created_at')<i class="fas fa-sort-{{ $dir == 'asc' ? 'up' : 'down' }}"></i>@endif
+                        <th class="p-3.5 min-w-[100px]">Kelas</th>
+                        <th class="p-3.5 min-w-[140px]">Jurusan</th>
+                        <th class="p-3.5 min-w-[180px]">Email</th>
+                        <th class="p-3.5 min-w-[100px]">
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'dir' => ($sort == 'created_at' && $dir == 'asc' ? 'desc' : 'asc')]) }}" class="hover:text-blue-600 transition-colors inline-flex items-center gap-1">
+                                Terdaftar @if($sort == 'created_at')<i class="ti ti-arrow-narrow-{{ $dir == 'asc' ? 'up' : 'down' }} text-blue-600"></i>@endif
                             </a>
                         </th>
-                        <th class="p-4 border-b border-gray-100 text-center min-w-[80px]">Aksi</th>
+                        <th class="p-3.5 pr-5 text-center min-w-[100px]">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-700">
                     @forelse($siswas as $s)
-                    <tr class="hover:bg-indigo-50/40 transition-colors group">
-                        <td class="p-4 font-mono text-xs text-gray-500 align-top">{{ $s->user?->nis_nip ?? '-' }}</td>
+                    <tr class="hover:bg-slate-50/70 transition-colors group">
+                        <td class="p-3.5 pl-5 font-mono text-xs text-slate-500 font-bold align-middle">{{ $s->user?->nis_nip ?? '-' }}</td>
 
-                        <td class="p-4 align-top">
+                        <td class="p-3.5 align-middle">
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="font-semibold text-gray-900">{{ $s->nama_lengkap }}</span>
+                                <span class="font-bold text-slate-900">{{ $s->nama_lengkap }}</span>
                                 @if($s->user?->isSuperAdmin())
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs" title="Super Admin Sistem">
-                                        <i class="fas fa-shield-halved text-[9px] text-purple-600"></i> Super Admin
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200" title="Super Admin Sistem">
+                                        <i class="ti ti-shield-check text-xs text-blue-600"></i> Super Admin
                                     </span>
                                 @endif
                             </div>
                         </td>
 
-                        <td class="p-4 align-top">
+                        <td class="p-3.5 align-middle whitespace-nowrap">
                             @if($s->kelas)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
                                     {{ $s->kelas->nama_kelas }}
                                 </span>
                             @else
-                                <span class="text-gray-400 italic text-xs">Belum ada</span>
+                                <span class="text-slate-400 italic text-xs">Belum ada</span>
                             @endif
                         </td>
 
-                        <td class="p-4 align-top text-xs text-gray-600">
+                        <td class="p-3.5 align-middle text-xs text-slate-600 whitespace-nowrap">
                             {{ $s->jurusan?->nama_jurusan ?? $s->kelas?->jurusan?->nama_jurusan ?? '-' }}
                         </td>
 
-                        <td class="p-4 align-top text-xs text-gray-500 font-mono break-all">{{ $s->user?->email ?? '-' }}</td>
-                        <td class="p-4 align-top text-xs text-gray-500">{{ $s->created_at?->format('d/m/Y') ?? '-' }}</td>
+                        <td class="p-3.5 align-middle text-xs text-slate-500 font-mono break-all">{{ $s->user?->email ?? '-' }}</td>
+                        <td class="p-3.5 align-middle text-xs text-slate-500 whitespace-nowrap">{{ $s->created_at?->format('d/m/Y') ?? '-' }}</td>
 
-                        <td class="p-4 text-center align-middle whitespace-nowrap">
-                            <div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <td class="p-3.5 pr-5 text-center align-middle whitespace-nowrap">
+                            <div class="flex items-center justify-center gap-1.5">
                                 @if($s->user?->isSuperAdmin())
                                     <button type="button"
                                             onclick="toggleSuperadmin({{ $s->id }}, '{{ addslashes($s->nama_lengkap) }}', true)"
-                                            class="w-9 h-9 inline-flex items-center justify-center text-purple-700 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors"
+                                            class="w-8 h-8 inline-flex items-center justify-center text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all shadow-2xs"
                                             title="Cabut Status Super Admin">
-                                        <i class="fas fa-shield-alt text-sm"></i>
+                                        <i class="ti ti-shield-x text-base"></i>
                                     </button>
                                 @else
                                     <button type="button"
                                             onclick="toggleSuperadmin({{ $s->id }}, '{{ addslashes($s->nama_lengkap) }}', false)"
-                                            class="w-9 h-9 inline-flex items-center justify-center text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                            class="w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all shadow-2xs"
                                             title="Jadikan Super Admin">
-                                        <i class="far fa-shield text-sm"></i>
+                                        <i class="ti ti-shield-plus text-base"></i>
                                     </button>
                                 @endif
-                                <button onclick="editItem({{ $s->id }})" class="w-9 h-9 inline-flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat Data">
-                                    <i class="fas fa-eye"></i>
+                                <button onclick="editItem({{ $s->id }})" class="w-8 h-8 inline-flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white bg-blue-50 rounded-xl transition-all shadow-2xs" title="Lihat Data">
+                                    <i class="ti ti-eye text-base"></i>
                                 </button>
-                                <button onclick="deleteItem({{ $s->id }}, '{{ addslashes($s->nama_lengkap) }}')" class="w-9 h-9 inline-flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Data">
-                                    <i class="fas fa-trash-alt"></i>
+                                <button onclick="deleteItem({{ $s->id }}, '{{ addslashes($s->nama_lengkap) }}')" class="w-8 h-8 inline-flex items-center justify-center text-rose-600 hover:bg-rose-600 hover:text-white bg-rose-50 rounded-xl transition-all shadow-2xs" title="Hapus Data">
+                                    <i class="ti ti-trash text-base"></i>
                                 </button>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="p-10 text-center">
-                            <div class="flex flex-col items-center justify-center text-gray-400">
-                                <i class="fas fa-user-slash text-4xl mb-3 opacity-50"></i>
-                                <p class="text-sm font-medium">Belum ada data siswa.</p>
-                                <p class="text-xs mt-1">Lakukan sinkronisasi SiPintu atau tambah manual.</p>
-                            </div>
+                        <td colspan="7" class="p-12 text-center text-slate-400">
+                            <i class="ti ti-user-x text-4xl mb-2 text-slate-300 block"></i>
+                            <p class="text-xs font-semibold">Belum ada data siswa yang sesuai.</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Lakukan sinkronisasi SiPintu untuk memuat data terbaru.</p>
                         </td>
                     </tr>
                     @endforelse
@@ -193,119 +183,103 @@
         </div>
 
         @if($siswas->hasPages())
-        <div class="p-4 border-t border-gray-100 bg-gray-50/50">
+        <div class="p-4 border-t border-slate-100 bg-slate-50/50">
             {{ $siswas->links() }}
         </div>
         @endif
     </div>
 </div>
 
-{{-- MODAL FORM SISWA --}}
+{{-- MODAL DETAIL / FORM SISWA --}}
 <div id="formModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <!-- Backdrop overlay -->
-    <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+    <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
 
-    <!-- Centering wrapper -->
     <div class="relative min-h-screen flex items-center justify-center p-4">
-        <!-- Modal Card -->
-        <div class="relative z-10 w-full max-w-2xl bg-white rounded-xl text-left shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col my-8">
+        <div class="relative z-10 w-full max-w-2xl bg-white rounded-3xl text-left shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col my-8 border border-slate-200/80">
             <form id="siswaForm" method="POST" action="{{ route('admin.siswa.store') }}" class="flex flex-col min-h-0 flex-1">
                 @csrf
                 <input type="hidden" id="siswaId" name="siswa_id">
                 <input type="hidden" id="formMethod" name="_method" value="POST">
 
-                <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 flex justify-between items-center flex-shrink-0">
-                    <h3 id="modalTitle" class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fas fa-user-plus"></i> Tambah Siswa Baru
+                <div class="bg-gradient-to-r from-slate-900 to-blue-950 px-6 py-4 flex justify-between items-center shrink-0 border-b border-slate-800 text-white">
+                    <h3 id="modalTitle" class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="ti ti-user text-lg text-blue-400"></i> Detail Data Siswa
                     </h3>
-                    <button type="button" onclick="closeModal()" class="w-10 h-10 flex items-center justify-center text-indigo-100 hover:text-white transition-colors">
-                        <i class="fas fa-times text-lg"></i>
+                    <button type="button" onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                        <i class="ti ti-x text-lg"></i>
                     </button>
                 </div>
 
-                <div class="p-6 space-y-5 overflow-y-auto flex-1">
+                <div class="p-6 space-y-4 overflow-y-auto flex-1">
                     {{-- Info Box SiPintu --}}
-                    <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg text-xs text-blue-800 leading-relaxed flex gap-3">
-                        <i class="fas fa-info-circle mt-0.5 text-blue-500 text-sm"></i>
+                    <div class="p-3.5 bg-blue-50/80 border border-blue-200/80 rounded-2xl text-xs text-blue-800 leading-relaxed flex items-start gap-3">
+                        <i class="ti ti-info-circle text-lg text-blue-600 shrink-0 mt-0.5"></i>
                         <div>
-                            <strong class="block mb-1">Catatan Sinkronisasi SiPintu:</strong>
-                            Field <em>Alamat</em> dan <em>Password</em> dikelola otomatis oleh sistem SiPintu/Sijuna. Field <em>No. Telepon</em> dan <em>Tanggal Lahir</em> dapat diisi langsung oleh siswa melalui halaman Profil mereka.
+                            <strong class="font-bold">Sinkronisasi Data Otomatis:</strong>
+                            Data akun, password, dan rombel dikelola terpusat dari SiPintu Gateway. Field kontak dan data pribadi diperbarui mandiri oleh siswa.
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="sm:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
-                            <input type="text" id="nama_lengkap" name="nama_lengkap" required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                   placeholder="Contoh: Ahmad Fauzi">
-                            <span class="text-red-600 text-xs mt-1 block" id="error_nama_lengkap"></span>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap</label>
+                            <input type="text" id="nama_lengkap" name="nama_lengkap" required readonly
+                                   class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none">
+                            <span class="text-rose-600 text-[11px] mt-1 block" id="error_nama_lengkap"></span>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">NIS / NISN <span class="text-red-500">*</span></label>
-                            <input type="text" id="nis_nip" name="nis_nip" required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono"
-                                   placeholder="1234567890">
-                            <span class="text-red-600 text-xs mt-1 block" id="error_nis_nip"></span>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">NIS / NISN</label>
+                            <input type="text" id="nis_nip" name="nis_nip" required readonly
+                                   class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3.5 py-2 text-xs font-mono text-slate-800 outline-none">
+                            <span class="text-rose-600 text-[11px] mt-1 block" id="error_nis_nip"></span>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Sekolah <span class="text-red-500">*</span></label>
-                            <input type="email" id="email" name="email" required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                   placeholder="nis@smkn1bangsri.sch.id">
-                            <span class="text-red-600 text-xs mt-1 block" id="error_email"></span>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Email Akun</label>
+                            <input type="email" id="email" name="email" required readonly
+                                   class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3.5 py-2 text-xs font-mono text-slate-800 outline-none">
+                            <span class="text-rose-600 text-[11px] mt-1 block" id="error_email"></span>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jurusan</label>
-                            <select id="jurusan_id" name="jurusan_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer bg-white">
-                                <option value="">-- Pilih Jurusan --</option>
-                                {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Menggunakan $jurusanList sesuai Controller --}}
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Jurusan</label>
+                            <select id="jurusan_id" name="jurusan_id" disabled class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3.5 py-2 text-xs text-slate-700 outline-none">
+                                <option value="">-- Jurusan --</option>
                                 @foreach($jurusanList as $j)
                                     <option value="{{ $j->id }}">{{ $j->nama_jurusan }}</option>
                                 @endforeach
                             </select>
-                            <span class="text-red-600 text-xs mt-1 block" id="error_jurusan_id"></span>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kelas</label>
-                            <select id="kelas_id" name="kelas_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer bg-white">
-                                <option value="">-- Pilih Kelas --</option>
-                                {{-- <i class="fas fa-check-circle"></i> DIPERBAIKI: Menggunakan $kelasList (bukan $kelass) sesuai Controller --}}
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Kelas</label>
+                            <select id="kelas_id" name="kelas_id" disabled class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3.5 py-2 text-xs text-slate-700 outline-none">
+                                <option value="">-- Kelas --</option>
                                 @foreach($kelasList as $k)
-                                    <option value="{{ $k->id }}">{{ $k->nama_kelas }} ({{ $k->jurusan?->kode_jurusan ?? '-' }})</option>
+                                    <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
                                 @endforeach
                             </select>
-                            <span class="text-red-600 text-xs mt-1 block" id="error_kelas_id"></span>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Lahir</label>
-                            <input type="date" id="tanggal_lahir" name="tanggal_lahir"
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
-                            <span class="text-red-600 text-xs mt-1 block" id="error_tanggal_lahir"></span>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Lahir</label>
+                            <input type="date" id="tanggal_lahir" name="tanggal_lahir" readonly
+                                   class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">No. Telepon / WA</label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">No. WhatsApp</label>
                             <input type="text" id="no_telepon_display" readonly
-                                   class="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-base sm:text-sm text-gray-700 font-mono outline-none cursor-not-allowed"
-                                   placeholder="Belum diisi siswa">
-                            <p class="text-gray-400 text-[11px] mt-1">Diisi siswa melalui halaman Profil (read-only).</p>
+                                   class="w-full border border-slate-200 bg-slate-50 rounded-xl px-3.5 py-2 text-xs text-slate-800 font-mono outline-none">
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t border-gray-100 flex-shrink-0">
-                    <button type="button" onclick="closeModal()" class="min-h-[44px] px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
-                        Batal
+                <div class="bg-slate-50/80 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-100 shrink-0">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold hover:bg-slate-100 transition-colors">
+                        Tutup
                     </button>
-                    <!-- <button type="submit" form="siswaForm" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm transition-all flex items-center gap-2">
-                        <i class="fas fa-save"></i> Simpan Data
-                    </button> -->
                 </div>
             </form>
         </div>
@@ -314,109 +288,56 @@
 
 @push('scripts')
 <script>
-// ==========================================
-// 1. Modal Functions
-// ==========================================
-function openModal() {
-    document.getElementById('siswaForm').reset();
-    document.getElementById('formMethod').value = 'POST';
-    document.getElementById('siswaId').value = '';
-    // document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-plus"></i> Tambah Siswa Baru';
-    document.getElementById('siswaForm').action = "{{ route('admin.siswa.store') }}";
-    clearErrors();
-    document.getElementById('formModal').classList.remove('hidden');
+function editItem(siswaId) {
+    fetch(`/admin/siswa/${siswaId}/edit`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Gagal memuat data');
+        return res.json();
+    })
+    .then(data => {
+        document.getElementById('siswaForm').reset();
+        document.getElementById('siswaId').value = data.id;
+        document.getElementById('formMethod').value = 'PATCH';
+        document.getElementById('modalTitle').innerHTML = '<i class="ti ti-user text-blue-400"></i> Detail Siswa: ' + (data.nama_lengkap || '');
+
+        document.getElementById('nama_lengkap').value = data.nama_lengkap || '';
+        document.getElementById('nis_nip').value = data.user?.nis_nip || '';
+        document.getElementById('email').value = data.user?.email || '';
+        document.getElementById('tanggal_lahir').value = data.tanggal_lahir || '';
+        document.getElementById('no_telepon_display').value = data.no_telepon || 'Belum diisi';
+        document.getElementById('jurusan_id').value = data.jurusan_id || '';
+        document.getElementById('kelas_id').value = data.kelas_id || '';
+
+        document.getElementById('formModal').classList.remove('hidden');
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat data siswa.' });
+    });
 }
 
 function closeModal() {
     document.getElementById('formModal').classList.add('hidden');
 }
 
-// Tutup modal dengan tombol ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeModal();
 });
 
-// function editItem(siswaId) {
-//     fetch(`/admin/siswa/${siswaId}/edit`)
-//         .then(res => res.json())
-//         .then(data => {
-//             document.getElementById('siswaForm').reset();
-//             document.getElementById('siswaId').value = siswaId;
-//             document.getElementById('formMethod').value = 'PATCH';
-//             document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-edit"></i> Edit Data Siswa';
-
-//             // Mengisi field form berdasarkan data JSON
-//             document.getElementById('nama_lengkap').value = data.nama_lengkap || '';
-//             document.getElementById('nis_nip').value = data.user?.nis_nip || '';
-//             document.getElementById('email').value = data.user?.email || '';
-//             document.getElementById('tanggal_lahir').value = data.tanggal_lahir ? data.tanggal_lahir.substring(0, 10) : '';
-//             document.getElementById('no_telepon_display').value = data.no_telepon || '';
-//             document.getElementById('jurusan_id').value = data.jurusan_id || '';
-//             document.getElementById('kelas_id').value = data.kelas_id || '';
-
-//             document.getElementById('siswaForm').action = `/admin/siswa/${siswaId}`;
-//             clearErrors();
-//             document.getElementById('formModal').classList.remove('hidden');
-//         })
-//         .catch(err => {
-//             console.error('Error:', err);
-//             Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat data siswa.' });
-//         });
-// }
-function editItem(siswaId) {
-    // Tambahkan loading state (opsional)
-    // Swal.fire({ title: 'Memuat data...', didOpen: () => { Swal.showLoading() } });
-
-    fetch(`/admin/siswa/${siswaId}/edit`, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest', // ✅ PENTING: Memberi tahu Laravel ini adalah AJAX
-            'Accept': 'application/json'          // ✅ PENTING: Memaksa Laravel mengirim JSON
-        }
-    })
-    .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok');
-        return res.json();
-        })
-    .then(data => {
-        Swal.close(); // Tutup loading
-
-        document.getElementById('siswaForm').reset();
-        document.getElementById('siswaId').value = data.id; // Gunakan data.id
-        document.getElementById('formMethod').value = 'PATCH';
-        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-eye"></i> lihat Data Siswa';
-
-        // Mengisi field form berdasarkan data JSON
-        document.getElementById('nama_lengkap').value = data.nama_lengkap || '';
-        document.getElementById('nis_nip').value = data.user?.nis_nip || '';
-        document.getElementById('email').value = data.user?.email || '';
-        document.getElementById('tanggal_lahir').value = data.tanggal_lahir || ''; // Format sudah Y-m-d dari controller
-        document.getElementById('no_telepon_display').value = data.no_telepon || '';
-        document.getElementById('jurusan_id').value = data.jurusan_id || '';
-        document.getElementById('kelas_id').value = data.kelas_id || '';
-
-        document.getElementById('siswaForm').action = `/admin/siswa/${data.id}`;
-
-        // Panggil fungsi clearErrors Anda jika ada
-        if (typeof clearErrors === 'function') clearErrors();
-
-        document.getElementById('formModal').classList.remove('hidden');
-    })
-    .catch(err => {
-        Swal.close();
-        console.error('Error:', err);
-        Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat data siswa. Pastikan ID valid.' });
-    });
-}
-
 function deleteItem(id, name) {
     Swal.fire({
         title: 'Konfirmasi Hapus',
-        html: `Apakah Anda yakin ingin menghapus data siswa <b>"${name}"</b>?<br><span class="text-xs text-gray-500 mt-2 block">Tindakan ini juga akan menghapus akun login siswa terkait.</span>`,
+        html: `Apakah Anda yakin ingin menghapus data siswa <b>"${name}"</b>?<br><span class="text-xs text-slate-500 mt-2 block">Tindakan ini juga akan menghapus akun login siswa terkait.</span>`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Ya, Hapus Permanen',
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="ti ti-trash mr-1"></i> Ya, Hapus',
         cancelButtonText: 'Batal',
         reverseButtons: true
     }).then((result) => {
@@ -431,66 +352,13 @@ function deleteItem(id, name) {
     });
 }
 
-function clearErrors() {
-    document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = '');
-}
-
-// Handle Form Submit via Fetch untuk validasi AJAX
-document.getElementById('siswaForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    clearErrors();
-
-    const formData = new FormData(this);
-    const url = this.action;
-    const method = document.getElementById('formMethod').value;
-
-    fetch(url, {
-        method: method === 'PATCH' ? 'POST' : 'POST', // Laravel override method handled by hidden input
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('[name="_token"]')?.value,
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    })
-    .then(res => {
-        if (!res.ok) {
-            if (res.status === 422) {
-                return res.json().then(data => {
-                    Object.keys(data.errors).forEach(key => {
-                        const errorEl = document.getElementById(`error_${key}`);
-                        if (errorEl) errorEl.textContent = data.errors[key][0];
-                    });
-                    throw new Error('Validation error');
-                });
-            }
-            throw new Error('Request failed');
-        }
-        return res.text();
-    })
-    .then(() => {
-        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data siswa berhasil disimpan.', timer: 1500, showConfirmButton: false })
-            .then(() => window.location.reload());
-    })
-    .catch(err => {
-        if (err.message !== 'Validation error') {
-            console.error('Error:', err);
-            Swal.fire({ icon: 'error', title: 'Terjadi Kesalahan', text: 'Silakan coba lagi.' });
-        }
-    });
-});
-
-// Klik backdrop untuk menutup modal
-document.getElementById('formModal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-});
-
 function toggleSuperadmin(siswaId, namaSiswa, isSuperAdmin) {
     const actionText = isSuperAdmin ? 'Cabut Status Super Admin' : 'Jadikan Super Admin';
     const confirmText = isSuperAdmin ? 'Ya, Cabut Akses' : 'Ya, Jadikan Super Admin';
-    const confirmColor = isSuperAdmin ? '#dc2626' : '#7c3aed';
+    const confirmColor = isSuperAdmin ? '#e11d48' : '#2563eb';
     const descText = isSuperAdmin
-        ? `Apakah Anda yakin ingin mencabut hak akses Super Admin untuk siswa <b>"${namaSiswa}"</b>?<br><span class="text-xs text-gray-500 mt-2 block">Siswa ini akan kembali menjadi siswa biasa tanpa akses ke panel admin.</span>`
-        : `Apakah Anda yakin ingin mengangkat siswa <b>"${namaSiswa}"</b> sebagai <b>Super Admin</b>?<br><span class="text-xs text-purple-700 mt-2 block">Siswa ini akan memiliki hak Dual-Role: dapat login ke portal siswa sekaligus panel admin, serta dapat membuat pengajuan dispensasi rombongan ekstra tanpa batas ketua.</span>`;
+        ? `Apakah Anda yakin ingin mencabut hak akses Super Admin untuk siswa <b>"${namaSiswa}"</b>?`
+        : `Apakah Anda yakin ingin mengangkat siswa <b>"${namaSiswa}"</b> sebagai <b>Super Admin</b>? Siswa akan memiliki hak Dual-Role di portal siswa dan admin.`;
 
     Swal.fire({
         title: actionText + '?',
@@ -498,7 +366,7 @@ function toggleSuperadmin(siswaId, namaSiswa, isSuperAdmin) {
         icon: isSuperAdmin ? 'warning' : 'question',
         showCancelButton: true,
         confirmButtonColor: confirmColor,
-        cancelButtonColor: '#6b7280',
+        cancelButtonColor: '#64748b',
         confirmButtonText: confirmText,
         cancelButtonText: 'Batal',
         reverseButtons: true
