@@ -15,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Tabler Icons Webfont (Modern, Stroke-based, Konsisten dengan Siswa) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
@@ -152,6 +153,18 @@
                 </a>
                 <a href="{{ route('guru.laporan.index') }}" class="{{ request()->routeIs('guru.laporan.*') ? $navOn : $navOff }}">
                     <i class="ti ti-chart-bar text-lg w-5 mr-3"></i> Laporan
+                </a>
+                @php
+                    $pendingLaporanSatpamGuru = \App\Models\LaporanSatpam::where('status', 'menunggu')->count();
+                @endphp
+                <a href="{{ route('guru.laporan-satpam.index') }}" class="{{ request()->routeIs('guru.laporan-satpam.*') ? $navOn : $navOff }}">
+                    <i class="ti ti-shield-exclamation text-lg w-5 mr-3"></i>
+                    <span class="flex-1">Laporan Satpam</span>
+                    @if($pendingLaporanSatpamGuru > 0)
+                        <span class="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-bold leading-none">
+                            {{ $pendingLaporanSatpamGuru > 99 ? '99+' : $pendingLaporanSatpamGuru }}
+                        </span>
+                    @endif
                 </a>
                 <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
                     <i class="ti ti-book-2 text-lg w-5 mr-3"></i> Panduan
@@ -379,6 +392,18 @@
                    class="flex items-center min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                     <i class="ti ti-chart-bar text-lg w-5 mr-3 text-slate-400"></i>
                     <span>Laporan</span>
+                </a>
+
+                {{-- Laporan Satpam --}}
+                <a href="{{ route('guru.laporan-satpam.index') }}"
+                   class="flex items-center min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                    <i class="ti ti-shield-exclamation text-lg w-5 mr-3 text-slate-400"></i>
+                    <span class="flex-1">Laporan Satpam</span>
+                    @if($pendingLaporanSatpamGuru > 0)
+                        <span class="min-w-[18px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                            {{ $pendingLaporanSatpamGuru }}
+                        </span>
+                    @endif
                 </a>
 
                 {{-- Panduan --}}
