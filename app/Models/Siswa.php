@@ -63,6 +63,11 @@ class Siswa extends Model
         return $this->dispensasiRombongan();
     }
 
+    public function laporanSatpam(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\LaporanSatpam::class, 'siswa_id');
+    }
+
     public function getNamaLengkapAttribute($value): string
     {
         // ✅ CASTING STRING AGAR AMAN DARI NILAI NULL

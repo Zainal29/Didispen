@@ -150,7 +150,17 @@ class Dispensasi extends Model
      */
     public function anggotaSiswa(): BelongsToMany
     {
-        return $this->belongsToMany(Siswa::class, 'dispensasi_anggota', 'dispensasi_id', 'siswa_id')->withTimestamps();
+        return $this->belongsToMany(Siswa::class, 'dispensasi_anggota', 'dispensasi_id', 'siswa_id')
+            ->withPivot(['status_kembali', 'catatan_kembali', 'waktu_kembali'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Laporan satpam terkait dispensasi ini
+     */
+    public function laporanSatpam(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\LaporanSatpam::class, 'dispensasi_id');
     }
 
     /**
