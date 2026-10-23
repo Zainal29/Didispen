@@ -230,7 +230,7 @@ class Dispensasi extends Model
     }
 
     /**
-     * Cek apakah dispensasi berstatus 'selesai' namun kembali melewati batas waktu + toleransi
+     * Cek apakah dispensasi berstatus 'selesai' namun kembali melewati batas waktu kembali
      */
     public function isReturnedLate(): bool
     {
@@ -241,9 +241,39 @@ class Dispensasi extends Model
         return $this->status === 'selesai'
             && $this->batas_waktu_kembali !== null
             && $this->waktu_kembali_aktual !== null
-            && $this->waktu_kembali_aktual->greaterThan(
-                $this->batas_waktu_kembali->copy()->addMinutes(self::TOLERANSI_KETERLAMBATAN_MENIT)
-            );
+            && $this->waktu_kembali_aktual->greaterThan($this->batas_waktu_kembali);
+    }
+
+    /**
+     * Cek apakah keterlambatannya masih dalam rentang masa toleransi antrean gerbang (<= 5 menit)
+     */
+    public function isWithinTolerance(): bool
+    {
+        if (! $this->isReturnedLate()) {
+            return false;
+        }
+
+        $batasToleransi = $this->batas_waktu_kembali->copy()->addMinutes(self::TOLERANSI_KETERLAMBATAN_MENIT);
+        return $this->waktu_kembali_aktual->lessThanOrEqualTo($batasToleransi);
+    }
+
+    /**
+     * Teks keterangan toleransi antrean gerbang
+     */
+    public function getKeteranganToleransiKembaliText(): ?string
+    {
+        if (! $this->isReturnedLate()) {
+            return null;
+        }
+
+        $batasToleransi = $this->batas_waktu_kembali->copy()->addMinutes(self::TOLERANSI_KETERLAMBATAN_MENIT);
+        if ($this->waktu_kembali_aktual->lessThanOrEqualTo($batasToleransi)) {
+            $sisaDetik = $this->waktu_kembali_aktual->diffInSeconds($batasToleransi, false);
+            $sisaMenit = max(0, (int) ceil($sisaDetik / 60));
+            return 'Dalam batas toleransi gerbang (sisa ' . $sisaMenit . ' mnt toleransi)';
+        }
+
+        return 'Melewati batas toleransi gerbang';
     }
 
     /**
@@ -341,11 +371,15 @@ class Dispensasi extends Model
 
             if ($this->isReturnedLate()) {
                 $duration = $this->getLateDurationText(true);
+                $withinTol = $this->isWithinTolerance();
                 return [
                     'text' => 'Selesai (Terlambat' . ($duration ? ' ' . $duration : '') . ')',
-                    'class' => 'bg-amber-100 text-amber-800 border-amber-200',
-                    'dot' => 'bg-amber-500',
+                    'class' => $withinTol
+                        ? 'bg-amber-100 text-amber-800 border-amber-200'
+                        : 'bg-orange-100 text-orange-800 border-orange-300 font-bold',
+                    'dot' => $withinTol ? 'bg-amber-500' : 'bg-orange-600',
                     'is_late' => true,
+                    'within_tolerance' => $withinTol,
                 ];
             }
 
@@ -490,11 +524,76 @@ class Dispensasi extends Model
     }
 
     /**
+     * Batas waktu kadaluarsa untuk dispensasi status 'menunggu' persetujuan Guru Piket.
+     * Menggunakan kombinasi cerdas (MAX antara jam pembuatan + 20 menit dan jam keluar + 20 menit),
+     * dengan batas maksimal tidak melewati batas kembali / jam selesai KBM hari tersebut.
+     */
+    public function getBatasWaktuMenunggu(): ?\Carbon\Carbon
+    {
+        if ($this->status !== 'menunggu') {
+            return null;
+        }
+
+        $dispDate = $this->tanggal_izin
+            ? \Carbon\Carbon::parse($this->tanggal_izin, 'Asia/Jakarta')
+            : ($this->created_at ? $this->created_at->copy()->setTimezone('Asia/Jakarta') : now('Asia/Jakarta'));
+
+        $createdAt = $this->created_at
+            ? $this->created_at->copy()->setTimezone('Asia/Jakarta')
+            : now('Asia/Jakarta');
+
+        $batasDariCreated = $createdAt->copy()->addMinutes(self::DURASI_KADALUARSA_MENUNGGU_MENIT);
+
+        // Jam keluar yang dipilih siswa
+        $jamMulaiKeluar = \App\Helpers\TimeHelper::getWaktuMulaiKeluar($this->jam_keluar, $dispDate->dayOfWeek, $dispDate);
+        if ($jamMulaiKeluar) {
+            $jamMulaiKeluar = $jamMulaiKeluar->copy()->setTimezone('Asia/Jakarta')
+                ->setDate($dispDate->year, $dispDate->month, $dispDate->day);
+            $batasDariKeluar = $jamMulaiKeluar->copy()->addMinutes(self::DURASI_KADALUARSA_MENUNGGU_MENIT);
+
+            // Kombinasi Cerdas: Ambil waktu terjauh (MAX)
+            $deadline = $batasDariKeluar->greaterThan($batasDariCreated)
+                ? $batasDariKeluar
+                : $batasDariCreated;
+        } else {
+            $deadline = $batasDariCreated;
+        }
+
+        // Batas atas maksimal adalah batas_waktu_kembali (jika bukan sampai pulang) atau jam selesai KBM
+        $maxDeadline = null;
+        if (! $this->sampai_pulang) {
+            $maxDeadline = $this->batas_waktu_kembali;
+            if (! $maxDeadline && $this->jam_kembali) {
+                $maxDeadline = \App\Helpers\TimeHelper::getBatasWaktuKembali($this->jam_kembali, $dispDate->dayOfWeek);
+            }
+            if ($maxDeadline) {
+                $maxDeadline = $maxDeadline->copy()->setTimezone('Asia/Jakarta')
+                    ->setDate($dispDate->year, $dispDate->month, $dispDate->day);
+            }
+        }
+
+        if (! $maxDeadline) {
+            $maxDeadline = \App\Helpers\TimeHelper::getWaktuSelesaiKbmTerakhir($dispDate->dayOfWeek, $dispDate);
+        }
+
+        if ($maxDeadline && $deadline->greaterThan($maxDeadline)) {
+            return $maxDeadline;
+        }
+
+        return $deadline;
+    }
+
+    /**
      * Batas waktu kadaluarsa efektif untuk dispensasi sebelum scan keluar (format HH:mm WIB)
      */
     public function getBatasWaktuExpiredText(): string
     {
         if ($this->status === 'menunggu') {
+            $batasMenunggu = $this->getBatasWaktuMenunggu();
+            if ($batasMenunggu) {
+                return $batasMenunggu->format('H:i') . ' WIB';
+            }
+
             $createdAt = $this->created_at
                 ? $this->created_at->copy()->setTimezone('Asia/Jakarta')
                 : now('Asia/Jakarta');
@@ -545,12 +644,11 @@ class Dispensasi extends Model
      */
     public function scopeTerlambat(Builder $query): Builder
     {
-        $toleransi = self::TOLERANSI_KETERLAMBATAN_MENIT;
         $driver = $query->getConnection()->getDriverName();
         if ($driver === 'sqlite') {
-            $rawLateCondition = "datetime(waktu_kembali_aktual) > datetime(batas_waktu_kembali, '+{$toleransi} minutes')";
+            $rawLateCondition = "datetime(waktu_kembali_aktual) > datetime(batas_waktu_kembali)";
         } else {
-            $rawLateCondition = "waktu_kembali_aktual > DATE_ADD(batas_waktu_kembali, INTERVAL {$toleransi} MINUTE)";
+            $rawLateCondition = "waktu_kembali_aktual > batas_waktu_kembali";
         }
 
         return $query->where(function (Builder $q) use ($rawLateCondition) {

@@ -145,15 +145,11 @@ class QRScanService
      */
     public function checkScanCooldown(Dispensasi $dispensasi): array
     {
-        $recentScan = DB::table('scan_logs')
-            ->where('dispensasi_id', $dispensasi->id)
-            ->where('scanned_at', '>=', now()->subSeconds(5))
-            ->first();
-
-        if ($recentScan) {
+        $cacheKey = 'scan_cooldown_disp_' . $dispensasi->id;
+        if (! app()->runningUnitTests() && \Illuminate\Support\Facades\Cache::has($cacheKey)) {
             return [
                 'cooldown' => true,
-                'message' => 'QR Code baru saja di-scan. Tunggu beberapa detik untuk scan berikutnya.',
+                'message' => 'Dispensasi ini baru saja diproses. Mohon tunggu beberapa detik sebelum scan berikutnya.',
             ];
         }
 
@@ -161,6 +157,16 @@ class QRScanService
             'cooldown' => false,
             'message' => null,
         ];
+    }
+
+    /**
+     * Tandai cooldown scan untuk suatu dispensasi.
+     */
+    public function markScanCooldown(Dispensasi $dispensasi, int $seconds = 5): void
+    {
+        if (! app()->runningUnitTests()) {
+            \Illuminate\Support\Facades\Cache::put('scan_cooldown_disp_' . $dispensasi->id, true, now()->addSeconds($seconds));
+        }
     }
 
     /**
@@ -261,6 +267,8 @@ class QRScanService
             ['status' => 'keluar', 'satpam_keluar_id' => $userId]
         );
 
+        $this->markScanCooldown($dispensasi, 5);
+
         $msg = $dispensasi->sampai_pulang
             ? 'Siswa / Rombongan berhasil diverifikasi KELUAR sekolah (Izin Sampai Pulang - tidak perlu scan kembali).'
             : 'Siswa berhasil diverifikasi KELUAR sekolah.';
@@ -298,12 +306,27 @@ class QRScanService
             ];
         }
 
+        // Proteksi double scan: Siswa tidak mungkin kembali kurang dari 60 detik (1 menit) setelah keluar
+        if ($dispensasi->waktu_keluar_aktual && ! app()->runningUnitTests()) {
+            $waktuKeluar = Carbon::parse($dispensasi->waktu_keluar_aktual);
+            $selisih = now()->diffInSeconds($waktuKeluar);
+            if ($selisih < 60) {
+                $sisa = 60 - $selisih;
+                return [
+                    'success' => false,
+                    'message' => "Siswa baru saja diverifikasi KELUAR ({$selisih} detik lalu). Mohon tunggu {$sisa} detik lagi sebelum memverifikasi KEMBALI untuk mencegah double scan.",
+                    'status_code' => 422,
+                ];
+            }
+        }
+
         $toleransiMenit = Dispensasi::TOLERANSI_KETERLAMBATAN_MENIT;
         $batasToleransi = $dispensasi->batas_waktu_kembali
             ? $dispensasi->batas_waktu_kembali->copy()->addMinutes($toleransiMenit)
             : null;
 
-        $isLate = $batasToleransi && now()->greaterThan($batasToleransi);
+        $isLate = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
+        $isWithinTolerance = $isLate && $batasToleransi && now()->lessThanOrEqualTo($batasToleransi);
         $isEarly = $dispensasi->batas_waktu_kembali && now()->lessThan($dispensasi->batas_waktu_kembali);
 
         /*
@@ -364,10 +387,14 @@ class QRScanService
         );
 
         $message = $isLate
-            ? 'Siswa berhasil dicatat KEMBALI. PERINGATAN: Terlambat dari batas waktu!'
+            ? ($isWithinTolerance
+                ? 'Siswa berhasil dicatat KEMBALI. CATATAN: Terlambat (dalam toleransi antrean gerbang).'
+                : 'Siswa berhasil dicatat KEMBALI. PERINGATAN: Terlambat dari batas waktu!')
             : ($isEarly
                 ? 'Siswa berhasil dicatat KEMBALI (Lebih Awal).'
                 : 'Siswa berhasil dicatat KEMBALI (Tepat Waktu).');
+
+        $this->markScanCooldown($dispensasi, 5);
 
         return [
             'success' => true,

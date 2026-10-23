@@ -197,7 +197,7 @@ class DispensasiService
             ? $dispensasi->batas_waktu_kembali->copy()->addMinutes($toleransiMenit)
             : null;
 
-        $isLate = $batasToleransi && now()->greaterThan($batasToleransi);
+        $isLate = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
         $slug = $isLate ? 'terlambat' : 'kembali';
 
         // 1. DB transaction + lockForUpdate untuk memastikan update status berhasil sebelum file disentuh
@@ -336,13 +336,15 @@ class DispensasiService
             $isDeadlinePassed = $deadline && $now->greaterThan($deadline);
             $isDeadlineWithTolerancePassed = $deadlineWithTolerance && $now->greaterThan($deadlineWithTolerance);
 
-            // 1. Kasus 'menunggu': Melewati durasi batas menunggu (20 menit sejak diajukan), atau KBM usai / lewat hari
+            // 1. Kasus 'menunggu': Melewati durasi batas menunggu (kombinasi cerdas created_at & jam_keluar), atau KBM usai / lewat hari
             if ($d->status === 'menunggu') {
-                $createdAt = $d->created_at
-                    ? Carbon::parse($d->created_at, 'Asia/Jakarta')
-                    : $dispDate;
-
-                $batasMenunggu = $createdAt->copy()->addMinutes(Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT);
+                $batasMenunggu = $d->getBatasWaktuMenunggu();
+                if (! $batasMenunggu) {
+                    $createdAt = $d->created_at
+                        ? Carbon::parse($d->created_at, 'Asia/Jakarta')
+                        : $dispDate;
+                    $batasMenunggu = $createdAt->copy()->addMinutes(Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT);
+                }
                 $isBatasMenungguPassed = $now->greaterThan($batasMenunggu);
 
                 if (! $isPastDay && ! $isTodayKbmDone && ! $isBatasMenungguPassed) {
@@ -354,7 +356,7 @@ class DispensasiService
                     if ($isPastDay) {
                         $reason = 'Kadaluarsa otomatis karena melewati tanggal izin.';
                     } elseif ($isBatasMenungguPassed) {
-                        $reason = 'Kadaluarsa otomatis: Pengajuan tidak disetujui Guru Piket dalam waktu ' . Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT . ' menit (' . $batasMenunggu->format('H:i') . ' WIB).';
+                        $reason = 'Kadaluarsa otomatis: Pengajuan tidak disetujui Guru Piket dalam batas waktu toleransi (' . $batasMenunggu->format('H:i') . ' WIB).';
                     } else {
                         $reason = 'Kadaluarsa otomatis: Pengajuan tidak disetujui Guru Piket hingga jam KBM berakhir.';
                     }
