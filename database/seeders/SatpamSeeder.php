@@ -10,13 +10,14 @@ class SatpamSeeder extends Seeder
 {
     public function run(): void
     {
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['email' => 'satpam@smkn1bangsri.sch.id'],
             [
                 'name'     => 'Petugas Satpam',
                 'password' => Hash::make('satpam123'),
                 'role'     => 'satpam',
                 'nis_nip'  => 'SATPAM001',
+                'no_wa'    => '+6289501963463',
             ]
         );
 

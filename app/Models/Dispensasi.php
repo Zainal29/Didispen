@@ -23,7 +23,7 @@ class Dispensasi extends Model
         'approved_at', 'rejected_at',
         'qr_code', 'qr_token', 'print_count', 'max_print_limit', 'printed_at',
         'student_print_count', 'teacher_print_count', 'waktu_keluar_aktual', 'waktu_kembali_aktual',
-        'satpam_keluar_id', 'satpam_kembali_id', 'is_warned', 'warned_at',
+        'satpam_keluar_id', 'satpam_kembali_id', 'is_warned', 'warned_at', 'warned_by',
         'dibuat_manual_oleh_guru',
         'foto_verifikasi', 'foto_bukti', 'foto_bukti_uploaded_at',
     ];
@@ -80,6 +80,69 @@ class Dispensasi extends Model
     public function guru(): BelongsTo
     {
         return $this->belongsTo(Guru::class, 'guru_id');
+    }
+
+    public function petugasKeluar(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'satpam_keluar_id');
+    }
+
+    public function petugasKembali(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'satpam_kembali_id');
+    }
+
+    /**
+     * Dapatkan ringkasan riwayat scan keluar & kembali (siapa petugasnya, rolenya, dan jam berapa)
+     */
+    public function getRiwayatScanAttribute(): array
+    {
+        $keluar = null;
+        if ($this->waktu_keluar_aktual) {
+            $pKeluar = $this->petugasKeluar;
+            $role = $pKeluar?->role;
+            $roleLabel = match($role) {
+                'satpam' => 'Satpam (Pos Gerbang)',
+                'guru'   => 'Guru Piket',
+                'admin'  => 'Administrator',
+                default  => 'Petugas'
+            };
+            $waktu = \Carbon\Carbon::parse($this->waktu_keluar_aktual)->timezone('Asia/Jakarta')->format('H:i') . ' WIB';
+            $keluar = [
+                'sudah'      => true,
+                'role'       => $role ?? 'petugas',
+                'role_label' => $roleLabel,
+                'nama'       => $pKeluar?->name ?? 'Petugas',
+                'waktu'      => $waktu,
+                'pesan'      => "Siswa telah diverifikasi KELUAR oleh {$roleLabel} ({$pKeluar?->name}) pukul {$waktu}",
+            ];
+        }
+
+        $kembali = null;
+        if ($this->waktu_kembali_aktual) {
+            $pKembali = $this->petugasKembali;
+            $role = $pKembali?->role;
+            $roleLabel = match($role) {
+                'satpam' => 'Satpam (Pos Gerbang)',
+                'guru'   => 'Guru Piket',
+                'admin'  => 'Administrator',
+                default  => 'Petugas'
+            };
+            $waktu = \Carbon\Carbon::parse($this->waktu_kembali_aktual)->timezone('Asia/Jakarta')->format('H:i') . ' WIB';
+            $kembali = [
+                'sudah'      => true,
+                'role'       => $role ?? 'petugas',
+                'role_label' => $roleLabel,
+                'nama'       => $pKembali?->name ?? 'Petugas',
+                'waktu'      => $waktu,
+                'pesan'      => "Siswa telah diverifikasi KEMBALI oleh {$roleLabel} ({$pKembali?->name}) pukul {$waktu}",
+            ];
+        }
+
+        return [
+            'keluar'  => $keluar,
+            'kembali' => $kembali,
+        ];
     }
 
     /**
@@ -528,12 +591,32 @@ class Dispensasi extends Model
     /**
      * Tandai sebagai sudah diberi peringatan
      */
-    public function markAsWarned(): void
+    public function markAsWarned(string $by = 'bot'): void
     {
         $this->update([
             'is_warned' => true,
             'warned_at' => now(),
+            'warned_by' => $by,
         ]);
+    }
+
+    /**
+     * Dapatkan teks keterangan siapa yang menghubungi dan jamnya
+     */
+    public function getWarnedText(): string
+    {
+        if (! $this->is_warned) {
+            return '';
+        }
+
+        $jam = $this->warned_at ? $this->warned_at->timezone('Asia/Jakarta')->format('H:i') . ' WIB' : '';
+        $who = match ($this->warned_by) {
+            'guru' => 'Sudah Dihubungi Guru Piket',
+            'satpam' => 'Sudah Dihubungi Satpam',
+            default => 'Sudah dihubungi bot WA DIDISPEN',
+        };
+
+        return $jam ? "{$who} ({$jam})" : $who;
     }
 
     /**
