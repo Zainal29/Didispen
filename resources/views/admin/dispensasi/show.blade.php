@@ -1,432 +1,467 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Detail Pengajuan')
+@section('title', 'Detail Pengajuan Dispensasi')
 @section('page-title', 'Detail Pengajuan Dispensasi')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+<div class="max-w-4xl mx-auto space-y-6">
+
+    {{-- Header Card --}}
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div class="min-w-0">
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-800 break-all">{{ $dispensasi->nomor_surat }}</h3>
-                <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB</p>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Nomor Surat</span>
+                    @if($dispensasi->isRombongan())
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                            <i class="ti ti-users text-xs"></i> Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)
+                        </span>
+                    @else
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+                            <i class="ti ti-user text-xs"></i> Individu
+                        </span>
+                    @endif
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight break-all">
+                    {{ $dispensasi->nomor_surat }}
+                </h3>
+                <p class="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                    <i class="ti ti-clock text-slate-400"></i>
+                    Diajukan: {{ $dispensasi->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i:s') }} WIB
+                </p>
             </div>
+
             <div class="flex items-center gap-2 flex-wrap">
-                @if($dispensasi->isRombongan())
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1.5">
-                        <i class="fas fa-users"></i> Dispensasi Rombongan ({{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa)
-                    </span>
-                @else
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200 flex items-center gap-1.5">
-                        <i class="fas fa-user"></i> Dispensasi Individu
-                    </span>
-                @endif
                 @if($dispensasi->trashed())
-                    <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                        <i class="fas fa-archive mr-1"></i> Diarsipkan
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1">
+                        <i class="ti ti-archive text-xs"></i> Diarsipkan
                     </span>
                 @endif
-                <span class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold flex-shrink-0 {{ $statusColors[$dispensasi->status] ?? 'bg-gray-100' }}">
+                <span class="px-3.5 py-1 rounded-full text-xs sm:text-sm font-bold flex-shrink-0 {{ $statusColors[$dispensasi->status] ?? 'bg-slate-100 text-slate-700 border border-slate-200' }}">
                     {{ ucfirst($dispensasi->status) }}
                 </span>
             </div>
         </div>
 
+        {{-- Soft Delete Warning Banner --}}
         @if($dispensasi->trashed())
-            <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-3">
-                <i class="fas fa-info-circle text-amber-600 text-xl flex-shrink-0"></i>
-                <div class="text-xs sm:text-sm text-amber-900">
+            <div class="mt-5 p-4 rounded-xl bg-amber-50/80 border border-amber-200 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                    <i class="ti ti-archive text-lg"></i>
+                </div>
+                <div class="text-xs sm:text-sm text-amber-900 min-w-0">
                     <p class="font-bold">Dispensasi ini berada di arsip (Soft Deleted)</p>
-                    <p class="text-amber-700 mt-0.5">Dihapus dari daftar aktif pada: {{ $dispensasi->deleted_at?->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB. Anda dapat memulihkannya kapan saja.</p>
+                    <p class="text-amber-700 text-xs mt-0.5">Dihapus dari daftar aktif pada: {{ $dispensasi->deleted_at?->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB. Anda dapat memulihkannya kapan saja.</p>
                 </div>
             </div>
         @endif
 
+        {{-- Pending Alert --}}
         @if($dispensasi->status === 'menunggu')
-            <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-300 flex items-start gap-3.5">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-exclamation-triangle text-base animate-pulse"></i>
+            <div class="mt-5 p-4 rounded-xl bg-amber-50/80 border border-amber-300 flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                    <i class="ti ti-clock-pause text-xl animate-pulse"></i>
                 </div>
-                <div class="text-xs sm:text-sm text-amber-900 flex-1">
+                <div class="text-xs sm:text-sm text-amber-900 flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                         <p class="font-bold">Pengajuan Menunggu Persetujuan Guru Piket</p>
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
-                            <i class="fas fa-hourglass-half text-[10px]"></i> Kadaluarsa: {{ $dispensasi->getBatasWaktuExpiredText() }}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-200/80 text-amber-900 border border-amber-300">
+                            <i class="ti ti-hourglass-low text-xs"></i> Kadaluarsa: {{ $dispensasi->getBatasWaktuExpiredText() }}
                         </span>
                     </div>
-                    <p class="text-amber-800 mt-1">Pengajuan ini belum disetujui dan akan otomatis berubah menjadi <strong>Kadaluarsa</strong> jika tidak disetujui hingga {{ $dispensasi->sampai_pulang ? 'jam KBM sekolah hari ini berakhir' : 'batas waktu izin' }} (pukul {{ $dispensasi->getBatasWaktuExpiredText() }}).</p>
+                    <p class="text-amber-800 text-xs mt-1">Pengajuan ini belum disetujui dan akan otomatis berubah menjadi <strong>Kadaluarsa</strong> jika tidak disetujui hingga {{ $dispensasi->sampai_pulang ? 'jam KBM sekolah hari ini berakhir' : 'batas waktu izin' }} (pukul {{ $dispensasi->getBatasWaktuExpiredText() }}).</p>
                 </div>
             </div>
         @elseif($dispensasi->status === 'kadaluarsa')
-            <div class="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-3.5">
-                <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-calendar-xmark text-lg"></i>
+            <div class="mt-5 p-4 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
+                    <i class="ti ti-calendar-off text-xl"></i>
                 </div>
-                <div class="text-xs sm:text-sm text-orange-900 flex-1">
+                <div class="text-xs sm:text-sm text-orange-900 flex-1 min-w-0">
                     <p class="font-bold">Dispensasi Kadaluarsa</p>
-                    <p class="text-orange-800 mt-0.5">{{ $dispensasi->catatan_admin ?? 'Permohonan dispensasi ini telah kadaluarsa karena melewati batas waktu operasional KBM.' }}</p>
+                    <p class="text-orange-800 text-xs mt-0.5">{{ $dispensasi->catatan_admin ?? 'Permohonan dispensasi ini telah kadaluarsa karena melewati batas waktu operasional KBM.' }}</p>
                 </div>
             </div>
         @endif
+    </div>
 
-        <!--<div class="p-5 sm:p-6 space-y-5">-->
-
-        {{-- Foto Verifikasi (Jika Ada) --}}
-        @if($dispensasi->foto_verifikasi)
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div class="flex items-start gap-4">
-                <div class="w-20 h-20 rounded-lg overflow-hidden border border-blue-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_verifikasi) }}', 'Foto Verifikasi - {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}')">
-                    <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}" alt="Foto {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
+    {{-- Foto Bukti & Verifikasi --}}
+    @if($dispensasi->foto_verifikasi || $dispensasi->foto_bukti)
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{-- Foto Verifikasi Siswa --}}
+            @if($dispensasi->foto_verifikasi)
+                <div class="bg-white rounded-2xl border border-blue-200/80 p-4 shadow-2xs">
+                    <div class="flex items-start gap-3.5">
+                        <div class="w-20 h-20 rounded-xl overflow-hidden border border-blue-200 shrink-0 bg-slate-900 cursor-pointer hover:shadow-lg transition-all group"
+                             onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_verifikasi) }}', 'Foto Verifikasi - {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}')">
+                            <img src="{{ Storage::url($dispensasi->foto_verifikasi) }}" alt="Foto {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <h4 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1">
+                                    <i class="ti ti-camera text-blue-600"></i> Foto Verifikasi
+                                </h4>
+                                <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 cursor-pointer" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_verifikasi) }}', 'Foto Verifikasi - {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}')">
+                                    Perbesar
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500">Verifikasi visual identitas siswa saat pengajuan izin.</p>
+                            <p class="text-[10px] text-slate-400 mt-2 flex items-center gap-1">
+                                <i class="ti ti-info-circle"></i> Dihapus otomatis setelah siswa kembali.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex-1">
-                    <h4 class="text-sm font-bold text-blue-900 mb-1 flex items-center">
-                        <i class="fas fa-camera mr-1.5"></i> Foto Verifikasi Siswa
-                        <span class="ml-2 text-[10px] font-normal text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
-                            <i class="fas fa-expand mr-1"></i>Klik untuk memperbesar
-                        </span>
-                    </h4>
-                    <p class="text-xs text-blue-700 mb-2">
-                        Gunakan foto ini untuk memverifikasi identitas siswa secara visual sebelum melakukan scan QR Code.
-                    </p>
-                    <p class="text-[10px] text-blue-600">
-                        <i class="fas fa-info-circle mr-1"></i> Foto akan dihapus otomatis setelah siswa kembali.
-                    </p>
+            @endif
+
+            {{-- Foto Bukti Kedatangan --}}
+            @if($dispensasi->foto_bukti)
+                <div class="bg-white rounded-2xl border border-emerald-200/80 p-4 shadow-2xs">
+                    <div class="flex items-start gap-3.5">
+                        <div class="w-20 h-20 rounded-xl overflow-hidden border border-emerald-200 shrink-0 bg-slate-900 cursor-pointer hover:shadow-lg transition-all group"
+                             onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_bukti) }}', 'Foto Bukti Kedatangan - {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}')">
+                            <img src="{{ Storage::url($dispensasi->foto_bukti) }}" alt="Foto Bukti {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <h4 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1">
+                                    <i class="ti ti-photo-check text-emerald-600"></i> Bukti Kedatangan
+                                </h4>
+                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 cursor-pointer" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_bukti) }}', 'Foto Bukti Kedatangan - {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}')">
+                                    Perbesar
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500">Foto bukti yang diunggah siswa di lokasi tujuan.</p>
+                            @if($dispensasi->foto_bukti_uploaded_at)
+                                <p class="text-[10px] text-emerald-700 mt-2 font-mono flex items-center gap-1">
+                                    <i class="ti ti-clock"></i> {{ $dispensasi->foto_bukti_uploaded_at->isoFormat('D MMM Y, HH:mm') }} WIB
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
+
+    {{-- Main Details Grid --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {{-- Data Siswa --}}
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5">
+            <h4 class="font-bold text-slate-900 text-sm mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <i class="ti ti-user text-blue-600"></i> Data Pemohon Siswa
+            </h4>
+            <div class="space-y-3 text-xs sm:text-sm">
+                <div>
+                    <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block">Nama Lengkap</span>
+                    <p class="font-bold text-slate-900 mt-0.5">{{ $dispensasi->siswa?->nama_lengkap ?? '-' }}</p>
+                </div>
+                <div>
+                    <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block">NIS</span>
+                    <p class="font-mono font-bold text-slate-800 mt-0.5">{{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block">Kelas</span>
+                        <p class="font-semibold text-slate-800 mt-0.5">{{ $dispensasi->siswa?->kelas?->nama_kelas ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block">Jurusan</span>
+                        <p class="font-semibold text-slate-800 mt-0.5 truncate">{{ $dispensasi->siswa?->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
+                    </div>
                 </div>
             </div>
         </div>
-        @endif
 
-        {{-- Foto Bukti Siswa --}}
-        @if($dispensasi->foto_bukti)
-        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-            <div class="flex items-start gap-4">
-                <div class="w-20 h-20 rounded-lg overflow-hidden border border-emerald-200 flex-shrink-0 bg-white cursor-pointer hover:shadow-lg transition-shadow" onclick="openPhotoModal('{{ Storage::url($dispensasi->foto_bukti) }}', 'Foto Bukti Kedatangan - {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}')">
-                    <img src="{{ Storage::url($dispensasi->foto_bukti) }}" alt="Foto Bukti {{ $dispensasi->siswa?->nama_lengkap ?? '-' }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
-                </div>
-                <div class="flex-1">
-                    <h4 class="text-sm font-bold text-emerald-900 mb-1 flex items-center">
-                        <i class="fas fa-image mr-1.5"></i> Foto Bukti Kedatangan
-                        <span class="ml-2 text-[10px] font-normal text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
-                            <i class="fas fa-expand mr-1"></i>Klik untuk memperbesar
-                        </span>
-                    </h4>
-                    <p class="text-xs text-emerald-700 mb-2">
-                        Foto ini diupload oleh siswa sebagai bukti kedatangan di lokasi tujuan.
-                    </p>
-                    @if($dispensasi->foto_bukti_uploaded_at)
-                    <p class="text-[10px] text-emerald-600">
-                        <i class="far fa-clock mr-1"></i> Diupload: {{ $dispensasi->foto_bukti_uploaded_at->isoFormat('D MMMM Y, HH:mm') }} WIB
-                    </p>
-                    @endif
-                </div>
-            </div>
-        </div>
-        @endif
-        {{-- MODAL PREVIEW FOTO --}}
-        <div id="photoModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md" onclick="closePhotoModal(event)">
-            <div class="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-700/30" onclick="event.stopPropagation()">
-                {{-- Header Modal --}}
-                <div class="w-full bg-white px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between border-b border-gray-200 shrink-0">
-                    <h3 id="photoModalTitle" class="min-w-0 text-sm font-bold text-gray-900 flex items-center gap-2 truncate pr-2">
-                        <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                            <i class="fas fa-image text-sm"></i>
-                        </span>
-                        <span class="truncate">Preview Foto</span>
-                    </h3>
-                    <button onclick="closePhotoModal()" class="w-9 h-9 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 active:bg-gray-200 flex items-center justify-center transition-colors shrink-0" aria-label="Tutup preview foto">
-                        <i class="fas fa-times text-base"></i>
-                    </button>
-                </div>
-
-                {{-- Body Modal --}}
-                <div class="min-h-0 flex-1 w-full bg-slate-950 p-2 sm:p-4 flex items-center justify-center overflow-auto max-h-[calc(92dvh-115px)]">
-                    <img id="photoModalImage" src="" alt="Preview" class="max-w-full max-h-[70dvh] w-auto h-auto object-contain rounded-xl shadow-lg">
-                </div>
-
-                {{-- Footer Modal --}}
-                <div class="px-4 py-2.5 sm:px-5 bg-gray-50 border-t border-gray-200 flex items-center justify-between shrink-0">
-                    <span class="text-[11px] text-gray-500 font-medium truncate pr-2 flex items-center gap-1">
-                        <i class="fas fa-info-circle text-xs text-gray-400"></i> Ketuk luar untuk menutup
-                    </span>
-                    <button type="button"
-                            onclick="closePhotoModal()"
-                            class="px-4 py-2 min-h-[36px] rounded-xl bg-white border border-gray-300 hover:bg-gray-100 active:bg-gray-200 text-gray-700 text-xs font-bold transition-colors shadow-2xs">
-                        Tutup
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-6">
-            {{-- Data Siswa --}}
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">Data Siswa</h4>
-                <div class="space-y-2">
+        {{-- Detail Pengajuan --}}
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5">
+            <h4 class="font-bold text-slate-900 text-sm mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <i class="ti ti-file-description text-blue-600"></i> Detail Permohonan
+            </h4>
+            <div class="space-y-3 text-xs sm:text-sm">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <span class="text-gray-500">Nama:</span>
-                        <p class="font-semibold">{{ $dispensasi->siswa?->nama_lengkap ?? '-' }}</p>
+                        <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block">Kategori</span>
+                        <p class="font-bold text-slate-900 capitalize mt-0.5">{{ str_replace('_', ' ', $dispensasi->kategori) }}</p>
                     </div>
                     <div>
-                        <span class="text-gray-500">NIS:</span>
-                        <p class="font-mono">{{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Kelas:</span>
-                        <p class="font-semibold">{{ $dispensasi->siswa?->kelas?->nama_kelas ?? '-' }}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Jurusan:</span>
-                        <p>{{ $dispensasi->siswa?->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
+                        <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block">Lokasi</span>
+                        <p class="font-semibold text-slate-800 mt-0.5 truncate">{{ $dispensasi->lokasi ?? '-' }}</p>
                     </div>
                 </div>
-            </div>
-
-            {{-- Detail Pengajuan --}}
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">Detail Pengajuan</h4>
-                <div class="space-y-2">
+                <div>
+                    <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block">Tujuan Dispensasi</span>
+                    <p class="font-semibold text-slate-800 mt-0.5">{{ $dispensasi->tujuan }}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
                     <div>
-                        <span class="text-gray-500">Kategori:</span>
-                        <p class="font-semibold capitalize">{{ str_replace('_', ' ', $dispensasi->kategori) }}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Tujuan:</span>
-                        <p class="font-semibold">{{ $dispensasi->tujuan }}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Lokasi:</span>
-                        <p class="font-semibold">{{ $dispensasi->lokasi ?? '-' }}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Jam Keluar:</span>
-                        {{-- jam_keluar disimpan sebagai string jam (bukan timestamp), jadi tetap echo langsung --}}
-                        <p class="font-semibold text-indigo-700">
+                        <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block">Rencana Keluar</span>
+                        <p class="font-bold text-blue-700 font-mono mt-0.5">
                             {{ $dispensasi->jam_keluar }}
-                            <span class="text-xs text-gray-500 block mt-1 font-normal">
-                                <i class="far fa-clock mr-1"></i>
+                            <span class="text-[11px] text-slate-500 block font-normal">
                                 {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar) }}
                             </span>
                         </p>
                     </div>
                     <div>
-                        <span class="text-gray-500">Jam Kembali:</span>
-                        <p class="font-semibold text-indigo-700">
+                        <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block">Rencana Kembali</span>
+                        <p class="font-bold text-blue-700 font-mono mt-0.5">
                             {{ $dispensasi->jam_kembali }}
-                            <span class="text-xs text-gray-500 block mt-1 font-normal">
-                                <i class="far fa-clock mr-1"></i>
+                            <span class="text-[11px] text-slate-500 block font-normal">
                                 {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali) }}
                             </span>
                         </p>
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- Info Grid --}}
-            <div class="grid grid-cols-2 gap-3 text-xs">
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <p class="text-gray-500 text-[10px] font-semibold uppercase mb-0.5">Kategori</p>
-                    <p class="font-semibold text-gray-900 capitalize">{{ str_replace('_', ' ', $dispensasi->kategori) }}</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <p class="text-gray-500 text-[10px] font-semibold uppercase mb-0.5">Lokasi</p>
-                    <p class="font-semibold text-gray-900 truncate">{{ $dispensasi->lokasi ?? '-' }}</p>
-                </div>
-            </div>
-
-            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                <p class="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-1">Tujuan</p>
-                <p class="text-sm text-gray-800 font-medium">{{ $dispensasi->tujuan }}</p>
-            </div>
-
-
-
-            {{-- Alasan & Catatan --}}
-            <div class="md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">Alasan & Catatan</h4>
-                <div class="space-y-3">
-                    @if($dispensasi->dibuat_manual_oleh_guru)
-                    <div class="bg-violet-50 p-3 rounded border-l-4 border-violet-400">
-                        <span class="text-violet-800 font-semibold text-xs uppercase"><i class="fas fa-user-tie mr-1"></i>Dibuat Manual oleh Guru Piket</span>
-                        <p class="text-violet-900 mt-1">Pengajuan ini dibuat langsung oleh {{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }} untuk siswa.</p>
+        {{-- Alasan & Catatan --}}
+        <div class="md:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5">
+            <h4 class="font-bold text-slate-900 text-sm mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <i class="ti ti-notes text-blue-600"></i> Alasan & Catatan Tambahan
+            </h4>
+            <div class="space-y-3 text-xs sm:text-sm">
+                @if($dispensasi->dibuat_manual_oleh_guru)
+                    <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-200">
+                        <span class="text-indigo-800 font-bold text-xs uppercase flex items-center gap-1.5">
+                            <i class="ti ti-user-check text-base"></i> Dibuat Manual oleh Guru Piket
+                        </span>
+                        <p class="text-indigo-900 mt-1 text-xs">Pengajuan ini dibuat langsung oleh {{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }} untuk siswa bersangkutan.</p>
                     </div>
-                    @endif
+                @endif
+                <div>
+                    <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block mb-1">Alasan Pengajuan Siswa</span>
+                    <p class="font-medium text-slate-800 bg-slate-50/80 p-3 rounded-xl border border-slate-200/60 leading-relaxed">{{ $dispensasi->alasan }}</p>
+                </div>
+                @if($dispensasi->catatan_admin && !$dispensasi->dibuat_manual_oleh_guru)
                     <div>
-                        <span class="text-gray-500">Alasan Siswa:</span>
-                        <p class="font-medium mt-1 text-gray-800">{{ $dispensasi->alasan }}</p>
+                        <span class="text-slate-400 font-medium text-[11px] uppercase tracking-wider block mb-1">Catatan Admin / Guru</span>
+                        <p class="font-medium text-slate-800 bg-amber-50/70 p-3 rounded-xl border border-amber-200 leading-relaxed">{{ $dispensasi->catatan_admin }}</p>
                     </div>
-                    @if($dispensasi->catatan_admin && !$dispensasi->dibuat_manual_oleh_guru)
-                    <div class="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
-                        <span class="text-gray-700 font-semibold text-xs uppercase">Catatan Admin / Guru:</span>
-                        <p class="text-gray-800 mt-1">{{ $dispensasi->catatan_admin }}</p>
-                    </div>
-                    @endif
+                @endif
+            </div>
+        </div>
+
+        {{-- Guru Piket Penanggung Jawab --}}
+        <div class="md:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5">
+            <h4 class="font-bold text-slate-900 text-sm mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <i class="ti ti-user-shield text-blue-600"></i> Guru Piket Penanggung Jawab
+            </h4>
+            <div class="flex items-center space-x-3.5">
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">
+                    {{ strtoupper(substr($dispensasi->guru?->nama_lengkap ?? 'G', 0, 1)) }}
+                </div>
+                <div class="min-w-0">
+                    <p class="font-bold text-slate-900 text-sm sm:text-base">{{ $dispensasi->guru?->nama_lengkap ?? 'Menunggu persetujuan guru piket' }}</p>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Tanggal Pengajuan: {{ $dispensasi->created_at ? $dispensasi->created_at->format('d M Y') : '-' }}
+                    </p>
                 </div>
             </div>
+        </div>
 
-            {{-- Data Guru Piket --}}
-            <div class="md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">Guru Piket Penanggung Jawab</h4>
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xl">
-                        {{ substr($dispensasi->guru?->nama_lengkap ?? 'G', 0, 1) }}
-                    </div>
-                    <div>
-                        <p class="font-semibold text-gray-800">{{ $dispensasi->guru?->nama_lengkap ?? 'Menunggu persetujuan' }}</p>
-                        <p class="text-sm text-gray-500">
-                            Tanggal Piket: {{ $dispensasi->created_at ? $dispensasi->created_at->format('d M Y') : '-' }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Anggota Rombongan (Jika Tipe Rombongan) --}}
-            @if($dispensasi->isRombongan() && $dispensasi->anggotaSiswa->count() > 0)
-            <div class="md:col-span-2 bg-purple-50/50 p-4 rounded-xl border border-purple-200">
-                <div class="flex items-center justify-between mb-3 border-b border-purple-200 pb-2">
-                    <h4 class="font-bold text-purple-900 flex items-center gap-1.5 text-sm">
-                        <i class="fas fa-users text-purple-600"></i> Anggota Rombongan
+        {{-- Anggota Rombongan --}}
+        @if($dispensasi->isRombongan() && $dispensasi->anggotaSiswa->count() > 0)
+            <div class="md:col-span-2 bg-white rounded-2xl border border-purple-200/80 shadow-2xs p-5">
+                <div class="flex items-center justify-between mb-4 border-b border-purple-100 pb-3">
+                    <h4 class="font-bold text-purple-900 flex items-center gap-2 text-sm">
+                        <i class="ti ti-users text-purple-600"></i> Anggota Siswa Rombongan
                     </h4>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-200 text-purple-800">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
                         {{ $dispensasi->anggotaSiswa->count() + 1 }} Siswa
                     </span>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div class="p-2.5 rounded-lg bg-white border border-purple-100 flex items-center justify-between text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="p-3 rounded-xl bg-purple-50/50 border border-purple-200 flex items-center justify-between text-xs">
                         <div class="min-w-0 pr-2">
-                            <p class="font-bold text-gray-900 truncate">1. {{ $dispensasi->siswa?->nama_lengkap }}</p>
-                            <p class="text-[11px] text-gray-500 font-mono">{{ $dispensasi->siswa?->kelas?->nama_kelas ?? '-' }} • NIS: {{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</p>
+                            <p class="font-bold text-slate-900 truncate">1. {{ $dispensasi->siswa?->nama_lengkap }}</p>
+                            <p class="text-[11px] text-slate-500 font-mono mt-0.5">{{ $dispensasi->siswa?->kelas?->nama_kelas ?? '-' }} • NIS: {{ $dispensasi->siswa?->user?->nis_nip ?? '-' }}</p>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 shrink-0">Ketua</span>
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-200 text-purple-800 shrink-0">Ketua</span>
                     </div>
                     @foreach($dispensasi->anggotaSiswa as $idx => $anggota)
-                    <div class="p-2.5 rounded-lg bg-white border border-purple-100 flex items-center justify-between text-xs">
-                        <div class="min-w-0 pr-2">
-                            <p class="font-bold text-gray-900 truncate">{{ $idx + 2 }}. {{ $anggota->nama_lengkap }}</p>
-                            <p class="text-[11px] text-gray-500 font-mono">{{ $anggota->kelas?->nama_kelas ?? '-' }} • NIS: {{ $anggota->user?->nis_nip ?? '-' }}</p>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                            <div class="min-w-0 pr-2">
+                                <p class="font-bold text-slate-900 truncate">{{ $idx + 2 }}. {{ $anggota->nama_lengkap }}</p>
+                                <p class="text-[11px] text-slate-500 font-mono mt-0.5">{{ $anggota->kelas?->nama_kelas ?? '-' }} • NIS: {{ $anggota->user?->nis_nip ?? '-' }}</p>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-200 text-slate-700 shrink-0">Anggota</span>
                         </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600 shrink-0">Anggota</span>
-                    </div>
                     @endforeach
                 </div>
             </div>
-            @endif
-        </div>
+        @endif
+    </div>
 
-        {{-- TIMELINE STATUS (DIPERBAIKI: Menambahkan status "Menunggu Satpam") --}}
-        <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center border-b border-gray-100 pb-3">
-                <i class="fas fa-history text-gray-400 mr-2"></i>Alur & Riwayat Status
-            </h3>
-            <div class="space-y-4">
-                {{-- 1. Diajukan --}}
-                <div class="flex items-start gap-3">
-                    <div class="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0"></div>
-                    <div class="flex-1">
-                        <p class="text-xs font-bold text-gray-900">Pengajuan Dibuat</p>
-                        <p class="text-[10px] text-gray-500">{{ $dispensasi->created_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+    {{-- Timeline Status Stepper --}}
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6">
+        <h3 class="text-sm font-bold text-slate-900 mb-5 flex items-center border-b border-slate-100 pb-3 gap-2">
+            <i class="ti ti-timeline text-blue-600"></i> Alur & Riwayat Status Dispensasi
+        </h3>
+        <div class="space-y-4">
+            {{-- 1. Diajukan --}}
+            <div class="flex items-start gap-3.5">
+                <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
+                    <i class="ti ti-file-plus"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-bold text-slate-900">Pengajuan Dibuat</p>
+                    <p class="text-[11px] text-slate-400 font-mono">{{ $dispensasi->created_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                </div>
+            </div>
+
+            {{-- 2. Disetujui / Ditolak --}}
+            @if($dispensasi->status === 'ditolak')
+                <div class="flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
+                        <i class="ti ti-x"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-bold text-rose-600">Ditolak oleh Guru Piket</p>
+                        <p class="text-[11px] text-slate-400 font-mono">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                     </div>
                 </div>
+            @elseif($dispensasi->guru)
+                <div class="flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
+                        <i class="ti ti-check"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-bold text-slate-900">Disetujui oleh Guru Piket</p>
+                        <p class="text-[11px] text-slate-400 font-mono">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                    </div>
+                </div>
+            @endif
 
-                {{-- 2. Disetujui / Ditolak --}}
-                @if($dispensasi->status === 'ditolak')
-                    <div class="flex items-start gap-3">
-                        <div class="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-red-600">Ditolak oleh Guru Piket</p>
-                            <p class="text-[10px] text-gray-500">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                        </div>
+            {{-- 3. Menunggu Scan Keluar --}}
+            @if($dispensasi->status === 'disetujui')
+                <div class="flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold animate-pulse">
+                        <i class="ti ti-qrcode"></i>
                     </div>
-                @elseif($dispensasi->guru)
-                    <div class="flex items-start gap-3">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-gray-900">Disetujui oleh Guru Piket</p>
-                            <p class="text-[10px] text-gray-500">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                        </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-bold text-amber-700">Menunggu Konfirmasi Satpam (Gerbang Keluar)</p>
+                        <p class="text-[11px] text-slate-400">Silakan tunjukkan QR Code kepada petugas satpam di pos.</p>
                     </div>
-                @endif
+                </div>
+            @endif
 
-                {{-- 3. Menunggu Scan Keluar --}}
-                @if($dispensasi->status === 'disetujui')
-                    <div class="flex items-start gap-3">
-                        <div class="w-2 h-2 rounded-full bg-amber-500 mt-1.5 flex-shrink-0 animate-pulse"></div>
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-amber-600">Menunggu Konfirmasi Satpam (Keluar)</p>
-                            <p class="text-[10px] text-gray-500">Silakan tunjukkan QR Code kepada petugas satpam di pos.</p>
-                        </div>
+            {{-- 4. Konfirmasi Keluar --}}
+            @if($dispensasi->waktu_keluar_aktual)
+                <div class="flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
+                        <i class="ti ti-door-exit"></i>
                     </div>
-                @endif
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-bold text-slate-900">Dikonfirmasi Keluar oleh Satpam</p>
+                        <p class="text-[11px] text-slate-400 font-mono">{{ \Carbon\Carbon::parse($dispensasi->waktu_keluar_aktual)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                    </div>
+                </div>
+            @endif
 
-                {{-- 4. Konfirmasi Keluar --}}
-                @if($dispensasi->waktu_keluar_aktual)
-                    <div class="flex items-start gap-3">
-                        <div class="w-2 h-2 rounded-full bg-sky-500 mt-1.5 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-gray-900">Dikonfirmasi Keluar oleh Satpam</p>
-                            <p class="text-[10px] text-gray-500">{{ \Carbon\Carbon::parse($dispensasi->waktu_keluar_aktual)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                        </div>
+            {{-- 5. Menunggu Scan Kembali --}}
+            @if($dispensasi->status === 'keluar')
+                <div class="flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold animate-pulse">
+                        <i class="ti ti-door-enter"></i>
                     </div>
-                @endif
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-bold text-amber-700">Menunggu Konfirmasi Satpam (Gerbang Masuk)</p>
+                        <p class="text-[11px] text-slate-400">Tunjukkan QR Code yang sama saat kembali ke sekolah.</p>
+                    </div>
+                </div>
+            @endif
 
-                {{-- 5. Menunggu Scan Kembali --}}
-                @if($dispensasi->status === 'keluar')
-                    <div class="flex items-start gap-3">
-                        <div class="w-2 h-2 rounded-full bg-amber-500 mt-1.5 flex-shrink-0 animate-pulse"></div>
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-amber-600">Menunggu Konfirmasi Satpam (Kembali)</p>
-                            <p class="text-[10px] text-gray-500">Tunjukkan QR Code yang sama saat kembali ke sekolah.</p>
-                        </div>
+            {{-- 6. Konfirmasi Kembali --}}
+            @if($dispensasi->waktu_kembali_aktual)
+                <div class="flex items-start gap-3.5">
+                    <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
+                        <i class="ti ti-circle-check"></i>
                     </div>
-                @endif
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-bold text-slate-900">Dikonfirmasi Selesai & Kembali oleh Satpam</p>
+                        <p class="text-[11px] text-slate-400 font-mono">{{ \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                        @if($dispensasi->is_warned)
+                            <p class="text-[11px] text-rose-600 font-bold mt-1 flex items-center gap-1">
+                                <i class="ti ti-alert-triangle"></i> Tercatat Terlambat dari Waktu Dispensasi
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
 
-                {{-- 6. Konfirmasi Kembali --}}
-                @if($dispensasi->waktu_kembali_aktual)
-                    <div class="flex items-start gap-3">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-gray-900">Dikonfirmasi Kembali oleh Satpam</p>
-                            <p class="text-[10px] text-gray-500">{{ \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                            @if($dispensasi->is_warned)
-                                <p class="text-[10px] text-red-500 font-semibold mt-0.5"><i class="fas fa-exclamation-circle mr-1"></i>Tercatat Terlambat</p>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-            </div>
+    {{-- Bottom Action Buttons --}}
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <a href="{{ route('admin.semua.pengajuan') }}" class="min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-xl text-slate-700 text-xs sm:text-sm font-bold hover:bg-slate-50 transition-colors gap-2">
+            <i class="ti ti-arrow-left text-base"></i>
+            <span>Kembali ke Daftar</span>
+        </a>
+
+        <div class="flex items-center gap-2 flex-wrap">
+            @if($dispensasi->trashed())
+                <button type="button"
+                        onclick="confirmRestore({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}')"
+                        class="min-h-[44px] px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs">
+                    <i class="ti ti-rotate-clockwise text-base"></i>
+                    <span>Pulihkan Dispensasi</span>
+                </button>
+                <button type="button"
+                        onclick="confirmForceDelete({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}', '{{ addslashes($dispensasi->siswa?->nama_lengkap ?? '-') }}')"
+                        class="min-h-[44px] px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs">
+                    <i class="ti ti-trash-x text-base"></i>
+                    <span>Hapus Permanen</span>
+                </button>
+            @else
+                <button type="button"
+                        onclick="confirmSoftDelete({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}', '{{ addslashes($dispensasi->siswa?->nama_lengkap ?? '-') }}')"
+                        class="min-h-[44px] px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs">
+                    <i class="ti ti-archive text-base"></i>
+                    <span>Pindahkan ke Arsip</span>
+                </button>
+            @endif
+        </div>
+    </div>
+</div>
+
+{{-- MODAL PREVIEW FOTO --}}
+<div id="photoModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md" onclick="closePhotoModal(event)">
+    <div class="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-700/30" onclick="event.stopPropagation()">
+        {{-- Header Modal --}}
+        <div class="w-full bg-white px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between border-b border-slate-200 shrink-0">
+            <h3 id="photoModalTitle" class="min-w-0 text-sm font-bold text-slate-900 flex items-center gap-2 truncate pr-2">
+                <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <i class="ti ti-photo text-base"></i>
+                </span>
+                <span class="truncate">Preview Foto</span>
+            </h3>
+            <button onclick="closePhotoModal()" class="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 flex items-center justify-center transition-colors shrink-0" aria-label="Tutup preview foto">
+                <i class="ti ti-x text-lg"></i>
+            </button>
         </div>
 
-        <div class="border-t border-gray-100 pt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <a href="{{ route('admin.semua.pengajuan') }}" class="min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar
-            </a>
+        {{-- Body Modal --}}
+        <div class="min-h-0 flex-1 w-full bg-slate-950 p-2 sm:p-4 flex items-center justify-center overflow-auto max-h-[calc(92dvh-115px)]">
+            <img id="photoModalImage" src="" alt="Preview" class="max-w-full max-h-[70dvh] w-auto h-auto object-contain rounded-xl shadow-lg">
+        </div>
 
-            <div class="flex items-center gap-2 flex-wrap">
-                @if($dispensasi->trashed())
-                    <button type="button"
-                            onclick="confirmRestore({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}')"
-                            class="min-h-[44px] px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs">
-                        <i class="fas fa-trash-restore"></i>
-                        <span>Pulihkan Dispensasi</span>
-                    </button>
-                    <button type="button"
-                            onclick="confirmForceDelete({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}', '{{ addslashes($dispensasi->siswa?->nama_lengkap ?? '-') }}')"
-                            class="min-h-[44px] px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs">
-                        <i class="fas fa-times-circle"></i>
-                        <span>Hapus Permanen</span>
-                    </button>
-                @else
-                    <button type="button"
-                            onclick="confirmSoftDelete({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}', '{{ addslashes($dispensasi->siswa?->nama_lengkap ?? '-') }}')"
-                            class="min-h-[44px] px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs">
-                        <i class="fas fa-archive"></i>
-                        <span>Pindahkan ke Arsip</span>
-                    </button>
-                @endif
-            </div>
+        {{-- Footer Modal --}}
+        <div class="px-4 py-2.5 sm:px-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+            <span class="text-[11px] text-slate-500 font-medium truncate pr-2 flex items-center gap-1">
+                <i class="ti ti-info-circle text-xs text-slate-400"></i> Ketuk luar untuk menutup
+            </span>
+            <button type="button"
+                    onclick="closePhotoModal()"
+                    class="px-4 py-2 min-h-[36px] rounded-xl bg-white border border-slate-300 hover:bg-slate-100 active:bg-slate-200 text-slate-700 text-xs font-bold transition-colors shadow-2xs">
+                Tutup
+            </button>
         </div>
     </div>
 </div>
 @endsection
+
 @push('scripts')
 <script>
 function openPhotoModal(imageUrl, title) {
@@ -461,23 +496,28 @@ function confirmSoftDelete(id, nomorSurat, namaSiswa) {
         title: 'Arsipkan Dispensasi?',
         html: `
             <div class="text-left">
-                <p class="mb-2">Data dispensasi ini akan dipindahkan ke <strong>Arsip</strong> (Soft Delete).</p>
-                <div class="bg-gray-50 p-3 rounded-lg text-sm border border-gray-200">
+                <p class="mb-2 text-sm text-slate-600">Data dispensasi ini akan dipindahkan ke <strong>Arsip</strong> (Soft Delete).</p>
+                <div class="bg-slate-50 p-3 rounded-xl text-xs border border-slate-200 font-medium text-slate-700">
                     <p><strong>No. Surat:</strong> ${nomorSurat}</p>
                     <p><strong>Siswa:</strong> ${namaSiswa}</p>
                 </div>
-                <p class="text-amber-700 text-xs mt-3">
-                    <i class="fas fa-info-circle mr-1"></i> Data tetap tersimpan aman dan dapat dipulihkan kapan saja.
+                <p class="text-amber-700 text-xs mt-3 flex items-center gap-1">
+                    <i class="ti ti-info-circle"></i> Data tetap tersimpan aman dan dapat dipulihkan kapan saja.
                 </p>
             </div>
         `,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d97706',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '<i class="fas fa-archive mr-1"></i> Ya, Arsipkan',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="ti ti-archive mr-1"></i> Ya, Arsipkan',
         cancelButtonText: 'Batal',
-        reverseButtons: true
+        reverseButtons: true,
+        customClass: {
+            popup: 'rounded-2xl shadow-xl border border-slate-200',
+            confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5',
+            cancelButton: 'rounded-xl text-xs font-semibold px-4 py-2.5'
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             submitFormAction(`/admin/semua-pengajuan/${id}`, 'DELETE', 'Mengarsipkan...');
@@ -492,10 +532,15 @@ function confirmRestore(id, nomorSurat) {
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#059669',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '<i class="fas fa-trash-restore mr-1"></i> Ya, Pulihkan',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="ti ti-rotate-clockwise mr-1"></i> Ya, Pulihkan',
         cancelButtonText: 'Batal',
-        reverseButtons: true
+        reverseButtons: true,
+        customClass: {
+            popup: 'rounded-2xl shadow-xl border border-slate-200',
+            confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5',
+            cancelButton: 'rounded-xl text-xs font-semibold px-4 py-2.5'
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             submitFormAction(`/admin/semua-pengajuan/${id}/restore`, 'POST', 'Memulihkan...');
@@ -508,20 +553,25 @@ function confirmForceDelete(id, nomorSurat, namaSiswa) {
         title: 'Hapus Permanen?',
         html: `
             <div class="text-left">
-                <p class="mb-2">Hapus data ini secara <strong>permanen</strong>?</p>
-                <p class="text-red-600 text-xs mt-2 font-semibold">
-                    <i class="fas fa-exclamation-triangle mr-1"></i>
-                    File foto bukti dan QR code akan terhapus permanen dari server. Tindakan ini tidak dapat dibatalkan!
-                </p>
+                <p class="mb-2 text-sm text-slate-700">Hapus data surat ini secara <strong>permanen</strong>?</p>
+                <div class="bg-rose-50 p-3 rounded-xl text-xs border border-rose-200 text-rose-800">
+                    <p class="font-bold flex items-center gap-1"><i class="ti ti-alert-triangle"></i> Peringatan:</p>
+                    <p class="mt-1">File foto bukti dan QR code akan terhapus permanen dari server. Tindakan ini tidak dapat dibatalkan!</p>
+                </div>
             </div>
         `,
         icon: 'error',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '<i class="fas fa-trash mr-1"></i> Hapus Permanen',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="ti ti-trash mr-1"></i> Hapus Permanen',
         cancelButtonText: 'Batal',
-        reverseButtons: true
+        reverseButtons: true,
+        customClass: {
+            popup: 'rounded-2xl shadow-xl border border-slate-200',
+            confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5',
+            cancelButton: 'rounded-xl text-xs font-semibold px-4 py-2.5'
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             submitFormAction(`/admin/semua-pengajuan/${id}/force-delete`, 'DELETE', 'Menghapus permanen...');
