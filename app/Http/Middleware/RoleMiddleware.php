@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, string $role)
+    public function handle(Request $request, Closure $next, string ...$roles)
     {
         $user = $request->user();
 
@@ -15,12 +15,17 @@ class RoleMiddleware
         }
 
         $isAllowed = false;
-        if ($role === 'superadmin') {
-            $isAllowed = $user->isSuperAdmin();
-        } elseif ($role === 'admin') {
-            $isAllowed = $user->isAdmin();
-        } else {
-            $isAllowed = ($user->role === $role) || ($user->isSuperAdmin() && in_array($role, ['siswa', 'admin'], true));
+        foreach ($roles as $role) {
+            if ($role === 'superadmin' && $user->isSuperAdmin()) {
+                $isAllowed = true;
+                break;
+            } elseif ($role === 'admin' && $user->isAdmin()) {
+                $isAllowed = true;
+                break;
+            } elseif (($user->role === $role) || ($user->isSuperAdmin() && in_array($role, ['siswa', 'admin'], true))) {
+                $isAllowed = true;
+                break;
+            }
         }
 
         if (!$isAllowed) {

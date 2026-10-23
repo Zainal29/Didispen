@@ -76,27 +76,28 @@
                 </dd>
             </div>
 
-            {{-- NOMOR TELEPON --}}
-            @if($user->role === 'siswa' && $user->siswa)
-                <div class="pt-3">
-                    <dt class="text-slate-500 font-medium mb-1.5">No. Telepon / WA</dt>
-                    <dd class="flex items-center justify-end">
-                        @if($user->siswa->no_telepon)
-                            @php
-                                $rawProfPhone = preg_replace('/[^0-9]/', '', $user->siswa->no_telepon);
-                                $waProfPhone = str_starts_with($rawProfPhone, '0') ? '62' . substr($rawProfPhone, 1) : $rawProfPhone;
-                            @endphp
-                            <a href="https://wa.me/{{ $waProfPhone }}" target="_blank" rel="noopener noreferrer"
-                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200 text-xs font-bold break-all">
-                                <i class="ti ti-brand-whatsapp flex-shrink-0 text-emerald-600 text-sm"></i>
-                                <span>{{ str_replace('+62', '0', $user->siswa->no_telepon) }}</span>
-                            </a>
-                        @else
-                            <span class="text-slate-400 italic text-xs">Belum diatur</span>
-                        @endif
-                    </dd>
-                </div>
-            @endif
+            {{-- NOMOR TELEPON / WA --}}
+            @php
+                $profilePhone = $user->getPhoneNumber();
+            @endphp
+            <div class="pt-3">
+                <dt class="text-slate-500 font-medium mb-1.5">No. Telepon / WA</dt>
+                <dd class="flex items-center justify-end">
+                    @if($profilePhone)
+                        @php
+                            $rawProfPhone = preg_replace('/[^0-9]/', '', $profilePhone);
+                            $waProfPhone = str_starts_with($rawProfPhone, '0') ? '62' . substr($rawProfPhone, 1) : $rawProfPhone;
+                        @endphp
+                        <a href="https://wa.me/{{ $waProfPhone }}" target="_blank" rel="noopener noreferrer"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200 text-xs font-bold break-all">
+                            <i class="ti ti-brand-whatsapp flex-shrink-0 text-emerald-600 text-sm"></i>
+                            <span>{{ str_starts_with($profilePhone, '+62') ? '0' . substr($profilePhone, 3) : $profilePhone }}</span>
+                        </a>
+                    @else
+                        <span class="text-slate-400 italic text-xs">Belum diatur</span>
+                    @endif
+                </dd>
+            </div>
         </dl>
 
         <div class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-500 flex items-start gap-2">
@@ -185,6 +186,56 @@
                             <i class="ti ti-device-floppy text-base"></i>
                             <span>Simpan Data Profil</span>
                         </button>
+                    </div>
+                </form>
+            </div>
+        @endif
+
+        {{-- ========================================================= --}}
+        {{-- DATA KONTAK SATPAM --}}
+        {{-- ========================================================= --}}
+        @if($user->role === 'satpam')
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6 overflow-hidden">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <i class="ti ti-brand-whatsapp text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm sm:text-base">Kontak WhatsApp Satpam</h3>
+                        <p class="text-xs text-slate-500">Nomor ini digunakan untuk menerima notifikasi siaga pos gerbang & koordinasi siswa dispensasi.</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ route('profil.update-additional') }}">
+                    @csrf
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                                <i class="ti ti-brand-whatsapp mr-1 text-emerald-600 text-base"></i> Nomor WhatsApp Aktif
+                            </label>
+                            <div class="flex w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-slate-300 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20">
+                                <span class="inline-flex items-center px-3 sm:px-3.5 bg-slate-50 text-slate-600 font-bold text-xs sm:text-sm flex-shrink-0 whitespace-nowrap border-r border-slate-200">
+                                    <i class="ti ti-world text-slate-400 mr-1 text-sm"></i> +62
+                                </span>
+                                <input type="tel" name="no_wa" id="satpam_no_wa_input" inputmode="numeric"
+                                       value="{{ old('no_wa', preg_replace('/^\+62|^0/', '', $user->no_wa ?? '')) }}"
+                                       placeholder="89501963463"
+                                       class="w-full min-w-0 flex-1 px-3 sm:px-4 py-2.5 outline-none transition-all text-base sm:text-sm font-medium @error('no_wa') bg-rose-50 @enderror">
+                            </div>
+                            @error('no_wa')
+                                <p class="text-rose-600 text-xs mt-1.5 flex items-center gap-1"><i class="ti ti-alert-circle"></i> {{ $message }}</p>
+                            @else
+                                <p class="text-slate-400 text-xs mt-1.5 flex items-center gap-1"><i class="ti ti-info-circle"></i> Masukkan nomor WhatsApp tanpa awalan 0 atau +62.</p>
+                            @enderror
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                    class="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2">
+                                <i class="ti ti-device-floppy text-base"></i>
+                                <span>Simpan Kontak Satpam</span>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

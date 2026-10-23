@@ -110,6 +110,51 @@ class ProfileController extends Controller
             abort(401);
         }
 
+        if ($user->role === 'satpam') {
+            $validated = $request->validate([
+                'no_wa' => [
+                    'nullable',
+                    'string',
+                    'max:20',
+                ],
+            ], [
+                'no_wa.max' => 'Nomor WhatsApp maksimal 20 digit.',
+            ]);
+
+            $formatted = null;
+            if (filled($validated['no_wa'] ?? null)) {
+                $raw = preg_replace('/[^0-9]/', '', $validated['no_wa']);
+                if (str_starts_with($raw, '0')) {
+                    $raw = substr($raw, 1);
+                } elseif (str_starts_with($raw, '62')) {
+                    $raw = substr($raw, 2);
+                }
+                $formatted = '+62' . $raw;
+            }
+
+            $user->update(['no_wa' => $formatted]);
+
+            if ($formatted) {
+                \App\Models\Setting::set('wa_satpam_phone', preg_replace('/[^0-9]/', '', $formatted));
+            }
+
+            try {
+                $this->auditLog?->log(
+                    $user->id,
+                    'update_profile_satpam_phone',
+                    'users',
+                    $user->id
+                );
+            } catch (\Throwable $e) {
+                // Abaikan jika audit gagal
+            }
+
+            return back()->with(
+                'success',
+                'Nomor WhatsApp Satpam berhasil diperbarui!'
+            );
+        }
+
         if ($user->role !== 'siswa' || ! $user->siswa) {
             abort(
                 403,

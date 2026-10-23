@@ -6,9 +6,12 @@
     <title>Login — DIDISPEN</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tabler Icons Webfont (Modern, Stroke-based, Konsisten dengan Siswa, Guru & Satpam) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- PWA & Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
@@ -37,12 +40,24 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: -0.011em;
+        }
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
 </head>
 <body class="bg-slate-900 font-sans antialiased text-slate-800 min-h-screen flex flex-col justify-between" x-data="loginForm()" x-init="initPwa()">
 
@@ -97,16 +112,16 @@
         <p class="text-blue-100 text-xs font-medium mb-4">Digital Dispensasi Pendidikan</p>
 
         <div class="bg-white/10 rounded-xl p-3.5 border border-white/15 max-w-xs text-left">
-            <i class="fas fa-quote-left text-blue-200 text-xs mb-1 block"></i>
+            <i class="ti ti-quote text-blue-200 text-sm mb-1 block"></i>
             <p class="text-xs text-white/90 leading-relaxed">
                 "Pelacakan informasi manajemen izin dan ketidakhadiran siswa kini lebih cepat, aman, dan terintegrasi."
             </p>
         </div>
 
         <div class="mt-4 flex items-center gap-4 text-white/80 text-[11px] font-medium">
-            <div class="flex items-center gap-1"><i class="fas fa-shield-alt"></i> Aman</div>
-            <div class="flex items-center gap-1"><i class="fas fa-bolt"></i> Cepat</div>
-            <div class="flex items-center gap-1"><i class="fas fa-link"></i> Terintegrasi</div>
+            <div class="flex items-center gap-1.5"><i class="ti ti-shield-check text-sm"></i> Aman</div>
+            <div class="flex items-center gap-1.5"><i class="ti ti-bolt text-sm"></i> Cepat</div>
+            <div class="flex items-center gap-1.5"><i class="ti ti-link text-sm"></i> Terintegrasi</div>
         </div>
     </div>
 </div>
@@ -121,7 +136,7 @@
                     <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/60">
                         <template x-for="role in roles" :key="role.id">
                             <button type="button" @click="switchRole(role.id)" class="min-h-[38px] py-1.5 px-1 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all" :class="activeRole === role.id ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/40'">
-                                <i :class="role.icon"></i>
+                                <i :class="role.icon" class="text-sm"></i>
                                 <span x-text="role.label" class="truncate"></span>
                             </button>
                         </template>
@@ -137,20 +152,20 @@
                 <!-- ERROR MESSAGE -->
                 @if ($errors->any())
                     <div class="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2.5 shadow-sm text-xs" x-data="{ show: true }" x-show="show">
-                        <i class="fas fa-exclamation-circle text-red-600 text-base flex-shrink-0 mt-0.5"></i>
+                        <i class="ti ti-alert-circle text-red-600 text-lg flex-shrink-0 mt-0.5"></i>
                         <div class="flex-1 min-w-0">
                             <p class="font-bold text-red-800">Gagal!</p>
                             <p class="text-red-700 mt-0.5">{{ $errors->first() }}</p>
                         </div>
                         <button type="button" @click="show = false" class="text-red-400 hover:text-red-600 transition-colors flex-shrink-0">
-                            <i class="fas fa-times"></i>
+                            <i class="ti ti-x text-sm"></i>
                         </button>
                     </div>
                 @endif
 
                 @if (session('success'))
                     <div class="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2.5 shadow-sm text-xs">
-                        <i class="fas fa-check-circle text-emerald-600 text-base flex-shrink-0 mt-0.5"></i>
+                        <i class="ti ti-circle-check text-emerald-600 text-lg flex-shrink-0 mt-0.5"></i>
                         <div class="flex-1 min-w-0">
                             <p class="font-bold text-emerald-800">Berhasil!</p>
                             <p class="text-emerald-700 mt-0.5">{{ session('success') }}</p>
@@ -169,7 +184,7 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Email / NIS Siswa</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-sm"><i class="fas fa-envelope"></i></span>
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-base"><i class="ti ti-mail"></i></span>
                                     <input name="email" type="text" x-model="loginId" required placeholder="Masukkan NIS atau email siswa" class="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10 transition-all">
                                 </div>
                             </div>
@@ -177,10 +192,10 @@
                             <div x-data="{ showPw: false }">
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-sm"><i class="fas fa-lock"></i></span>
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-base"><i class="ti ti-lock"></i></span>
                                     <input name="password" :type="showPw ? 'text' : 'password'" required autocomplete="current-password" placeholder="Masukkan password" class="w-full h-10 pl-9 pr-9 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10 transition-all">
                                     <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 w-9 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
-                                        <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                        <i :class="showPw ? 'ti ti-eye-off' : 'ti ti-eye'" class="text-base"></i>
                                     </button>
                                 </div>
                             </div>
@@ -193,7 +208,7 @@
                             </div>
 
                             <button type="submit" :disabled="loading" class="w-full h-10 mt-1 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20">
-                                <i x-show="loading" class="fas fa-spinner fa-spin"></i>
+                                <i x-show="loading" class="ti ti-loader-2 animate-spin text-base"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
                             </button>
                         </form>
@@ -208,7 +223,7 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Email / NIP Guru</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-sm"><i class="fas fa-envelope"></i></span>
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-base"><i class="ti ti-mail"></i></span>
                                     <input name="email" type="text" x-model="loginId" required autocomplete="username" placeholder="Masukkan NIP atau email guru" class="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10 transition-all">
                                 </div>
                             </div>
@@ -216,10 +231,10 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-sm"><i class="fas fa-lock"></i></span>
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-base"><i class="ti ti-lock"></i></span>
                                     <input name="password" :type="showPw ? 'text' : 'password'" required autocomplete="current-password" placeholder="Masukkan password" class="w-full h-10 pl-9 pr-9 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10 transition-all">
                                     <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 w-9 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
-                                        <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                        <i :class="showPw ? 'ti ti-eye-off' : 'ti ti-eye'" class="text-base"></i>
                                     </button>
                                 </div>
                             </div>
@@ -232,7 +247,7 @@
                             </div>
 
                             <button type="submit" :disabled="loading" class="w-full h-10 mt-1 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20">
-                                <i x-show="loading" class="fas fa-spinner fa-spin"></i>
+                                <i x-show="loading" class="ti ti-loader-2 animate-spin text-base"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
                             </button>
                         </form>
@@ -247,7 +262,7 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Email / ID Satpam</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-sm"><i class="fas fa-envelope"></i></span>
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-base"><i class="ti ti-mail"></i></span>
                                     <input name="email" type="text" value="{{ old('email') }}" required placeholder="Masukkan ID atau email satpam" class="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10 transition-all">
                                 </div>
                             </div>
@@ -255,10 +270,10 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-sm"><i class="fas fa-lock"></i></span>
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-base"><i class="ti ti-lock"></i></span>
                                     <input name="password" :type="showPw ? 'text' : 'password'" required placeholder="Masukkan password" class="w-full h-10 pl-9 pr-9 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10 transition-all">
                                     <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 w-9 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
-                                        <i :class="showPw ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                        <i :class="showPw ? 'ti ti-eye-off' : 'ti ti-eye'" class="text-base"></i>
                                     </button>
                                 </div>
                             </div>
@@ -271,7 +286,7 @@
                             </div>
 
                             <button type="submit" :disabled="loading" class="w-full h-10 mt-1 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20">
-                                <i x-show="loading" class="fas fa-spinner fa-spin"></i>
+                                <i x-show="loading" class="ti ti-loader-2 animate-spin text-base"></i>
                                 <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
                             </button>
                         </form>
@@ -297,7 +312,7 @@
                             </div>
                             <div class="text-xs font-semibold text-blue-600 pl-2 pr-1 flex items-center gap-1 shrink-0">
                                 <span x-text="isInstalled ? 'Buka' : 'Pasang'"></span>
-                                <i class="fas fa-chevron-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i>
+                                <i class="ti ti-chevron-right text-xs group-hover:translate-x-0.5 transition-transform"></i>
                             </div>
                         </button>
                     </div>
@@ -327,11 +342,11 @@
             
             <div class="p-4 bg-blue-600 text-white flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
-                    <i class="fas fa-arrow-down-to-bracket"></i>
+                    <i class="ti ti-download text-lg"></i>
                     <h3 class="font-bold text-sm">Pasang Pintasan Layar Utama</h3>
                 </div>
                 <button type="button" @click="showGuideModal = false" class="text-white/80 hover:text-white">
-                    <i class="fas fa-times"></i>
+                    <i class="ti ti-x text-base"></i>
                 </button>
             </div>
 
@@ -341,13 +356,13 @@
                             @click="activePlatform = 'android'" 
                             class="flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
                             :class="activePlatform === 'android' ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-slate-600'">
-                        <i class="fab fa-android text-emerald-500"></i> Android
+                        <i class="ti ti-brand-android text-emerald-500 text-base"></i> Android
                     </button>
                     <button type="button" 
                             @click="activePlatform = 'ios'" 
                             class="flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
                             :class="activePlatform === 'ios' ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-slate-600'">
-                        <i class="fab fa-apple"></i> iPhone / iPad
+                        <i class="ti ti-brand-apple text-base"></i> iPhone / iPad
                     </button>
                 </div>
 
@@ -400,7 +415,7 @@
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
         </span>
-        <i class="fas fa-clock-rotate-left text-blue-400 group-hover:rotate-[-30deg] transition-transform duration-200"></i>
+        <i class="ti ti-history text-blue-400 group-hover:rotate-[-30deg] transition-transform duration-200"></i>
         <span class="text-slate-200 font-semibold hidden xs:inline sm:inline">Pembaruan</span>
         <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-600/30 text-blue-300 border border-blue-500/30">v2.4</span>
     </button>
@@ -420,32 +435,82 @@
             <div class="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-slate-850 to-blue-950 text-white flex items-center justify-between border-b border-slate-800">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                        <i class="fas fa-code-branch text-base"></i>
+                        <i class="ti ti-git-branch text-base"></i>
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
                             <h3 class="font-bold text-sm sm:text-base text-white">Catatan Pembaruan Sistem</h3>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 font-mono">v2.4.0</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 font-mono">v2.5.0</span>
                         </div>
                         <p class="text-slate-400 text-xs mt-0.5">Riwayat peningkatan fitur & stabilitas DIDISPEN</p>
                     </div>
                 </div>
                 <button type="button" @click="showChangelogModal = false" class="w-8 h-8 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors">
-                    <i class="fas fa-times text-xs"></i>
+                    <i class="ti ti-x text-sm"></i>
                 </button>
             </div>
 
             <!-- BODY LIST -->
             <div class="p-4 sm:p-5 overflow-y-auto space-y-5 text-xs text-slate-700">
                 
-                <!-- VERSI 2.4.0 -->
+                <!-- VERSI 2.5.0 -->
                 <div class="relative pl-6 border-l-2 border-blue-500 space-y-2.5">
                     <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-600 border-2 border-white shadow-xs"></div>
                     
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                         <div class="flex items-center gap-2">
-                            <span class="font-bold text-slate-900 text-sm">Versi 2.4.0</span>
+                            <span class="font-bold text-slate-900 text-sm">Versi 2.5.0</span>
                             <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Terbaru</span>
+                        </div>
+                        <span class="text-slate-600 text-[11px] font-medium">23 Oktober 2026</span>
+                    </div>
+
+                    <p class="text-slate-600 text-[11px] leading-relaxed">
+                        Penyempurnaan aturan kedisiplinan keterlambatan transparan, kombinasi cerdas batas waktu tunggu permohonan, proteksi anti double-scan 4 lapis berkecepatan tinggi, dan penyelarasan laporan admin.
+                    </p>
+
+                    <div class="space-y-2 pt-1">
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="ti ti-clock-exclamation text-amber-600 mt-0.5 flex-shrink-0 text-base"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Aturan Keterlambatan Transparan & Sisa Toleransi Gerbang</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Siswa yang kembali melewati jam izin resmi dicatat "Terlambat" di rekapitulasi dan badge status. Toleransi 5 menit pos satpam berfungsi sebagai pelindung antrean gerbang dengan info sisa waktu toleransi.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="ti ti-hourglass-low text-blue-600 mt-0.5 flex-shrink-0 text-base"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Kombinasi Cerdas Batas Waktu Menunggu ACC</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Batas kadaluarsa menunggu persetujuan Guru Piket dihitung cerdas antara jam pembuatan dan jam keluar terpilih. Siswa yang mengajukan lebih awal tidak lagi hangus sebelum jam keluar tiba.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="ti ti-qrcode text-emerald-600 mt-0.5 flex-shrink-0 text-base"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Anti Double-Scan 4 Lapis & Scanner Satpam Kilat (1.5 Detik)</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Proteksi cooldown 5 detik per-QR, kunci transaksional database, proteksi jeda fisik 1 menit keluar-kembali, serta Mode Cepat (Express) super responsif untuk antrean ramai.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="ti ti-layout-dashboard text-indigo-600 mt-0.5 flex-shrink-0 text-base"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Desain Laporan Admin & Single Desktop Logout</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Filter status realisasi lengkap (Sedang Keluar, Kembali Tepat Waktu, Terlambat, Sampai Pulang, Tidak Scan Kembali), navigasi rapi dengan tombol logout tunggal di header profil.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VERSI 2.4.0 -->
+                <div class="relative pl-6 border-l-2 border-slate-200 space-y-2.5">
+                    <div class="absolute -left-[7px] top-0.5 w-3 h-3 rounded-full bg-slate-400 border-2 border-white"></div>
+                    
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-800 text-xs">Versi 2.4.0</span>
                         </div>
                         <span class="text-slate-600 text-[11px] font-medium">Oktober 2026</span>
                     </div>
@@ -456,7 +521,7 @@
 
                     <div class="space-y-2 pt-1">
                         <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                            <i class="fas fa-hourglass-half text-blue-600 mt-0.5 flex-shrink-0"></i>
+                            <i class="ti ti-hourglass-low text-blue-600 mt-0.5 flex-shrink-0 text-base"></i>
                             <div>
                                 <p class="font-bold text-slate-800">Toleransi 20 Menit & Status Kadaluarsa Otomatis</p>
                                 <p class="text-slate-500 text-[11px] mt-0.5">Siswa yang disetujui memiliki waktu toleransi 20 menit untuk scan keluar ke satpam sebelum izin berstatus kadaluarsa.</p>
@@ -464,7 +529,7 @@
                         </div>
 
                         <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                            <i class="fas fa-bell text-amber-600 mt-0.5 flex-shrink-0"></i>
+                            <i class="ti ti-bell text-amber-600 mt-0.5 flex-shrink-0 text-base"></i>
                             <div>
                                 <p class="font-bold text-slate-800">Notifikasi Layar & Anti-Keluar HP Siswa</p>
                                 <p class="text-slate-500 text-[11px] mt-0.5">Peringatan status bar dan pengingat kembali jika aplikasi di-minimize, serta dialog pencegah tutup tab saat izin masih berjalan.</p>
@@ -472,7 +537,7 @@
                         </div>
 
                         <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                            <i class="fas fa-shield-halved text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                            <i class="ti ti-shield-check text-emerald-600 mt-0.5 flex-shrink-0 text-base"></i>
                             <div>
                                 <p class="font-bold text-slate-800">Mode Pos Satpam Express & Screen Wake Lock</p>
                                 <p class="text-slate-500 text-[11px] mt-0.5">Penyimpanan login permanen akun satpam dan guru, mode scanner auto-confirm dengan audio beep, serta pencegah layar redup otomatis.</p>
@@ -480,7 +545,7 @@
                         </div>
 
                         <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                            <i class="fas fa-user-check text-indigo-600 mt-0.5 flex-shrink-0"></i>
+                            <i class="ti ti-user-check text-indigo-600 mt-0.5 flex-shrink-0 text-base"></i>
                             <div>
                                 <p class="font-bold text-slate-800">Fitur Ingat Saya & Tampilan Responsif</p>
                                 <p class="text-slate-500 text-[11px] mt-0.5">Kotak centang Ingat Saya di login, serta perbaikan badge status dan nomor surat di dashboard siswa, guru, dan satpam.</p>
@@ -500,11 +565,11 @@
 
                     <div class="space-y-1.5 text-slate-600 text-[11px]">
                         <div class="flex items-start gap-2">
-                            <i class="fas fa-users text-purple-600 mt-0.5 flex-shrink-0"></i>
+                            <i class="ti ti-users text-purple-600 mt-0.5 flex-shrink-0 text-base"></i>
                             <span>Dukungan Dispensasi Rombongan untuk izin kelompok dalam satu surat resmi.</span>
                         </div>
                         <div class="flex items-start gap-2">
-                            <i class="fas fa-print text-slate-600 mt-0.5 flex-shrink-0"></i>
+                            <i class="ti ti-printer text-slate-600 mt-0.5 flex-shrink-0 text-base"></i>
                             <span>Pencetakan struk bukti dispensasi via printer thermal bluetooth 58mm.</span>
                         </div>
                     </div>
@@ -521,11 +586,11 @@
 
                     <div class="space-y-1.5 text-slate-600 text-[11px]">
                         <div class="flex items-start gap-2">
-                            <i class="fas fa-comment-dots text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                            <i class="ti ti-brand-whatsapp text-emerald-600 mt-0.5 flex-shrink-0 text-base"></i>
                             <span>Notifikasi WhatsApp otomatis kepada siswa saat pengajuan disetujui atau melewati batas waktu.</span>
                         </div>
                         <div class="flex items-start gap-2">
-                            <i class="fas fa-qrcode text-blue-600 mt-0.5 flex-shrink-0"></i>
+                            <i class="ti ti-qrcode text-blue-600 mt-0.5 flex-shrink-0 text-base"></i>
                             <span>Verifikasi QR Code terenkripsi untuk validasi pos gerbang satpam dan guru piket.</span>
                         </div>
                     </div>
@@ -536,7 +601,7 @@
             <!-- FOOTER -->
             <div class="p-3 sm:p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium truncate">
-                    <i class="fas fa-shield-check text-emerald-600"></i>
+                    <i class="ti ti-shield-check text-emerald-600 text-sm"></i>
                     <span class="truncate">Sistem Resmi SMK Negeri 1 Bangsri</span>
                 </div>
                 <button type="button" @click="showChangelogModal = false" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors shrink-0">
@@ -560,9 +625,9 @@
                 activePlatform: 'android',
 
                 roles: [
-                    { id: 'student', label: 'Siswa', icon: 'fas fa-user-graduate', description: 'Gunakan NIS atau email siswa untuk masuk' },
-                    { id: 'teacher', label: 'Guru Piket', icon: 'fas fa-chalkboard-teacher', description: 'Gunakan NIP atau email guru untuk masuk' },
-                    { id: 'security', label: 'Satpam', icon: 'fas fa-user-shield', description: 'Gunakan ID atau email satpam untuk masuk' }
+                    { id: 'student', label: 'Siswa', icon: 'ti ti-school', description: 'Gunakan NIS atau email siswa untuk masuk' },
+                    { id: 'teacher', label: 'Guru Piket', icon: 'ti ti-user-check', description: 'Gunakan NIP atau email guru untuk masuk' },
+                    { id: 'security', label: 'Satpam', icon: 'ti ti-shield-check', description: 'Gunakan ID atau email satpam untuk masuk' }
                 ],
 
                 initPwa() {

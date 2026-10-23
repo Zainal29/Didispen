@@ -458,8 +458,8 @@
                     <span>Bagaimana cara mencetak bukti izin ke Printer Bluetooth Thermal 58mm?</span>
                     <i class="ti ti-chevron-down text-gray-400 text-sm transition-transform flex-shrink-0" :class="openFaq === 5 ? 'rotate-180 text-gray-700' : ''"></i>
                 </button>
-                <div x-show="openFaq === 5" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed">
-                    Guru Piket cukup membuka permohonan yang telah disetujui, menyalakan Bluetooth di laptop/HP, lalu mengklik tombol <strong>"Cetak Bluetooth"</strong>. Browser Chrome/Edge akan memindai printer thermal kasir (ESC/POS 58mm) dan mencetak struk fisik lengkap dengan barcode/QR dalam hitungan detik tanpa perlu instalasi driver tambahan.
+                <div x-show="openFaq === 5" x-cloak class="p-3.5 bg-white border-t border-gray-100 text-gray-600 leading-relaxed text-xs">
+                    Guru Piket cukup membuka permohonan yang telah disetujui, menyalakan Bluetooth di laptop/HP Android, lalu mengklik tombol <strong>"Cetak Bluetooth"</strong>. Browser Chrome/Edge akan memindai printer thermal kasir (ESC/POS 58mm) dan mencetak struk fisik secara instan. Untuk pengguna <strong>iPhone / iPad</strong>, tersedia tombol <strong>"Cetak Struk (AirPrint / iPhone)"</strong> untuk cetak langsung via printer AirPrint/Thermal/PDF, atau gunakan aplikasi browser <strong>Bluefy</strong> dari App Store jika ingin koneksi Bluetooth langsung.
                 </div>
             </div>
         </div>
