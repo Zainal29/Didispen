@@ -112,13 +112,13 @@
                 <div class="lg:col-span-2">
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Status Realisasi</label>
                     <select name="status" class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none cursor-pointer">
-                        <option value="realisasi" {{ ($currentStatus === 'realisasi' || empty($currentStatus)) ? 'selected' : '' }}>🌟 Semua Realisasi Siswa Keluar (Default)</option>
-                        <option value="keluar" {{ $currentStatus === 'keluar' ? 'selected' : '' }}>🚗 Sedang Keluar (Belum Kembali)</option>
-                        <option value="selesai_awal" {{ $currentStatus === 'selesai_awal' ? 'selected' : '' }}>⚡ Selesai (Kembali Lebih Awal / Tepat)</option>
-                        <option value="terlambat" {{ $currentStatus === 'terlambat' ? 'selected' : '' }}>⚠️ Selesai (Terlambat Kembali)</option>
-                        <option value="tidak_kembali" {{ $currentStatus === 'tidak_kembali' ? 'selected' : '' }}>🛑 Kadaluarsa (Tidak Scan Kembali)</option>
-                        <option value="sampai_pulang" {{ $currentStatus === 'sampai_pulang' ? 'selected' : '' }}>🏠 Selesai (Izin Sampai Pulang)</option>
-                        <option value="semua" {{ $currentStatus === 'semua' ? 'selected' : '' }}>📂 Semua Riwayat Lengkap (Audit Termasuk Batal & Tolak)</option>
+                        <option value="realisasi" {{ ($currentStatus === 'realisasi' || empty($currentStatus)) ? 'selected' : '' }}>Semua Realisasi Siswa Keluar (Default)</option>
+                        <option value="keluar" {{ $currentStatus === 'keluar' ? 'selected' : '' }}>Sedang Keluar (Belum Kembali)</option>
+                        <option value="selesai_awal" {{ $currentStatus === 'selesai_awal' ? 'selected' : '' }}>Selesai (Kembali Lebih Awal / Tepat)</option>
+                        <option value="terlambat" {{ $currentStatus === 'terlambat' ? 'selected' : '' }}>Selesai (Terlambat Kembali)</option>
+                        <option value="tidak_kembali" {{ $currentStatus === 'tidak_kembali' ? 'selected' : '' }}>Kadaluarsa (Tidak Scan Kembali)</option>
+                        <option value="sampai_pulang" {{ $currentStatus === 'sampai_pulang' ? 'selected' : '' }}>Selesai (Izin Sampai Pulang)</option>
+                        <option value="semua" {{ $currentStatus === 'semua' ? 'selected' : '' }}>Semua Riwayat Lengkap (Audit Termasuk Batal & Tolak)</option>
                         <optgroup label="Status Baku Lainnya">
                             <option value="menunggu" {{ $currentStatus === 'menunggu' ? 'selected' : '' }}>Menunggu Persetujuan Guru Piket</option>
                             <option value="disetujui" {{ $currentStatus === 'disetujui' ? 'selected' : '' }}>Disetujui Guru Piket (Belum Keluar)</option>
