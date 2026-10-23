@@ -84,7 +84,14 @@ class DashboardController extends Controller
 
             $query = trim($request->input('query'));
 
-            $dispensasi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'anggotaSiswa.kelas', 'guru'])
+            $dispensasi = Dispensasi::with([
+                    'siswa.user',
+                    'siswa.kelas.jurusan',
+                    'anggotaSiswa.kelas',
+                    'guru',
+                    'petugasKeluar',
+                    'petugasKembali',
+                ])
                 ->whereIn('status', ['disetujui', 'keluar', 'selesai'])
                 ->where(function($q) use ($query) {
                     $q->where('nomor_surat', 'like', "%{$query}%")
@@ -144,6 +151,7 @@ class DashboardController extends Controller
                     'is_sampai_pulang' => (bool)$d->sampai_pulang,
                     'waktu_keluar_aktual' => $d->waktu_keluar_aktual ? \Carbon\Carbon::parse($d->waktu_keluar_aktual)->format('H:i') : null,
                     'waktu_kembali_aktual' => $d->waktu_kembali_aktual ? \Carbon\Carbon::parse($d->waktu_kembali_aktual)->format('H:i') : null,
+                    'riwayat_scan' => $d->riwayat_scan,
                     'alasan' => $d->alasan,
                     'tujuan' => $d->tujuan,
                     'detail_url' => route('satpam.dispensasi.detail', $d->id),
@@ -252,10 +260,7 @@ class DashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Dispensasi tidak valid']);
         }
 
-        $dispensasi->update([
-            'is_warned' => true,
-            'warned_at' => now(),
-        ]);
+        $dispensasi->markAsWarned('satpam');
 
         return response()->json(['success' => true]);
     }

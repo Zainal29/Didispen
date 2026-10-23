@@ -20,7 +20,7 @@ class ScanController extends Controller
     public function index()
     {
         return view('satpam.scan', [
-            'defaultExpressMode' => filter_var(\App\Models\Setting::get('satpam_express_mode', '1'), FILTER_VALIDATE_BOOLEAN),
+            'defaultExpressMode' => filter_var(\App\Models\Setting::get('satpam_express_mode', '0'), FILTER_VALIDATE_BOOLEAN),
             'defaultBeepSound'   => filter_var(\App\Models\Setting::get('satpam_beep_sound', '1'), FILTER_VALIDATE_BOOLEAN),
             'defaultWakeLock'    => filter_var(\App\Models\Setting::get('satpam_wake_lock', '1'), FILTER_VALIDATE_BOOLEAN),
         ]);
@@ -48,7 +48,7 @@ class ScanController extends Controller
         }
 
         $dispensasi->refresh();
-        $dispensasi->loadMissing(['siswa.kelas.jurusan', 'siswa.user', 'guru', 'anggotaSiswa.kelas.jurusan', 'anggotaSiswa.user']);
+        $dispensasi->loadMissing(['siswa.kelas.jurusan', 'siswa.user', 'guru', 'anggotaSiswa.kelas.jurusan', 'anggotaSiswa.user', 'petugasKeluar', 'petugasKembali']);
 
         $today = now('Asia/Jakarta')->toDateString();
         $tglIzin = ($dispensasi->tanggal_izin ?? $dispensasi->created_at)?->toDateString() ?? $today;
@@ -188,6 +188,9 @@ class ScanController extends Controller
                     'is_terlambat' => $isLate,
                     'jam_keluar' => $dispensasi->jam_keluar,
                     'jam_kembali' => $dispensasi->jam_kembali,
+                    'waktu_keluar_aktual' => $dispensasi->waktu_keluar_aktual ? \Carbon\Carbon::parse($dispensasi->waktu_keluar_aktual)->timezone('Asia/Jakarta')->format('H:i') : null,
+                    'waktu_kembali_aktual' => $dispensasi->waktu_kembali_aktual ? \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->timezone('Asia/Jakarta')->format('H:i') : null,
+                    'riwayat_scan' => $dispensasi->riwayat_scan,
                     'alasan' => $dispensasi->alasan,
                     'tujuan' => $dispensasi->tujuan,
                     'lokasi' => $dispensasi->lokasi,
@@ -203,6 +206,15 @@ class ScanController extends Controller
                     'total_rombongan' => count($anggotaFormatted) + 1,
                 ],
             ]);
+        }
+
+        // Cek cooldown scan untuk mencegah double scan
+        $cooldown = $scanService->checkScanCooldown($dispensasi);
+        if ($cooldown['cooldown']) {
+            return response()->json([
+                'success' => false,
+                'message' => $cooldown['message'],
+            ], 429);
         }
 
         // MODE EKSEKUSI (Konfirmasi Keluar / Kembali)

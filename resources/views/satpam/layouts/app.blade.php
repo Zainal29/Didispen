@@ -148,7 +148,8 @@
     {{-- ================================================== --}}
     {{-- BOTTOM NAV — MOBILE (HP-FRIENDLY & ERGONOMIS)        --}}
     {{-- ================================================== --}}
-    <nav x-show="!sheet"
+    <nav id="mobileBottomNav"
+         x-show="!sheet"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="translate-y-full opacity-0"
          x-transition:enter-end="translate-y-0 opacity-100"

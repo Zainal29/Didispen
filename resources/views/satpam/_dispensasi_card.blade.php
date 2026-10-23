@@ -48,7 +48,7 @@
                     @endif
                     @if($isWarned)
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-purple-100 text-purple-700 uppercase">
-                            <i class="ti ti-phone-call mr-1"></i>DIHUBUNGI
+                            <i class="ti ti-brand-whatsapp mr-1"></i>{{ ($dispensasi->warned_by ?? 'bot') === 'bot' ? 'DIHUBUNGI BOT WA' : 'DIHUBUNGI' }}
                         </span>
                     @endif
                 </div>
@@ -193,7 +193,10 @@
                 @endif
             @elseif($isWarned)
                 <div class="p-2.5 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-800">
-                    <span class="font-semibold flex items-center"><i class="ti ti-circle-check mr-1 text-purple-600 text-sm"></i>Sudah Dihubungi</span>
+                    <span class="font-semibold flex items-center">
+                        <i class="ti ti-brand-whatsapp mr-1 text-purple-600 text-sm"></i>
+                        {{ ($dispensasi->warned_by ?? 'bot') === 'bot' ? 'Sudah dihubungi bot WA DIDISPEN' : 'Sudah Dihubungi Manual' }}
+                    </span>
                     <span class="text-[10px] text-purple-600 font-mono">{{ $dispensasi->warned_at ? \Carbon\Carbon::parse($dispensasi->warned_at)->format('H:i') . ' WIB' : '-' }}</span>
                 </div>
             @endif
