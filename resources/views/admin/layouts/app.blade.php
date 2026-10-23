@@ -1,13 +1,25 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin') - DIDISPEN</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tabler Icons Webfont -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    
+    <!-- Font Awesome retained for older CRUD views if needed -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <link rel="icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
@@ -15,263 +27,335 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @include('components.sweetalert-theme')
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .sidebar-link.active { background-color: #1e40af; color: white; }
-        .sidebar-link:hover:not(.active) { background-color: #e0e7ff; }
-
-        /* ===== RESPONSIVE SIDEBAR ===== */
-        #sidebar {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        [x-cloak] { display: none !important; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: -0.011em;
         }
-        @media (max-width: 1023px) {
-            #sidebar {
-                position: fixed;
-                top: 0;
-                bottom: 0;
-                left: 0;
-                z-index: 50;
-                width: 16rem;
-                height: 100vh;
-                height: 100dvh;
-                max-height: 100dvh;
-                transform: translateX(-100%);
-            }
-            #sidebar.sidebar-open {
-                transform: translateX(0);
-            }
-            /* Cegah body scroll saat sidebar terbuka */
-            body.sidebar-active {
-                overflow: hidden;
-            }
-        }
-        @media (min-width: 1024px) {
-            #sidebar {
-                position: sticky;
-                top: 0;
-                height: 100vh;
-                height: 100dvh;
-                max-height: 100vh;
-                max-height: 100dvh;
-                flex-shrink: 0;
-            }
-        }
-        #sidebar-overlay {
-            display: none;
-        }
-        #sidebar-overlay.overlay-open {
-            display: block;
+        * {
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* ===== CUSTOM SLEEK SCROLLBAR UNTUK MENU SIDEBAR ===== */
-        .sidebar-nav {
+        /* Slim sleek scrollbar for sidebar */
+        .sidebar-scroll {
             scrollbar-width: thin;
             scrollbar-color: #cbd5e1 transparent;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-            touch-action: pan-y;
         }
-        .sidebar-nav::-webkit-scrollbar {
+        .sidebar-scroll::-webkit-scrollbar {
             width: 4px;
         }
-        .sidebar-nav::-webkit-scrollbar-track {
+        .sidebar-scroll::-webkit-scrollbar-track {
             background: transparent;
         }
-        .sidebar-nav::-webkit-scrollbar-thumb {
+        .sidebar-scroll::-webkit-scrollbar-thumb {
             background-color: #cbd5e1;
             border-radius: 9999px;
         }
-        .sidebar-nav::-webkit-scrollbar-thumb:hover {
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
             background-color: #94a3b8;
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="flex min-h-screen">
+<body class="h-full bg-slate-50 text-slate-800 antialiased font-sans" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
 
-        {{-- OVERLAY (mobile only) --}}
-        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 z-40 lg:hidden"></div>
+    {{-- =========================================================
+        MOBILE SIDEBAR OVERLAY & DRAWER
+    ========================================================== --}}
+    <div x-show="sidebarOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 lg:hidden" 
+         role="dialog" 
+         aria-modal="true">
+        
+        {{-- Backdrop --}}
+        <div x-show="sidebarOpen" 
+             x-transition:enter="transition-opacity ease-linear duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="sidebarOpen = false"
+             class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"></div>
 
-        {{-- SIDEBAR --}}
-        <aside id="sidebar" class="w-64 bg-white shadow-lg flex flex-col h-screen h-[100dvh] max-h-screen overflow-hidden">
-            {{-- Header (Fixed Top) --}}
-            <div class="p-5 border-b flex items-center justify-between shrink-0 bg-white">
+        {{-- Mobile Drawer Panel --}}
+        <div x-show="sidebarOpen"
+             x-transition:enter="transition ease-in-out duration-200 transform"
+             x-transition:enter-start="-translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transition ease-in-out duration-200 transform"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="-translate-x-full"
+             class="relative flex flex-col w-72 max-w-[85vw] h-full bg-white shadow-2xl border-r border-slate-200">
+            
+            {{-- Mobile Drawer Header --}}
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
                 <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-12 h-12 rounded-xl bg-[#fbfcf6] shadow-sm border border-slate-100 overflow-hidden flex items-center justify-center flex-shrink-0">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/20 overflow-hidden flex items-center justify-center shrink-0">
                         @if(file_exists(public_path('images/logo-didispen.png')))
-                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-1">
                         @else
-                            <i class="fas fa-school text-blue-800 text-xl"></i>
+                            <i class="ti ti-school text-xl"></i>
                         @endif
                     </div>
                     <div class="min-w-0">
-                        <h1 class="text-lg font-bold text-blue-800 truncate">DIDISPEN</h1>
-                        <p class="text-[11px] text-gray-500 truncate">Panel Administrator</p>
+                        <div class="flex items-center gap-1.5">
+                            <h1 class="text-sm font-extrabold text-slate-900 tracking-tight leading-none">DIDISPEN</h1>
+                            <span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">ADMIN</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 font-medium mt-1 truncate">Panel Administrator</p>
                     </div>
                 </div>
-                {{-- Tombol close sidebar (mobile only) --}}
-                <button onclick="toggleSidebar()" class="lg:hidden text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0" aria-label="Tutup menu">
-                    <i class="fas fa-times text-lg"></i>
+                <button type="button" @click="sidebarOpen = false" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Tutup menu">
+                    <i class="ti ti-x text-lg"></i>
                 </button>
             </div>
 
-            {{-- Nav Links (Scrollable Middle Section) --}}
-            <nav class="sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-1 pb-6">
-                <a href="{{ route('admin.dashboard') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-tachometer-alt w-5 mr-3"></i> Dashboard
-                </a>
-
-                <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Master Data</p>
-                <a href="{{ route('admin.siswa.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
-                    <i class="fas fa-user-graduate w-5 mr-3"></i> Siswa
-                </a>
-                <a href="{{ route('admin.satpam.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.satpam.*') ? 'active' : '' }}">
-                    <i class="fas fa-user-shield w-5 mr-3"></i> Satpam
-                </a>
-                <a href="{{ route('admin.guru.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ (request()->routeIs('admin.guru.index') || request()->routeIs('admin.guru.create') || request()->routeIs('admin.guru.edit')) ? 'active' : '' }}">
-                    <i class="fas fa-chalkboard-teacher w-5 mr-3"></i> Guru
-                </a>
-                <a href="{{ route('admin.guru.checklog') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.guru.checklog') ? 'active' : '' }}">
-                    <i class="fas fa-id-card-alt w-5 mr-3"></i> Izin Guru
-                </a>
-                <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Operasional</p>
-                <a href="{{ route('admin.jadwal-piket.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.jadwal-piket.*') ? 'active' : '' }}">
-                    <i class="fas fa-calendar-alt w-5 mr-3"></i> Jadwal Piket
-                </a>
-                <a href="{{ route('admin.semua.pengajuan') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.semua.*') ? 'active' : '' }}">
-                    <i class="fas fa-file-alt w-5 mr-3"></i> Semua Pengajuan
-                </a>
-                <a href="{{ route('admin.laporan.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.laporan.*') ? 'active' : '' }}">
-                    <i class="fas fa-chart-bar w-5 mr-3"></i> Laporan
-                </a>
-                <a href="{{ route('admin.whatsapp-templates.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.whatsapp-templates.*') ? 'active' : '' }}">
-                    <i class="fab fa-whatsapp w-5 mr-3"></i> Template WA
-                </a>
-
-                {{-- ✅ TAMBAHKAN MENU BOT WA DI BAWAHNYA --}}
-                <a href="{{ route('admin.whatsapp-bot.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.whatsapp-bot.*') ? 'active' : '' }}">
-                    <i class="fas fa-robot w-5 mr-2 text-emerald-600"></i>
-                    <span>Bot & Log WhatsApp</span>
-                </a>
-
-                <p class="text-xs text-gray-400 uppercase mt-4 px-3 font-semibold">Sistem</p>
-                <a href="{{ route('admin.superadmin.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.superadmin.*') ? 'active' : '' }}">
-                    <i class="fas fa-shield-alt w-5 mr-3 text-purple-600"></i> Super Admin
-                </a>
-                <a href="{{ route('admin.settings.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                    <i class="fas fa-cog w-5 mr-3"></i> Pengaturan
-                </a>
-                <a href="{{ route('admin.audit.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
-                    <i class="fas fa-history w-5 mr-3"></i> Audit Log
-                </a>
-                <a href="{{ url('/profil') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->is('profil*') ? 'active' : '' }}">
-                    <i class="fas fa-user-circle w-5 mr-3"></i> Profil
-                </a>
-                <a href="{{ url('/panduan') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->is('panduan*') ? 'active' : '' }}">
-                    <i class="fas fa-book-open w-5 mr-3"></i> Panduan
-                </a>
-                <a href="{{ route('admin.tutorial-videos.index') }}"
-                   class="sidebar-link flex items-center px-3 py-2 rounded text-gray-700 {{ request()->routeIs('admin.tutorial-videos.*') ? 'active' : '' }}">
-                    <i class="fas fa-video w-5 mr-3"></i> Video Tutorial
-                </a>
-            </nav>
-
-            {{-- Footer: Logout Pinned At Bottom --}}
-            <div class="p-3 border-t shrink-0 bg-white">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full flex items-center px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 font-medium transition-colors">
-                        <i class="fas fa-sign-out-alt w-5 mr-3 text-red-500"></i> Logout
-                    </button>
-                </form>
+            {{-- Mobile Navigation Links --}}
+            <div class="flex-1 overflow-y-auto sidebar-scroll p-3 space-y-1">
+                @include('admin.layouts.partials.nav-links')
             </div>
-        </aside>
 
-        {{-- MAIN CONTENT --}}
-        <div class="flex-1 flex flex-col min-w-0">
-            {{-- TOPBAR --}}
-            <header class="bg-white shadow-sm px-4 sm:px-6 py-3 flex justify-between items-center gap-3 sticky top-0 z-30">
-                <div class="flex items-center gap-3 min-w-0">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-800 truncate">@yield('page-title', 'Dashboard')</h2>
-                </div>
-                <div class="flex items-center gap-3 flex-shrink-0">
-                    @if(auth()->user()->isSuperAdmin())
-                        <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs">
-                            <i class="fas fa-shield-halved text-purple-600"></i> Super Admin
-                        </span>
-                    @endif
-
-                    @if(auth()->user()->siswa)
-                        <a href="{{ route('siswa.dashboard') }}"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
-                           title="Kembali ke Dashboard Siswa">
-                            <i class="fas fa-graduation-cap text-sm"></i>
-                            <span class="hidden sm:inline">Portal Siswa</span>
-                        </a>
-                    @endif
-
-                    <span class="text-sm text-gray-600 hidden sm:inline-flex items-center">
-                        <i class="fas fa-user-circle mr-1 text-slate-400"></i>
-                        {{ auth()->user()->name }}
-                    </span>
-                    <span class="text-sm text-gray-600 sm:hidden">
-                        <i class="fas fa-user-circle text-slate-400"></i>
-                    </span>
-                    {{-- Quick Logout button in topbar --}}
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
+            {{-- Mobile Drawer Footer --}}
+            <div class="p-3 border-t border-slate-100 shrink-0 bg-slate-50/60">
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-800 truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-[10px] text-slate-400 font-medium">Administrator</p>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}" class="shrink-0">
                         @csrf
-                        <button type="submit" class="text-slate-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition" title="Logout">
-                            <i class="fas fa-sign-out-alt text-base"></i>
+                        <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Logout">
+                            <i class="ti ti-logout text-base"></i>
                         </button>
                     </form>
-                    {{-- Tombol hamburger di KANAN (mobile only) --}}
-                    <button id="hamburger-btn" onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition flex-shrink-0" aria-label="Buka menu">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
                 </div>
-            </header>
-
-            {{-- CONTENT --}}
-            <main class="flex-1 p-4 sm:p-6">
-                @yield('content')
-            </main>
+            </div>
         </div>
     </div>
 
-    <script>
-        function toggleSidebar() {
-            const sidebar  = document.getElementById('sidebar');
-            const overlay  = document.getElementById('sidebar-overlay');
-            const isOpen   = sidebar.classList.toggle('sidebar-open');
-            overlay.classList.toggle('overlay-open', isOpen);
-            // Cegah scroll halaman utama saat sidebar terbuka
-            document.body.classList.toggle('sidebar-active', isOpen);
-        }
+    {{-- =========================================================
+        DESKTOP STATIC SIDEBAR (Fixed Left, Independent Scroll)
+    ========================================================== --}}
+    <aside class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200/90 flex-col z-30 shadow-2xs">
+        {{-- Desktop Header --}}
+        <div class="p-4 border-b border-slate-100 flex items-center space-x-3 shrink-0 bg-white">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/20 overflow-hidden flex items-center justify-center shrink-0">
+                @if(file_exists(public_path('images/logo-didispen.png')))
+                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-1">
+                @else
+                    <i class="ti ti-school text-xl"></i>
+                @endif
+            </div>
+            <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                    <h1 class="text-sm font-extrabold text-slate-900 tracking-tight leading-none">DIDISPEN</h1>
+                    <span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">ADMIN</span>
+                </div>
+                <p class="text-[10px] text-slate-400 font-medium mt-1 truncate">Panel Administrator</p>
+            </div>
+        </div>
 
-        // Tutup sidebar saat tekan tombol Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const sidebar = document.getElementById('sidebar');
-                if (sidebar && sidebar.classList.contains('sidebar-open')) {
-                    toggleSidebar();
-                }
-            }
-        });
-    </script>
+        {{-- Desktop Navigation Links --}}
+        <div class="flex-1 overflow-y-auto sidebar-scroll p-3 space-y-1">
+            @include('admin.layouts.partials.nav-links')
+        </div>
+
+        {{-- Desktop Footer User Profile Link (No redundant logout) --}}
+        <div class="p-3 border-t border-slate-100 shrink-0 bg-slate-50/60">
+            <a href="{{ url('/profil') }}" 
+               class="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-blue-300 hover:bg-blue-50/30 transition-all group"
+               title="Buka Profil Saya">
+                <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-slate-800 truncate group-hover:text-blue-700 transition-colors">{{ auth()->user()->name }}</p>
+                    <p class="text-[10px] text-slate-400 font-medium truncate">{{ auth()->user()->isSuperAdmin() ? 'Super Admin' : 'Administrator' }}</p>
+                </div>
+                <i class="ti ti-chevron-right text-xs text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all"></i>
+            </a>
+        </div>
+    </aside>
+
+    {{-- =========================================================
+        MAIN AREA (Header + Content)
+    ========================================================== --}}
+    <div class="flex flex-col min-h-screen lg:pl-64">
+
+        {{-- STICKY TOPBAR --}}
+        <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-3 flex items-center justify-between gap-4 shadow-2xs">
+            
+            {{-- Left: Mobile Toggle & Page Title --}}
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" 
+                        @click="sidebarOpen = true" 
+                        class="lg:hidden text-slate-600 hover:text-slate-900 p-2 rounded-xl hover:bg-slate-100 transition-colors shrink-0" 
+                        aria-label="Buka menu navigasi">
+                    <i class="ti ti-menu-2 text-xl"></i>
+                </button>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium hidden sm:flex">
+                        <span>Admin</span>
+                        <i class="ti ti-chevron-right text-[10px]"></i>
+                        <span class="text-slate-600 font-semibold truncate">@yield('page-title', 'Dashboard')</span>
+                    </div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight truncate">
+                        @yield('page-title', 'Dashboard')
+                    </h2>
+                </div>
+            </div>
+
+            {{-- Right: System Status & Responsive Profile Menu --}}
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                
+                {{-- Live Indicator --}}
+                <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Sistem Aktif
+                </span>
+
+                {{-- Date widget --}}
+                <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200/70">
+                    <i class="ti ti-calendar text-blue-600 text-sm"></i>
+                    {{ now()->translatedFormat('d M Y') }}
+                </span>
+
+                @if(auth()->user()->isSuperAdmin())
+                    <span class="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200/80">
+                        <i class="ti ti-shield-check text-blue-600 text-xs"></i> Super Admin
+                    </span>
+                @endif
+
+                @if(auth()->user()->siswa)
+                    <a href="{{ route('siswa.dashboard') }}"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                       title="Kembali ke Dashboard Siswa">
+                        <i class="ti ti-school text-sm"></i>
+                        <span class="hidden sm:inline">Portal Siswa</span>
+                    </a>
+                @endif
+
+                <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>
+
+                {{-- RESPONSIVE USER PROFILE DROPDOWN (1 Logout Button in Desktop/Mobile) --}}
+                <div class="relative" x-data="{ profileOpen: false }" @click.outside="profileOpen = false" @keydown.escape.window="profileOpen = false">
+                    
+                    {{-- Trigger Button --}}
+                    <button type="button" 
+                            @click="profileOpen = !profileOpen"
+                            class="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl bg-slate-50 hover:bg-slate-100/90 border border-slate-200/80 text-slate-800 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            aria-expanded="false"
+                            aria-haspopup="true">
+                        <div class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-2xs shrink-0">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                        <div class="hidden sm:block text-left leading-tight min-w-0 max-w-[120px] lg:max-w-[160px]">
+                            <p class="text-xs font-bold text-slate-800 truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-[10px] text-slate-400 font-medium truncate">{{ auth()->user()->isSuperAdmin() ? 'Super Admin' : 'Admin' }}</p>
+                        </div>
+                        <i class="ti ti-chevron-down text-xs text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': profileOpen }"></i>
+                    </button>
+
+                    {{-- Dropdown Card --}}
+                    <div x-show="profileOpen" 
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-150 transform"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100 transform"
+                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                         class="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-slate-200/90 shadow-xl p-2 z-50 divide-y divide-slate-100">
+                        
+                        {{-- Dropdown Header Info --}}
+                        <div class="p-2.5">
+                            <p class="text-xs font-bold text-slate-900 truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-[11px] text-slate-400 font-medium truncate mt-0.5">{{ auth()->user()->email }}</p>
+                            <div class="mt-2 flex items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
+                                    {{ auth()->user()->isSuperAdmin() ? 'Super Administrator' : 'Administrator' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {{-- Navigation Links inside Dropdown --}}
+                        <div class="py-1">
+                            <a href="{{ url('/profil') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                <i class="ti ti-user text-base text-slate-400"></i>
+                                <span>Profil Saya</span>
+                            </a>
+                            <a href="{{ route('admin.settings.index') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                <i class="ti ti-settings text-base text-slate-400"></i>
+                                <span>Pengaturan Sistem</span>
+                            </a>
+                            <a href="{{ url('/panduan') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                <i class="ti ti-book-2 text-base text-slate-400"></i>
+                                <span>Panduan Penggunaan</span>
+                            </a>
+                        </div>
+
+                        {{-- The Single Desktop/Mobile Logout Button --}}
+                        <div class="pt-1">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" 
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors text-left">
+                                    <i class="ti ti-logout text-base"></i>
+                                    <span>Logout dari Akun</span>
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </header>
+
+        {{-- PAGE CONTENT --}}
+        <main class="flex-1 p-4 sm:p-6 lg:p-7 min-w-0">
+            @yield('content')
+        </main>
+    </div>
 
     @stack('scripts')
 </body>
