@@ -5,20 +5,27 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
-    {{-- Header --}}
-    <div class="flex items-center justify-between">
-        <div>
-            <h3 class="text-xl font-bold text-gray-800 tracking-tight">Detail Jadwal Piket</h3>
-            <p class="text-sm text-gray-500 mt-0.5">Informasi lengkap konfigurasi sesi jadwal dan daftar guru yang bertugas.</p>
+    {{-- Header Banner --}}
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5 min-w-0">
+            <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+                <i class="ti ti-calendar-event text-2xl"></i>
+            </div>
+            <div class="min-w-0">
+                <h3 class="text-base sm:text-lg font-bold text-slate-900 truncate">Detail Jadwal Piket</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Konfigurasi sesi jadwal, masa berlaku, dan daftar guru bertugas.</p>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
             <a href="{{ route('admin.jadwal-piket.edit', $jadwal) }}"
-               class="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                <i class="fas fa-pencil-alt mr-2"></i> Edit
+               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white transition-colors shadow-2xs">
+                <i class="ti ti-edit text-base"></i>
+                <span>Edit Jadwal</span>
             </a>
             <a href="{{ route('admin.jadwal-piket.index') }}"
-               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i> Kembali
+               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors">
+                <i class="ti ti-arrow-left text-base"></i>
+                <span>Kembali</span>
             </a>
         </div>
     </div>
@@ -30,13 +37,13 @@
     @endphp
 
     {{-- Main Info Card --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <span class="text-2xl font-black text-blue-700">{{ $namaHari[$jadwal->hari] ?? 'Hari '.$jadwal->hari }}</span>
+                    <span class="text-2xl font-black text-blue-600 tracking-tight">{{ $namaHari[$jadwal->hari] ?? 'Hari '.$jadwal->hari }}</span>
                     @if($jadwal->nama_sesi)
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-800">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/70">
                             {{ $jadwal->nama_sesi }}
                         </span>
                     @endif
@@ -45,13 +52,14 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Aktif
                         </span>
                     @else
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>Nonaktif
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5"></span>Nonaktif
                         </span>
                     @endif
                 </div>
-                <p class="text-sm font-mono text-gray-500 mt-1">
-                    <i class="far fa-clock mr-1 text-gray-400"></i> {{ substr($jadwal->jam_mulai, 0, 5) }} - {{ substr($jadwal->jam_selesai, 0, 5) }} WIB
+                <p class="text-xs sm:text-sm font-mono text-slate-500 mt-1.5 flex items-center gap-1.5">
+                    <i class="ti ti-clock text-blue-600"></i>
+                    {{ substr($jadwal->jam_mulai, 0, 5) }} - {{ substr($jadwal->jam_selesai, 0, 5) }} WIB
                 </p>
             </div>
 
@@ -61,62 +69,66 @@
                 @csrf
                 @method('PATCH')
                 <button type="submit"
-                        class="px-4 py-2 rounded-lg text-xs font-bold transition-colors border {{ $jadwal->is_active ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' }}">
-                    <i class="fas {{ $jadwal->is_active ? 'fa-ban mr-1.5' : 'fa-check mr-1.5' }}"></i>
+                        class="px-4 py-2 rounded-xl text-xs font-bold transition-colors border {{ $jadwal->is_active ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' }}">
+                    <i class="ti {{ $jadwal->is_active ? 'ti-ban mr-1' : 'ti-check mr-1' }}"></i>
                     {{ $jadwal->is_active ? 'Nonaktifkan Jadwal' : 'Aktifkan Jadwal' }}
                 </button>
             </form>
         </div>
 
-        <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-6 bg-gray-50/50">
+        <div class="p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-6 bg-slate-50/50">
             <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Koordinator Guru Piket</p>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Koordinator Guru Piket</p>
                 @if($jadwal->koordinator)
-                    <p class="text-sm font-bold text-gray-800 mt-1">{{ $jadwal->koordinator->nama_lengkap }}</p>
+                    <p class="text-sm font-bold text-slate-900 mt-1">{{ $jadwal->koordinator->nama_lengkap }}</p>
                     @php
                         $waService = $waService ?? app(\App\Services\WhatsappMessageService::class);
                         $koorWaLink = $waService->generatePiketWaLink($jadwal->koordinator, $jadwal);
                     @endphp
                     @if($koorWaLink)
                         <a href="{{ $koorWaLink }}" target="_blank" rel="noopener noreferrer"
-                           class="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:text-emerald-950 font-mono mt-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors shadow-2xs group"
+                           class="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:text-emerald-950 font-mono mt-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors shadow-2xs group"
                            title="Kirim pesan WhatsApp pengingat ke Koordinator">
-                            <i class="fab fa-whatsapp text-emerald-600 text-sm group-hover:scale-110 transition-transform"></i>
+                            <i class="ti ti-brand-whatsapp text-emerald-600 text-sm group-hover:scale-110 transition-transform"></i>
                             <span class="font-bold">{{ $jadwal->koordinator->no_telepon }}</span>
-                            <span class="text-[10px] bg-emerald-200/70 text-emerald-800 px-1.5 py-0.5 rounded font-sans font-semibold">Ingatkan WA</span>
+                            <span class="text-[10px] bg-emerald-200/70 text-emerald-800 px-1.5 py-0.5 rounded-md font-sans font-semibold">Ingatkan WA</span>
                         </a>
                     @else
-                        <p class="text-xs text-gray-400 font-mono mt-0.5 flex items-center">
-                            <i class="fab fa-whatsapp mr-1 text-gray-300"></i> {{ $jadwal->koordinator->no_telepon ?? '-' }}
+                        <p class="text-xs text-slate-400 font-mono mt-1 flex items-center gap-1">
+                            <i class="ti ti-brand-whatsapp text-slate-300"></i> {{ $jadwal->koordinator->no_telepon ?? '-' }}
                         </p>
                     @endif
                 @else
-                    <p class="text-xs text-gray-400 italic mt-1">Tidak disetel khusus</p>
+                    <p class="text-xs text-slate-400 italic mt-1">Tidak disetel khusus</p>
                 @endif
             </div>
 
             <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tanggal Mulai Berlaku</p>
-                <p class="text-sm font-bold text-gray-800 mt-1">
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tanggal Mulai Berlaku</p>
+                <p class="text-sm font-bold text-slate-900 mt-1 flex items-center gap-1.5">
+                    <i class="ti ti-calendar text-slate-400"></i>
                     {{ \Carbon\Carbon::parse($jadwal->tanggal_mulai_berlaku)->isoFormat('D MMMM Y') }}
                 </p>
             </div>
 
             <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tanggal Selesai Berlaku</p>
-                <p class="text-sm font-bold text-gray-800 mt-1">
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tanggal Selesai Berlaku</p>
+                <p class="text-sm font-bold text-slate-900 mt-1 flex items-center gap-1.5">
                     @if($jadwal->tanggal_selesai_berlaku)
+                        <i class="ti ti-calendar text-slate-400"></i>
                         {{ \Carbon\Carbon::parse($jadwal->tanggal_selesai_berlaku)->isoFormat('D MMMM Y') }}
                     @else
-                        <span class="text-emerald-600 font-semibold">Berlaku tanpa batas akhir</span>
+                        <span class="text-emerald-600 font-bold flex items-center gap-1">
+                            <i class="ti ti-infinity"></i> Tanpa batas akhir
+                        </span>
                     @endif
                 </p>
             </div>
         </div>
 
         {{-- Helper Penjelasan Jadwal Berulang --}}
-        <div class="px-6 py-3.5 bg-blue-50/70 border-t border-blue-100/60 text-xs text-blue-900 flex items-start gap-2.5">
-            <i class="fas fa-info-circle text-blue-600 text-sm mt-0.5 flex-shrink-0"></i>
+        <div class="px-5 sm:px-6 py-3.5 bg-blue-50/70 border-t border-blue-100 text-xs text-blue-900 flex items-start gap-2.5">
+            <i class="ti ti-info-circle text-blue-600 text-base mt-0.5 shrink-0"></i>
             <div class="leading-relaxed">
                 <span class="font-bold text-blue-950">Penjelasan Jadwal Berulang:</span>
                 Jadwal @if($jadwal->nama_sesi)<strong>[{{ $jadwal->nama_sesi }}]</strong>@endif ini berulang setiap hari <strong>{{ $namaHari[$jadwal->hari] ?? 'Hari '.$jadwal->hari }}</strong> pukul <strong>{{ substr($jadwal->jam_mulai, 0, 5) }} - {{ substr($jadwal->jam_selesai, 0, 5) }} WIB</strong>
@@ -130,13 +142,16 @@
     </div>
 
     {{-- Guru Piket Resmi Card --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h4 class="text-base font-bold text-gray-900 border-b border-gray-100 pb-3 mb-4 flex items-center">
-            <i class="fas fa-users text-blue-600 mr-2"></i> Guru Piket Resmi ({{ $jadwal->guru->count() }} Guru)
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6">
+        <h4 class="text-sm sm:text-base font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
+            <i class="ti ti-users text-blue-600"></i> Guru Piket Resmi ({{ $jadwal->guru->count() }} Guru)
         </h4>
 
         @if($jadwal->guru->isEmpty())
-            <p class="text-sm text-amber-600 italic">Belum ada guru piket resmi yang ditugaskan pada jadwal ini.</p>
+            <div class="py-8 text-center border border-dashed border-slate-200 rounded-xl">
+                <i class="ti ti-user-x text-3xl text-slate-300 mb-1"></i>
+                <p class="text-xs text-amber-600 font-medium">Belum ada guru piket resmi yang ditugaskan pada jadwal ini.</p>
+            </div>
         @else
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 @foreach($jadwal->guru as $index => $g)
@@ -144,30 +159,30 @@
                         $waService = $waService ?? app(\App\Services\WhatsappMessageService::class);
                         $gWaLink = $waService->generatePiketWaLink($g, $jadwal);
                     @endphp
-                    <div class="flex items-center p-3.5 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center mr-3 flex-shrink-0">
+                    <div class="flex items-center p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                        <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center mr-3 shrink-0 text-xs">
                             {{ $index + 1 }}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-bold text-gray-800 truncate">{{ $g->nama_lengkap }}</p>
-                            <div class="flex flex-wrap items-center gap-x-2.5 text-xs font-mono mt-1">
-                                <span class="text-gray-400">NIP: {{ $g->nip ?? '-' }}</span>
+                            <p class="text-xs sm:text-sm font-bold text-slate-900 truncate">{{ $g->nama_lengkap }}</p>
+                            <div class="flex flex-wrap items-center gap-x-2 text-xs font-mono mt-1">
+                                <span class="text-slate-400">NIP: {{ $g->nip ?? '-' }}</span>
                                 @if($gWaLink)
                                     <a href="{{ $gWaLink }}" target="_blank" rel="noopener noreferrer"
-                                       class="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition-colors shadow-2xs group"
+                                       class="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200 transition-colors text-[11px] group"
                                        title="Kirim pesan WhatsApp pengingat ke {{ $g->nama_lengkap }}">
-                                        <i class="fab fa-whatsapp text-emerald-600 group-hover:scale-110 transition-transform"></i>
+                                        <i class="ti ti-brand-whatsapp text-emerald-600"></i>
                                         <span class="font-bold">{{ $g->no_telepon }}</span>
-                                        <i class="fas fa-paper-plane text-[9px] text-emerald-500 opacity-70 group-hover:opacity-100"></i>
+                                        <i class="ti ti-send text-[10px] text-emerald-500 opacity-70 group-hover:opacity-100"></i>
                                     </a>
                                 @else
-                                    <span class="inline-flex items-center text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
-                                        <i class="fab fa-whatsapp mr-1 text-gray-300"></i> {{ $g->no_telepon ?? 'No HP belum ada' }}
+                                    <span class="inline-flex items-center text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">
+                                        <i class="ti ti-brand-whatsapp mr-1 text-slate-300"></i> {{ $g->no_telepon ?? 'No HP belum ada' }}
                                     </span>
                                 @endif
                             </div>
                         </div>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold {{ $g->status_aktif ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-600' }}">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold {{ $g->status_aktif ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200' }}">
                             {{ $g->status_aktif ? 'Aktif' : 'Nonaktif' }}
                         </span>
                     </div>
@@ -178,14 +193,14 @@
 
     {{-- Riwayat Pertukaran / Penggantian Jadwal --}}
     @if($jadwal->pertukaranJadwalPikets->isNotEmpty())
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h4 class="text-base font-bold text-gray-900 border-b border-gray-100 pb-3 mb-4 flex items-center">
-                <i class="fas fa-exchange-alt text-indigo-600 mr-2"></i> Riwayat Penggantian Guru Piket ({{ $jadwal->pertukaranJadwalPikets->count() }})
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
+                <i class="ti ti-arrows-exchange text-indigo-600"></i> Riwayat Penggantian Guru Piket ({{ $jadwal->pertukaranJadwalPikets->count() }})
             </h4>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-gray-600">
-                    <thead class="bg-gray-50 text-gray-500 font-semibold uppercase border-b border-gray-100">
+            <div class="overflow-x-auto min-w-0 w-full">
+                <table class="w-full text-left text-xs text-slate-600 border-collapse">
+                    <thead class="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-100">
                         <tr>
                             <th class="py-2.5 px-3">Tanggal</th>
                             <th class="py-2.5 px-3">Guru Asal</th>
@@ -194,31 +209,31 @@
                             <th class="py-2.5 px-3 text-center">Aktif</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-slate-100">
                         @foreach($jadwal->pertukaranJadwalPikets as $p)
-                            <tr>
-                                <td class="py-2.5 px-3 font-medium text-gray-900">
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 font-medium text-slate-900 font-mono">
                                     {{ \Carbon\Carbon::parse($p->tanggal)->isoFormat('D MMM Y') }}
                                 </td>
-                                <td class="py-2.5 px-3 font-semibold text-gray-800">
+                                <td class="py-2.5 px-3 font-semibold text-slate-800">
                                     {{ $p->guruAsal?->nama_lengkap ?? '-' }}
                                 </td>
-                                <td class="py-2.5 px-3 font-semibold text-gray-800">
+                                <td class="py-2.5 px-3 font-semibold text-slate-800">
                                     {{ $p->guruPengganti?->nama_lengkap ?? '-' }}
                                 </td>
                                 <td class="py-2.5 px-3 text-center">
-                                    <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase
                                         {{ $p->status === 'disetujui' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                                           ($p->status === 'ditolak' ? 'bg-red-50 text-red-700 border border-red-200' :
-                                           ($p->status === 'dibatalkan' ? 'bg-gray-100 text-gray-600 border border-gray-200' : 'bg-amber-50 text-amber-700 border border-amber-200')) }}">
+                                           ($p->status === 'ditolak' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                                           ($p->status === 'dibatalkan' ? 'bg-slate-100 text-slate-600 border border-slate-200' : 'bg-amber-50 text-amber-700 border border-amber-200')) }}">
                                         {{ $p->status }}
                                     </span>
                                 </td>
                                 <td class="py-2.5 px-3 text-center">
                                     @if($p->is_active)
-                                        <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                                        <i class="ti ti-circle-check text-emerald-600 text-base"></i>
                                     @else
-                                        <span class="text-gray-300 font-bold">-</span>
+                                        <span class="text-slate-300 font-bold">-</span>
                                     @endif
                                 </td>
                             </tr>

@@ -5,20 +5,26 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-            <h3 class="text-xl font-bold text-gray-800 tracking-tight">Edit Jadwal Piket</h3>
-            <p class="text-sm text-gray-500 mt-0.5">Perbarui hari mingguan, waktu sesi, rentang periode, atau penugasan guru piket.</p>
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5 min-w-0">
+            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center shrink-0">
+                <i class="ti ti-edit text-2xl"></i>
+            </div>
+            <div class="min-w-0">
+                <h3 class="text-base sm:text-lg font-bold text-slate-900 truncate">Edit Jadwal Piket</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Perbarui hari mingguan, waktu sesi, rentang periode, atau penugasan guru piket.</p>
+            </div>
         </div>
         <a href="{{ route('admin.jadwal-piket.index') }}"
-           class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors w-fit">
-            <i class="fas fa-arrow-left mr-2"></i> Kembali
+           class="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors w-fit shrink-0">
+            <i class="ti ti-arrow-left text-base"></i>
+            <span>Kembali</span>
         </a>
     </div>
 
     @include('components.alert')
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6">
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6">
         <form id="formJadwalPiket" method="POST" action="{{ route('admin.jadwal-piket.update', $jadwal) }}" class="space-y-6">
             @csrf
             @method('PUT')
@@ -106,7 +112,7 @@
                         Jam Mulai <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none"><i class="fas fa-clock text-sm"></i></span>
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none"><i class="ti ti-clock text-base"></i></span>
                         <input type="time" name="jam_mulai" id="jam_mulai" required
                                value="{{ old('jam_mulai', substr($jadwal->jam_mulai, 0, 5)) }}"
                                class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow">
@@ -121,7 +127,7 @@
                         Jam Selesai <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none"><i class="fas fa-clock text-sm"></i></span>
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none"><i class="ti ti-clock text-base"></i></span>
                         <input type="time" name="jam_selesai" id="jam_selesai" required
                                value="{{ old('jam_selesai', substr($jadwal->jam_selesai, 0, 5)) }}"
                                class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow">
@@ -161,7 +167,7 @@
 
             {{-- HELPER PENJELASAN PERIODE BERLAKU --}}
             <div class="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
-                <i class="fas fa-info-circle text-blue-600 text-sm mt-0.5 flex-shrink-0"></i>
+                <i class="ti ti-info-circle text-blue-600 text-base mt-0.5 shrink-0"></i>
                 <div class="leading-relaxed">
                     <span class="font-bold block text-blue-950 mb-0.5">Penjelasan Jadwal Berulang:</span>
                     <span id="helperJadwalText">Jadwal akan berulang setiap hari Senin selama periode berlaku.</span>
@@ -183,21 +189,21 @@
                     {{-- Search Input Guru --}}
                     <div class="w-full sm:w-80">
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none">
-                                <i class="fas fa-search text-xs"></i>
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                                <i class="ti ti-search text-xs"></i>
                             </span>
                             <input type="text" id="guruSearchInput" placeholder="Cari nama, NIP, atau No HP guru..." autocomplete="off"
-                                   class="w-full pl-8 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                            <button type="button" id="btnResetSearch" class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600">
-                                <i class="fas fa-times-circle text-xs"></i>
+                                   class="w-full pl-8 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                            <button type="button" id="btnResetSearch" class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600">
+                                <i class="ti ti-x text-xs"></i>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 @error('guru')
-                    <div class="p-3 mb-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-semibold flex items-center gap-2">
-                        <i class="fas fa-exclamation-circle text-sm"></i>
+                    <div class="p-3 mb-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-semibold flex items-center gap-2">
+                        <i class="ti ti-alert-circle text-base"></i>
                         <span>{{ $message }}</span>
                     </div>
                 @enderror
@@ -228,7 +234,7 @@
                                     <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
                                         <span class="text-xs text-gray-500 font-mono">NIP: {{ $g->nip ?? '-' }}</span>
                                         <span class="inline-flex items-center text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                            <i class="fab fa-whatsapp text-emerald-600 mr-1.5 text-xs"></i> {{ $g->no_telepon ?? 'No HP belum ada' }}
+                                            <i class="ti ti-brand-whatsapp text-emerald-600 mr-1.5 text-xs"></i> {{ $g->no_telepon ?? 'No HP belum ada' }}
                                         </span>
                                     </div>
                                 </div>
@@ -244,7 +250,7 @@
 
                         {{-- Empty Search Result Placeholder --}}
                         <div id="guruEmptySearchState" class="hidden p-8 text-center text-xs text-gray-500">
-                            <i class="fas fa-search text-gray-300 text-2xl mb-2 block"></i>
+                            <i class="ti ti-search text-slate-300 text-3xl mb-2 block"></i>
                             Tidak ditemukan guru dengan nama, NIP, atau No HP tersebut.
                         </div>
                     </div>
@@ -254,12 +260,12 @@
             {{-- Tombol Aksi --}}
             <div class="pt-4 border-t border-gray-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
                 <a href="{{ route('admin.jadwal-piket.index') }}"
-                   class="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors text-center">
+                   class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors text-center">
                     Batal
                 </a>
                 <button type="submit" id="submitBtn"
-                        class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm hover:shadow transition-all flex items-center justify-center gap-2">
-                    <i class="fas fa-save"></i> Perbarui Jadwal
+                        class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-sm hover:shadow transition-all flex items-center justify-center gap-2">
+                    <i class="ti ti-device-floppy text-base"></i> Perbarui Jadwal
                 </button>
             </div>
         </form>
@@ -397,7 +403,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitBtn = document.getElementById('submitBtn');
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
+                submitBtn.innerHTML = '<i class="ti ti-loader-2 animate-spin mr-2"></i> Menyimpan...';
             }
         });
     }
