@@ -319,7 +319,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs sm:text-sm font-bold text-rose-600">Ditolak oleh Guru Piket</p>
-                        <p class="text-[11px] text-slate-400 font-mono">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                        <p class="text-[11px] text-slate-400 font-mono">{{ ($dispensasi->rejected_at ?? $dispensasi->updated_at)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                     </div>
                 </div>
             @elseif($dispensasi->guru)
@@ -329,7 +329,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs sm:text-sm font-bold text-slate-900">Disetujui oleh Guru Piket</p>
-                        <p class="text-[11px] text-slate-400 font-mono">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                        <p class="text-[11px] text-slate-400 font-mono">{{ ($dispensasi->approved_at ?? $dispensasi->created_at)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                     </div>
                 </div>
             @endif
