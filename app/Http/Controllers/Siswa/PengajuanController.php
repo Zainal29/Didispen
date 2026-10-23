@@ -535,9 +535,8 @@ namespace App\Http\Controllers\Siswa;
     $hubungiError = null;
 
     if ($dispensasi->status === 'menunggu') {
-        $expiredAt = $dispensasi->created_at
-            ->copy()
-            ->addMinutes(Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT);
+        $expiredAt = $dispensasi->getBatasWaktuMenunggu()
+            ?? $dispensasi->created_at->copy()->addMinutes(Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT);
 
     $now = now('Asia/Jakarta');
 
@@ -678,9 +677,8 @@ public function hubungiGuruPiket(\Illuminate\Http\Request $request, Dispensasi $
             ->with('error', 'Pengajuan ini sudah tidak dapat digunakan untuk menghubungi Guru Piket.');
     }
 
-    $expiredAt = $dispensasi->created_at
-        ->copy()
-        ->addMinutes(Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT);
+    $expiredAt = $dispensasi->getBatasWaktuMenunggu()
+        ?? $dispensasi->created_at->copy()->addMinutes(Dispensasi::DURASI_KADALUARSA_MENUNGGU_MENIT);
 
     if (! now('Asia/Jakarta')->lt($expiredAt)) {
         return redirect()

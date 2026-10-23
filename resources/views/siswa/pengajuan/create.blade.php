@@ -63,6 +63,44 @@
                 </div>
             </div>
 
+            {{-- Deteksi In-App Browser (WhatsApp / Instagram WebView) --}}
+            <div id="inAppBrowserAlert" class="hidden mb-5 rounded-2xl border border-sky-200 bg-sky-50/95 p-4 text-sky-950 shadow-xs">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 shrink-0 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center border border-sky-200">
+                        <i class="ti ti-brand-chrome text-lg"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <p class="text-xs sm:text-sm font-bold text-sky-950">Buka di Browser Utama (Chrome / Safari)</p>
+                            <button type="button" onclick="document.getElementById('inAppBrowserAlert').classList.add('hidden')" class="text-sky-400 hover:text-sky-600 p-1" title="Tutup">
+                                <i class="ti ti-x text-sm"></i>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-xs text-sky-800 leading-relaxed">
+                            Anda membuka halaman ini melalui browser aplikasi (WhatsApp/Instagram). Jika kamera terasa lambat atau halaman memuat ulang (reload), silakan ketuk tanda titik tiga (<strong>⋮</strong> atau <strong>⋯</strong>) di pojok kanan atas lalu pilih <strong>"Buka di Browser / Chrome"</strong> agar stabil tanpa kendala batas memori.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Pemulihan Draft Otomatis --}}
+            <div id="draftRestoredAlert" class="hidden mb-5 rounded-2xl border border-emerald-200 bg-emerald-50/95 p-4 text-emerald-950 shadow-xs">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 shrink-0 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                            <i class="ti ti-history text-lg"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs sm:text-sm font-bold text-emerald-950">Data Formulir Dipulihkan Otomatis</p>
+                            <p class="text-[11px] text-emerald-800 truncate sm:whitespace-normal">Isian pengajuan dan foto Anda sebelumnya tersimpan aman di perangkat.</p>
+                        </div>
+                    </div>
+                    <button type="button" id="btnClearDraft" class="shrink-0 text-xs font-bold text-emerald-700 hover:text-emerald-900 underline px-2 py-1">
+                        Reset Formulir
+                    </button>
+                </div>
+            </div>
+
             {{-- Informasi penting & Aturan Konfirmasi --}}
             <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
                 <div class="flex items-start gap-3">
@@ -501,7 +539,7 @@
                             </div>
                         </div>
 
-                        <input type="file" name="foto_verifikasi" id="foto_verifikasi_input" class="hidden" accept="image/*" capture="user">
+                        <input type="file" name="foto_verifikasi" id="foto_verifikasi_input" class="hidden" accept="image/*">
 
                         {{-- Standby --}}
                         <div id="selfieStandbyBox" class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-6 sm:p-8 text-center transition-all">
@@ -520,7 +558,7 @@
                         {{-- Live camera --}}
                         <div id="selfieCameraBox" class="hidden">
                             <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-[3/4] sm:aspect-[4/3] max-h-[26rem] mx-auto border border-slate-800 shadow-lg">
-                                <video id="selfieVideo" autoplay playsinline muted class="w-full h-full object-cover -scale-x-100"></video>
+                                <video id="selfieVideo" autoplay playsinline webkit-playsinline muted class="w-full h-full object-cover -scale-x-100"></video>
 
                                 <div class="absolute top-3 left-3 bg-rose-600/95 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> LIVE
@@ -1559,11 +1597,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Resolusi optimal: ringan untuk GPU/RAM ponsel, cepat terbuka, tidak memicu Low Memory Killer (LMK)
         const constraints = {
             video: {
                 facingMode: { ideal: facingMode },
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+                width: { ideal: 640, max: 1280 },
+                height: { ideal: 480, max: 720 }
             },
             audio: false
         };
@@ -1582,27 +1621,31 @@ document.addEventListener('DOMContentLoaded', function () {
         navigator.mediaDevices.getUserMedia(constraints)
             .then(attachStream)
             .catch(function (err) {
-                console.warn('Constraint ideal kamera gagal, mencoba fallback standard video:true', err);
-                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                console.warn('Constraint ideal kamera gagal, mencoba fallback facingMode:', err);
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: facingMode } }, audio: false })
                     .then(attachStream)
-                    .catch(function (fallbackErr) {
-                        console.warn('Kamera live tidak dapat dibuka, mengalihkan ke kamera bawaan perangkat:', fallbackErr);
-                        stopSelfieCamera();
-                        if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
-                        if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
-                        if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
+                    .catch(function () {
+                        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                            .then(attachStream)
+                            .catch(function (fallbackErr) {
+                                console.warn('Kamera live tidak dapat dibuka, mengalihkan ke kamera bawaan perangkat:', fallbackErr);
+                                stopSelfieCamera();
+                                if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
+                                if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
+                                if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
 
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Buka Kamera Perangkat',
-                            text: 'Live kamera tidak dapat diakses langsung pada browser ini. Silakan gunakan kamera bawaan perangkat Anda.',
-                            confirmButtonColor: '#2563eb',
-                            confirmButtonText: '<i class="ti ti-camera mr-1.5"></i> Buka Kamera'
-                        }).then(function (result) {
-                            if (result.isConfirmed && fotoInput) {
-                                fotoInput.click();
-                            }
-                        });
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Buka Kamera Perangkat',
+                                    text: 'Live kamera tidak dapat diakses langsung pada browser ini. Silakan gunakan kamera bawaan perangkat Anda.',
+                                    confirmButtonColor: '#2563eb',
+                                    confirmButtonText: '<i class="ti ti-camera mr-1.5"></i> Buka Kamera'
+                                }).then(function (result) {
+                                    if (result.isConfirmed && fotoInput) {
+                                        fotoInput.click();
+                                    }
+                                });
+                            });
                     });
             });
     }
@@ -1618,20 +1661,47 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         try {
-            const img = new Image();
-            const objectUrl = URL.createObjectURL(file);
+            let width = 640;
+            let height = 480;
+            const maxDim = 800; // Optimal untuk mobile RAM & kejernihan verifikasi
+            let sourceElement = null;
+            let needRevoke = null;
 
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = objectUrl;
-            });
-            URL.revokeObjectURL(objectUrl);
+            // Optimasi 1: Gunakan createImageBitmap jika didukung untuk streaming decode tanpa alokasi memori besar
+            if ('createImageBitmap' in window) {
+                try {
+                    sourceElement = await createImageBitmap(file, {
+                        resizeWidth: maxDim,
+                        resizeQuality: 'medium'
+                    });
+                    width = sourceElement.width;
+                    height = sourceElement.height;
+                } catch (eBitmap) {
+                    try {
+                        sourceElement = await createImageBitmap(file);
+                        width = sourceElement.width;
+                        height = sourceElement.height;
+                    } catch (eBitmap2) {
+                        sourceElement = null;
+                    }
+                }
+            }
 
-            let maxDim = 1280;
-            let width = img.naturalWidth || img.width || 640;
-            let height = img.naturalHeight || img.height || 480;
+            // Optimasi 2: Fallback ke Image element jika createImageBitmap gagal
+            if (!sourceElement) {
+                const img = new Image();
+                needRevoke = URL.createObjectURL(file);
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = needRevoke;
+                });
+                width = img.naturalWidth || img.width || 640;
+                height = img.naturalHeight || img.height || 480;
+                sourceElement = img;
+            }
 
+            // Hitung rasio dimensi target
             if (width > maxDim || height > maxDim) {
                 if (width > height) {
                     height = Math.round((height * maxDim) / width);
@@ -1646,7 +1716,17 @@ document.addEventListener('DOMContentLoaded', function () {
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
+            ctx.drawImage(sourceElement, 0, 0, width, height);
+
+            // Bersihkan source secepatnya untuk bebaskan RAM perangkat
+            if (sourceElement && typeof sourceElement.close === 'function') {
+                sourceElement.close();
+            } else if (sourceElement && sourceElement instanceof Image) {
+                sourceElement.src = '';
+            }
+            if (needRevoke) {
+                URL.revokeObjectURL(needRevoke);
+            }
 
             const nowWib = getWibNow();
             const pad = n => String(n).padStart(2, '0');
@@ -1683,16 +1763,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 currentObjectUrl = URL.createObjectURL(blob);
                 if (selfiePreviewImg) selfiePreviewImg.src = currentObjectUrl;
 
+                const displayTimestamp = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB`;
                 if (selfieTimestampText) {
-                    selfieTimestampText.textContent = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB`;
+                    selfieTimestampText.textContent = displayTimestamp;
                 }
+
+                // Backup selfie ke sessionStorage agar tidak hilang jika terjadi reload tidak terduga
+                try {
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                    sessionStorage.setItem('didispen_selfie_backup', dataUrl);
+                    sessionStorage.setItem('didispen_selfie_timestamp', displayTimestamp);
+                } catch (eStorage) {}
+
+                // Bebaskan buffer canvas
+                canvas.width = 0;
+                canvas.height = 0;
 
                 if (selfieStandbyBox) selfieStandbyBox.classList.add('hidden');
                 if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
                 if (selfieErrorBox) selfieErrorBox.classList.add('hidden');
                 if (selfiePreviewBox) selfiePreviewBox.classList.remove('hidden');
                 stopSelfieCamera();
-            }, 'image/jpeg', 0.85);
+            }, 'image/jpeg', 0.82);
 
         } catch (err) {
             Swal.close();
@@ -1753,9 +1845,20 @@ document.addEventListener('DOMContentLoaded', function () {
         btnSnapSelfie.addEventListener('click', function () {
             if (!selfieVideo || !selfieStream) return;
 
+            let videoWidth = selfieVideo.videoWidth || 640;
+            let videoHeight = selfieVideo.videoHeight || 480;
+            const maxDim = 800;
+            if (videoWidth > maxDim || videoHeight > maxDim) {
+                if (videoWidth > videoHeight) {
+                    videoHeight = Math.round((videoHeight * maxDim) / videoWidth);
+                    videoWidth = maxDim;
+                } else {
+                    videoWidth = Math.round((videoWidth * maxDim) / videoHeight);
+                    videoHeight = maxDim;
+                }
+            }
+
             const canvas = document.createElement('canvas');
-            const videoWidth = selfieVideo.videoWidth || 640;
-            const videoHeight = selfieVideo.videoHeight || 480;
             canvas.width = videoWidth;
             canvas.height = videoHeight;
             const ctx = canvas.getContext('2d');
@@ -1802,14 +1905,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 currentObjectUrl = URL.createObjectURL(blob);
                 if (selfiePreviewImg) selfiePreviewImg.src = currentObjectUrl;
 
+                const displayTimestamp = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB`;
                 if (selfieTimestampText) {
-                    selfieTimestampText.textContent = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB`;
+                    selfieTimestampText.textContent = displayTimestamp;
                 }
+
+                // Backup selfie ke sessionStorage
+                try {
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                    sessionStorage.setItem('didispen_selfie_backup', dataUrl);
+                    sessionStorage.setItem('didispen_selfie_timestamp', displayTimestamp);
+                } catch (eStorage) {}
+
+                // Bebaskan buffer canvas
+                canvas.width = 0;
+                canvas.height = 0;
 
                 if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
                 if (selfiePreviewBox) selfiePreviewBox.classList.remove('hidden');
                 stopSelfieCamera();
-            }, 'image/jpeg', 0.85);
+            }, 'image/jpeg', 0.82);
         });
     }
 
@@ -1818,6 +1933,10 @@ document.addEventListener('DOMContentLoaded', function () {
             cleanupObjectUrl();
             if (fotoInput) fotoInput.value = '';
             if (selfiePreviewImg) selfiePreviewImg.src = '';
+            try {
+                sessionStorage.removeItem('didispen_selfie_backup');
+                sessionStorage.removeItem('didispen_selfie_timestamp');
+            } catch (e) {}
             if (selfiePreviewBox) selfiePreviewBox.classList.add('hidden');
             if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
             if (btnStartSelfie) btnStartSelfie.click();
@@ -2073,6 +2192,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }).then(function (result) {
                     if (result.isConfirmed) {
+                        clearFormDraft();
                         formDispensasi.dataset.confirmed = 'true';
                         formDispensasi.requestSubmit();
                     } else {
@@ -2155,6 +2275,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (el.id === 'foto_verifikasi_input') return true;
             if (el.id === 'btnLihatJadwalPageHeader' || el.id === 'btnLihatJadwalHeader' || el.id === 'btnLihatJadwal') return true;
             if (el.closest('.tipe-pengajuan-selector')) return true;
+            if (el.id === 'btnClearDraft') return true;
             return false;
         };
 
@@ -2199,9 +2320,157 @@ document.addEventListener('DOMContentLoaded', function () {
         stopSelfieCamera();
     }
 
+    // =========================================================
+    // FITUR AUTO-SAVE DRAFT & DETEKSI IN-APP BROWSER
+    // =========================================================
+    const DRAFT_KEY = 'didispen_form_draft_siswa';
+    const SELFIE_BACKUP_KEY = 'didispen_selfie_backup';
+    const SELFIE_TIMESTAMP_KEY = 'didispen_selfie_timestamp';
+
+    function checkInAppBrowser() {
+        const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+        const isInApp = /FBAN|FBAV|Instagram|WhatsApp|Line|Snapchat|TikTok|Twitter/i.test(ua);
+        const alertBox = document.getElementById('inAppBrowserAlert');
+        if (isInApp && alertBox) {
+            alertBox.classList.remove('hidden');
+        }
+    }
+
+    let autoSaveTimer = null;
+    function debouncedSaveDraft() {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(saveFormDraft, 500);
+    }
+
+    function saveFormDraft() {
+        try {
+            if (!formDispensasi || formDispensasi.dataset.submitting === 'true') return;
+            const alpineData = getAlpineData();
+            const draft = {
+                kategori: document.getElementById('kategori')?.value || '',
+                alasan: document.getElementById('alasan')?.value || '',
+                tujuan: document.getElementById('tujuan')?.value || '',
+                lokasi: document.getElementById('lokasi')?.value || '',
+                no_telepon: document.getElementById('noTelepon')?.value || '',
+                jam_keluar: document.getElementById('jamKeluar')?.value || '',
+                jam_kembali: document.getElementById('jamKembali')?.value || '',
+                tipe_pengajuan: alpineData?.tipePengajuan || 'individu',
+                tanggal_izin: alpineData?.tanggalIzin || '',
+                sampai_pulang: !!alpineData?.sampaiPulang,
+                selected_anggota: alpineData?.selectedAnggota || [],
+                saved_at: Date.now()
+            };
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        } catch (e) {}
+    }
+
+    function clearFormDraft() {
+        try {
+            localStorage.removeItem(DRAFT_KEY);
+            sessionStorage.removeItem(SELFIE_BACKUP_KEY);
+            sessionStorage.removeItem(SELFIE_TIMESTAMP_KEY);
+        } catch (e) {}
+    }
+
+    function restoreFormDraft() {
+        try {
+            const raw = localStorage.getItem(DRAFT_KEY);
+            let restoredAny = false;
+
+            if (raw) {
+                const draft = JSON.parse(raw);
+                // Pulihkan hanya jika draft disimpan dalam 4 jam terakhir
+                if (draft && draft.saved_at && (Date.now() - draft.saved_at < 4 * 3600 * 1000)) {
+                    const alpineData = getAlpineData();
+                    if (alpineData) {
+                        if (draft.tipe_pengajuan) alpineData.tipePengajuan = draft.tipe_pengajuan;
+                        if (draft.sampai_pulang !== undefined) alpineData.sampaiPulang = draft.sampai_pulang;
+                        if (draft.tanggal_izin) alpineData.tanggalIzin = draft.tanggal_izin;
+                        if (Array.isArray(draft.selected_anggota) && draft.selected_anggota.length > 0) {
+                            alpineData.selectedAnggota = draft.selected_anggota;
+                            restoredAny = true;
+                        }
+                    }
+
+                    const setVal = (id, val, triggerEvent = false) => {
+                        const el = document.getElementById(id);
+                        if (el && val && !el.value) {
+                            el.value = val;
+                            if (triggerEvent) el.dispatchEvent(new Event(triggerEvent));
+                            restoredAny = true;
+                        }
+                    };
+
+                    setVal('kategori', draft.kategori, 'change');
+                    setVal('alasan', draft.alasan, 'input');
+                    setVal('tujuan', draft.tujuan);
+                    setVal('lokasi', draft.lokasi);
+                    setVal('noTelepon', draft.no_telepon);
+                    setVal('jamKeluar', draft.jam_keluar, 'change');
+                    setVal('jamKembali', draft.jam_kembali, 'change');
+                } else {
+                    localStorage.removeItem(DRAFT_KEY);
+                }
+            }
+
+            // Pulihkan foto selfie dari sessionStorage jika ada
+            const savedSelfie = sessionStorage.getItem(SELFIE_BACKUP_KEY);
+            const savedTimestamp = sessionStorage.getItem(SELFIE_TIMESTAMP_KEY);
+            if (savedSelfie && selfiePreviewImg) {
+                fetch(savedSelfie)
+                    .then(r => r.blob())
+                    .then(blob => {
+                        const restoredFile = new File([blob], `selfie_restored_${Date.now()}.jpg`, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        const dt = new DataTransfer();
+                        dt.items.add(restoredFile);
+                        if (fotoInput) fotoInput.files = dt.files;
+
+                        selfiePreviewImg.src = savedSelfie;
+                        if (selfieTimestampText && savedTimestamp) {
+                            selfieTimestampText.textContent = savedTimestamp;
+                        }
+                        if (selfieStandbyBox) selfieStandbyBox.classList.add('hidden');
+                        if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
+                        if (selfieErrorBox) selfieErrorBox.classList.add('hidden');
+                        if (selfiePreviewBox) selfiePreviewBox.classList.remove('hidden');
+                    })
+                    .catch(() => {});
+                restoredAny = true;
+            }
+
+            if (restoredAny) {
+                const draftAlert = document.getElementById('draftRestoredAlert');
+                if (draftAlert) draftAlert.classList.remove('hidden');
+            }
+        } catch (e) {
+            console.warn('Gagal memulihkan draft:', e);
+        }
+    }
+
+    const btnClearDraft = document.getElementById('btnClearDraft');
+    if (btnClearDraft) {
+        btnClearDraft.addEventListener('click', function () {
+            clearFormDraft();
+            window.location.reload();
+        });
+    }
+
     checkDispensasiTime();
     setInterval(checkDispensasiTime, 60000);
     updateTimeInputLimits();
+
+    // Inisialisasi Deteksi In-App Browser & Pemulihan Draft
+    checkInAppBrowser();
+    restoreFormDraft();
+    setTimeout(restoreFormDraft, 200); // Pastikan sinkron jika Alpine inisialisasi lambat
+
+    if (formDispensasi) {
+        formDispensasi.addEventListener('input', debouncedSaveDraft);
+        formDispensasi.addEventListener('change', debouncedSaveDraft);
+    }
 });
 </script>
 @endpush

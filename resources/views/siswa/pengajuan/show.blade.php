@@ -953,12 +953,19 @@
                             <div class="flex-1 min-w-0">
                                 <p class="text-xs font-bold text-slate-900">Dikonfirmasi Kembali oleh Satpam</p>
                                 <p class="text-[11px] text-slate-500">{{ \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                                @if($dispensasi->is_warned || $dispensasi->isReturnedLate())
-                                    <p class="text-[11px] text-rose-600 font-bold mt-0.5 flex items-center gap-1"><i class="ti ti-alert-circle text-xs"></i>Tercatat Terlambat {{ $dispensasi->getLateDurationText(true) ? '(' . $dispensasi->getLateDurationText(true) . ')' : '' }}</p>
+                                @if($dispensasi->isReturnedLate())
+                                    <p class="text-[11px] text-amber-700 font-bold mt-0.5 flex items-center gap-1 flex-wrap">
+                                        <i class="ti ti-alert-triangle text-xs"></i>Tercatat Terlambat {{ $dispensasi->getLateDurationText(true) ? '(' . $dispensasi->getLateDurationText(true) . ')' : '' }}
+                                        @if($dispensasi->isWithinTolerance())
+                                            <span class="text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                                                {{ $dispensasi->getKeteranganToleransiKembaliText() }}
+                                            </span>
+                                        @endif
+                                    </p>
                                 @elseif($dispensasi->isReturnedEarly())
                                     <p class="text-[11px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1"><i class="ti ti-clock-check text-xs"></i>Kembali Lebih Awal</p>
                                 @else
-                                    <p class="text-[11px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1"><i class="ti ti-circle-check text-xs"></i>Tepat Waktu</p>
+                                    <p class="text-[11px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1"><i class="ti ti-circle-check text-xs"></i>Tepat Waktu Sesuai Izin</p>
                                 @endif
                             </div>
                         </div>
