@@ -112,10 +112,7 @@ class DashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Dispensasi tidak valid']);
         }
 
-        $dispensasi->update([
-            'is_warned' => true,
-            'warned_at' => now(),
-        ]);
+        $dispensasi->markAsWarned('guru');
 
         return response()->json(['success' => true]);
     }

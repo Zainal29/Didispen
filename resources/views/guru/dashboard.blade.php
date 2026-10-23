@@ -430,7 +430,8 @@ $cards = [
                             @endif
                             @if($item->is_warned)
                                 <span class="warned-badge px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-800 border-emerald-200 flex items-center gap-1">
-                                    <i class="ti ti-brand-whatsapp text-emerald-600"></i>Sudah Dihubungi
+                                    <i class="ti ti-brand-whatsapp text-emerald-600"></i>
+                                    {{ ($item->warned_by ?? 'bot') === 'bot' ? 'Sudah dihubungi bot WA DIDISPEN' : 'Sudah Dihubungi' }}
                                 </span>
                             @endif
                         </div>

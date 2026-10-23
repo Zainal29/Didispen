@@ -184,35 +184,54 @@
 
         </div>
 
+        {{-- TOMBOL CETAK UNIVERSAL (IPHONE / AIRPRINT / PDF / SEMUA PERANGKAT) --}}
+        <div class="mt-3 pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
+            <a
+                href="{{ route('guru.cetak-struk', $dispensasi) }}?autoprint=1"
+                target="_blank"
+                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px]
+                       bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold
+                       rounded-xl transition-all shadow-xs active:scale-[0.98]"
+            >
+                <i class="ti ti-printer text-base"></i>
+                <span>Cetak Struk (AirPrint / iPhone & Semua OS)</span>
+            </a>
+            <a
+                href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}"
+                target="_blank"
+                class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[42px]
+                       bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold
+                       rounded-xl transition-all border border-slate-200 active:scale-[0.98]"
+            >
+                <i class="ti ti-file-text text-base"></i>
+                <span>PDF Struk (58mm)</span>
+            </a>
+        </div>
 
-        {{-- INFO ANDROID --}}
-        <div
-            class="mt-3 flex items-start gap-2
-                   px-3 py-2.5
-                   rounded-xl
-                   bg-slate-50
-                   border border-slate-100"
-        >
-
-            <i
-                class="ti ti-info-circle
-                       text-slate-400
-                       text-sm
-                       mt-0.5 shrink-0"
-            ></i>
-
-            <p class="text-[11px] leading-relaxed text-slate-500">
-                Jika gagal terhubung di HP Android, pastikan
-                <strong class="font-semibold text-slate-600">
-                    Bluetooth
-                </strong>
-                dan
-                <strong class="font-semibold text-slate-600">
-                    Lokasi/GPS
-                </strong>
-                sudah aktif.
-            </p>
-
+        {{-- INFO PETUNJUK PERANGKAT (ANDROID & IPHONE/IOS) --}}
+        <div class="mt-3 space-y-2">
+            <div class="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-blue-50/60 border border-blue-100">
+                <i class="ti ti-brand-apple text-blue-600 text-base mt-0.5 shrink-0"></i>
+                <div class="text-[11px] leading-relaxed text-slate-600 min-w-0 flex-1">
+                    <p>
+                        <strong class="font-bold text-slate-800">Pengguna iPhone / iPad:</strong> Apple membatasi Bluetooth di Safari & Chrome iOS. Untuk koneksi Bluetooth thermal langsung tanpa ribet, gunakan browser gratis <strong class="font-bold text-blue-700">Bluefy</strong> dari App Store.
+                    </p>
+                    <div class="mt-1.5 flex items-center gap-2 flex-wrap">
+                        <a href="https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] transition-colors shadow-2xs">
+                            <i class="ti ti-download"></i> Unduh Bluefy (App Store)
+                        </a>
+                        <button type="button" onclick="navigator.clipboard?.writeText(window.location.href); alert('Link halaman ini disalin! Buka aplikasi Bluefy lalu paste link ini.');" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-blue-700 font-semibold text-[10px] hover:bg-blue-50 transition-colors">
+                            <i class="ti ti-copy"></i> Salin Link Halaman
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 px-3 py-2 rounded-xl bg-slate-50/60 border border-slate-100">
+                <i class="ti ti-brand-android text-slate-500 text-sm mt-0.5 shrink-0"></i>
+                <p class="text-[11px] leading-relaxed text-slate-500">
+                    <strong class="font-bold text-slate-700">Pengguna Android:</strong> Pastikan <strong class="font-semibold text-slate-600">Bluetooth</strong> dan <strong class="font-semibold text-slate-600">Lokasi/GPS</strong> aktif di HP sebelum menekan Hubungkan.
+                </p>
+            </div>
         </div>
 
     </div>
@@ -747,8 +766,49 @@
         }
 
         if (!('bluetooth' in navigator)) {
-            setStatus('Web Bluetooth tidak didukung browser ini.');
-            setPrintStatus('Gunakan Google Chrome di Android atau Desktop.', 'error');
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+                          /CriOS|FxiOS/.test(navigator.userAgent);
+
+            if (isIOS) {
+                setStatus('iOS Safari & Chrome membatasi Web Bluetooth.');
+                setPrintStatus('Di iPhone/iPad, Apple membatasi Bluetooth di Safari & Chrome. Buka web ini di browser Bluefy (App Store) untuk Bluetooth langsung, atau klik Cetak Struk.', 'warning');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Koneksi Bluetooth di iPhone / iPad',
+                        html: `
+                            <p class="text-xs text-slate-600 mb-3 text-left">
+                                Apple membatasi akses Web Bluetooth pada browser Safari dan Google Chrome di iOS. Agar printer Bluetooth thermal Anda bisa langsung terhubung:
+                            </p>
+                            <div class="text-xs text-left space-y-2 mb-3 bg-blue-50 p-3 rounded-xl border border-blue-200">
+                                <p class="text-blue-900 font-bold">1. Gunakan Browser Bluefy (Rekomendasi Bluetooth):</p>
+                                <p class="text-slate-600">Unduh aplikasi gratis <strong>Bluefy (Web BLE Browser)</strong> dari App Store, lalu buka web Didispen di aplikasi tersebut. Tombol Hubungkan akan langsung aktif!</p>
+                            </div>
+                            <div class="text-xs text-left space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                                <p class="text-slate-800 font-bold">2. Cetak Struk Biasa:</p>
+                                <p class="text-slate-500">Membuka dialog cetak web browser bawaan.</p>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        showDenyButton: true,
+                        confirmButtonText: '<i class="ti ti-download mr-1"></i> Unduh Bluefy',
+                        denyButtonText: '<i class="ti ti-printer mr-1"></i> Cetak Struk',
+                        cancelButtonText: 'Tutup',
+                        confirmButtonColor: '#2563eb',
+                        denyButtonColor: '#475569'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.open("https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055", "_blank");
+                        } else if (result.isDenied) {
+                            window.open("{{ route('guru.cetak-struk', $dispensasi) }}?autoprint=1", "_blank");
+                        }
+                    });
+                }
+            } else {
+                setStatus('Web Bluetooth tidak didukung browser ini.');
+                setPrintStatus('Browser ini belum mendukung Web Bluetooth. Silakan buka halaman ini menggunakan Google Chrome di Laptop atau HP Android.', 'error');
+            }
             return;
         }
 

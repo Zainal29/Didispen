@@ -102,6 +102,16 @@
         <div class="row"><span>Kelas</span><span>: {{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }}</span></div>
     </div>
 
+    @if($dispensasi->isRombongan() && $dispensasi->anggotaSiswa->count() > 0)
+    <div class="section">
+        <div class="section-title">ANGGOTA ROMBONGAN ({{ $dispensasi->anggotaSiswa->count() + 1 }} SISWA)</div>
+        <div class="row" style="font-weight: bold;"><span>1. {{ $dispensasi->siswa->nama_lengkap }}</span><span>(Ketua)</span></div>
+        @foreach($dispensasi->anggotaSiswa as $idx => $anggota)
+            <div class="row"><span>{{ $idx + 2 }}. {{ $anggota->nama_lengkap }}</span><span>{{ $anggota->kelas?->nama_kelas ?? '-' }}</span></div>
+        @endforeach
+    </div>
+    @endif
+
     <div class="section">
         <div class="section-title">DETAIL DISPENSASI</div>
         <div class="row"><span>Kategori</span><span>: {{ ucfirst(str_replace('_', ' ', $dispensasi->kategori)) }}</span></div>
@@ -116,7 +126,7 @@
     @if(!empty($dispensasi->qr_code))
         <div class="qr-section">
             <p style="margin: 0 0 5px 0; font-weight: bold;">QR CODE VALIDASI</p>
-            <img src="{{ public_path('storage/' . $dispensasi->qr_code) }}" alt="QR Code">
+            <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code">
             <p style="margin: 5px 0 0 0; font-size: 9px;">Scan di Pos Satpam</p>
         </div>
     @else
@@ -142,17 +152,27 @@
     </div>
 
     <div class="btn-container">
+        <button type="button" onclick="window.print()" class="btn" style="background-color: #059669; font-weight: bold; cursor: pointer;">
+            🖨️ Cetak Struk Sekarang (AirPrint / Printer)
+        </button>
         <a href="{{ route('guru.cetak-pdf', [$dispensasi, 'format' => 'thermal']) }}" class="btn" target="_blank">
-            🖨️ Buka PDF Struk (58mm)
+            📄 Buka PDF Struk (58mm)
         </a>
         <a href="{{ route('guru.pengajuan.show', $dispensasi) }}" class="btn btn-close">
-            ✕ Tutup
+            ✕ Kembali
         </a>
     </div>
 
     <script>
-        // Auto print saat halaman dimuat (opsional, bisa dihapus jika ingin manual)
-        // window.onload = function() { window.print(); }
+        // Auto print jika query parameter autoprint=1
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('autoprint') === '1') {
+                setTimeout(function() {
+                    window.print();
+                }, 400);
+            }
+        });
     </script>
 </body>
 </html>

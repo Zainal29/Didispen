@@ -339,7 +339,7 @@
                         </div>
 
                         {{-- Hidden File Input (Dipopulasi oleh canvas snapshot atau fallback native kamera) --}}
-                        <input type="file" name="foto_verifikasi" id="foto_verifikasi_input" class="hidden" accept="image/*" capture="user">
+                        <input type="file" name="foto_verifikasi" id="foto_verifikasi_input" class="hidden" accept="image/*">
 
                         {{-- Standby State --}}
                         <div id="selfieStandbyBox" class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-6 sm:p-8 text-center transition-all">
@@ -358,7 +358,7 @@
                         {{-- Live Camera State --}}
                         <div id="selfieCameraBox" class="hidden">
                             <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-[3/4] sm:aspect-[4/3] max-h-[26rem] mx-auto border border-slate-800 shadow-lg">
-                                <video id="selfieVideo" autoplay playsinline muted class="w-full h-full object-cover -scale-x-100"></video>
+                                <video id="selfieVideo" autoplay playsinline webkit-playsinline muted class="w-full h-full object-cover -scale-x-100"></video>
 
                                 <div class="absolute top-3 left-3 bg-rose-600/95 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> LIVE
@@ -1494,11 +1494,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Resolusi optimal: ringan untuk GPU/RAM, cepat terbuka, tidak memicu LMK
         const constraints = {
             video: {
                 facingMode: { ideal: facingMode },
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+                width: { ideal: 640, max: 1280 },
+                height: { ideal: 480, max: 720 }
             },
             audio: false
         };
@@ -1517,27 +1518,31 @@ document.addEventListener('DOMContentLoaded', function () {
         navigator.mediaDevices.getUserMedia(constraints)
             .then(attachStream)
             .catch(function (err) {
-                console.warn('Constraint ideal kamera gagal, mencoba fallback standard video:true', err);
-                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                console.warn('Constraint ideal kamera gagal, mencoba fallback facingMode:', err);
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: facingMode } }, audio: false })
                     .then(attachStream)
-                    .catch(function (fallbackErr) {
-                        console.warn('Kamera live tidak dapat dibuka, mengalihkan ke kamera bawaan perangkat:', fallbackErr);
-                        stopSelfieCamera();
-                        if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
-                        if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
-                        if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
+                    .catch(function () {
+                        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                            .then(attachStream)
+                            .catch(function (fallbackErr) {
+                                console.warn('Kamera live tidak dapat dibuka, mengalihkan ke kamera bawaan perangkat:', fallbackErr);
+                                stopSelfieCamera();
+                                if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
+                                if (selfieStandbyBox) selfieStandbyBox.classList.remove('hidden');
+                                if (selfieErrorBox) selfieErrorBox.classList.remove('hidden');
 
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Buka Kamera Perangkat',
-                            text: 'Live kamera tidak dapat diakses langsung pada browser ini. Silakan gunakan kamera bawaan perangkat Anda.',
-                            confirmButtonColor: '#2563eb',
-                            confirmButtonText: '<i class="ti ti-camera mr-1.5"></i> Buka Kamera'
-                        }).then(function (result) {
-                            if (result.isConfirmed && fotoInput) {
-                                fotoInput.click();
-                            }
-                        });
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Buka Kamera Perangkat',
+                                    text: 'Live kamera tidak dapat diakses langsung pada browser ini. Silakan gunakan kamera bawaan perangkat Anda.',
+                                    confirmButtonColor: '#2563eb',
+                                    confirmButtonText: '<i class="ti ti-camera mr-1.5"></i> Buka Kamera'
+                                }).then(function (result) {
+                                    if (result.isConfirmed && fotoInput) {
+                                        fotoInput.click();
+                                    }
+                                });
+                            });
                     });
             });
     }
@@ -1563,20 +1568,47 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         try {
-            const img = new Image();
-            const objectUrl = URL.createObjectURL(file);
+            let width = 640;
+            let height = 480;
+            const maxDim = 800; // Optimal untuk mobile RAM & kejernihan verifikasi
+            let sourceElement = null;
+            let needRevoke = null;
 
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = objectUrl;
-            });
-            URL.revokeObjectURL(objectUrl);
+            // Optimasi 1: Gunakan createImageBitmap jika didukung untuk streaming decode tanpa alokasi memori besar
+            if ('createImageBitmap' in window) {
+                try {
+                    sourceElement = await createImageBitmap(file, {
+                        resizeWidth: maxDim,
+                        resizeQuality: 'medium'
+                    });
+                    width = sourceElement.width;
+                    height = sourceElement.height;
+                } catch (eBitmap) {
+                    try {
+                        sourceElement = await createImageBitmap(file);
+                        width = sourceElement.width;
+                        height = sourceElement.height;
+                    } catch (eBitmap2) {
+                        sourceElement = null;
+                    }
+                }
+            }
 
-            let maxDim = 1280;
-            let width = img.naturalWidth || img.width || 640;
-            let height = img.naturalHeight || img.height || 480;
+            // Optimasi 2: Fallback ke Image element jika createImageBitmap gagal
+            if (!sourceElement) {
+                const img = new Image();
+                needRevoke = URL.createObjectURL(file);
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = needRevoke;
+                });
+                width = img.naturalWidth || img.width || 640;
+                height = img.naturalHeight || img.height || 480;
+                sourceElement = img;
+            }
 
+            // Hitung rasio dimensi target
             if (width > maxDim || height > maxDim) {
                 if (width > height) {
                     height = Math.round((height * maxDim) / width);
@@ -1591,7 +1623,17 @@ document.addEventListener('DOMContentLoaded', function () {
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
+            ctx.drawImage(sourceElement, 0, 0, width, height);
+
+            // Bersihkan source secepatnya untuk bebaskan RAM perangkat
+            if (sourceElement && typeof sourceElement.close === 'function') {
+                sourceElement.close();
+            } else if (sourceElement && sourceElement instanceof Image) {
+                sourceElement.src = '';
+            }
+            if (needRevoke) {
+                URL.revokeObjectURL(needRevoke);
+            }
 
             const nowWib = getWibNow();
             const pad = n => String(n).padStart(2, '0');
@@ -1634,11 +1676,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     selfieTimestampText.textContent = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB (${sName})`;
                 }
 
+                // Bebaskan buffer canvas
+                canvas.width = 0;
+                canvas.height = 0;
+
                 if (selfieStandbyBox) selfieStandbyBox.classList.add('hidden');
                 if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
                 if (selfieErrorBox) selfieErrorBox.classList.add('hidden');
                 if (selfiePreviewBox) selfiePreviewBox.classList.remove('hidden');
-            }, 'image/jpeg', 0.85);
+            }, 'image/jpeg', 0.82);
 
         } catch (e) {
             Swal.close();
@@ -1697,9 +1743,20 @@ document.addEventListener('DOMContentLoaded', function () {
         btnSnapSelfie.addEventListener('click', function () {
             if (!selfieVideo || !selfieStream) return;
 
+            let videoWidth = selfieVideo.videoWidth || 640;
+            let videoHeight = selfieVideo.videoHeight || 480;
+            const maxDim = 800;
+            if (videoWidth > maxDim || videoHeight > maxDim) {
+                if (videoWidth > videoHeight) {
+                    videoHeight = Math.round((videoHeight * maxDim) / videoWidth);
+                    videoWidth = maxDim;
+                } else {
+                    videoWidth = Math.round((videoWidth * maxDim) / videoHeight);
+                    videoHeight = maxDim;
+                }
+            }
+
             const canvas = document.createElement('canvas');
-            const videoWidth = selfieVideo.videoWidth || 640;
-            const videoHeight = selfieVideo.videoHeight || 480;
             canvas.width = videoWidth;
             canvas.height = videoHeight;
             const ctx = canvas.getContext('2d');
@@ -1753,10 +1810,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     selfieTimestampText.textContent = `${nowWib.toLocaleDateString('id-ID')} ${formatTimeInput(nowWib)} WIB (${sName})`;
                 }
 
+                // Bebaskan buffer canvas
+                canvas.width = 0;
+                canvas.height = 0;
+
                 if (selfieCameraBox) selfieCameraBox.classList.add('hidden');
                 if (selfiePreviewBox) selfiePreviewBox.classList.remove('hidden');
                 stopSelfieCamera();
-            }, 'image/jpeg', 0.85);
+            }, 'image/jpeg', 0.82);
         });
     }
 

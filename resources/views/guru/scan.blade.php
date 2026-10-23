@@ -80,7 +80,7 @@
 {{-- MODAL POPUP HASIL SCAN QR & KONFIRMASI GURU --}}
 {{-- ======================================================== --}}
 <div id="scanModal"
-     class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-900/75 backdrop-blur-sm hidden overflow-y-auto"
+     class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-gray-900/75 backdrop-blur-sm hidden overflow-y-auto"
      onclick="handleBackdropClick(event)">
     <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-auto transition-all max-h-[90dvh] flex flex-col"
          onclick="event.stopPropagation()">
@@ -122,8 +122,77 @@
 let html5QrCode;
 let isScanning = true;
 let isProcessing = false;
+let isSubmitting = false;
 let currentScannedQr = null;
 let autoCloseTimer = null;
+let isCooldownActive = false;
+let cooldownCountdownTimer = null;
+
+// Anti-Double Scan: Cooldown Map untuk QR yang sama (5 detik)
+const scannedCooldownMap = new Map();
+const QR_COOLDOWN_MS = 5000;
+
+function isQrInCooldown(code) {
+    if (!code) return false;
+    const now = Date.now();
+    const lastTime = scannedCooldownMap.get(code);
+    if (lastTime && (now - lastTime) < QR_COOLDOWN_MS) {
+        return Math.ceil((QR_COOLDOWN_MS - (now - lastTime)) / 1000);
+    }
+    return false;
+}
+
+function registerQrCooldown(code) {
+    if (!code) return;
+    scannedCooldownMap.set(code, Date.now());
+    const now = Date.now();
+    for (const [k, v] of scannedCooldownMap.entries()) {
+        if (now - v > 60000) {
+            scannedCooldownMap.delete(k);
+        }
+    }
+}
+
+function startScannerCooldown(seconds = 3, qrCode = null) {
+    if (qrCode) {
+        registerQrCooldown(qrCode);
+    }
+
+    if (cooldownCountdownTimer) {
+        clearInterval(cooldownCountdownTimer);
+        cooldownCountdownTimer = null;
+    }
+
+    isCooldownActive = true;
+    isScanning = false;
+    isProcessing = false;
+
+    let remaining = seconds;
+    const updateUI = (cnt) => {
+        const el = document.getElementById('scanStatus');
+        if (!el) return;
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping mr-1.5 flex-shrink-0"></span> Cooldown: Siap scan dalam ${cnt}s...`;
+        el.className = 'inline-flex items-center text-xs font-semibold text-amber-600 truncate min-w-0';
+    };
+
+    updateUI(remaining);
+
+    cooldownCountdownTimer = setInterval(() => {
+        remaining--;
+        if (remaining > 0) {
+            updateUI(remaining);
+        } else {
+            clearInterval(cooldownCountdownTimer);
+            cooldownCountdownTimer = null;
+            isCooldownActive = false;
+            isScanning = true;
+            if (html5QrCode) {
+                try { html5QrCode.resume(); } catch (e) {}
+            }
+            setStatus('Kamera aktif — siap scan', true);
+        }
+    }, 1000);
+}
 
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -134,12 +203,19 @@ function escapeHtml(text) {
 function setStatus(text, ok = true) {
     const el = document.getElementById('scanStatus');
     if (!el) return;
-    el.innerHTML = `<span class="w-2 h-2 rounded-full ${ok ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'} mr-1.5"></span> ${escapeHtml(text)}`;
-    el.className = `inline-flex items-center text-xs font-semibold ${ok ? 'text-emerald-600' : 'text-amber-600'}`;
+    el.innerHTML = `<span class="w-2 h-2 rounded-full ${ok ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'} mr-1.5 flex-shrink-0"></span> ${escapeHtml(text)}`;
+    el.className = `inline-flex items-center text-xs font-semibold ${ok ? 'text-emerald-600' : 'text-amber-600'} truncate min-w-0`;
 }
 
 function onScanSuccess(decodedText) {
-    if (!isScanning || isProcessing) return;
+    if (!isScanning || isProcessing || isCooldownActive) return;
+
+    // Cek apakah QR yang sama masih dalam masa cooldown 15 detik
+    const cooldownSec = isQrInCooldown(decodedText);
+    if (cooldownSec) {
+        setStatus(`Cooldown: QR baru saja diproses. Tunggu ${cooldownSec}s...`, false);
+        return;
+    }
 
     isProcessing = true;
     isScanning = false;
@@ -150,6 +226,16 @@ function onScanSuccess(decodedText) {
 
     showModalLoading();
     checkQrData(decodedText);
+}
+
+function setBottomNavVisible(visible) {
+    const nav = document.getElementById('mobileBottomNav');
+    if (!nav) return;
+    if (visible) {
+        nav.classList.remove('hidden');
+    } else {
+        nav.classList.add('hidden');
+    }
 }
 
 // 1. Loading di Modal
@@ -183,6 +269,7 @@ function showModalLoading() {
 
     modal.classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
+    setBottomNavVisible(false);
     setStatus('Memverifikasi QR Code...', false);
 }
 
@@ -257,6 +344,56 @@ function renderScanDetail(data) {
     }
 
     let alertHtml = '';
+
+    // Deteksi Riwayat Scan Keluar (Pembedaan Guru vs Satpam)
+    if (data.riwayat_scan && data.riwayat_scan.keluar && data.riwayat_scan.keluar.sudah) {
+        const rk = data.riwayat_scan.keluar;
+        const isSatpam = rk.role === 'satpam';
+        alertHtml += `
+            <div class="p-3.5 ${isSatpam ? 'bg-amber-50 border-2 border-amber-300' : 'bg-blue-50 border-2 border-blue-200'} rounded-xl text-xs text-slate-900 flex items-start gap-3 shadow-xs">
+                <div class="w-8 h-8 rounded-lg ${isSatpam ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white'} flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                    <i class="ti ${isSatpam ? 'ti-shield-check' : 'ti-user-check'} text-lg"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-extrabold ${isSatpam ? 'text-amber-950' : 'text-blue-950'} text-[11px] uppercase tracking-wide">
+                            ${isSatpam ? '⚠️ Siswa Telah Scan di Satpam' : 'ℹ️ Siswa Telah Scan di Guru Piket'}
+                        </span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isSatpam ? 'bg-amber-200 text-amber-900' : 'bg-blue-100 text-blue-900'} font-mono">
+                            ${escapeHtml(rk.waktu)}
+                        </span>
+                    </div>
+                    <p class="text-xs ${isSatpam ? 'text-amber-900' : 'text-blue-900'} mt-1 leading-snug">
+                        Siswa ini telah diverifikasi <strong class="font-bold">KELUAR</strong> oleh
+                        <span class="font-bold underline decoration-current">${escapeHtml(rk.role_label)} (${escapeHtml(rk.nama)})</span>
+                        pada pukul <strong class="font-mono">${escapeHtml(rk.waktu)}</strong>.
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Deteksi Riwayat Scan Kembali
+    if (data.riwayat_scan && data.riwayat_scan.kembali && data.riwayat_scan.kembali.sudah) {
+        const rkb = data.riwayat_scan.kembali;
+        alertHtml += `
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-start gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                    <i class="ti ti-circle-check text-base"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-bold text-emerald-950 text-[11px]">RIWAYAT SCAN KEMBALI</span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-200 text-emerald-900">${escapeHtml(rkb.waktu)}</span>
+                    </div>
+                    <p class="text-[11px] text-emerald-800 mt-0.5 leading-snug">
+                        Diverifikasi <strong>KEMBALI</strong> oleh <strong>${escapeHtml(rkb.role_label)} (${escapeHtml(rkb.nama)})</strong> pada pukul <strong>${escapeHtml(rkb.waktu)}</strong>.
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
     if (data.is_terlambat) {
         alertHtml += `
             <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-semibold flex items-center gap-2.5">
@@ -480,11 +617,14 @@ function renderScanError(message) {
 // 5. Submit Konfirmasi
 function submitConfirmation(action) {
     const btn = document.getElementById('btnConfirmAction');
-    if (!btn || !currentScannedQr) return;
+    if (!btn || !currentScannedQr || isSubmitting) return;
 
+    isSubmitting = true;
     btn.disabled = true;
     btn.innerHTML = '<i class="ti ti-loader-2 animate-spin mr-1.5 inline-block"></i> Memproses...';
-    btn.classList.add('opacity-75', 'cursor-not-allowed');
+    btn.classList.add('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
+
+    const codeToConfirm = currentScannedQr;
 
     fetch('{{ route("guru.scan.verify") }}', {
         method: 'POST',
@@ -493,7 +633,7 @@ function submitConfirmation(action) {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Accept': 'application/json'
         },
-        body: JSON.stringify({ qr_data: currentScannedQr, action: action })
+        body: JSON.stringify({ qr_data: codeToConfirm, action: action })
     })
     .then(async r => {
         const data = await r.json().catch(() => null);
@@ -503,22 +643,25 @@ function submitConfirmation(action) {
         return data;
     })
     .then(data => {
+        isSubmitting = false;
         if (data && data.success) {
+            registerQrCooldown(codeToConfirm);
             if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
             renderSuccessState(data);
         } else {
             Swal.fire('Gagal', (data && data.message) ? data.message : 'Terjadi kesalahan saat konfirmasi.', 'error');
             btn.disabled = false;
             btn.innerHTML = action === 'keluar' ? '<i class="ti ti-door-exit text-base"></i> Ya, Setujui KELUAR' : '<i class="ti ti-door-enter text-base"></i> Ya, Konfirmasi KEMBALI';
-            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            btn.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
         }
     })
     .catch(err => {
+        isSubmitting = false;
         console.error('Submit error:', err);
         Swal.fire('Gagal', err.message || 'Terjadi kesalahan jaringan.', 'error');
         btn.disabled = false;
         btn.innerHTML = action === 'keluar' ? '<i class="ti ti-door-exit text-base"></i> Ya, Setujui KELUAR' : '<i class="ti ti-door-enter text-base"></i> Ya, Konfirmasi KEMBALI';
-        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        btn.classList.remove('opacity-75', 'cursor-not-allowed', 'pointer-events-none');
     });
 }
 
@@ -542,13 +685,13 @@ function renderSuccessState(data) {
                 <i class="ti ti-check text-3xl"></i>
             </div>
             <h4 class="font-bold text-gray-900 text-lg leading-snug">${escapeHtml(data.message)}</h4>
-            <p class="text-xs text-gray-500 mt-2">Modal akan tertutup otomatis dalam 3 detik untuk scan berikutnya.</p>
+            <p class="text-xs text-slate-500 mt-2">Modal akan tertutup otomatis dalam 3 detik untuk scan berikutnya.</p>
         </div>
     `;
 
     footer.innerHTML = `
         <button type="button"
-                onclick="closeScanModal()"
+                onclick="closeScanModal(true)"
                 class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-md shadow-emerald-600/20">
             <i class="ti ti-refresh mr-1.5"></i> Scan Siswa Berikutnya
         </button>
@@ -558,12 +701,12 @@ function renderSuccessState(data) {
 
     if (autoCloseTimer) clearTimeout(autoCloseTimer);
     autoCloseTimer = setTimeout(() => {
-        closeScanModal();
+        closeScanModal(true);
     }, 3000);
 }
 
-// 7. Tutup Modal & Nyalakan Kembali Scanner
-function closeScanModal() {
+// 7. Tutup Modal & Nyalakan Kembali Scanner dengan Cooldown
+function closeScanModal(startCooldown = true) {
     if (autoCloseTimer) {
         clearTimeout(autoCloseTimer);
         autoCloseTimer = null;
@@ -572,16 +715,23 @@ function closeScanModal() {
     const modal = document.getElementById('scanModal');
     modal.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
+    setBottomNavVisible(true);
 
+    const closedQr = currentScannedQr;
     currentScannedQr = null;
-    isProcessing = false;
-    isScanning = true;
+    isSubmitting = false;
 
-    if (html5QrCode) {
-        try { html5QrCode.resume(); } catch (e) {}
+    if (startCooldown) {
+        // Cooldown 3 detik sebelum kamera menerima scan berikutnya
+        startScannerCooldown(3, closedQr);
+    } else {
+        isProcessing = false;
+        isScanning = true;
+        if (html5QrCode) {
+            try { html5QrCode.resume(); } catch (e) {}
+        }
+        setStatus('Kamera aktif — siap scan');
     }
-
-    setStatus('Kamera aktif — siap scan');
 }
 
 function handleBackdropClick(e) {

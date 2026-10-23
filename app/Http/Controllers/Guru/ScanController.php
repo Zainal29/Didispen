@@ -41,7 +41,7 @@ class ScanController extends Controller
             ], 404);
         }
 
-        $dispensasi->loadMissing(['siswa.kelas.jurusan', 'siswa.user', 'guru', 'anggotaSiswa.kelas']);
+        $dispensasi->loadMissing(['siswa.kelas.jurusan', 'siswa.user', 'guru', 'anggotaSiswa.kelas', 'petugasKeluar', 'petugasKembali']);
 
         // MODE CHECK (Preview Data untuk Modal Konfirmasi)
         if ($request->action === 'check') {
@@ -85,6 +85,9 @@ class ScanController extends Controller
                     'is_terlambat' => $isLate,
                     'jam_keluar' => $dispensasi->jam_keluar,
                     'jam_kembali' => $dispensasi->jam_kembali,
+                    'waktu_keluar_aktual' => $dispensasi->waktu_keluar_aktual ? \Carbon\Carbon::parse($dispensasi->waktu_keluar_aktual)->timezone('Asia/Jakarta')->format('H:i') : null,
+                    'waktu_kembali_aktual' => $dispensasi->waktu_kembali_aktual ? \Carbon\Carbon::parse($dispensasi->waktu_kembali_aktual)->timezone('Asia/Jakarta')->format('H:i') : null,
+                    'riwayat_scan' => $dispensasi->riwayat_scan,
                     'alasan' => $dispensasi->alasan,
                     'tujuan' => $dispensasi->tujuan,
                     'foto_verifikasi' => $dispensasi->foto_verifikasi ? Storage::url($dispensasi->foto_verifikasi) : null,
@@ -98,6 +101,15 @@ class ScanController extends Controller
                     'anggota' => $anggotaFormatted,
                 ],
             ]);
+        }
+
+        // Cek cooldown scan untuk mencegah double scan
+        $cooldown = $scanService->checkScanCooldown($dispensasi);
+        if ($cooldown['cooldown']) {
+            return response()->json([
+                'success' => false,
+                'message' => $cooldown['message'],
+            ], 429);
         }
 
         // MODE EKSEKUSI (Konfirmasi Keluar / Kembali)
@@ -160,7 +172,9 @@ class ScanController extends Controller
                     'siswa.kelas.jurusan',
                     'anggotaSiswa.kelas',
                     'anggotaSiswa.user',
-                    'guru'
+                    'guru',
+                    'petugasKeluar',
+                    'petugasKembali',
                 ])
                 ->whereIn('status', ['disetujui', 'keluar', 'selesai'])
                 ->where(function($q) use ($query) {
@@ -227,6 +241,7 @@ class ScanController extends Controller
                     'is_sampai_pulang' => (bool)$d->sampai_pulang,
                     'waktu_keluar_aktual' => $d->waktu_keluar_aktual ? \Carbon\Carbon::parse($d->waktu_keluar_aktual)->format('H:i') : null,
                     'waktu_kembali_aktual' => $d->waktu_kembali_aktual ? \Carbon\Carbon::parse($d->waktu_kembali_aktual)->format('H:i') : null,
+                    'riwayat_scan' => $d->riwayat_scan,
                     'alasan' => $d->alasan,
                     'tujuan' => $d->tujuan,
                     'lokasi' => $d->lokasi,
