@@ -145,7 +145,11 @@ Route::middleware(['auth'])->group(function () {
                  Route::post('sipintu/test-sync', [Admin\SipintuSyncController::class, 'testSync'])
                 ->name('sipintu.test-sync');
 
-                Route::resource('tutorial-videos', Admin\TutorialVideoController::class);
+                 Route::resource('tutorial-videos', Admin\TutorialVideoController::class);
+
+                // Laporan Temuan Satpam
+                Route::get('laporan-satpam', [Admin\LaporanSatpamController::class, 'index'])->name('laporan-satpam.index');
+                Route::post('laporan-satpam/{laporanSatpam}/tindak-lanjuti', [Admin\LaporanSatpamController::class, 'tindakLanjuti'])->name('laporan-satpam.tindak-lanjuti');
 
             });
 
@@ -215,6 +219,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('piket/swap/{pertukaran}/accept', [\App\Http\Controllers\Guru\PiketSwapController::class, 'accept'])->name('piket.swap.accept');
         Route::post('piket/swap/{pertukaran}/reject', [\App\Http\Controllers\Guru\PiketSwapController::class, 'reject'])->name('piket.swap.reject');
         Route::post('piket/swap/{pertukaran}/cancel', [\App\Http\Controllers\Guru\PiketSwapController::class, 'cancel'])->name('piket.swap.cancel');
+
+        // Laporan Temuan Satpam (Panel Guru Piket)
+        Route::get('laporan-satpam', [\App\Http\Controllers\Guru\LaporanSatpamController::class, 'index'])->name('laporan-satpam.index');
+        Route::post('laporan-satpam/{laporanSatpam}/tindak-lanjuti', [\App\Http\Controllers\Guru\LaporanSatpamController::class, 'tindakLanjuti'])->name('laporan-satpam.tindak-lanjuti');
     });
 
     // ==========================================
@@ -265,6 +273,11 @@ Route::middleware(['auth'])->group(function () {
         // Detail & Lainnya
         Route::get('dispensasi/{dispensasi}/detail', [DashboardController::class, 'showDetail'])->name('dispensasi.detail');
         Route::post('dispensasi/{dispensasi}/wa-contacted', [DashboardController::class, 'markWaContacted'])->name('wa-contacted');
+
+        // Laporan Gerbang Satpam (Temuan / Siswa Tidak Kembali)
+        Route::get('laporan', [\App\Http\Controllers\Satpam\LaporanController::class, 'index'])->name('laporan.index');
+        Route::post('laporan', [\App\Http\Controllers\Satpam\LaporanController::class, 'store'])->name('laporan.store');
+        Route::get('laporan/search-siswa', [\App\Http\Controllers\Satpam\LaporanController::class, 'searchSiswa'])->name('laporan.search-siswa');
     });
 
     // ==========================================
