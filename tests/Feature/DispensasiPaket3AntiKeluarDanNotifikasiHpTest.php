@@ -23,6 +23,8 @@ class DispensasiPaket3AntiKeluarDanNotifikasiHpTest extends TestCase
     {
         parent::setUp();
 
+        Carbon::setTestNow(Carbon::today('Asia/Jakarta')->setTime(9, 0, 0));
+
         $jurusan = Jurusan::create(['nama_jurusan' => 'PPLG', 'kode_jurusan' => 'PPLG']);
         $kelas = Kelas::create(['nama_kelas' => 'XII PPLG 1', 'tingkat' => 'XII', 'jurusan_id' => $jurusan->id]);
 
@@ -83,7 +85,7 @@ class DispensasiPaket3AntiKeluarDanNotifikasiHpTest extends TestCase
             'tipe_pengajuan'       => 'individu',
             'tanggal_pengajuan'    => Carbon::today(),
             'jam_keluar'           => 1,
-            'jam_kembali'          => 4,
+            'jam_kembali'          => 10,
             'status'               => 'disetujui',
             'status_persetujuan'   => 'disetujui',
             'approved_at'          => Carbon::now(),
@@ -177,7 +179,7 @@ class DispensasiPaket3AntiKeluarDanNotifikasiHpTest extends TestCase
             'tipe_pengajuan'       => 'rombongan',
             'tanggal_pengajuan'    => Carbon::today(),
             'jam_keluar'           => 1,
-            'jam_kembali'          => 5,
+            'jam_kembali'          => 10,
             'status'               => 'disetujui',
             'status_persetujuan'   => 'disetujui',
             'approved_at'          => Carbon::now(),
@@ -190,5 +192,11 @@ class DispensasiPaket3AntiKeluarDanNotifikasiHpTest extends TestCase
         $response->assertOk();
         $response->assertSee('didispenAntiKeluarContainer');
         $response->assertSee('Segera ke Pos Satpam (Sisa 20 Menit). Wajib pakai helm!');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 }

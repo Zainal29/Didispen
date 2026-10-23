@@ -72,7 +72,7 @@ class DispensasiKembaliStatusDanToleransiTest extends TestCase
         $this->assertFalse($badge['is_late']);
     }
 
-    public function test_kembali_dalam_toleransi_5_menit_mendapatkan_status_tepat_waktu(): void
+    public function test_kembali_dalam_toleransi_5_menit_tetap_tercatat_terlambat_dengan_catatan_toleransi(): void
     {
         $batasKembali = Carbon::parse('2026-10-19 13:00:00', 'Asia/Jakarta');
         // Kembali 3 menit setelah batas (dalam masa toleransi 5 menit gerbang)
@@ -93,10 +93,13 @@ class DispensasiKembaliStatusDanToleransiTest extends TestCase
         ]);
 
         $this->assertFalse($dispensasi->isReturnedEarly());
-        $this->assertFalse($dispensasi->isReturnedLate());
+        $this->assertTrue($dispensasi->isReturnedLate());
+        $this->assertTrue($dispensasi->isWithinTolerance());
         $badge = $dispensasi->status_badge;
-        $this->assertEquals('Selesai (Tepat Waktu)', $badge['text']);
-        $this->assertFalse($badge['is_late']);
+        $this->assertEquals('Selesai (Terlambat 3m)', $badge['text']);
+        $this->assertTrue($badge['is_late']);
+        $this->assertTrue($badge['within_tolerance']);
+        $this->assertStringContainsString('toleransi gerbang', $dispensasi->getKeteranganToleransiKembaliText());
     }
 
     public function test_kembali_melewati_toleransi_5_menit_mendapatkan_status_terlambat(): void

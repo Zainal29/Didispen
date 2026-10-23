@@ -348,8 +348,8 @@ class DispensasiKadaluarsaAlertDanAutoExpireTest extends TestCase
     }
 
     /**
-     * 7. Dispensasi status 'menunggu' otomatis kadaluarsa jika tidak disetujui
-     * Guru Piket dalam durasi 20 menit sejak pengajuan dibuat.
+     * 7. Dispensasi status 'menunggu' menggunakan kombinasi cerdas (MAX antara jam pembuatan + 20m dan jam keluar + 20m).
+     * Jika dibuat 12:45 untuk jam keluar 12:50, batas kadaluarsa adalah 13:10 WIB.
      */
     public function test_dispensasi_menunggu_otomatis_kadaluarsa_setelah_20_menit(): void
     {
@@ -368,21 +368,59 @@ class DispensasiKadaluarsaAlertDanAutoExpireTest extends TestCase
             'status'              => 'menunggu',
         ]);
 
-        // Pada 13:00 (15 menit sejak diajukan, masih di bawah 20 menit) -> tetap menunggu
-        Carbon::setTestNow(Carbon::parse('2026-10-19 13:00:00', 'Asia/Jakarta'));
+        // Pada 13:06 (karena jam_keluar 12:50 + 20m = 13:10, pada 13:06 masih aktif) -> tetap menunggu
+        Carbon::setTestNow(Carbon::parse('2026-10-19 13:06:00', 'Asia/Jakarta'));
         DispensasiService::autoExpireOverdueDispensasi();
         $dispensasi->refresh();
         $this->assertEquals('menunggu', $dispensasi->status);
 
-        // Pada 13:06 (21 menit sejak diajukan: 12:45 + 20 menit = 13:05) -> harus otomatis kadaluarsa
-        Carbon::setTestNow(Carbon::parse('2026-10-19 13:06:00', 'Asia/Jakarta'));
+        // Pada 13:11 (melewati 13:10 WIB) -> harus otomatis kadaluarsa
+        Carbon::setTestNow(Carbon::parse('2026-10-19 13:11:00', 'Asia/Jakarta'));
         $affected = DispensasiService::autoExpireOverdueDispensasi();
         $this->assertGreaterThanOrEqual(1, $affected);
 
         $dispensasi->refresh();
         $this->assertEquals('kadaluarsa', $dispensasi->status);
-        $this->assertStringContainsString('20 menit', $dispensasi->catatan_admin);
-        $this->assertStringContainsString('13:05 WIB', $dispensasi->catatan_admin);
+        $this->assertStringContainsString('13:10 WIB', $dispensasi->catatan_admin);
         $this->assertStringContainsString('tidak disetujui Guru Piket', $dispensasi->catatan_admin);
+    }
+
+    /**
+     * 8. Pengajuan lebih awal (advance) tidak kadaluarsa prematur.
+     * Contoh: Dibuat jam 08:00 untuk jam keluar 09:30.
+     * Batas kadaluarsa = 09:30 + 20 menit = 09:50 WIB.
+     * Pada jam 08:25 (lewat 25 menit dari created_at) TETAP aktif karena belum jam 09:50.
+     */
+    public function test_dispensasi_menunggu_diajukan_lebih_awal_tidak_kadaluarsa_prematur(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-19 08:00:00', 'Asia/Jakarta'));
+
+        $dispensasi = Dispensasi::create([
+            'siswa_id'            => $this->siswa->id,
+            'nomor_surat'         => Dispensasi::generateNomorSurat(),
+            'kategori'            => 'izin',
+            'alasan'              => 'Lomba debat bahasa inggris',
+            'tujuan'              => 'Gedung Kesenian',
+            'tanggal_izin'        => '2026-10-19',
+            'jam_keluar'          => '09:30',
+            'jam_kembali'         => '12:00',
+            'batas_waktu_kembali' => Carbon::parse('2026-10-19 12:00:00', 'Asia/Jakarta'),
+            'status'              => 'menunggu',
+        ]);
+
+        $this->assertEquals('09:50 WIB', $dispensasi->getBatasWaktuExpiredText());
+
+        // Pada 08:25 (lewat 25 menit sejak dibuat): HARUS TETAP MENUNGGU
+        Carbon::setTestNow(Carbon::parse('2026-10-19 08:25:00', 'Asia/Jakarta'));
+        DispensasiService::autoExpireOverdueDispensasi();
+        $dispensasi->refresh();
+        $this->assertEquals('menunggu', $dispensasi->status);
+
+        // Pada 09:55 (melewati 09:50 WIB): Baru otomatis kadaluarsa
+        Carbon::setTestNow(Carbon::parse('2026-10-19 09:55:00', 'Asia/Jakarta'));
+        DispensasiService::autoExpireOverdueDispensasi();
+        $dispensasi->refresh();
+        $this->assertEquals('kadaluarsa', $dispensasi->status);
+        $this->assertStringContainsString('09:50 WIB', $dispensasi->catatan_admin);
     }
 }

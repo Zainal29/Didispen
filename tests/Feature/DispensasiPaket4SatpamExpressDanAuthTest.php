@@ -29,6 +29,8 @@ class DispensasiPaket4SatpamExpressDanAuthTest extends TestCase
     {
         parent::setUp();
 
+        Carbon::setTestNow(Carbon::today('Asia/Jakarta')->setTime(9, 0, 0));
+
         $jurusan = Jurusan::create(['nama_jurusan' => 'PPLG', 'kode_jurusan' => 'PPLG']);
         $kelas = Kelas::create(['nama_kelas' => 'XII PPLG 1', 'tingkat' => 'XII', 'jurusan_id' => $jurusan->id]);
 
@@ -163,7 +165,8 @@ class DispensasiPaket4SatpamExpressDanAuthTest extends TestCase
             'tipe_pengajuan'       => 'individu',
             'tanggal_pengajuan'    => Carbon::today(),
             'jam_keluar'           => 1,
-            'jam_kembali'          => 4,
+            'jam_kembali'          => 10,
+            'qr_token'             => \Illuminate\Support\Str::random(32),
             'status'               => 'disetujui',
             'status_persetujuan'   => 'disetujui',
             'approved_at'          => Carbon::now(),
@@ -199,5 +202,11 @@ class DispensasiPaket4SatpamExpressDanAuthTest extends TestCase
         $dispensasi->refresh();
         $this->assertEquals('selesai', $dispensasi->status);
         $this->assertNotNull($dispensasi->waktu_kembali_aktual);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 }

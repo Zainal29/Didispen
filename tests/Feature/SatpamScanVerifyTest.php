@@ -218,6 +218,87 @@ class SatpamScanVerifyTest extends TestCase
         ]);
     }
 
+    public function test_verify_preview_mode_returns_riwayat_scan_detection_satpam_dan_guru(): void
+    {
+        // Buat user guru piket
+        $guruUser = User::create([
+            'name'                => 'Guru Piket Bu Siti',
+            'email'               => 'busiti@sch.id',
+            'role'                => 'guru',
+            'password'            => Hash::make('SecretPassword123!'),
+            'password_changed_at' => now(),
+            'no_wa'               => '081234567890',
+        ]);
+
+        \App\Models\Guru::create([
+            'user_id'        => $guruUser->id,
+            'nip'            => '198501012010011002',
+            'nama_lengkap'   => 'Guru Piket Bu Siti, S.Pd.',
+            'mata_pelajaran' => 'Matematika',
+            'no_telepon'     => '081234567890',
+            'status_aktif'   => true,
+        ]);
+
+        // Skenario 1: Siswa di-scan keluar oleh Guru Piket
+        $this->dispensasi->update([
+            'status'              => 'keluar',
+            'waktu_keluar_aktual' => now()->subMinutes(15),
+            'satpam_keluar_id'    => $guruUser->id,
+        ]);
+
+        // Satpam memindai QR siswa untuk check/preview
+        $responseSatpam = $this->actingAs($this->satpam)
+            ->postJson('/satpam/scan/verify', [
+                'qr_data' => json_encode(['token' => $this->dispensasi->qr_token]),
+                'action'  => 'check',
+            ]);
+
+        $responseSatpam->assertOk()
+            ->assertJson([
+                'success' => true,
+                'mode'    => 'preview',
+                'data'    => [
+                    'riwayat_scan' => [
+                        'keluar' => [
+                            'sudah'      => true,
+                            'role'       => 'guru',
+                            'role_label' => 'Guru Piket',
+                            'nama'       => 'Guru Piket Bu Siti',
+                        ],
+                        'kembali' => null,
+                    ],
+                ],
+            ]);
+
+        // Skenario 2: Sebaliknya, siswa di-scan keluar oleh Satpam, lalu diperiksa di portal Guru
+        $this->dispensasi->update([
+            'satpam_keluar_id' => $this->satpam->id,
+        ]);
+
+        $this->flushSession();
+        $responseGuru = $this->actingAs($guruUser)
+            ->postJson('/guru/scan/verify', [
+                'qr_data' => json_encode(['token' => $this->dispensasi->qr_token]),
+                'action'  => 'check',
+            ]);
+
+        $responseGuru->assertOk()
+            ->assertJson([
+                'success' => true,
+                'mode'    => 'preview',
+                'data'    => [
+                    'riwayat_scan' => [
+                        'keluar' => [
+                            'sudah'      => true,
+                            'role'       => 'satpam',
+                            'role_label' => 'Satpam (Pos Gerbang)',
+                            'nama'       => 'Satpam Test',
+                        ],
+                    ],
+                ],
+            ]);
+    }
+
     protected function tearDown(): void
     {
         \Carbon\Carbon::setTestNow();
