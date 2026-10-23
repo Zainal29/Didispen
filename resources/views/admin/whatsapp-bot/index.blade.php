@@ -8,9 +8,9 @@
     {{-- Header & Status Utama --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-2xl shadow-xs border border-slate-200">
         <div>
-            <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-lg">
-                    <i class="fab fa-whatsapp"></i>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200/70 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                    <i class="ti ti-brand-whatsapp"></i>
                 </div>
                 <div>
                     <h1 class="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -30,13 +30,13 @@
                 @if($settings['wa_bot_enabled'])
                     <button type="submit" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5 transition" title="Klik untuk mematikan bot">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <i class="fas fa-power-off"></i>
+                        <i class="ti ti-power"></i>
                         <span>Bot: ON (Matikan)</span>
                     </button>
                 @else
                     <button type="submit" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold flex items-center gap-1.5 transition" title="Klik untuk menghidupkan bot">
                         <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                        <i class="fas fa-power-off"></i>
+                        <i class="ti ti-power"></i>
                         <span>Bot: OFF (Aktifkan)</span>
                     </button>
                 @endif
@@ -45,14 +45,14 @@
             <form action="{{ route('admin.whatsapp-bot.restart') }}" method="POST" onsubmit="return confirm('Restart socket Baileys?')">
                 @csrf
                 <button type="submit" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
-                    <i class="fas fa-sync-alt text-slate-500"></i>
+                    <i class="ti ti-refresh text-slate-500"></i>
                     <span>Restart Socket</span>
                 </button>
             </form>
 
             <button type="button" onclick="document.getElementById('sectionSettings').scrollIntoView({ behavior: 'smooth' })"
-                class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-xs">
-                <i class="fas fa-cog"></i>
+                class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm shadow-blue-500/25">
+                <i class="ti ti-settings"></i>
                 <span>Pengaturan</span>
             </button>
         </div>
@@ -61,13 +61,13 @@
     {{-- Flash Message --}}
     @if(session('success'))
         <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
-            <i class="fas fa-check-circle text-emerald-600"></i>
+            <i class="ti ti-circle-check text-emerald-600 text-base"></i>
             <span>{{ session('success') }}</span>
         </div>
     @endif
     @if(session('error'))
         <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
-            <i class="fas fa-exclamation-circle text-rose-600"></i>
+            <i class="ti ti-alert-circle text-rose-600 text-base"></i>
             <span>{{ session('error') }}</span>
         </div>
     @endif
@@ -77,7 +77,7 @@
         <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
                 <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <i class="fas fa-qrcode text-emerald-600"></i>
+                    <i class="ti ti-qrcode text-blue-600 text-lg"></i>
                     Koneksi Perangkat WhatsApp (QR Code Scanner)
                 </h2>
                 <p class="text-xs text-slate-500 mt-0.5">Tautkan akun WhatsApp sekolah untuk mengirim notifikasi secara otomatis.</p>
@@ -86,7 +86,7 @@
             <div id="liveStatusBadge" class="flex items-center gap-2 flex-wrap">
                 @if(!$settings['wa_bot_enabled'])
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300">
-                        <i class="fas fa-pause-circle text-amber-500"></i>
+                        <i class="ti ti-player-pause text-amber-500"></i>
                         Status: Dijeda (OFF)
                     </span>
                 @endif
@@ -115,11 +115,11 @@
                 <div class="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-emerald-50/60 border border-emerald-200">
                     <div class="flex items-center gap-4">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-3xl shadow-sm shrink-0">
-                            <i class="fab fa-whatsapp"></i>
+                            <i class="ti ti-brand-whatsapp"></i>
                         </div>
                         <div>
                             <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-emerald-200 text-emerald-900 mb-1">
-                                <i class="fas fa-shield-alt"></i> Sesi Aktif & Siap Mengirim
+                                <i class="ti ti-shield-check"></i> Sesi Aktif & Siap Mengirim
                             </div>
                             <h3 class="text-base sm:text-lg font-bold text-slate-900" id="connectedPhoneText">
                                 {{ $botStatus['user']['phone'] ?? 'WhatsApp Terhubung' }}
@@ -134,7 +134,7 @@
                         <form action="{{ route('admin.whatsapp-bot.disconnect') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin memutuskan perangkat WhatsApp ini? Anda perlu melakukan scan QR ulang.')">
                             @csrf
                             <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-2 shadow-xs">
-                                <i class="fas fa-sign-out-alt"></i>
+                                <i class="ti ti-logout"></i>
                                 <span>Putuskan Sesi / Ganti Nomor</span>
                             </button>
                         </form>
@@ -149,7 +149,7 @@
                         <div class="relative w-64 h-64 bg-white rounded-xl shadow-xs border border-slate-200 flex items-center justify-center overflow-hidden p-2">
                             <img id="qrImageElement" src="{{ $botStatus['qr_image'] ?? '' }}" alt="QR Code WhatsApp" class="w-full h-full object-contain {{ empty($botStatus['qr_image']) ? 'hidden' : '' }}">
                             <div id="qrLoadingPlaceholder" class="{{ !empty($botStatus['qr_image']) ? 'hidden' : '' }} text-center p-4">
-                                <i class="fas fa-spinner fa-spin text-3xl text-emerald-600 mb-2"></i>
+                                <i class="ti ti-loader-2 animate-spin text-3xl text-blue-600 mb-2"></i>
                                 <p class="text-xs text-slate-500">Mempersiapkan QR Code...</p>
                             </div>
                         </div>
@@ -158,8 +158,8 @@
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                                 <span>Auto-refresh aktif</span>
                             </span>
-                            <button type="button" onclick="pollBotStatus(true)" id="btnRefreshQr" class="text-emerald-700 hover:text-emerald-800 font-semibold flex items-center gap-1 transition">
-                                <i class="fas fa-sync-alt" id="iconRefreshQr"></i>
+                            <button type="button" onclick="pollBotStatus(true)" id="btnRefreshQr" class="text-blue-700 hover:text-blue-800 font-semibold flex items-center gap-1 transition">
+                                <i class="ti ti-refresh" id="iconRefreshQr"></i>
                                 <span>Muat Ulang QR</span>
                             </button>
                         </div>
@@ -167,7 +167,7 @@
                             <form action="{{ route('admin.whatsapp-bot.disconnect') }}" method="POST" onsubmit="return confirm('QR Code belum muncul? Klik OK untuk menghapus cache sesi lama dan memaksa WhatsApp server mengirimkan QR Code baru.')">
                                 @csrf
                                 <button type="submit" class="text-[11px] text-slate-400 hover:text-rose-600 underline transition inline-flex items-center gap-1">
-                                    <i class="fas fa-redo-alt text-[10px]"></i>
+                                    <i class="ti ti-refresh text-[10px]"></i>
                                     <span>QR tidak kunjung muncul? Reset & Buat QR Baru</span>
                                 </button>
                             </form>
@@ -210,7 +210,7 @@
                 <div class="p-6 rounded-2xl bg-rose-50 border border-rose-200 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-5">
                     <div class="flex items-start gap-3.5">
                         <div class="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl shrink-0">
-                            <i class="fas fa-exclamation-triangle"></i>
+                            <i class="ti ti-alert-triangle text-2xl"></i>
                         </div>
                         <div>
                             <h3 class="text-sm sm:text-base font-bold text-rose-900">Server Microservice WhatsApp Bot Sedang Offline</h3>
@@ -227,7 +227,7 @@
                     <form action="{{ route('admin.whatsapp-bot.restart') }}" method="POST">
                         @csrf
                         <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shrink-0">
-                            <i class="fas fa-redo"></i> Coba Hubungkan Ulang
+                            <i class="ti ti-refresh"></i> Coba Hubungkan Ulang
                         </button>
                     </form>
                 </div>
@@ -239,7 +239,7 @@
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden" id="sectionSettings">
         <div class="p-5 border-b border-slate-100">
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                <i class="fas fa-sliders-h text-emerald-600"></i>
+                <i class="ti ti-adjustments text-blue-600"></i>
                 Pengaturan Konfigurasi & Notifikasi Bot
             </h2>
             <p class="text-xs text-slate-500 mt-0.5">Atur preferensi server, kredensial API, dan pilih jenis notifikasi otomatis yang aktif.</p>
@@ -292,7 +292,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <label for="wa_piket_reminder_minutes" class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5 cursor-pointer">
-                            <i class="fas fa-clock text-emerald-600"></i>
+                            <i class="ti ti-clock text-blue-600"></i>
                             Waktu Pengingat Sebelum Sesi Piket Dimulai
                         </label>
                         <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
@@ -303,8 +303,29 @@
                         <input type="number" name="wa_piket_reminder_minutes" id="wa_piket_reminder_minutes"
                             value="{{ old('wa_piket_reminder_minutes', $settings['wa_piket_reminder_minutes'] ?? 15) }}"
                             min="0" max="120" required
-                            class="w-24 px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold text-center focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition bg-white shadow-2xs">
+                            class="w-24 px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold text-center focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition bg-white shadow-2xs">
                         <span class="text-xs font-bold text-slate-700">Menit sebelum sesi</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 3b. Nomor WhatsApp Pos Satpam --}}
+            <div class="p-4 rounded-xl border border-blue-200 bg-blue-50/40 space-y-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <label for="wa_satpam_phone" class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5 cursor-pointer">
+                            <i class="ti ti-shield-check text-blue-600"></i>
+                            Nomor WhatsApp Pos Satpam / Gerbang Utama
+                        </label>
+                        <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                            Nomor WhatsApp HP dinas / pos gerbang utama untuk menerima pengingat kesiapsiagaan memindai QR siswa setiap sesi piket.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <input type="text" name="wa_satpam_phone" id="wa_satpam_phone"
+                            value="{{ old('wa_satpam_phone', $settings['wa_satpam_phone'] ?? '') }}"
+                            placeholder="Contoh: 081234567890"
+                            class="w-48 sm:w-56 px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition bg-white shadow-2xs font-mono">
                     </div>
                 </div>
             </div>
@@ -367,6 +388,15 @@
                             <span class="block text-[11px] text-slate-500 leading-normal">Kirim rekap data siswa terlambat ke nomor Guru Piket untuk ditindaklanjuti.</span>
                         </div>
                     </label>
+
+                    {{-- Opsi G: Pengingat Siaga Pos Satpam --}}
+                    <label class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white cursor-pointer transition flex items-start gap-3">
+                        <input type="checkbox" name="wa_notify_satpam_sesi_piket" value="1" class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300" @checked($settings['wa_notify_satpam_sesi_piket'])>
+                        <div class="space-y-1">
+                            <span class="block text-xs font-bold text-slate-900">Siaga Pos Satpam (Per Sesi)</span>
+                            <span class="block text-[11px] text-slate-500 leading-normal">Kirim WA otomatis ke Pos Satpam setiap sesi guru piket dimulai agar standby scan QR gerbang.</span>
+                        </div>
+                    </label>
                 </div>
             </div>
 
@@ -393,8 +423,8 @@
             </div>
 
             <div class="pt-2 flex justify-end">
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-xs">
-                    <i class="fas fa-save"></i>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-sm shadow-blue-500/25">
+                    <i class="ti ti-device-floppy"></i>
                     <span>Simpan Pengaturan</span>
                 </button>
             </div>
@@ -406,7 +436,7 @@
         <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <i class="fas fa-calendar-check text-emerald-600"></i>
+                    <i class="ti ti-calendar-check text-blue-600"></i>
                     Matriks Agenda Pengiriman Bot Guru Piket
                 </h2>
                 <p class="text-xs text-slate-500 mt-0.5">
@@ -414,12 +444,12 @@
                 </p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    <i class="fas fa-check-circle text-emerald-600"></i>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
+                    <i class="ti ti-circle-check text-blue-600"></i>
                     Format Matriks SK SMK N 1 Bangsri
                 </span>
                 <a href="{{ route('admin.jadwal-piket.index', ['view' => 'matriks']) }}" class="px-3 py-1 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold flex items-center gap-1 transition">
-                    <i class="fas fa-external-link-alt text-[10px]"></i>
+                    <i class="ti ti-external-link text-[10px]"></i>
                     <span>Kelola Jadwal Piket</span>
                 </a>
             </div>
@@ -435,7 +465,7 @@
 
             @if(empty($matriksData) || $matriksData->isEmpty())
                 <div class="text-center py-8 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    <i class="fas fa-calendar-times text-3xl text-slate-400 mb-2"></i>
+                    <i class="ti ti-calendar-off text-3xl text-slate-400 mb-2"></i>
                     <p class="text-sm font-semibold text-slate-700">Belum Ada Data Jadwal Piket Aktif</p>
                     <p class="text-xs text-slate-500 mt-0.5">Silakan tambahkan data sesi dan penugasan guru piket terlebih dahulu.</p>
                 </div>
@@ -474,8 +504,8 @@
                                                 <div class="flex flex-col gap-1">
                                                     <span class="text-xs font-bold">{{ $hariNames[$hariNum] ?? 'Hari '.$hariNum }}</span>
                                                     @if($isToday)
-                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white shadow-2xs">
-                                                            <i class="fas fa-calendar-day text-[9px]"></i> Hari Ini
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white shadow-2xs">
+                                                            <i class="ti ti-calendar text-[10px]"></i> Hari Ini
                                                         </span>
                                                     @endif
                                                     @if(!$isDayActive)
@@ -494,18 +524,18 @@
                                                     @endphp
                                                     @if($koorWaLink)
                                                         <a href="{{ $koorWaLink }}" target="_blank" rel="noopener noreferrer"
-                                                           class="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-900 font-mono mt-1 px-2 py-0.5 rounded bg-emerald-100/60 hover:bg-emerald-200/60 border border-emerald-300 transition-colors whitespace-nowrap"
+                                                           class="inline-flex items-center gap-1 text-[11px] text-blue-700 hover:text-blue-900 font-mono mt-1 px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors whitespace-nowrap"
                                                            title="Kirim pesan WhatsApp pengingat ke Koordinator">
-                                                            <i class="fab fa-whatsapp text-emerald-600"></i>
+                                                            <i class="ti ti-brand-whatsapp text-blue-600"></i>
                                                             <span class="font-semibold">{{ $koordinator->no_telepon }}</span>
                                                         </a>
                                                     @else
                                                         <div class="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center whitespace-nowrap">
-                                                            <i class="fab fa-whatsapp text-slate-300 mr-1 text-xs"></i> {{ $koordinator->no_telepon ?? '-' }}
+                                                            <i class="ti ti-brand-whatsapp text-slate-300 mr-1 text-xs"></i> {{ $koordinator->no_telepon ?? '-' }}
                                                         </div>
                                                     @endif
-                                                    <div class="mt-1.5 text-[10px] text-emerald-700 font-medium flex items-center gap-1">
-                                                        <i class="fas fa-shield-alt text-emerald-500 text-[10px]"></i>
+                                                    <div class="mt-1.5 text-[10px] text-blue-700 font-medium flex items-center gap-1">
+                                                        <i class="ti ti-shield-check text-blue-600 text-xs"></i>
                                                         <span>Notifikasi: 1x sehari di sesi awal</span>
                                                     </div>
                                                 @else
@@ -517,17 +547,17 @@
                                         {{-- Pengaturan Sesi Piket --}}
                                         <td class="py-2.5 px-4 border-r border-slate-200 font-medium">
                                             <div class="flex items-center gap-1.5 whitespace-nowrap">
-                                                <span class="font-bold text-emerald-800">{{ $sesi->nama_sesi ?? 'Sesi' }}</span>
+                                                <span class="font-bold text-blue-800">{{ $sesi->nama_sesi ?? 'Sesi' }}</span>
                                                 <span class="text-[11px] text-slate-500 font-mono">({{ substr($sesi->jam_mulai, 0, 5) }} - {{ substr($sesi->jam_selesai, 0, 5) }})</span>
                                             </div>
                                             <div class="text-[10px] mt-0.5">
                                                 @if($sesi->is_active)
                                                     <span class="text-emerald-700 font-semibold inline-flex items-center">
-                                                        <i class="fas fa-check-circle text-emerald-500 mr-1 text-[10px]"></i> Sesi Aktif
+                                                        <i class="ti ti-circle-check text-emerald-500 mr-1 text-xs"></i> Sesi Aktif
                                                     </span>
                                                 @else
                                                     <span class="text-slate-400 font-semibold inline-flex items-center">
-                                                        <i class="fas fa-times-circle text-slate-400 mr-1 text-[10px]"></i> Nonaktif
+                                                        <i class="ti ti-circle-x text-slate-400 mr-1 text-xs"></i> Nonaktif
                                                     </span>
                                                 @endif
                                             </div>
@@ -541,7 +571,7 @@
                                                 <ul class="space-y-1">
                                                     @foreach($sesi->guru as $guru)
                                                         <li class="flex items-center gap-1.5">
-                                                            <i class="fas fa-user-tie text-[10px] text-emerald-600"></i>
+                                                            <i class="ti ti-user text-xs text-blue-600"></i>
                                                             <span class="font-medium text-slate-800">{{ $guru->nama_lengkap }}</span>
                                                         </li>
                                                     @endforeach
@@ -564,12 +594,12 @@
                                                                 <a href="{{ $waLink }}" target="_blank" rel="noopener noreferrer"
                                                                    class="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-950 font-mono px-2 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
                                                                    title="Hubungi Guru Piket via WhatsApp">
-                                                                    <i class="fab fa-whatsapp text-emerald-600"></i>
+                                                                    <i class="ti ti-brand-whatsapp text-emerald-600"></i>
                                                                     <span>{{ $guru->no_telepon }}</span>
                                                                 </a>
                                                             @else
                                                                 <span class="text-[11px] font-mono text-slate-400">
-                                                                    <i class="fab fa-whatsapp text-slate-300 mr-0.5"></i> {{ $guru->no_telepon ?? '-' }}
+                                                                    <i class="ti ti-brand-whatsapp text-slate-300 mr-0.5"></i> {{ $guru->no_telepon ?? '-' }}
                                                                 </span>
                                                             @endif
                                                         </li>
@@ -582,11 +612,11 @@
                                         <td class="py-2.5 px-3 text-center border-l border-slate-200">
                                             @if(!$isDayActive)
                                                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-slate-100 text-slate-500">
-                                                    <i class="fas fa-pause text-[9px]"></i> Hari Nonaktif
+                                                    <i class="ti ti-player-pause text-[10px]"></i> Hari Nonaktif
                                                 </span>
                                             @elseif(!$settings['wa_notify_piket_bertugas'])
                                                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                                    <i class="fas fa-ban text-[9px]"></i> Notifikasi OFF
+                                                    <i class="ti ti-ban text-[10px]"></i> Notifikasi OFF
                                                 </span>
                                             @else
                                                 <div class="flex flex-col items-center gap-0.5">
@@ -594,13 +624,13 @@
                                                         $remMinutes = (int) ($settings['wa_piket_reminder_minutes'] ?? 15);
                                                         $waktuKirim = \Carbon\Carbon::parse($sesi->jam_mulai)->subMinutes($remMinutes)->format('H:i');
                                                     @endphp
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                        <i class="fas fa-paper-plane text-[9px] text-emerald-600"></i>
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
+                                                        <i class="ti ti-send text-[10px] text-blue-600"></i>
                                                         Otomatis {{ $waktuKirim }} WIB
                                                     </span>
                                                     <span class="text-[10px] text-slate-500 font-mono">
                                                         @if($remMinutes > 0)
-                                                            H-{{ $remMinutes }} mnt sebelum sesi
+                                                             H-{{ $remMinutes }} mnt sebelum sesi
                                                         @else
                                                             Saat sesi dimulai
                                                         @endif
@@ -641,22 +671,22 @@
     {{-- FORM TES KIRIM PESAN WA --}}
     <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-200">
         <h2 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-            <i class="fas fa-paper-plane text-emerald-600"></i>
+            <i class="ti ti-send text-blue-600"></i>
             Uji Coba Kirim Pesan WhatsApp Langsung
         </h2>
         <form action="{{ route('admin.whatsapp-bot.send-test') }}" method="POST" class="grid grid-cols-1 md:grid-cols-12 gap-3">
             @csrf
             <div class="md:col-span-3">
                 <input type="text" name="phone" placeholder="No. WA (cth: 08123456789)" required
-                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition">
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition">
             </div>
             <div class="md:col-span-7">
                 <input type="text" name="message" placeholder="Isi pesan uji coba..." value="Halo, ini pesan uji coba otomatis dari Bot WhatsApp DIDISPEN SMKN 1 Bangsri." required
-                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition">
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition">
             </div>
             <div class="md:col-span-2">
-                <button type="submit" class="w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2">
-                    <i class="fas fa-paper-plane"></i> Kirim Tes
+                <button type="submit" class="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-blue-500/25">
+                    <i class="ti ti-send"></i> Kirim Tes
                 </button>
             </div>
         </form>
@@ -683,8 +713,8 @@
                     <option value="returned_late" @selected(request('context') === 'returned_late')>Siswa Kembali Terlambat</option>
                     <option value="test_admin" @selected(request('context') === 'test_admin')>Uji Coba Admin</option>
                 </select>
-                <button type="submit" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition">
-                    <i class="fas fa-filter mr-1"></i> Filter
+                <button type="submit" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition">
+                    <i class="ti ti-filter mr-1"></i> Filter
                 </button>
             </form>
 
@@ -692,7 +722,7 @@
                 <form action="{{ route('admin.whatsapp-bot.retry-all') }}" method="POST" onsubmit="return confirm('Kirim ulang semua pesan gagal?')">
                     @csrf
                     <button type="submit" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
-                        <i class="fas fa-redo"></i> Kirim Ulang Gagal ({{ $stats['failed'] }})
+                        <i class="ti ti-refresh"></i> Kirim Ulang Gagal ({{ $stats['failed'] }})
                     </button>
                 </form>
             @endif
@@ -725,24 +755,24 @@
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
                                 @if($log->context === 'piket_bertugas')
-                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-blue-100 text-blue-800 font-semibold">
-                                        <i class="fas fa-calendar-check mr-0.5 text-[9px]"></i> Piket Bertugas
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 font-semibold inline-flex items-center gap-1">
+                                        <i class="ti ti-calendar-check text-[11px]"></i> Piket Bertugas
                                     </span>
                                 @elseif($log->context === 'piket_koordinator')
-                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-purple-100 text-purple-800 font-semibold">
-                                        <i class="fas fa-user-shield mr-0.5 text-[9px]"></i> Koordinator Piket
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 font-semibold inline-flex items-center gap-1">
+                                        <i class="ti ti-shield-check text-[11px]"></i> Koordinator Piket
                                     </span>
                                 @elseif($log->context === 'overdue' || str_contains($log->context, 'overdue'))
-                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-rose-100 text-rose-800 font-semibold">
-                                        <i class="fas fa-clock mr-0.5 text-[9px]"></i> Siswa Terlambat
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-rose-50 text-rose-700 border border-rose-200/60 font-semibold inline-flex items-center gap-1">
+                                        <i class="ti ti-clock text-[11px]"></i> Siswa Terlambat
                                     </span>
                                 @elseif($log->context === 'laporan_piket_overdue')
-                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-amber-100 text-amber-800 font-semibold">
-                                        <i class="fas fa-exclamation-triangle mr-0.5 text-[9px]"></i> Laporan Guru Piket
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-amber-50 text-amber-700 border border-amber-200/60 font-semibold inline-flex items-center gap-1">
+                                        <i class="ti ti-alert-triangle text-[11px]"></i> Laporan Guru Piket
                                     </span>
                                 @elseif($log->context === 'test_admin')
-                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-100 text-slate-700 font-semibold">
-                                        <i class="fas fa-vial mr-0.5 text-[9px]"></i> Tes Admin
+                                    <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-100 text-slate-700 font-semibold inline-flex items-center gap-1">
+                                        <i class="ti ti-flask text-[11px]"></i> Tes Admin
                                     </span>
                                 @else
                                     <span class="px-2 py-0.5 text-[11px] rounded-md bg-slate-100 text-slate-700 font-mono font-semibold">
@@ -756,7 +786,7 @@
                                 </div>
                                 @if($log->error_message)
                                     <div class="text-xs text-rose-600 mt-1 font-semibold flex items-start gap-1">
-                                        <i class="fas fa-exclamation-circle mt-0.5"></i>
+                                        <i class="ti ti-alert-circle mt-0.5"></i>
                                         <span>{{ $log->error_message }}</span>
                                     </div>
                                 @endif
@@ -774,8 +804,8 @@
                                 @if($log->status !== 'sent' && $log->phone)
                                     <form action="{{ route('admin.whatsapp-bot.retry', $log) }}" method="POST" class="inline">
                                         @csrf
-                                        <button type="submit" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition">
-                                            <i class="fas fa-redo mr-1"></i>Retry
+                                        <button type="submit" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition">
+                                            <i class="ti ti-refresh mr-1"></i>Retry
                                         </button>
                                     </form>
                                 @endif
@@ -818,7 +848,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!isPolling && !manual) return;
 
         const icon = document.getElementById('iconRefreshQr');
-        if (manual && icon) icon.classList.add('fa-spin');
+        if (manual && icon) icon.classList.add('animate-spin');
 
         try {
             const res = await fetch(statusUrl, {
@@ -843,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function () {
             renderOffline();
         } finally {
             if (manual && icon) {
-                setTimeout(() => icon.classList.remove('fa-spin'), 600);
+                setTimeout(() => icon.classList.remove('animate-spin'), 600);
             }
         }
     };

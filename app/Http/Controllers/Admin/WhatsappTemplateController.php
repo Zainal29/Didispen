@@ -102,6 +102,7 @@ class WhatsappTemplateController extends Controller
             'link_persetujuan'    => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/') . '/guru/piket/swap/incoming',
             'status_persetujuan'  => 'DISETUJUI',
             'catatan_tambahan'    => 'Catatan: Siap menggantikan tugas piket.',
+            'link_scan_satpam'    => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/') . '/satpam/scan',
         ];
 
         // Escape dulu sebelum replace agar aman

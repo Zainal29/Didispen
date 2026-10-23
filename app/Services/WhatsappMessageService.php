@@ -234,6 +234,51 @@ class WhatsappMessageService
     }
 
     /**
+     * Render pesan WA Pengingat Siaga Pos Satpam sesuai Sesi Guru Piket
+     */
+    private function renderSatpamContent(string $content, \App\Models\JadwalPiket $jadwal, array $petugasList = []): string
+    {
+        $hariMap = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+        $hariStr = $hariMap[$jadwal->hari] ?? 'Hari Ini';
+
+        $jamMulai = substr((string) $jadwal->jam_mulai, 0, 5);
+        $jamSelesai = substr((string) $jadwal->jam_selesai, 0, 5);
+
+        $petugasFormatted = [];
+        foreach ($petugasList as $p) {
+            $guruObj = is_array($p) ? ($p['guru'] ?? null) : $p;
+            if ($guruObj instanceof \App\Models\Guru) {
+                $nama = $guruObj->nama_lengkap ?? $guruObj->nama ?? 'Guru';
+                $status = (is_array($p) && !empty($p['is_pengganti'])) ? ' (Pengganti)' : '';
+                $petugasFormatted[] = "• {$nama}{$status}";
+            }
+        }
+        $daftarPetugasText = !empty($petugasFormatted) ? implode("\n", $petugasFormatted) : '• (Belum ada petugas terdaftar)';
+        $koordinatorName = $jadwal->koordinator?->nama_lengkap ?? $jadwal->koordinator?->nama ?? '-';
+
+        $scanSatpamUrl = rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/') . '/satpam/scan';
+
+        $replacements = [
+            '{hari}'             => $hariStr,
+            '{nama_sesi}'        => $jadwal->nama_sesi ?? 'Piket',
+            '{jam_mulai}'        => $jamMulai,
+            '{jam_selesai}'      => $jamSelesai,
+            '{daftar_petugas}'   => $daftarPetugasText,
+            '{koordinator}'      => $koordinatorName,
+            '{nama_koordinator}' => $koordinatorName,
+            '{tanggal}'          => now('Asia/Jakarta')->translatedFormat('d F Y'),
+            '{link_scan_satpam}' => $scanSatpamUrl,
+            '{link_web}'         => rtrim(config('app.url', 'https://didispen.smkn1bangsri.sch.id'), '/'),
+        ];
+
+        return str_replace(
+            array_keys($replacements),
+            array_values($replacements),
+            $content
+        );
+    }
+
+    /**
      * Replace variabel {xxx} dengan data asli
      */
     private function renderContent(string $content, Dispensasi $dispensasi, string $context): string
@@ -691,6 +736,64 @@ class WhatsappMessageService
             context: 'piket_koordinator',
             userId: $koordinator->user_id,
             recipientName: $koordinator->nama_lengkap,
+            referenceKey: $refKey
+        );
+    }
+
+    /**
+     * Kirim Notifikasi WA Pengingat Siaga di Pos Gerbang ke Satpam sesuai Sesi Guru Piket
+     */
+    public function notifySatpamStandbySesiPiket(\App\Models\JadwalPiket $jadwal, array $petugasList = []): void
+    {
+        if (! (bool) \App\Models\Setting::get('wa_notify_satpam_sesi_piket', true)) {
+            return;
+        }
+
+        // Ambil nomor WA Satpam dari Pengaturan, atau fallback ke akun Satpam aktif
+        $rawSatpamPhone = \App\Models\Setting::get('wa_satpam_phone');
+        $satpamUserId = null;
+
+        if (empty($rawSatpamPhone)) {
+            // Fallback: cari user role satpam yang punya no_wa / no_telepon
+            $satpamUser = \App\Models\User::where('role', 'satpam')
+                ->where(function ($q) {
+                    $q->whereNotNull('no_wa')->orWhereNotNull('no_telepon');
+                })
+                ->first();
+
+            if ($satpamUser) {
+                $rawSatpamPhone = $satpamUser->no_wa ?? $satpamUser->no_telepon;
+                $satpamUserId = $satpamUser->id;
+            }
+        }
+
+        if (empty($rawSatpamPhone)) {
+            return;
+        }
+
+        $today = now('Asia/Jakarta')->toDateString();
+        // Kunci unik harian agar Satpam hanya dikirimi 1x per sesi per hari
+        $refKey = "satpam_sesi_{$jadwal->id}_{$today}";
+
+        $templates = $this->getTemplates();
+        $content = $templates['pengingat-satpam']
+            ?? $templates['pengingat_satpam']
+            ?? $templates['pengingat-satpam-standby-gerbang']
+            ?? $templates['satpam-standby']
+            ?? null;
+
+        if (! $content) {
+            $content = "🛡️ *PENGINGAT SIAGA POS GERBANG (DIDISPEN)*\n\nHalo Petugas Satpam, mohon perhatian & kesiapsiagaan di *Pos Gerbang Utama*:\n\n⏰ *Sesi Guru Piket Telah Dimulai:*\n- Sesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n- Guru Piket Bertugas:\n{daftar_petugas}\n- Koordinator Piket: {koordinator}\n\n📋 *Instruksi Operasional Pos Satpam:*\n1. Standby di Pos Gerbang untuk memantau siswa keluar dan masuk area sekolah.\n2. Pastikan setiap siswa membawa Surat Dispensasi Digital resmi dan lakukan *Scan QR Code Keluar / Masuk*.\n3. Jika ada siswa tanpa izin atau bermasalah, segera koordinasikan dengan Guru Piket yang bertugas di atas.\n\n🔗 *Buka Kamera Scanner Gerbang:*\n{link_scan_satpam}\n\nSelamat bertugas!\n- Sistem DIDISPEN SMKN 1 Bangsri";
+        }
+
+        $pesan = $this->renderSatpamContent($content, $jadwal, $petugasList);
+
+        $this->dispatchBaileysMessage(
+            rawPhone: $rawSatpamPhone,
+            message: $pesan,
+            context: 'satpam_sesi_piket',
+            userId: $satpamUserId,
+            recipientName: 'Pos Satpam Gerbang',
             referenceKey: $refKey
         );
     }

@@ -58,6 +58,12 @@ class MonitorPiketDanTerlambat extends Command
                                 $petugasInfo['petugas']
                             );
                         }
+
+                        // C. Notifikasi Pengingat Siaga di Pos Gerbang ke Satpam (1x per sesi)
+                        $waService->notifySatpamStandbySesiPiket(
+                            $jadwal,
+                            $petugasInfo['petugas']
+                        );
                     }
                 }
             }
@@ -77,8 +83,8 @@ class MonitorPiketDanTerlambat extends Command
                 // Kirim WA ke Siswa & Guru Piket yang sedang bertugas
                 $waService->notifySiswaTerlambatDanGuruPiket($dispensasi, 'overdue');
 
-                // Tandai is_warned = true & warned_at = now() agar tidak dispam setiap menit
-                $dispensasi->markAsWarned();
+                // Tandai is_warned = true, warned_at = now(), warned_by = 'bot' agar tidak dispam setiap menit
+                $dispensasi->markAsWarned('bot');
             }
         }
 

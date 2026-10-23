@@ -59,6 +59,8 @@ class WhatsappBotController extends Controller
             'wa_piket_reminder_minutes'    => (int) Setting::get('wa_piket_reminder_minutes', 15),
             'wa_notify_siswa_terlambat'    => filter_var(Setting::get('wa_notify_siswa_terlambat', '1'), FILTER_VALIDATE_BOOLEAN),
             'wa_notify_laporan_guru_piket' => filter_var(Setting::get('wa_notify_laporan_guru_piket', '1'), FILTER_VALIDATE_BOOLEAN),
+            'wa_satpam_phone'              => Setting::get('wa_satpam_phone', ''),
+            'wa_notify_satpam_sesi_piket'  => filter_var(Setting::get('wa_notify_satpam_sesi_piket', '1'), FILTER_VALIDATE_BOOLEAN),
             'wa_active_days'               => $activeDays,
         ];
 
@@ -111,6 +113,7 @@ class WhatsappBotController extends Controller
         $validated = $request->validate([
             'wa_bot_url'                => 'required|url',
             'wa_bot_api_key'            => 'required|string|max:255',
+            'wa_satpam_phone'           => 'nullable|string|max:30',
             'wa_piket_reminder_minutes' => 'nullable|integer|min:0|max:120',
         ], [
             'wa_bot_url.required' => 'URL Server Bot wajib diisi.',
@@ -124,6 +127,7 @@ class WhatsappBotController extends Controller
         Setting::set('wa_bot_url', rtrim($validated['wa_bot_url'], '/'));
         Setting::set('wa_bot_api_key', $validated['wa_bot_api_key']);
         Setting::set('wa_bot_enabled', $request->boolean('wa_bot_enabled') ? '1' : '0');
+        Setting::set('wa_satpam_phone', preg_replace('/[^0-9]/', '', (string) $request->input('wa_satpam_phone', '')));
         Setting::set('wa_piket_reminder_minutes', (string) ($request->input('wa_piket_reminder_minutes', 15)));
         Setting::set('wa_notify_piket_bertugas', $request->boolean('wa_notify_piket_bertugas') ? '1' : '0');
         Setting::set('wa_notify_koordinator_piket', $request->boolean('wa_notify_koordinator_piket') ? '1' : '0');
@@ -131,6 +135,7 @@ class WhatsappBotController extends Controller
         Setting::set('wa_notify_piket_swap_result', $request->boolean('wa_notify_piket_swap_result') ? '1' : '0');
         Setting::set('wa_notify_siswa_terlambat', $request->boolean('wa_notify_siswa_terlambat') ? '1' : '0');
         Setting::set('wa_notify_laporan_guru_piket', $request->boolean('wa_notify_laporan_guru_piket') ? '1' : '0');
+        Setting::set('wa_notify_satpam_sesi_piket', $request->boolean('wa_notify_satpam_sesi_piket') ? '1' : '0');
 
         // Simpan wa_active_days bahkan jika semua hari dicopot centangnya ([])
         $activeDays = array_map('intval', (array) $request->input('wa_active_days', []));
