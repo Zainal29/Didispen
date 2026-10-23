@@ -20,7 +20,7 @@
             </div>
             <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/80">
-                    <i class="ti ti-check-double text-sm"></i>
+                    <i class="ti ti-checks text-sm"></i>
                     <span>{{ $statusLabel }}</span>
                 </span>
             </div>

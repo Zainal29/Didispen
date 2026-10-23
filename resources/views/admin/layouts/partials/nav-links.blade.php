@@ -58,6 +58,20 @@
     <span>Laporan Rekapitulasi</span>
 </a>
 
+@php
+    $countLaporanSatpamMenunggu = \App\Models\LaporanSatpam::where('status', 'menunggu')->count();
+@endphp
+<a href="{{ route('admin.laporan-satpam.index') }}"
+   class="{{ request()->routeIs('admin.laporan-satpam.*') ? $navOn : $navOff }}">
+    <i class="ti ti-shield-exclamation text-base w-5 mr-2.5 shrink-0 {{ request()->routeIs('admin.laporan-satpam.*') ? 'text-white' : 'text-slate-400 group-hover:text-slate-600' }}"></i>
+    <span class="flex-1">Laporan Satpam</span>
+    @if($countLaporanSatpamMenunggu > 0)
+        <span class="min-w-[18px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+            {{ $countLaporanSatpamMenunggu }}
+        </span>
+    @endif
+</a>
+
 <a href="{{ route('admin.whatsapp-templates.index') }}"
    class="{{ request()->routeIs('admin.whatsapp-templates.*') ? $navOn : $navOff }}">
     <i class="ti ti-brand-whatsapp text-base w-5 mr-2.5 shrink-0 {{ request()->routeIs('admin.whatsapp-templates.*') ? 'text-white' : 'text-slate-400 group-hover:text-slate-600' }}"></i>

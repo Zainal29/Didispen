@@ -181,12 +181,27 @@
                         <td class="p-4">
                             @if(isset($log->new_value['status']))
                                 @php
-                                    $isSuccess = $log->new_value['status'] === 'success';
-                                    $statusText = $isSuccess ? 'Berhasil' : 'Gagal';
+                                    $rawStatus = (string) $log->new_value['status'];
+                                    $statusConfig = [
+                                        'success'    => ['text' => 'Berhasil',   'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60', 'icon' => 'ti-check'],
+                                        'failed'     => ['text' => 'Gagal',      'class' => 'bg-rose-50 text-rose-700 border-rose-200/60',       'icon' => 'ti-x'],
+                                        'disetujui'  => ['text' => 'Disetujui',  'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60', 'icon' => 'ti-circle-check'],
+                                        'keluar'     => ['text' => 'Keluar',     'class' => 'bg-blue-50 text-blue-700 border-blue-200/60',       'icon' => 'ti-door-exit'],
+                                        'selesai'    => ['text' => 'Selesai',    'class' => 'bg-indigo-50 text-indigo-700 border-indigo-200/60', 'icon' => 'ti-circle-check'],
+                                        'menunggu'   => ['text' => 'Menunggu',   'class' => 'bg-amber-50 text-amber-700 border-amber-200/60',   'icon' => 'ti-clock'],
+                                        'ditolak'    => ['text' => 'Ditolak',    'class' => 'bg-rose-50 text-rose-700 border-rose-200/60',       'icon' => 'ti-x'],
+                                        'dibatalkan' => ['text' => 'Dibatalkan', 'class' => 'bg-slate-100 text-slate-700 border-slate-200',      'icon' => 'ti-ban'],
+                                        'kadaluarsa' => ['text' => 'Kadaluarsa', 'class' => 'bg-red-50 text-red-700 border-red-200/60',       'icon' => 'ti-clock-x'],
+                                    ];
+                                    $cfg = $statusConfig[$rawStatus] ?? [
+                                        'text'  => ucfirst(str_replace('_', ' ', $rawStatus)),
+                                        'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
+                                        'icon'  => 'ti-check'
+                                    ];
                                 @endphp
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold {{ $isSuccess ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60' }}">
-                                    <i class="ti {{ $isSuccess ? 'ti-check' : 'ti-x' }} text-xs"></i>
-                                    {{ $statusText }}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border {{ $cfg['class'] }}">
+                                    <i class="ti {{ $cfg['icon'] }} text-xs"></i>
+                                    {{ $cfg['text'] }}
                                 </span>
                                 @if(isset($log->new_value['stats']))
                                     <div class="mt-1 text-[10px] font-mono text-slate-400">
