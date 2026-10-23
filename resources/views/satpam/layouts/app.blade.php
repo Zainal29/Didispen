@@ -35,6 +35,21 @@
     $navOff = 'flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-rose-50/80 hover:text-rose-700 transition-colors';
     $mobOn  = 'text-rose-600 font-bold';
     $mobOff = 'text-slate-400 hover:text-slate-600';
+
+    $isDashboard = request()->routeIs('satpam.dashboard') || request()->routeIs('satpam.dispensasi.*');
+    $isScan = request()->routeIs('satpam.scan');
+    $isLaporan = request()->routeIs('satpam.laporan.*');
+    $isPanduan = request()->routeIs('panduan');
+    $isProfil = request()->routeIs('profil.*');
+
+    $countSiswaKeluar = 0;
+    $countLaporanMenunggu = 0;
+    if ($user && $user->role === 'satpam') {
+        $countSiswaKeluar = \App\Models\Dispensasi::where('status', 'keluar')
+            ->whereDate('created_at', now()->format('Y-m-d'))
+            ->count();
+        $countLaporanMenunggu = \App\Models\LaporanSatpam::where('status', 'menunggu')->count();
+    }
 @endphp
 
 <div class="min-h-screen" x-data="{ sheet: false }">
@@ -59,23 +74,32 @@
         </div>
 
         <nav class="flex-1 overflow-y-auto px-3.5 py-4 space-y-1.5">
-            <a href="{{ route('satpam.dashboard') }}" class="{{ request()->routeIs('satpam.dashboard') ? $navOn : $navOff }}">
+            <a href="{{ route('satpam.dashboard') }}" class="{{ $isDashboard ? $navOn : $navOff }}">
                 <i class="ti ti-dashboard w-5 mr-3 text-center text-lg"></i>
                 <span>Dashboard</span>
             </a>
             <a href="{{ route('satpam.scan') }}"
-               class="flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-rose-200' : '' }}">
+               class="flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors {{ $isScan ? 'ring-2 ring-rose-200' : '' }}">
                 <i class="ti ti-qrcode w-5 mr-3 text-center text-lg"></i>
                 <span>Scan QR Code</span>
                 <i class="ti ti-chevron-right ml-auto text-xs"></i>
             </a>
+            <a href="{{ route('satpam.laporan.index') }}" class="{{ $isLaporan ? $navOn : $navOff }}">
+                <i class="ti ti-shield-exclamation w-5 mr-3 text-center text-lg"></i>
+                <span>Laporan Temuan</span>
+                @if($countLaporanMenunggu > 0)
+                    <span class="ml-auto min-w-[18px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                        {{ $countLaporanMenunggu }}
+                    </span>
+                @endif
+            </a>
             <a href="{{ route('profil.show') }}"
                class="flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-colors
-                      {{ request()->routeIs('profil.show') ? 'bg-rose-600 text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-rose-50/80 hover:text-rose-700' }}">
+                      {{ $isProfil ? 'bg-rose-600 text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-rose-50/80 hover:text-rose-700' }}">
                 <i class="ti ti-user w-5 mr-3 text-center text-lg"></i>
                 <span>Profil Saya</span>
             </a>
-            <a href="{{ route('panduan') }}" class="{{ request()->routeIs('panduan') ? $navOn : $navOff }}">
+            <a href="{{ route('panduan') }}" class="{{ $isPanduan ? $navOn : $navOff }}">
                 <i class="ti ti-book-2 w-5 mr-3 text-center text-lg"></i>
                 <span>Panduan</span>
             </a>
@@ -115,7 +139,7 @@
                 </div>
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Online
-                </span>
+                    </span>
             </div>
             {{-- Desktop Header --}}
             <div class="hidden lg:flex items-center justify-between px-6 py-3.5">
@@ -139,49 +163,73 @@
         </header>
 
         {{-- KONTEN --}}
-        <main class="flex-1 p-4 sm:p-6 pb-28 lg:pb-8">
+        <main class="flex-1 p-4 sm:p-6 pb-32 sm:pb-36 lg:pb-8">
             @include('components.alert')
             @yield('content')
         </main>
     </div>
 
     {{-- ================================================== --}}
-    {{-- BOTTOM NAV — MOBILE (HP-FRIENDLY & ERGONOMIS)        --}}
+    {{-- BOTTOM NAV — MOBILE (HP-FRIENDLY, SELALU DI BAWAH)  --}}
     {{-- ================================================== --}}
     <nav id="mobileBottomNav"
-         x-show="!sheet"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="translate-y-full opacity-0"
-         x-transition:enter-end="translate-y-0 opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="translate-y-0 opacity-100"
-         x-transition:leave-end="translate-y-full opacity-0"
-         class="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg"
-         style="padding-bottom: max(env(safe-area-inset-bottom), 8px);">
-        <div class="grid grid-cols-5 h-16 w-full">
-            <a href="{{ route('satpam.dashboard') }}" class="flex flex-col items-center justify-center gap-1 transition-colors {{ request()->routeIs('satpam.dashboard') ? $mobOn : $mobOff }}">
-                <i class="ti ti-smart-home text-xl"></i>
-                <span class="text-[10px] leading-tight">Beranda</span>
+         class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transform-gpu transition-all duration-200"
+         style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);">
+        <div class="grid grid-cols-5 h-16 w-full max-w-md mx-auto items-center">
+            {{-- 1. Beranda --}}
+            <a href="{{ route('satpam.dashboard') }}"
+               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-95 {{ $isDashboard ? $mobOn : $mobOff }}">
+                <div class="relative">
+                    <i class="ti ti-smart-home text-xl"></i>
+                    @if($countSiswaKeluar > 0)
+                        <span class="absolute -top-1 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-xs" title="{{ $countSiswaKeluar }} siswa sedang di luar">
+                            {{ $countSiswaKeluar > 99 ? '99+' : $countSiswaKeluar }}
+                        </span>
+                    @endif
+                </div>
+                <span class="text-[10px] font-semibold leading-tight tracking-tight">Beranda</span>
             </a>
-            <a href="{{ route('satpam.scan') }}#manual" class="flex flex-col items-center justify-center gap-1 transition-colors {{ $mobOff }} hover:text-rose-600">
-                <i class="ti ti-search text-xl"></i>
-                <span class="text-[10px] leading-tight">Manual</span>
+
+            {{-- 2. Laporan Temuan --}}
+            <a href="{{ route('satpam.laporan.index') }}"
+               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-95 {{ $isLaporan ? $mobOn : $mobOff }}">
+                <div class="relative">
+                    <i class="ti ti-shield-exclamation text-xl"></i>
+                    @if($countLaporanMenunggu > 0)
+                        <span class="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-0.5 rounded-full bg-amber-500 text-white text-[8px] font-bold flex items-center justify-center border border-white">
+                            {{ $countLaporanMenunggu }}
+                        </span>
+                    @endif
+                </div>
+                <span class="text-[10px] font-semibold leading-tight tracking-tight">Laporan</span>
             </a>
-            <div class="relative flex flex-col items-center justify-end pb-1">
-                <a href="{{ route('satpam.scan') }}" class="absolute -top-5 w-12 h-12 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xl flex items-center justify-center shadow-lg shadow-rose-600/30 border-4 border-slate-50 active:scale-95 transition-all {{ request()->routeIs('satpam.scan') ? 'ring-2 ring-rose-300' : '' }}" aria-label="Scan QR Code">
+
+            {{-- 3. Center FAB: Scan QR --}}
+            <div class="relative flex flex-col items-center justify-end h-full pb-1">
+                <a href="{{ route('satpam.scan') }}"
+                   aria-label="Scan QR Code"
+                   class="absolute -top-5 w-12 h-12 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xl flex items-center justify-center shadow-lg shadow-rose-600/35 border-4 border-slate-50 active:scale-95 transition-all duration-200 {{ $isScan ? 'ring-4 ring-rose-500/25 scale-105' : '' }}">
                     <i class="ti ti-qrcode"></i>
                 </a>
-                <span class="text-[10px] font-semibold leading-tight {{ request()->routeIs('satpam.scan') ? $mobOn : $mobOff }}">Scan</span>
+                <span class="text-[10px] leading-tight tracking-tight mt-auto {{ $isScan ? 'font-bold text-rose-600' : 'font-semibold text-slate-500' }}">Scan</span>
             </div>
-            <a href="{{ route('panduan') }}" class="flex flex-col items-center justify-center gap-1 transition-colors {{ request()->routeIs('panduan') ? $mobOn : $mobOff }}">
-                <i class="ti ti-book-2 text-xl"></i>
-                <span class="text-[10px] leading-tight">Panduan</span>
+
+            {{-- 4. Manual --}}
+            <a href="{{ route('satpam.scan') }}#manual"
+               id="navManualBtn"
+               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-95 {{ $mobOff }} hover:text-rose-600">
+                <i class="ti ti-search text-xl"></i>
+                <span class="text-[10px] font-semibold leading-tight tracking-tight">Manual</span>
             </a>
-            <button type="button" @click="sheet = true" class="flex flex-col items-center justify-center gap-1 transition-colors {{ $mobOff }} hover:text-rose-600">
-                <span class="w-6 h-6 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold flex items-center justify-center">
+
+            {{-- 5. Akun --}}
+            <button type="button"
+                    @click="sheet = true"
+                    class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-95 {{ $isProfil ? $mobOn : $mobOff }}">
+                <div class="w-6 h-6 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold flex items-center justify-center shadow-2xs">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
-                </span>
-                <span class="text-[10px] leading-tight">Akun</span>
+                </div>
+                <span class="text-[10px] font-semibold leading-tight tracking-tight">Akun</span>
             </button>
         </div>
     </nav>
@@ -236,6 +284,45 @@
         </div>
     </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const bottomNav = document.getElementById('mobileBottomNav');
+    if (!bottomNav) return;
+
+    // Sembunyikan halus saat keyboard virtual HP terbuka agar tidak menutupi input
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', function () {
+            const isKeyboardOpen = (window.innerHeight - window.visualViewport.height) > 150;
+            if (isKeyboardOpen) {
+                bottomNav.style.transform = 'translateY(100%)';
+                bottomNav.style.opacity = '0';
+                bottomNav.style.pointerEvents = 'none';
+            } else {
+                bottomNav.style.transform = 'translateY(0)';
+                bottomNav.style.opacity = '1';
+                bottomNav.style.pointerEvents = 'auto';
+            }
+        });
+    }
+
+    // Deteksi hash #manual untuk penandaan navigasi & auto-focus
+    function checkHashManual() {
+        if (window.location.hash === '#manual') {
+            const manualBtn = document.getElementById('navManualBtn');
+            if (manualBtn) {
+                manualBtn.classList.remove('text-slate-400');
+                manualBtn.classList.add('text-rose-600', 'font-bold');
+            }
+            const manualInput = document.getElementById('manualCode');
+            if (manualInput) {
+                setTimeout(() => manualInput.focus(), 300);
+            }
+        }
+    }
+    checkHashManual();
+    window.addEventListener('hashchange', checkHashManual);
+});
+</script>
 @stack('scripts')
 </body>
 </html>

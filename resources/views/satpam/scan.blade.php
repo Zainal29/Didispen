@@ -93,7 +93,7 @@
     </div>
 
     {{-- VERIFIKASI MANUAL --}}
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5 mt-4">
+    <div id="manual" class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5 mt-4 scroll-mt-20">
         <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Verifikasi Manual</p>
         <form onsubmit="manualVerify(event)" class="flex gap-2">
             @csrf
@@ -495,16 +495,11 @@ function onScanSuccess(decodedText) {
     // Unlock AudioContext jika belum aktif
     AudioHelper.init();
 
-    if (isExpressMode) {
-        // Mode Satpam Express: Auto-Confirm tanpa harus memencet layar
-        processExpressScan(decodedText);
-    } else {
-        // Mode Manual: Buka Modal Verifikasi Detail
-        AudioHelper.beepSuccess();
-        if (navigator.vibrate) navigator.vibrate(80);
-        showModalLoading();
-        checkQrData(decodedText);
-    }
+    // Buka Modal Verifikasi Detail & Konfirmasi Sadar (Mencegah Double Scan Otomatis)
+    AudioHelper.beepSuccess();
+    if (navigator.vibrate) navigator.vibrate(80);
+    showModalLoading();
+    checkQrData(decodedText);
 }
 
 // Handler Khusus Mode Satpam Express (Auto-Confirm & Fast Feedback)
@@ -638,14 +633,11 @@ function hideExpressOverlay() {
     }
 }
 
-function setBottomNavVisible(visible) {
+function setBottomNavVisible(visible = true) {
     const nav = document.getElementById('mobileBottomNav');
     if (!nav) return;
-    if (visible) {
-        nav.classList.remove('hidden');
-    } else {
-        nav.classList.add('hidden');
-    }
+    // Bottom bar selalu di bawah dan tidak disembunyikan agar navigasi tetap konsisten & tidak hilang
+    nav.classList.remove('hidden');
 }
 
 // 1. Tampilkan loading di modal
@@ -679,7 +671,7 @@ function showModalLoading() {
 
     modal.classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
-    setBottomNavVisible(false);
+    setBottomNavVisible(true);
     setStatus('Memverifikasi QR Code...', false);
 }
 
@@ -731,6 +723,8 @@ function renderScanDetail(data) {
     const subtitle = document.getElementById('modalSubtitle');
     const body = document.getElementById('modalBody');
     const footer = document.getElementById('modalFooter');
+
+    window.currentDispensasiData = data;
 
     let isKeluar = data.action_type === 'keluar';
     let isKembali = data.action_type === 'kembali';
@@ -899,27 +893,104 @@ function renderScanDetail(data) {
         ` : ''}
 
         ${(data.tipe_pengajuan === 'rombongan' || data.tipe_pengajuan === 'organisasi') ? `
-            <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="font-bold text-purple-900 flex items-center gap-1.5">
-                        <i class="ti ti-users text-purple-600 text-sm"></i>
-                        Dispensasi Rombongan
+            <div class="p-3.5 bg-purple-50/90 border-2 border-purple-200 rounded-2xl text-xs space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-purple-950 flex items-center gap-1.5 text-xs">
+                        <i class="ti ti-users text-purple-600 text-base"></i>
+                        Dispensasi Rombongan (${data.total_rombongan} Siswa)
                     </span>
-                    <span class="px-2 py-0.5 bg-purple-200 text-purple-800 text-[10px] font-bold rounded-full">
-                        ${data.total_rombongan} Siswa
-                    </span>
+                    ${isKembali ? `
+                        <span id="rombonganHadirBadge" class="px-2.5 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-full shadow-2xs">
+                            ${data.total_rombongan} / ${data.total_rombongan} Hadir Lengkap
+                        </span>
+                    ` : `
+                        <span class="px-2 py-0.5 bg-purple-200 text-purple-800 text-[10px] font-bold rounded-full">
+                            Semua Keluar
+                        </span>
+                    `}
                 </div>
-                ${data.anggota && data.anggota.length > 0 ? `
-                    <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                        <p class="text-[10px] font-bold text-purple-700 uppercase tracking-wide">Daftar Anggota:</p>
-                        ${data.anggota.map((ang, idx) => `
-                            <div class="flex items-center justify-between py-1 px-2 bg-white/80 rounded-lg border border-purple-100 text-[11px]">
-                                <span class="font-medium text-slate-800">${idx + 1}. ${escapeHtml(ang.nama_lengkap)}</span>
-                                <span class="text-slate-500 font-mono text-[10px]">${escapeHtml(ang.kelas)}</span>
+
+                ${isKembali ? `
+                    <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 leading-snug">
+                        <p class="font-bold flex items-center gap-1 text-[11px] text-amber-950">
+                            <i class="ti ti-checklist text-amber-700"></i> Verifikasi Siswa yang Kembali:
+                        </p>
+                        <p class="text-[10px] text-amber-800 mt-0.5">
+                            Hilangkan centang jika ada teman rombongan yang <strong>tidak ikut kembali</strong> (misal langsung pulang). Sistem akan otomatis mencatatnya sebagai temuan gerbang untuk Admin.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
+                        {{-- 1. Ketua / Pemohon Utama --}}
+                        <div class="p-2.5 bg-white rounded-xl border border-purple-200 shadow-2xs">
+                            <label class="flex items-center gap-2.5 cursor-pointer">
+                                <input type="checkbox"
+                                       id="chk_siswa_${data.siswa.id}"
+                                       value="${data.siswa.id}"
+                                       checked
+                                       onchange="onMemberCheckToggle(${data.siswa.id})"
+                                       class="member-checkbox w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-bold text-slate-900 text-xs">${escapeHtml(data.siswa.nama_lengkap)}</span>
+                                        <span class="px-1.5 py-0.2 rounded bg-purple-100 text-purple-700 text-[9px] font-bold">Ketua Rombongan</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 font-mono mt-0.5">${escapeHtml(data.siswa.kelas)} • NIS: ${escapeHtml(data.siswa.nis)}</p>
+                                </div>
+                            </label>
+                            <div id="box_alasan_${data.siswa.id}" class="hidden mt-2 pt-2 border-t border-purple-100">
+                                <label class="block text-[10px] font-bold text-rose-700 mb-1">Alasan / Keterangan Tidak Kembali:</label>
+                                <select id="sel_alasan_${data.siswa.id}" class="w-full px-2 py-1.5 rounded-lg border border-rose-200 bg-rose-50/70 text-xs text-rose-950 font-medium">
+                                    <option value="Langsung Pulang ke Rumah">Langsung Pulang ke Rumah</option>
+                                    <option value="Masih di Lokasi Kegiatan / Lomba">Masih di Lokasi Kegiatan / Lomba</option>
+                                    <option value="Kabur / Tanpa Keterangan">Kabur / Tanpa Keterangan</option>
+                                    <option value="Lainnya">Alasan Lainnya...</option>
+                                </select>
+                                <input type="text" id="txt_catatan_${data.siswa.id}" placeholder="Catatan satpam saat ditanya (opsional)" class="w-full mt-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+                            </div>
+                        </div>
+
+                        {{-- 2. Anggota Lainnya --}}
+                        ${(data.anggota || []).map(ang => `
+                            <div class="p-2.5 bg-white rounded-xl border border-purple-200 shadow-2xs">
+                                <label class="flex items-center gap-2.5 cursor-pointer">
+                                    <input type="checkbox"
+                                           id="chk_siswa_${ang.id}"
+                                           value="${ang.id}"
+                                           checked
+                                           onchange="onMemberCheckToggle(${ang.id})"
+                                           class="member-checkbox w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                                    <div class="min-w-0 flex-1">
+                                        <span class="font-bold text-slate-900 text-xs">${escapeHtml(ang.nama_lengkap)}</span>
+                                        <p class="text-[10px] text-slate-400 font-mono mt-0.5">${escapeHtml(ang.kelas)} • NIS: ${escapeHtml(ang.nis)}</p>
+                                    </div>
+                                </label>
+                                <div id="box_alasan_${ang.id}" class="hidden mt-2 pt-2 border-t border-purple-100">
+                                    <label class="block text-[10px] font-bold text-rose-700 mb-1">Alasan / Keterangan Tidak Kembali:</label>
+                                    <select id="sel_alasan_${ang.id}" class="w-full px-2 py-1.5 rounded-lg border border-rose-200 bg-rose-50/70 text-xs text-rose-950 font-medium">
+                                        <option value="Langsung Pulang ke Rumah">Langsung Pulang ke Rumah</option>
+                                        <option value="Masih di Lokasi Kegiatan / Lomba">Masih di Lokasi Kegiatan / Lomba</option>
+                                        <option value="Kabur / Tanpa Keterangan">Kabur / Tanpa Keterangan</option>
+                                        <option value="Lainnya">Alasan Lainnya...</option>
+                                    </select>
+                                    <input type="text" id="txt_catatan_${ang.id}" placeholder="Catatan satpam saat ditanya (opsional)" class="w-full mt-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+                                </div>
                             </div>
                         `).join('')}
                     </div>
-                ` : '<p class="text-[11px] text-purple-600 italic">Tidak ada anggota tambahan.</p>'}
+                ` : `
+                    ${data.anggota && data.anggota.length > 0 ? `
+                        <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                            <p class="text-[10px] font-bold text-purple-700 uppercase tracking-wide">Daftar Anggota:</p>
+                            ${data.anggota.map((ang, idx) => `
+                                <div class="flex items-center justify-between py-1 px-2 bg-white/80 rounded-lg border border-purple-100 text-[11px]">
+                                    <span class="font-medium text-slate-800">${idx + 1}. ${escapeHtml(ang.nama_lengkap)}</span>
+                                    <span class="text-slate-500 font-mono text-[10px]">${escapeHtml(ang.kelas)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p class="text-[11px] text-purple-600 italic">Tidak ada anggota tambahan.</p>'}
+                `}
             </div>
         ` : ''}
 
@@ -1042,6 +1113,55 @@ function submitConfirmation(action) {
 
     const codeToConfirm = currentScannedQr;
 
+    const payload = {
+        qr_data: codeToConfirm,
+        action: action
+    };
+
+    // Ambil data checklist rombongan jika aksi kembali
+    if (action === 'kembali' && window.currentDispensasiData && (window.currentDispensasiData.tipe_pengajuan === 'rombongan' || window.currentDispensasiData.tipe_pengajuan === 'organisasi')) {
+        const d = window.currentDispensasiData;
+        const kembaliIds = [];
+        const tidakKembali = [];
+
+        // Periksa Ketua
+        if (d.siswa && d.siswa.id) {
+            const chkKetua = document.getElementById('chk_siswa_' + d.siswa.id);
+            if (chkKetua) {
+                if (chkKetua.checked) {
+                    kembaliIds.push(d.siswa.id);
+                } else {
+                    tidakKembali.push({
+                        siswa_id: d.siswa.id,
+                        nama: d.siswa.nama_lengkap,
+                        alasan: document.getElementById('sel_alasan_' + d.siswa.id)?.value || 'Tidak ikut kembali',
+                        catatan: document.getElementById('txt_catatan_' + d.siswa.id)?.value || ''
+                    });
+                }
+            }
+        }
+
+        // Periksa Anggota Lainnya
+        (d.anggota || []).forEach(ang => {
+            const chkAng = document.getElementById('chk_siswa_' + ang.id);
+            if (chkAng) {
+                if (chkAng.checked) {
+                    kembaliIds.push(ang.id);
+                } else {
+                    tidakKembali.push({
+                        siswa_id: ang.id,
+                        nama: ang.nama_lengkap,
+                        alasan: document.getElementById('sel_alasan_' + ang.id)?.value || 'Tidak ikut kembali',
+                        catatan: document.getElementById('txt_catatan_' + ang.id)?.value || ''
+                    });
+                }
+            }
+        });
+
+        payload.siswa_kembali_ids = kembaliIds;
+        payload.siswa_tidak_kembali = tidakKembali;
+    }
+
     fetch('{{ route("satpam.scan.verify") }}', {
         method: 'POST',
         headers: {
@@ -1049,7 +1169,7 @@ function submitConfirmation(action) {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Accept': 'application/json'
         },
-        body: JSON.stringify({ qr_data: codeToConfirm, action: action })
+        body: JSON.stringify(payload)
     })
     .then(async r => {
         const data = await r.json().catch(() => null);
@@ -1146,6 +1266,52 @@ function closeScanModal(startCooldown = true) {
             try { html5QrCode.resume(); } catch (e) {}
         }
         setStatus('Kamera aktif — siap scan');
+    }
+}
+
+// 8. Event Handler Checklist Anggota Rombongan
+function onMemberCheckToggle(siswaId) {
+    const chk = document.getElementById('chk_siswa_' + siswaId);
+    const box = document.getElementById('box_alasan_' + siswaId);
+    if (!chk) return;
+
+    if (chk.checked) {
+        if (box) box.classList.add('hidden');
+    } else {
+        if (box) box.classList.remove('hidden');
+    }
+
+    updateRombonganSummary();
+}
+
+function updateRombonganSummary() {
+    if (!window.currentDispensasiData) return;
+    const data = window.currentDispensasiData;
+    const checkboxes = document.querySelectorAll('.member-checkbox');
+    let total = checkboxes.length;
+    let hadir = 0;
+    checkboxes.forEach(c => { if (c.checked) hadir++; });
+
+    const badge = document.getElementById('rombonganHadirBadge');
+    if (badge) {
+        if (hadir === total) {
+            badge.className = 'px-2.5 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-full shadow-2xs';
+            badge.textContent = `${total} / ${total} Hadir Lengkap`;
+        } else {
+            badge.className = 'px-2.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded-full shadow-2xs';
+            badge.textContent = `${hadir} / ${total} Hadir (${total - hadir} Tidak Ikut)`;
+        }
+    }
+
+    const btnConfirm = document.getElementById('btnConfirmAction');
+    if (btnConfirm) {
+        if (hadir === total) {
+            btnConfirm.innerHTML = '<i class="ti ti-door-enter text-base"></i> Ya, Konfirmasi KEMBALI (Lengkap)';
+            btnConfirm.className = 'flex-1 py-3 px-4 min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5';
+        } else {
+            btnConfirm.innerHTML = `<i class="ti ti-shield-exclamation text-base"></i> Konfirmasi KEMBALI (${hadir} Hadir, ${total - hadir} Lapor)`;
+            btnConfirm.className = 'flex-1 py-3 px-4 min-h-[44px] rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5';
+        }
     }
 }
 

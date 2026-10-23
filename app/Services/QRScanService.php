@@ -288,7 +288,8 @@ class QRScanService
      */
     public function processKembali(
         Dispensasi $dispensasi,
-        int $userId
+        int $userId,
+        array $rombonganData = []
     ): array {
         if ($dispensasi->status !== 'keluar') {
             return [
@@ -374,6 +375,92 @@ class QRScanService
         // Refresh model agar statusnya 'selesai' sebelum cleanup dipanggil
         $dispensasi->refresh();
 
+        // Pemrosesan status anggota rombongan & temuan satpam jika ada yang tidak kembali
+        $laporanTemuanCount = 0;
+        if ($dispensasi->isRombongan()) {
+            $siswaKembaliIds = !empty($rombonganData['siswa_kembali_ids'])
+                ? array_map('intval', (array) $rombonganData['siswa_kembali_ids'])
+                : null; // null jika tidak dikirim (misal auto/tanpa checklist, dianggap kembali semua)
+
+            $siswaTidakKembali = !empty($rombonganData['siswa_tidak_kembali'])
+                ? (array) $rombonganData['siswa_tidak_kembali']
+                : [];
+
+            $dispensasi->loadMissing(['anggotaSiswa.kelas', 'siswa.kelas']);
+
+            // 1. Update status tiap anggota rombongan
+            foreach ($dispensasi->anggotaSiswa as $anggota) {
+                $isKembali = true;
+                $alasan = null;
+                $catatan = null;
+
+                $itemTidakKembali = collect($siswaTidakKembali)->firstWhere('siswa_id', $anggota->id);
+                if ($itemTidakKembali || ($siswaKembaliIds !== null && !in_array($anggota->id, $siswaKembaliIds))) {
+                    $isKembali = false;
+                    $alasan = $itemTidakKembali['alasan'] ?? 'Tidak ikut kembali bersama rombongan';
+                    $catatan = $itemTidakKembali['catatan'] ?? null;
+                }
+
+                if ($isKembali) {
+                    $dispensasi->anggotaSiswa()->updateExistingPivot($anggota->id, [
+                        'status_kembali' => 'kembali',
+                        'catatan_kembali' => null,
+                        'waktu_kembali' => now(),
+                    ]);
+                } else {
+                    $dispensasi->anggotaSiswa()->updateExistingPivot($anggota->id, [
+                        'status_kembali' => 'tidak_kembali',
+                        'catatan_kembali' => $catatan ?: $alasan,
+                        'waktu_kembali' => null,
+                    ]);
+
+                    \App\Models\LaporanSatpam::create([
+                        'satpam_id' => $userId,
+                        'siswa_id' => $anggota->id,
+                        'dispensasi_id' => $dispensasi->id,
+                        'kategori' => 'rombongan_tidak_kembali',
+                        'keterangan' => "Siswa tidak ikut kembali bersama rombongan (No. Surat: {$dispensasi->nomor_surat}). Keterangan satpam: " . ($catatan ?: $alasan),
+                        'status' => 'menunggu',
+                    ]);
+                    $laporanTemuanCount++;
+                }
+            }
+
+            // 2. Cek apakah ketua (pemohon utama) juga tercatat tidak kembali
+            $ketuaTidakKembali = collect($siswaTidakKembali)->firstWhere('siswa_id', $dispensasi->siswa_id);
+            if ($ketuaTidakKembali || ($siswaKembaliIds !== null && !in_array($dispensasi->siswa_id, $siswaKembaliIds))) {
+                $alasanKetua = $ketuaTidakKembali['alasan'] ?? 'Ketua/pemohon dispensasi tidak ikut kembali bersama rombongan';
+                $catatanKetua = $ketuaTidakKembali['catatan'] ?? null;
+
+                \App\Models\LaporanSatpam::create([
+                    'satpam_id' => $userId,
+                    'siswa_id' => $dispensasi->siswa_id,
+                    'dispensasi_id' => $dispensasi->id,
+                    'kategori' => 'rombongan_tidak_kembali',
+                    'keterangan' => "Ketua rombongan tidak ikut kembali (No. Surat: {$dispensasi->nomor_surat}). Keterangan satpam: " . ($catatanKetua ?: $alasanKetua),
+                    'status' => 'menunggu',
+                ]);
+                $laporanTemuanCount++;
+            }
+
+            // 3. Notifikasi ke Admin & Guru Piket jika ada temuan
+            if ($laporanTemuanCount > 0) {
+                try {
+                    $notifService = app(\App\Services\NotifikasiService::class);
+                    $adminUsers = \App\Models\User::whereIn('role', ['admin', 'superadmin'])->get();
+                    $notifText = "⚠️ Laporan Satpam: {$laporanTemuanCount} siswa rombongan ({$dispensasi->nomor_surat}) tidak kembali ke sekolah.";
+                    foreach ($adminUsers as $admin) {
+                        $notifService->send($admin->id, $notifText, route('admin.laporan-satpam.index'));
+                    }
+                    if ($dispensasi->guru?->user_id) {
+                        $notifService->send($dispensasi->guru->user_id, $notifText, route('guru.laporan-satpam.index'));
+                    }
+                } catch (\Throwable $ne) {
+                    Log::warning('Gagal kirim notifikasi laporan temuan satpam: ' . $ne->getMessage());
+                }
+            }
+        }
+
         // Cleanup file fisik (QR code, foto_verifikasi, foto_bukti) setelah status menjadi selesai
         DispensasiService::cleanupCompletedDispensasiFiles($dispensasi);
 
@@ -383,7 +470,7 @@ class QRScanService
             'dispensasi',
             $dispensasi->id,
             ['status' => 'keluar'],
-            ['status' => 'selesai', 'satpam_kembali_id' => $userId, 'is_terlambat' => $isLate]
+            ['status' => 'selesai', 'satpam_kembali_id' => $userId, 'is_terlambat' => $isLate, 'laporan_temuan_count' => $laporanTemuanCount]
         );
 
         $message = $isLate
@@ -394,6 +481,10 @@ class QRScanService
                 ? 'Siswa berhasil dicatat KEMBALI (Lebih Awal).'
                 : 'Siswa berhasil dicatat KEMBALI (Tepat Waktu).');
 
+        if ($laporanTemuanCount > 0) {
+            $message .= " Ditemukan {$laporanTemuanCount} siswa tidak kembali dan telah dilaporkan ke Admin & Guru Piket.";
+        }
+
         $this->markScanCooldown($dispensasi, 5);
 
         return [
@@ -401,8 +492,10 @@ class QRScanService
             'message' => $message,
             'action' => 'kembali',
             'is_terlambat' => $isLate,
+            'laporan_temuan_count' => $laporanTemuanCount,
             'data' => $dispensasi->fresh([
                 'siswa.kelas.jurusan',
+                'anggotaSiswa.kelas.jurusan',
             ]),
         ];
     }

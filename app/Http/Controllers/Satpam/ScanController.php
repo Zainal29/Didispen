@@ -197,6 +197,7 @@ class ScanController extends Controller
                     'foto_verifikasi' => $dispensasi->foto_verifikasi ? Storage::url($dispensasi->foto_verifikasi) : null,
                     'guru' => $dispensasi->guru?->nama_lengkap ?? '-',
                     'siswa' => [
+                        'id' => $dispensasi->siswa?->id,
                         'nama_lengkap' => $dispensasi->siswa?->nama_lengkap ?? 'Tidak Diketahui',
                         'nis' => $dispensasi->siswa?->user?->nis_nip ?? '-',
                         'kelas' => $dispensasi->siswa?->kelas?->nama_kelas ?? '-',
@@ -269,9 +270,15 @@ class ScanController extends Controller
                     ], 400);
                 }
 
+                $rombonganData = [
+                    'siswa_kembali_ids' => $request->input('siswa_kembali_ids'),
+                    'siswa_tidak_kembali' => $request->input('siswa_tidak_kembali'),
+                ];
+
                 $result = $scanService->processKembali(
                     $dispensasi,
-                    auth()->id()
+                    auth()->id(),
+                    $rombonganData
                 );
 
                 if (($result['success'] ?? false) && $dispensasi->siswa?->user_id) {
