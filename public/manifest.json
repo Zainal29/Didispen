@@ -8,6 +8,8 @@
     "orientation": "portrait",
     "background_color": "#2563eb",
     "theme_color": "#2563eb",
+    "navigation_bar_color": "#2563eb",
+    "navigation_bar_divider_color": "#2563eb",
     "icons": [
         {
             "src": "/icons/icon-192.png",
