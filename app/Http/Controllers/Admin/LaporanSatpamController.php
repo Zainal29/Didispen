@@ -95,7 +95,18 @@ class LaporanSatpamController extends Controller
             } catch (\Throwable $e) {}
         }
 
-        return redirect()->back()
-            ->with('success', 'Laporan satpam berhasil ditindaklanjuti.');
+        return redirect()->route('admin.laporan-satpam.index')
+            ->with('success', 'Tindakan / respon Wali Kelas berhasil disimpan.');
+    }
+
+    /**
+     * Hapus laporan temuan satpam oleh Admin
+     */
+    public function destroy(LaporanSatpam $laporanSatpam)
+    {
+        $laporanSatpam->delete();
+
+        return redirect()->route('admin.laporan-satpam.index')
+            ->with('success', 'Laporan temuan satpam berhasil dihapus.');
     }
 }

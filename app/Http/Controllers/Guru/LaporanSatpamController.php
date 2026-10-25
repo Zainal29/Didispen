@@ -84,7 +84,7 @@ class LaporanSatpamController extends Controller
             } catch (\Throwable $e) {}
         }
 
-        return redirect()->back()
-            ->with('success', 'Laporan berhasil ditindaklanjuti oleh Guru Piket.');
+        return redirect()->route('guru.laporan-satpam.index')
+            ->with('success', 'Tindakan / respon Wali Kelas berhasil disimpan.');
     }
 }

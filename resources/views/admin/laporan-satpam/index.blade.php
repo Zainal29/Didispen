@@ -90,7 +90,7 @@
                         <th class="py-3 px-4">Siswa Terkait</th>
                         <th class="py-3 px-4">Kategori & No. Surat</th>
                         <th class="py-3 px-4">Kronologi Satpam</th>
-                        <th class="py-3 px-4">Status & Respon</th>
+                        <th class="py-3 px-4">Tindakan / Respon Wali Kelas</th>
                         <th class="py-3 px-4 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -135,25 +135,39 @@
                                 <p class="text-slate-700 line-clamp-3 leading-relaxed">{{ $lap->keterangan }}</p>
                             </td>
 
-                            {{-- STATUS --}}
-                            <td class="py-3.5 px-4 whitespace-nowrap">
+                            {{-- STATUS & RESPON WALI KELAS --}}
+                            <td class="py-3.5 px-4">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $statusBadge }}">
                                     {{ $lap->status_label }}
                                 </span>
                                 @if($lap->catatan_tindak_lanjut)
-                                    <p class="text-[10px] text-slate-500 mt-1 max-w-[160px] truncate" title="{{ $lap->catatan_tindak_lanjut }}">
-                                        Oleh: {{ $lap->petugasTindakLanjut?->name ?? 'Admin' }}
+                                    <div class="mt-1 text-[11px] text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-200/60 max-w-xs whitespace-pre-line leading-relaxed">
+                                        <span class="font-bold text-slate-900 block text-[10px] text-blue-700">Tindakan Wali Kelas:</span>
+                                        {{ $lap->catatan_tindak_lanjut }}
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">
+                                        Petugas: {{ $lap->petugasTindakLanjut?->name ?? 'Wali Kelas / Admin' }} • {{ $lap->tindak_lanjut_at?->format('d/m/Y H:i') }}
                                     </p>
+                                @else
+                                    <p class="text-[10px] text-amber-600 font-medium mt-1">Belum ada respon</p>
                                 @endif
                             </td>
 
                             {{-- AKSI --}}
                             <td class="py-3.5 px-4 text-center whitespace-nowrap">
-                                <button type="button"
-                                        @click="openTindakLanjutModal({{ $lap->id }}, '{{ addslashes($lap->siswa?->nama_lengkap ?? '') }}', '{{ $lap->status }}', '{{ addslashes($lap->keterangan) }}', '{{ addslashes($lap->catatan_tindak_lanjut ?? '') }}')"
-                                        class="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-bold text-xs transition-colors shadow-2xs">
-                                    <i class="ti ti-edit mr-1"></i> Tindak Lanjut
-                                </button>
+                                <div class="inline-flex items-center gap-1.5">
+                                    <button type="button"
+                                            @click="openTindakLanjutModal({{ $lap->id }}, '{{ addslashes($lap->siswa?->nama_lengkap ?? '') }}', '{{ $lap->status }}', '{{ addslashes($lap->keterangan) }}', '{{ addslashes($lap->catatan_tindak_lanjut ?? '') }}')"
+                                            class="px-2.5 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-bold text-xs transition-colors shadow-2xs">
+                                        <i class="ti ti-edit mr-1"></i> Tindak Lanjut
+                                    </button>
+                                    <button type="button"
+                                            onclick="confirmDeleteLaporan('{{ $lap->id }}', '{{ addslashes($lap->siswa?->nama_lengkap ?? '') }}')"
+                                            class="px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 font-bold text-xs transition-colors shadow-2xs"
+                                            title="Hapus Laporan Temuan">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -175,7 +189,13 @@
         @endif
     </div>
 
-    {{-- MODAL TINDAK LANJUT --}}
+    {{-- FORM TERSEMBUNYI UNTUK HAPUS LAPORAN --}}
+    <form id="deleteLaporanForm" method="POST" style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
+
+    {{-- MODAL TINDAK LANJUT WALI KELAS --}}
     <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
         <div class="min-h-screen px-4 text-center flex items-center justify-center p-0">
             <div x-show="modalOpen" @click="modalOpen = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
@@ -184,10 +204,13 @@
                  class="relative bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-lg p-5 sm:p-6 border border-slate-100 my-8">
 
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                    <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i class="ti ti-clipboard-check text-blue-600 text-lg"></i>
-                        Tindak Lanjut Laporan Satpam
-                    </h3>
+                    <div>
+                        <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="ti ti-clipboard-check text-blue-600 text-lg"></i>
+                            Tindakan / Respon Wali Kelas
+                        </h3>
+                        <p class="text-[10px] text-slate-500 mt-0.5">Laporan temuan siswa rombongan tidak kembali untuk ditindaklanjuti Wali Kelas / Admin.</p>
+                    </div>
                     <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
                         <i class="ti ti-x text-base"></i>
                     </button>
@@ -206,18 +229,18 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Status Tindak Lanjut</label>
                         <select name="status" x-model="statusForm" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
-                            <option value="ditindaklanjuti">Sedang Ditindaklanjuti (Diproses BK / Dipanggil)</option>
-                            <option value="selesai">Selesai (Sudah Dikonfirmasi / Diberikan Sanksi)</option>
+                            <option value="ditindaklanjuti">Sedang Ditindaklanjuti Wali Kelas (Menghubungi Ortu / Siswa Dicari)</option>
+                            <option value="selesai">Selesai (Sudah Dikonfirmasi Wali Kelas / Diberikan Sanksi)</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Catatan Tindak Lanjut / Respon BK & Admin</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tindakan / Respon Wali Kelas</label>
                         <textarea name="catatan_tindak_lanjut"
                                   rows="3"
                                   x-model="catatanForm"
                                   required
-                                  placeholder="Contoh: Siswa sudah dipanggil ke ruang BK, orang tua telah dihubungi dan mengonfirmasi siswa sakit/izin..."
+                                  placeholder="Contoh: Wali kelas sudah menghubungi orang tua siswa, siswa izin langsung pulang ke rumah karena sakit / siswa telah diberikan pembinaan..."
                                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
                     </div>
 
@@ -226,7 +249,7 @@
                             Batal
                         </button>
                         <button type="submit" class="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs">
-                            Simpan Tindak Lanjut
+                            Simpan Respon Wali Kelas
                         </button>
                     </div>
                 </form>
@@ -254,6 +277,25 @@ function adminLaporanSatpam() {
             this.modalOpen = true;
         }
     };
+}
+
+function confirmDeleteLaporan(id, nama) {
+    Swal.fire({
+        title: 'Hapus Laporan Temuan?',
+        text: `Apakah Anda yakin ingin menghapus laporan temuan gerbang untuk siswa ${nama}? Data laporan akan dihapus.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.getElementById('deleteLaporanForm');
+            form.action = '{{ url('admin/laporan-satpam') }}/' + id;
+            form.submit();
+        }
+    });
 }
 </script>
 @endsection
