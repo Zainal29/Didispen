@@ -298,6 +298,15 @@ class Dispensasi extends Model
     }
 
     /**
+     * Cek apakah dispensasi berstatus 'kadaluarsa' karena tidak pernah scan keluar di pos gerbang
+     */
+    public function isNotScannedOut(): bool
+    {
+        return $this->status === 'kadaluarsa'
+            && $this->waktu_keluar_aktual === null;
+    }
+
+    /**
      * Cek apakah dispensasi ini termasuk kategori terlambat (selesai terlambat, overdue, atau tidak scan kembali)
      */
     public function isTerlambat(): bool
@@ -444,17 +453,17 @@ class Dispensasi extends Model
             'kadaluarsa' => [
                 'text' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
                     ? 'Kadaluarsa (Tidak Scan Kembali)'
-                    : (($this->catatan_admin && (str_contains($this->catatan_admin, 'scan keluar') || str_contains($this->catatan_admin, 'check-out')))
+                    : ((($this->catatan_admin && (str_contains($this->catatan_admin, 'scan keluar') || str_contains($this->catatan_admin, 'check-out'))) || !empty($this->guru_id))
                         ? 'Kadaluarsa (Tidak Scan Keluar)'
                         : 'Kadaluarsa (Tidak Minta ACC)'),
                 'class' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
                     ? 'bg-rose-50 text-rose-700 border-2 border-rose-500 font-bold shadow-xs'
-                    : (($this->catatan_admin && (str_contains($this->catatan_admin, 'scan keluar') || str_contains($this->catatan_admin, 'check-out')))
+                    : ((($this->catatan_admin && (str_contains($this->catatan_admin, 'scan keluar') || str_contains($this->catatan_admin, 'check-out'))) || !empty($this->guru_id))
                         ? 'bg-orange-50 text-orange-800 border border-orange-300 font-semibold'
                         : 'bg-amber-50 text-amber-800 border border-amber-300 font-semibold'),
                 'dot' => ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual))
                     ? 'bg-rose-600'
-                    : (($this->catatan_admin && (str_contains($this->catatan_admin, 'scan keluar') || str_contains($this->catatan_admin, 'check-out')))
+                    : ((($this->catatan_admin && (str_contains($this->catatan_admin, 'scan keluar') || str_contains($this->catatan_admin, 'check-out'))) || !empty($this->guru_id))
                         ? 'bg-orange-500'
                         : 'bg-amber-500'),
                 'is_late' => (bool) ($this->waktu_keluar_aktual && empty($this->waktu_kembali_aktual)),

@@ -237,6 +237,12 @@
                                                 <a href="{{ route('admin.jadwal-piket.edit', $sesi) }}" class="w-7 h-7 inline-flex items-center justify-center text-amber-600 hover:bg-amber-50 rounded-lg" title="Edit">
                                                     <i class="ti ti-edit text-sm"></i>
                                                 </a>
+                                                <button type="button"
+                                                        onclick="confirmDeleteJadwal('{{ $sesi->id }}', '{{ addslashes($hariNames[$hariNum] ?? 'Hari '.$hariNum) }} - {{ addslashes($sesi->nama_sesi ?? 'Sesi') }}')"
+                                                        class="w-7 h-7 inline-flex items-center justify-center text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"
+                                                        title="Hapus Jadwal">
+                                                    <i class="ti ti-trash text-sm"></i>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -395,6 +401,13 @@
                                                 <i class="ti {{ $j->is_active ? 'ti-toggle-right' : 'ti-toggle-left' }} text-lg"></i>
                                             </button>
                                         </form>
+
+                                        <button type="button"
+                                                onclick="confirmDeleteJadwal('{{ $j->id }}', '{{ addslashes($namaHari[$j->hari] ?? 'Hari '.$j->hari) }} - {{ addslashes($j->nama_sesi ?? 'Sesi') }}')"
+                                                class="w-8 h-8 inline-flex items-center justify-center text-rose-600 hover:bg-rose-600 hover:text-white bg-rose-50 rounded-xl transition-all shadow-2xs cursor-pointer"
+                                                title="Hapus Jadwal">
+                                            <i class="ti ti-trash text-base"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -507,7 +520,7 @@
                             @endif
                         </div>
 
-                        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2 flex-wrap">
                             <a href="{{ route('admin.jadwal-piket.show', $j) }}"
                                class="min-h-[36px] px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
                                 <i class="ti ti-eye text-blue-600"></i> Detail
@@ -526,6 +539,12 @@
                                     {{ $j->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                                 </button>
                             </form>
+                            <button type="button"
+                                    onclick="confirmDeleteJadwal('{{ $j->id }}', '{{ addslashes($namaHari[$j->hari] ?? 'Hari '.$j->hari) }} - {{ addslashes($j->nama_sesi ?? 'Sesi') }}')"
+                                    class="min-h-[36px] px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                                    title="Hapus Jadwal">
+                                <i class="ti ti-trash text-rose-600"></i> Hapus
+                            </button>
                         </div>
                     </div>
                 @empty
@@ -545,4 +564,31 @@
         @endif
     </div>
 </div>
+
+{{-- Form Hapus Jadwal Piket Hidden --}}
+<form id="deleteJadwalForm" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
+<script>
+function confirmDeleteJadwal(id, label) {
+    Swal.fire({
+        title: 'Hapus Jadwal Piket?',
+        text: `Apakah Anda yakin ingin menghapus jadwal piket "${label}"? Seluruh penugasan guru pada sesi jadwal ini akan ikut terhapus.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.getElementById('deleteJadwalForm');
+            form.action = '{{ url('admin/jadwal-piket') }}/' + id;
+            form.submit();
+        }
+    });
+}
+</script>
 @endsection

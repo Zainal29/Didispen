@@ -189,4 +189,25 @@ class JadwalPiketController extends Controller
             ->back()
             ->with('success', "Jadwal piket berhasil {$statusText}.");
     }
+
+    /**
+     * Hapus jadwal piket beserta relasinya dari database.
+     */
+    public function destroy(JadwalPiket $jadwal)
+    {
+        DB::transaction(function () use ($jadwal) {
+            // Hapus riwayat pertukaran jadwal piket terkait jika ada
+            $jadwal->pertukaranJadwalPikets()->delete();
+
+            // Detach guru piket yang ditugaskan pada sesi ini
+            $jadwal->guru()->detach();
+
+            // Hapus jadwal piket
+            $jadwal->delete();
+        });
+
+        return redirect()
+            ->route('admin.jadwal-piket.index')
+            ->with('success', 'Jadwal piket guru berhasil dihapus.');
+    }
 }

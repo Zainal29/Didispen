@@ -16,12 +16,18 @@
                 <p class="text-xs text-slate-500 mt-0.5">Konfigurasi sesi jadwal, masa berlaku, dan daftar guru bertugas.</p>
             </div>
         </div>
-        <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
+        <div class="flex items-center gap-2 self-start sm:self-center shrink-0 flex-wrap">
             <a href="{{ route('admin.jadwal-piket.edit', $jadwal) }}"
                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white transition-colors shadow-2xs">
                 <i class="ti ti-edit text-base"></i>
                 <span>Edit Jadwal</span>
             </a>
+            <button type="button"
+                    onclick="confirmDeleteJadwal()"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white transition-colors shadow-2xs cursor-pointer">
+                <i class="ti ti-trash text-base"></i>
+                <span>Hapus Jadwal</span>
+            </button>
             <a href="{{ route('admin.jadwal-piket.index') }}"
                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors">
                 <i class="ti ti-arrow-left text-base"></i>
@@ -244,4 +250,29 @@
         </div>
     @endif
 </div>
+
+{{-- Form Hapus Jadwal Piket Hidden --}}
+<form id="deleteJadwalForm" action="{{ route('admin.jadwal-piket.destroy', $jadwal) }}" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
+<script>
+function confirmDeleteJadwal() {
+    Swal.fire({
+        title: 'Hapus Jadwal Piket?',
+        text: 'Apakah Anda yakin ingin menghapus jadwal piket ini? Seluruh penugasan guru pada sesi ini akan dihapus.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('deleteJadwalForm').submit();
+        }
+    });
+}
+</script>
 @endsection
