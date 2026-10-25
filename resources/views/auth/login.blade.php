@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Login — DIDISPEN</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -48,11 +48,15 @@
     </script>
     <style>
         [x-cloak] { display: none !important; }
+        html {
+            background-color: #0f172a;
+        }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             letter-spacing: -0.011em;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         * {
             -webkit-tap-highlight-color: transparent;
@@ -60,7 +64,6 @@
     </style>
 </head>
 <body class="bg-slate-900 font-sans antialiased text-slate-800 min-h-screen flex flex-col justify-between" x-data="loginForm()" x-init="initPwa()">
-    @include('components.pwa-splash')
 
     <!-- BACKGROUND IMAGE TANPA HEAVY BLUR AGAR RINGAN DI HP -->
     <div class="fixed inset-0 z-0 pointer-events-none">

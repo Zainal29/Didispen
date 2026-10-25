@@ -15,9 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     @stack('styles')
-</head>
 <body class="bg-gray-100 min-h-screen flex flex-col font-sans text-gray-800">
-    @include('components.pwa-splash')
 
     {{-- Main Content Area --}}
     <main class="flex-grow flex items-center justify-center p-4">
