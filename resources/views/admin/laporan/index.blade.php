@@ -81,6 +81,16 @@
                 </span>
             </a>
 
+            {{-- 5b. Kadaluarsa (Tidak Scan Keluar) --}}
+            <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'tidak_scan_keluar'])) }}"
+               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ $currentStatus === 'tidak_scan_keluar' ? 'bg-orange-600 text-white border-orange-600 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
+                <i class="ti ti-door-off"></i>
+                <span>Tidak Scan Keluar</span>
+                <span class="ml-1 px-1.5 py-0.2 rounded-md text-[10px] {{ $currentStatus === 'tidak_scan_keluar' ? 'bg-orange-500 text-white' : 'bg-orange-100 text-orange-800' }}">
+                    {{ $counts['tidak_scan_keluar'] }}
+                </span>
+            </a>
+
             {{-- 6. Sampai Pulang --}}
             <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'sampai_pulang'])) }}"
                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ $currentStatus === 'sampai_pulang' ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
@@ -117,6 +127,7 @@
                         <option value="selesai_awal" {{ $currentStatus === 'selesai_awal' ? 'selected' : '' }}>Selesai (Kembali Lebih Awal / Tepat)</option>
                         <option value="terlambat" {{ $currentStatus === 'terlambat' ? 'selected' : '' }}>Selesai (Terlambat Kembali)</option>
                         <option value="tidak_kembali" {{ $currentStatus === 'tidak_kembali' ? 'selected' : '' }}>Kadaluarsa (Tidak Scan Kembali)</option>
+                        <option value="tidak_scan_keluar" {{ $currentStatus === 'tidak_scan_keluar' ? 'selected' : '' }}>Kadaluarsa (Tidak Scan Keluar / Indikasi Batal atau Terobos)</option>
                         <option value="sampai_pulang" {{ $currentStatus === 'sampai_pulang' ? 'selected' : '' }}>Selesai (Izin Sampai Pulang)</option>
                         <option value="semua" {{ $currentStatus === 'semua' ? 'selected' : '' }}>Semua Riwayat Lengkap (Audit Termasuk Batal & Tolak)</option>
                         <optgroup label="Status Baku Lainnya">

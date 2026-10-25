@@ -75,6 +75,9 @@ class LaporanController extends Controller
             $query->where('status', 'kadaluarsa')
                 ->whereNotNull('waktu_keluar_aktual')
                 ->whereNull('waktu_kembali_aktual');
+        } elseif ($status === 'tidak_scan_keluar') {
+            $query->where('status', 'kadaluarsa')
+                ->whereNull('waktu_keluar_aktual');
         } elseif ($status === 'sampai_pulang') {
             $query->where('sampai_pulang', true)
                 ->whereIn('status', ['keluar', 'selesai']);
@@ -123,6 +126,7 @@ class LaporanController extends Controller
             'selesai_awal' => 'Selesai (Kembali Lebih Awal / Tepat Waktu)',
             'terlambat' => 'Selesai (Terlambat Kembali)',
             'tidak_kembali' => 'Kadaluarsa (Tidak Scan Kembali)',
+            'tidak_scan_keluar' => 'Kadaluarsa (Tidak Scan Keluar / Indikasi Batal atau Terobos)',
             'sampai_pulang' => 'Selesai (Izin Sampai Pulang)',
             'semua' => 'Semua Riwayat (Lengkap Termasuk Batal & Ditolak)',
             'menunggu' => 'Menunggu Persetujuan Guru Piket',
@@ -195,6 +199,8 @@ class LaporanController extends Controller
             'tidak_kembali' => (clone $baseQuery)->where('status', 'kadaluarsa')
                 ->whereNotNull('waktu_keluar_aktual')
                 ->whereNull('waktu_kembali_aktual')->count(),
+            'tidak_scan_keluar' => (clone $baseQuery)->where('status', 'kadaluarsa')
+                ->whereNull('waktu_keluar_aktual')->count(),
             'sampai_pulang' => (clone $baseQuery)->where('sampai_pulang', true)
                 ->whereIn('status', ['keluar', 'selesai'])->count(),
             'semua' => (clone $baseQuery)->count(),

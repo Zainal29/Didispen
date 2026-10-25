@@ -44,10 +44,21 @@ class DashboardController extends Controller
 
             'dibatalkan' => Dispensasi::where('status', 'dibatalkan')->count(),
 
-            // Statistik master data
-            'total_siswa' => Siswa::count(),
+            // Statistik master data (hanya entitas aktif yang sinkron dengan Data Siswa & Data Guru)
+            'total_siswa' => Siswa::where('status_aktif', true)
+                ->where(function ($q) {
+                    $q->whereNull('kelas_id')
+                      ->orWhereDoesntHave('kelas')
+                      ->orWhereHas('kelas', function ($kelasQuery) {
+                          $kelasQuery->whereRaw(
+                              'UPPER(TRIM(nama_kelas)) != ?',
+                              ['BELUM_DIKELOMPOKKAN']
+                          );
+                      });
+                })
+                ->count(),
 
-            'total_guru' => Guru::count(),
+            'total_guru' => Guru::where('status_aktif', true)->count(),
 
             'total_satpam' => User::where('role', 'satpam')->count(),
         ];

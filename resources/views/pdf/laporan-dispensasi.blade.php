@@ -79,6 +79,7 @@
         }
         .status-early { background-color: #ecfdf5; color: #047857; border: 0.5pt solid #a7f3d0; }
         .status-late { background-color: #fef2f2; color: #b91c1c; border: 0.5pt solid #fecaca; }
+        .status-warning { background-color: #fff7ed; color: #c2410c; border: 0.5pt solid #fed7aa; }
         .status-out { background-color: #f0f9ff; color: #0369a1; border: 0.5pt solid #bae6fd; }
         .status-home { background-color: #f5f3ff; color: #6d28d9; border: 0.5pt solid #ddd6fe; }
         .status-default { background-color: #f1f5f9; color: #334155; border: 0.5pt solid #cbd5e1; }
@@ -147,6 +148,8 @@
                     $statusClass = 'status-default';
                     if ($d->status === 'keluar') {
                         $statusClass = $d->isOverdue() ? 'status-late' : 'status-out';
+                    } elseif ($d->isNotScannedOut()) {
+                        $statusClass = 'status-warning';
                     } elseif ($d->isNotReturned() || $d->isReturnedLate()) {
                         $statusClass = 'status-late';
                     } elseif ($d->isReturnedEarly()) {
