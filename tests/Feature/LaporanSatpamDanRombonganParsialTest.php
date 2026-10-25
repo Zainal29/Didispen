@@ -200,6 +200,83 @@ class LaporanSatpamDanRombonganParsialTest extends TestCase
         $guruResp = $this->actingAs($this->guruUser)->get(route('guru.laporan-satpam.index'));
         $guruResp->assertStatus(200);
         $guruResp->assertSee('CITRA ANGGOTA');
-        $guruResp->assertSee('Dispensasi Rombongan: Siswa Tidak Kembali');
+        $guruResp->assertSee('Dispensasi Rombongan: Siswa Tidak Kembali (Lapor Wali Kelas)');
+        $guruResp->assertSee('Tindakan / Respon Wali Kelas');
+    }
+
+    public function test_satpam_dapat_menghapus_laporan_temuan(): void
+    {
+        $lap = LaporanSatpam::create([
+            'satpam_id' => $this->satpam->id,
+            'siswa_id'  => $this->siswaKetua->id,
+            'kategori'  => 'terobos_gerbang',
+            'keterangan'=> 'Siswa melompat pagar samping',
+            'status'    => 'menunggu',
+        ]);
+
+        $this->actingAs($this->satpam)
+            ->delete(route('satpam.laporan.destroy', $lap))
+            ->assertRedirect(route('satpam.laporan.index'))
+            ->assertSessionHas('success');
+
+        $this->assertSoftDeleted('laporan_satpam', ['id' => $lap->id]);
+    }
+
+    public function test_admin_dapat_menghapus_laporan_temuan(): void
+    {
+        $lap = LaporanSatpam::create([
+            'satpam_id' => $this->satpam->id,
+            'siswa_id'  => $this->siswaKetua->id,
+            'kategori'  => 'pelanggaran_lain',
+            'keterangan'=> 'Siswa tidak memakai atribut lengkap',
+            'status'    => 'menunggu',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->delete(route('admin.laporan-satpam.destroy', $lap))
+            ->assertRedirect(route('admin.laporan-satpam.index'))
+            ->assertSessionHas('success');
+
+        $this->assertSoftDeleted('laporan_satpam', ['id' => $lap->id]);
+    }
+
+    public function test_admin_dan_guru_dapat_memberikan_tindakan_respon_wali_kelas(): void
+    {
+        $lap = LaporanSatpam::create([
+            'satpam_id' => $this->satpam->id,
+            'siswa_id'  => $this->siswaKetua->id,
+            'kategori'  => 'rombongan_tidak_kembali',
+            'keterangan'=> 'Siswa tidak ikut rombongan kembali',
+            'status'    => 'menunggu',
+        ]);
+
+        // Guru Piket tindak lanjuti atas nama Wali Kelas
+        $this->actingAs($this->guruUser)
+            ->post(route('guru.laporan-satpam.tindak-lanjuti', $lap), [
+                'status'                 => 'ditindaklanjuti',
+                'catatan_tindak_lanjut'  => 'Wali kelas sedang menghubungi orang tua siswa.',
+            ])
+            ->assertRedirect(route('guru.laporan-satpam.index'))
+            ->assertSessionHas('success');
+
+        $lap->refresh();
+        $this->assertEquals('ditindaklanjuti', $lap->status);
+        $this->assertEquals('Wali kelas sedang menghubungi orang tua siswa.', $lap->catatan_tindak_lanjut);
+        $this->assertEquals($this->guruUser->id, $lap->tindak_lanjut_oleh);
+
+        // Admin selesaikan
+        $this->flushSession();
+        $this->actingAs($this->admin)
+            ->post(route('admin.laporan-satpam.tindak-lanjuti', $lap), [
+                'status'                 => 'selesai',
+                'catatan_tindak_lanjut'  => 'Sudah dikonfirmasi Wali Kelas: Orang tua mengonfirmasi anak sakit di rumah.',
+            ])
+            ->assertRedirect(route('admin.laporan-satpam.index'))
+            ->assertSessionHas('success');
+
+        $lap->refresh();
+        $this->assertEquals('selesai', $lap->status);
+        $this->assertEquals($this->admin->id, $lap->tindak_lanjut_oleh);
     }
 }
+

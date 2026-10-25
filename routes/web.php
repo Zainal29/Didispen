@@ -150,7 +150,7 @@ Route::middleware(['auth'])->group(function () {
                 // Laporan Temuan Satpam
                 Route::get('laporan-satpam', [Admin\LaporanSatpamController::class, 'index'])->name('laporan-satpam.index');
                 Route::post('laporan-satpam/{laporanSatpam}/tindak-lanjuti', [Admin\LaporanSatpamController::class, 'tindakLanjuti'])->name('laporan-satpam.tindak-lanjuti');
-
+                Route::delete('laporan-satpam/{laporanSatpam}', [Admin\LaporanSatpamController::class, 'destroy'])->name('laporan-satpam.destroy');
             });
 
 
@@ -277,6 +277,7 @@ Route::middleware(['auth'])->group(function () {
         // Laporan Gerbang Satpam (Temuan / Siswa Tidak Kembali)
         Route::get('laporan', [\App\Http\Controllers\Satpam\LaporanController::class, 'index'])->name('laporan.index');
         Route::post('laporan', [\App\Http\Controllers\Satpam\LaporanController::class, 'store'])->name('laporan.store');
+        Route::delete('laporan/{laporanSatpam}', [\App\Http\Controllers\Satpam\LaporanController::class, 'destroy'])->name('laporan.destroy');
         Route::get('laporan/search-siswa', [\App\Http\Controllers\Satpam\LaporanController::class, 'searchSiswa'])->name('laporan.search-siswa');
     });
 
