@@ -808,5 +808,54 @@ class AdminJadwalPiketTest extends TestCase
         $responseShow->assertSee('082327046669');
         $responseShow->assertSee('085293146052');
     }
+
+    /**
+     * Test 27: Admin dapat menghapus jadwal piket beserta relasinya.
+     */
+    public function test_27_admin_dapat_menghapus_jadwal_piket(): void
+    {
+        $admin = $this->createAdminUser();
+        [$guruUser1, $guru1] = $this->createGuruUser('Guru Piket Hapus 1');
+        [$guruUser2, $guru2] = $this->createGuruUser('Guru Piket Hapus 2');
+
+        $jadwal = $this->createJadwal(4, '07:00:00', '09:30:00');
+        $jadwal->guru()->sync([$guru1->id, $guru2->id]);
+
+        $pertukaran = PertukaranJadwalPiket::create([
+            'jadwal_piket_id' => $jadwal->id,
+            'guru_asal_id' => $guru1->id,
+            'guru_pengganti_id' => $guru2->id,
+            'tanggal' => '2026-10-01',
+            'status' => 'disetujui',
+            'is_active' => true,
+        ]);
+
+        $guruCountBefore = Guru::count();
+
+        // Non-admin dilarang menghapus
+        $this->actingAs($guruUser1)
+            ->delete(route('admin.jadwal-piket.destroy', $jadwal))
+            ->assertStatus(403);
+
+        $this->assertDatabaseHas('jadwal_piket', ['id' => $jadwal->id]);
+
+        // Admin menghapus jadwal piket
+        $this->flushSession();
+        $response = $this->actingAs($admin)->delete(route('admin.jadwal-piket.destroy', $jadwal));
+
+        $response->assertRedirect(route('admin.jadwal-piket.index'));
+        $response->assertSessionHas('success');
+
+        // Jadwal dan pivot terhapus
+        $this->assertDatabaseMissing('jadwal_piket', ['id' => $jadwal->id]);
+        $this->assertDatabaseMissing('jadwal_piket_guru', ['jadwal_piket_id' => $jadwal->id]);
+        $this->assertDatabaseMissing('pertukaran_jadwal_piket', ['id' => $pertukaran->id]);
+
+        // Record guru asli tetap aman tidak ikut terhapus
+        $this->assertEquals($guruCountBefore, Guru::count());
+        $this->assertDatabaseHas('guru', ['id' => $guru1->id]);
+        $this->assertDatabaseHas('guru', ['id' => $guru2->id]);
+    }
 }
+
 
