@@ -60,6 +60,7 @@
     </style>
 </head>
 <body class="bg-slate-900 font-sans antialiased text-slate-800 min-h-screen flex flex-col justify-between" x-data="loginForm()" x-init="initPwa()">
+    @include('components.pwa-splash')
 
     <!-- BACKGROUND IMAGE TANPA HEAVY BLUR AGAR RINGAN DI HP -->
     <div class="fixed inset-0 z-0 pointer-events-none">

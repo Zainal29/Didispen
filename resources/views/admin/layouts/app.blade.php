@@ -87,6 +87,7 @@
     </style>
 </head>
 <body class="h-full bg-slate-50 text-slate-800 antialiased font-sans" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
+    @include('components.pwa-splash')
 
     {{-- =========================================================
         MOBILE SIDEBAR OVERLAY & DRAWER

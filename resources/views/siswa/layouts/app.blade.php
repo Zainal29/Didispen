@@ -121,6 +121,7 @@
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 antialiased">
+    @include('components.pwa-splash')
 
     @php
         $user   = auth()->user();
