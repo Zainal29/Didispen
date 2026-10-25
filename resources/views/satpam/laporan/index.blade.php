@@ -148,6 +148,13 @@
                             <span class="text-xs font-mono font-bold text-slate-700">#{{ $lap->dispensasi->nomor_surat }}</span>
                         </div>
                     @endif
+                    <button type="button"
+                            onclick="confirmDeleteLaporan('{{ $lap->id }}', '{{ addslashes($lap->siswa?->nama_lengkap ?? '') }}')"
+                            class="p-1.5 px-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold flex items-center gap-1 transition-colors shrink-0 shadow-2xs"
+                            title="Hapus Laporan Temuan">
+                        <i class="ti ti-trash text-sm"></i>
+                        <span class="hidden sm:inline">Hapus</span>
+                    </button>
                 </div>
 
                 {{-- KETERANGAN SATPAM --}}
@@ -158,17 +165,17 @@
                     <p class="whitespace-pre-line">{{ $lap->keterangan }}</p>
                 </div>
 
-                {{-- CATATAN TINDAK LANJUT ADMIN / GURU --}}
+                {{-- TINDAKAN / RESPON WALI KELAS --}}
                 @if($lap->catatan_tindak_lanjut)
                     <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900 leading-relaxed">
                         <p class="font-bold text-blue-950 mb-0.5 flex items-center gap-1.5 text-[11px]">
-                            <i class="ti ti-circle-check text-blue-600"></i> Respon Tindak Lanjut ({{ $lap->petugasTindakLanjut?->name ?? 'Admin/Guru' }} • {{ $lap->tindak_lanjut_at?->format('H:i') }} WIB):
+                            <i class="ti ti-circle-check text-blue-600"></i> Tindakan / Respon Wali Kelas ({{ $lap->petugasTindakLanjut?->name ?? 'Wali Kelas' }} • {{ $lap->tindak_lanjut_at?->format('H:i') }} WIB):
                         </p>
                         <p class="whitespace-pre-line">{{ $lap->catatan_tindak_lanjut }}</p>
                     </div>
                 @else
                     <div class="flex items-center gap-1.5 text-[11px] text-amber-600 font-medium">
-                        <i class="ti ti-clock"></i> Belum ada respon tindak lanjut dari Admin atau Guru Piket.
+                        <i class="ti ti-clock"></i> Belum ada tindakan / respon dari Wali Kelas.
                     </div>
                 @endif
             </div>
@@ -319,6 +326,12 @@
         </div>
     </div>
 
+    {{-- Form Hapus Hidden --}}
+    <form id="deleteLaporanForm" method="POST" style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
+
 </div>
 
 <script>
@@ -378,6 +391,25 @@ function laporanSatpam() {
                 });
         }
     };
+}
+
+function confirmDeleteLaporan(id, nama) {
+    Swal.fire({
+        title: 'Hapus Laporan Temuan?',
+        text: `Apakah Anda yakin ingin menghapus laporan temuan untuk siswa ${nama}? Data laporan akan dihapus.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.getElementById('deleteLaporanForm');
+            form.action = '{{ url('satpam/laporan') }}/' + id;
+            form.submit();
+        }
+    });
 }
 </script>
 @endsection

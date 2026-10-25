@@ -31,16 +31,16 @@ class LaporanSatpam extends Model
     ];
 
     public const KATEGORI_LABELS = [
-        'rombongan_tidak_kembali' => 'Dispensasi Rombongan: Siswa Tidak Kembali',
+        'rombongan_tidak_kembali' => 'Dispensasi Rombongan: Siswa Tidak Kembali (Lapor Wali Kelas)',
         'terobos_gerbang'        => 'Keluar Tanpa Izin / Terobos Gerbang',
         'terlambat_kembali'      => 'Terlambat Kembali Tidak Wajar',
         'pelanggaran_lain'       => 'Pelanggaran / Kejadian di Gerbang',
     ];
 
     public const STATUS_LABELS = [
-        'menunggu'       => 'Menunggu Tindak Lanjut',
-        'ditindaklanjuti' => 'Sedang Ditindaklanjuti',
-        'selesai'        => 'Selesai / Ditangani',
+        'menunggu'        => 'Menunggu Tindakan Wali Kelas',
+        'ditindaklanjuti' => 'Sedang Ditindaklanjuti Wali Kelas',
+        'selesai'         => 'Selesai / Dikonfirmasi Wali Kelas',
     ];
 
     public function satpam(): BelongsTo

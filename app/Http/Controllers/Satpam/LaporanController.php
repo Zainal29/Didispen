@@ -150,4 +150,15 @@ class LaporanController extends Controller
         return redirect()->route('satpam.laporan.index')
             ->with('success', 'Laporan temuan gerbang berhasil disimpan dan terkirim ke Admin & Guru Piket.');
     }
+
+    /**
+     * Hapus laporan temuan gerbang oleh satpam
+     */
+    public function destroy(LaporanSatpam $laporanSatpam)
+    {
+        $laporanSatpam->delete();
+
+        return redirect()->route('satpam.laporan.index')
+            ->with('success', 'Laporan temuan gerbang berhasil dihapus.');
+    }
 }
