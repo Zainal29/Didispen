@@ -84,9 +84,7 @@
         }
     </style>
 
-</head>
 <body class="bg-slate-50 text-slate-800 antialiased overflow-x-hidden">
-    @include('components.pwa-splash')
 
 @php
     $user    = auth()->user();

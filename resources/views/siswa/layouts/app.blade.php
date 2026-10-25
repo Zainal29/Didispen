@@ -119,9 +119,7 @@
             transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
         }
     </style>
-</head>
 <body class="bg-slate-50 min-h-screen text-slate-800 antialiased">
-    @include('components.pwa-splash')
 
     @php
         $user   = auth()->user();

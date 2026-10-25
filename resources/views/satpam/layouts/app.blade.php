@@ -27,9 +27,7 @@
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .break-words { word-break: break-word; overflow-wrap: break-word; }
     </style>
-</head>
 <body class="bg-slate-50 text-slate-900 antialiased selection:bg-rose-500 selection:text-white min-h-screen">
-    @include('components.pwa-splash')
 @php
     $user   = auth()->user();
     $navOn  = 'flex items-center w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 shadow-xs transition-colors';
