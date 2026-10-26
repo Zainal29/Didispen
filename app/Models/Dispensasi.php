@@ -225,6 +225,78 @@ class Dispensasi extends Model
     }
 
     /**
+     * Dapatkan objek Carbon batas waktu toleransi kembali (batas_waktu_kembali + 5 menit toleransi gerbang)
+     */
+    public function getBatasWaktuToleransiKembaliAttribute(): ?\Carbon\Carbon
+    {
+        if (! $this->batas_waktu_kembali) {
+            return null;
+        }
+
+        return $this->batas_waktu_kembali->copy()->addMinutes(self::TOLERANSI_KETERLAMBATAN_MENIT);
+    }
+
+    /**
+     * Format jam batas toleransi (contoh: '09:25 WIB')
+     */
+    public function getBatasToleransiFormattedAttribute(): ?string
+    {
+        $batasToleransi = $this->batas_waktu_toleransi_kembali;
+        return $batasToleransi ? $batasToleransi->setTimezone('Asia/Jakarta')->format('H:i') . ' WIB' : null;
+    }
+
+    /**
+     * Cek apakah saat ini sedang dalam rentang masa toleransi antrean gerbang
+     * (status keluar, sudah lewat batas waktu kembali, tetapi belum melewati batas toleransi 5 menit)
+     */
+    public function isCurrentlyInGracePeriod(): bool
+    {
+        if ($this->sampai_pulang || $this->status !== 'keluar' || ! $this->batas_waktu_kembali) {
+            return false;
+        }
+
+        $now = now('Asia/Jakarta');
+        $batas = $this->batas_waktu_kembali->copy()->setTimezone('Asia/Jakarta');
+        $batasToleransi = $this->batas_waktu_toleransi_kembali?->setTimezone('Asia/Jakarta');
+
+        return $now->greaterThan($batas) && $batasToleransi && $now->lessThanOrEqualTo($batasToleransi);
+    }
+
+    /**
+     * Cek apakah siswa saat ini sudah resmi terlambat (status keluar dan melewati batas waktu kembali + toleransi 5 menit)
+     */
+    public function isOfficiallyLate(): bool
+    {
+        if ($this->sampai_pulang || $this->status !== 'keluar' || ! $this->batas_waktu_kembali) {
+            return false;
+        }
+
+        $now = now('Asia/Jakarta');
+        $batasToleransi = $this->batas_waktu_toleransi_kembali?->setTimezone('Asia/Jakarta');
+
+        return $batasToleransi && $now->greaterThan($batasToleransi);
+    }
+
+    /**
+     * Sisa menit masa toleransi antrean gerbang (1 - 5 menit)
+     */
+    public function getSisaMenitToleransi(): int
+    {
+        if (! $this->isCurrentlyInGracePeriod()) {
+            return 0;
+        }
+
+        $now = now('Asia/Jakarta');
+        $batasToleransi = $this->batas_waktu_toleransi_kembali?->setTimezone('Asia/Jakarta');
+        if (! $batasToleransi) {
+            return 0;
+        }
+
+        $sisaDetik = $now->diffInSeconds($batasToleransi, false);
+        return max(1, (int) ceil($sisaDetik / 60));
+    }
+
+    /**
      * Cek apakah dispensasi berstatus 'selesai' dan kembali lebih awal sebelum batas jam yang ditentukan
      */
     public function isReturnedEarly(): bool

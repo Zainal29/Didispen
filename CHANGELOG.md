@@ -4,6 +4,27 @@ Semua pembaruan penting, perbaikan bug, dan peningkatan fitur pada aplikasi DIDI
 
 ---
 
+## [v2.5.2] - 2026-10-26
+
+### 🚀 Fitur Baru & Peningkatan
+- **Diferensiasi Masa Toleransi Antrean Gerbang (5 Menit) vs Terlambat Resmi:**
+  - **Masa Izin Normal:** Siswa aman dan bebas peringatan keterlambatan selama berada dalam rentang waktu jam keluar hingga batas waktu kembali yang diajukan.
+  - **Masa Toleransi Antrean Gerbang (Kuning / Amber):** Ketika batas jam kembali terlewati (misal 09:21 s.d. 09:25 pada batas kembali 09:20), sistem **tidak langsung memberi cap merah "Terlambat"**, melainkan menampilkan banner peringatan masa toleransi antrean gerbang (5 menit) lengkap dengan informasi sisa menit toleransi serta jam berakhirnya toleransi.
+  - **Terlambat Resmi (Merah):** Setelah masa toleransi 5 menit berakhir (lewat 09:25), siswa baru resmi dinyatakan terlambat dan tercatat sebagai pelanggaran keterlambatan.
+  - **Transparansi Jam di Beranda & Detail Siswa:** Informasi batas waktu kembali normal dan batas akhir toleransi gerbang ditampilkan jelas di dashboard maupun halaman detail pengajuan siswa.
+- **Penyelarasan & Sinkronisasi Waktu Alur Status Multi-Portal:**
+  - Memperbaiki bug tampilan waktu persetujuan Guru Piket pada portal Siswa, Guru, dan Satpam yang sebelumnya keliru merujuk ke `updated_at` menjadi `approved_at`.
+  - Mencegah jam persetujuan guru tertimpa atau tergeser saat data dispensasi mengalami pembaruan status di kemudian hari (misal saat scan keluar, bot warning, atau refresh).
+  - Alur riwayat status (Pengajuan Dibuat $\rightarrow$ Disetujui Guru $\rightarrow$ Konfirmasi Keluar Satpam $\rightarrow$ Konfirmasi Kembali Satpam) kini 100% konsisten, logis, dan selaras di seluruh portal Siswa, Guru Piket, Satpam Gerbang, dan Administrator.
+- **Penyempurnaan Cetak Struk & Web Bluetooth:**
+  - Perbaikan error 500 saat cetak struk dengan rendering langsung blade view thermal dan fallback SVG QR code on-the-fly.
+  - Penyesuaian antarmuka cetak guru untuk memprioritaskan koneksi Bluetooth BLE langsung pada Android serta panduan khusus browser Bluefy untuk iOS.
+- **Peningkatan Laporan Admin & PWA Splash:**
+  - Penambahan filter dan counting dispensasi kadaluarsa yang tidak scan keluar pada rekapitulasi, cetak PDF, dan ekspor Excel laporan admin.
+  - Penyederhanaan transisi splash screen PWA Android agar ikon dan warna status bar tampil proporsional tanpa overlay ganda.
+
+---
+
 ## [v2.5.1] - 2026-10-24
 
 ### 🚀 Fitur Baru & Peningkatan
