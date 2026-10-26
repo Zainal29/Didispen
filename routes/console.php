@@ -24,3 +24,9 @@ Schedule::command('dispensasi:cleanup-history')->dailyAt('00:00');
 Schedule::command('dispensasi:cleanup-foto')->dailyAt('02:00');
 
 Schedule::command('didispen:monitor-wa')->everyMinute();
+
+// Memproses antrean pesan WA & job background otomatis tiap menit (tanpa butuh PM2/daemon)
+Schedule::command('queue:work --stop-when-empty --tries=3')
+    ->everyMinute()
+    ->withoutOverlapping();
+

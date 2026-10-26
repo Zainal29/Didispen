@@ -26,6 +26,9 @@ Semua pembaruan penting, perbaikan bug, dan peningkatan fitur pada aplikasi DIDI
   - Notifikasi pengingat 1x sehari di pagi hari kepada Koordinator Guru Piket kini merangkum **seluruh sesi dan seluruh petugas piket hari tersebut (dari Sesi 1 sampai selesai KBM/pulang)**.
   - Setiap sesi dirinci berdasarkan nama sesi, rentang jam dinas (WIB), dan nama petugas aktual (termasuk deteksi otomatis guru pengganti).
   - Memudahkan Koordinator memegang jadwal komprehensif sejak awal hari guna memastikan pos piket selalu terisi tanpa harus menunggu sesi berganti.
+- **Penyederhanaan Infrastruktur WhatsApp Gateway (SiPintu Multi-Session & Auto-Queue Scheduler):**
+  - Mengalihkan pengiriman pesan otomatis sepenuhnya ke **SiPintu Multi-Session WhatsApp Gateway** (`https://sipintu.smkn1bangsri.sch.id`), menghilangkan kebutuhan microservice Baileys Node.js lokal dan process manager PM2 di server produksi.
+  - Menambahkan task antrean otomatis `queue:work --stop-when-empty --tries=3` langsung ke dalam Laravel Scheduler (`routes/console.php`), sehingga seluruh antrean pesan diproses otomatis setiap menit oleh cron server tanpa memerlukan daemon terpisah.
 
 ---
 
