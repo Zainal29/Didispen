@@ -29,6 +29,11 @@ Semua pembaruan penting, perbaikan bug, dan peningkatan fitur pada aplikasi DIDI
 - **Penyederhanaan Infrastruktur WhatsApp Gateway (SiPintu Multi-Session & Auto-Queue Scheduler):**
   - Mengalihkan pengiriman pesan otomatis sepenuhnya ke **SiPintu Multi-Session WhatsApp Gateway** (`https://sipintu.smkn1bangsri.sch.id`), menghilangkan kebutuhan microservice Baileys Node.js lokal dan process manager PM2 di server produksi.
   - Menambahkan task antrean otomatis `queue:work --stop-when-empty --tries=3` langsung ke dalam Laravel Scheduler (`routes/console.php`), sehingga seluruh antrean pesan diproses otomatis setiap menit oleh cron server tanpa memerlukan daemon terpisah.
+- **Peningkatan Kompatibilitas Bluetooth BLE iOS RPP02 & Deep-Link Bluefy:**
+  - Menambahkan dukungan profil ganda 128-bit UUID dan 16-bit hex (`000018f0-...`, `00002af1-...`, `49535343-...`, dll.) sesuai dump GATT RPP02 pada `bluetooth-printer.blade.php`.
+  - Mengintegrasikan deep-link otomatis URL scheme `bluefy://` di Safari/Chrome iOS sehingga guru dapat langsung berpindah ke aplikasi Bluefy hanya dengan 1 ketukan.
+  - Memperjelas panduan bagi pengguna iPhone untuk melepas ikatan (*Forget This Device*) dari Settings Bluetooth iOS dan menekan *Cancel* pada pop-up PIN pairing iOS demi kelancaran koneksi GATT murni.
+
 
 ---
 

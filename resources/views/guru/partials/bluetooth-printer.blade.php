@@ -91,7 +91,7 @@
                 <i class="ti ti-brand-apple text-blue-600 text-base mt-0.5 shrink-0"></i>
                 <div class="text-[11px] leading-relaxed text-slate-600 min-w-0 flex-1">
                     <p>
-                        <strong class="font-bold text-slate-800">Pengguna iPhone / iPad:</strong> Safari & Chrome iOS tidak mendukung Web Bluetooth dari Apple. Untuk menghubungkan printer bluetooth langsung di iPhone, wajib buka web ini melalui browser <strong class="font-bold text-blue-700">Bluefy (Web BLE Browser)</strong> yang tersedia gratis di App Store.
+                        <strong class="font-bold text-slate-800">Pengguna iPhone / iPad:</strong> Safari & Chrome iOS memblokir Bluetooth. Buka web ini via browser <strong class="font-bold text-blue-700">Bluefy (App Store)</strong>. <em>Penting:</em> Pastikan printer sudah di-<strong>Forget Device (Lupakan Perangkat)</strong> dari Settings Bluetooth iPhone, dan jika muncul pop-up PIN saat connect, tekan <strong>Cancel</strong>.
                     </p>
                 </div>
             </div>
@@ -242,22 +242,30 @@
      * ============================================================
      */
     const RPP02_GATT_PROFILES = [
-        // Target Utama RPP02: Microchip ISSC Transparent UART
+        // Target Utama 1: 16-bit Standard Thermal POS (0x18F0 / 0x2AF1) - Khas RPP02 di Bluefy iOS
         {
-            service: '49535343-fe7d-4ae5-8fa9-9fafd205e455',
-            writeChar: '49535343-8841-43f4-a8d4-ecbe34729bb3'
+            service: '000018f0-0000-1000-8000-00805f9b34fb',
+            writeChar: '00002af1-0000-1000-8000-00805f9b34fb'
         },
-        // Target Alternatif 1: 16-bit Standard POS
         {
             service: 0x18f0,
             writeChar: 0x2af1
         },
-        // Target Alternatif 2: Custom POS-58
+        // Target Utama 2: Microchip ISSC Transparent UART (RPP02 UART)
+        {
+            service: '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+            writeChar: '49535343-8841-43f4-a8d4-ecbe34729bb3'
+        },
+        // Target Alternatif 3: Custom POS-58
         {
             service: 'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
             writeChar: 'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f'
         },
-        // Target Alternatif 3: Standard 0xFFE0
+        // Target Alternatif 4: Standard 0xFFE0 / 0xFFE1
+        {
+            service: '0000ffe0-0000-1000-8000-00805f9b34fb',
+            writeChar: '0000ffe1-0000-1000-8000-00805f9b34fb'
+        },
         {
             service: 0xffe0,
             writeChar: 0xffe1
@@ -265,10 +273,13 @@
     ];
 
     const OPTIONAL_SERVICES = [
-        '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+        '000018f0-0000-1000-8000-00805f9b34fb',
         0x18f0,
+        '49535343-fe7d-4ae5-8fa9-9fafd205e455',
         'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+        '0000ffe0-0000-1000-8000-00805f9b34fb',
         0xffe0,
+        '0000180a-0000-1000-8000-00805f9b34fb',
         0x180a
     ];
 
@@ -433,39 +444,48 @@
                           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
             if (isIOS) {
+                const currentUrl = window.location.href;
+                const bluefyUrl = 'bluefy://' + currentUrl;
+
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
                         icon: 'info',
                         title: 'Akses Bluetooth di iPhone / iOS',
                         html: `
                             <p class="text-xs text-slate-600 mb-3 text-left leading-relaxed">
-                                Apple membatasi akses Web Bluetooth pada Chrome dan Safari di iOS. Untuk mencetak struk:
+                                Apple membatasi akses Web Bluetooth pada Safari & Chrome iOS. Agar printer <strong>RPP02</strong> dapat terhubung langsung:
                             </p>
-                            <div class="text-xs text-left space-y-2 mb-3 bg-blue-50 p-3 rounded-xl border border-blue-200">
-                                <p class="text-blue-900 font-bold">1. Gunakan Browser Bluefy (Bluetooth Langsung):</p>
-                                <p class="text-slate-600">Buka web Didispen melalui aplikasi gratis <strong>Bluefy</strong> di App Store agar tombol Hubungkan berfungsi.</p>
+                            <div class="text-xs text-left space-y-2 mb-3 bg-blue-50/80 p-3 rounded-xl border border-blue-200">
+                                <p class="text-blue-900 font-bold flex items-center gap-1.5">
+                                    <i class="ti ti-sparkles text-blue-600"></i> Cara Termudah (Browser Bluefy):
+                                </p>
+                                <ol class="list-decimal list-inside space-y-1 text-slate-600">
+                                    <li>Install aplikasi gratis <strong>Bluefy</strong> di App Store.</li>
+                                    <li>Pastikan RPP02 sudah di-<strong>Forget Device</strong> dari Settings Bluetooth iPhone.</li>
+                                    <li>Buka web ini di Bluefy lalu klik Hubungkan (jika muncul pop-up PIN, klik <strong>Cancel</strong>).</li>
+                                </ol>
                             </div>
-                            <div class="text-xs text-left bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                                <p class="text-slate-800 font-bold">2. Cetak Struk (AirPrint / Dialog Bawaan):</p>
-                                <p class="text-slate-500">Gunakan tombol biru "Cetak Struk" di bawah untuk mencetak via sistem iOS.</p>
+                            <div class="flex flex-col gap-2 pt-1">
+                                <a href="${bluefyUrl}" class="w-full py-2.5 px-3 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 no-underline hover:bg-blue-700 transition shadow-xs">
+                                    <i class="ti ti-external-link"></i> Buka Langsung di Aplikasi Bluefy
+                                </a>
+                                <a href="https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055" target="_blank" class="w-full py-2 px-3 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 no-underline hover:bg-slate-200 transition border border-slate-200">
+                                    <i class="ti ti-download"></i> Belum Punya? Unduh Bluefy di App Store
+                                </a>
                             </div>
                         `,
                         showCancelButton: true,
-                        showDenyButton: true,
-                        confirmButtonText: '<i class="ti ti-download mr-1"></i> Buka App Store',
-                        denyButtonText: '<i class="ti ti-printer mr-1"></i> Cetak Struk',
+                        showConfirmButton: true,
+                        confirmButtonText: '<i class="ti ti-printer mr-1"></i> Cetak Alternatif (AirPrint)',
                         cancelButtonText: 'Tutup',
-                        confirmButtonColor: '#2563eb',
-                        denyButtonColor: '#475569'
+                        confirmButtonColor: '#475569',
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.open("https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055", "_blank");
-                        } else if (result.isDenied) {
                             window.open("{{ route('guru.cetak-struk', $dispensasi) }}?autoprint=1", "_blank");
                         }
                     });
                 } else {
-                    alert('iPhone membatasi Bluetooth di Safari & Chrome. Gunakan tombol "Cetak Struk" di bawah.');
+                    alert('iPhone membatasi Bluetooth di Safari & Chrome. Buka melalui aplikasi Bluefy untuk koneksi Bluetooth langsung.');
                 }
             } else {
                 setStatus('Browser tidak didukung.');
@@ -500,7 +520,7 @@
                 setPrintStatus('Izin Bluetooth ditolak oleh browser.', 'error');
             } else {
                 setStatus('Gagal terhubung: ' + error.message);
-                setPrintStatus('Gagal terhubung: ' + error.message + '. Jika printer berstatus BONDED di HP, lakukan Unpair/Lupakan di menu Bluetooth HP.', 'error');
+                setPrintStatus('Gagal terhubung: ' + error.message + '. PENTING di iPhone/Android: Lupakan/Forget Device printer dari menu Bluetooth HP, dan jika muncul pop-up PIN tekan Cancel.', 'error');
             }
         }
     }
