@@ -35,6 +35,11 @@ class AdminWhatsappBotTest extends TestCase
             'role'     => 'siswa',
             'nis_nip'  => '9999',
         ]);
+
+        config([
+            'services.sipintu.client_id'     => null,
+            'services.sipintu.client_secret' => null,
+        ]);
     }
 
     public function test_admin_can_view_whatsapp_bot_page(): void
