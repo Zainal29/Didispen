@@ -4,6 +4,17 @@ Semua pembaruan penting, perbaikan bug, dan peningkatan fitur pada aplikasi DIDI
 
 ---
 
+## [v2.5.3] - 2026-10-27
+
+### ⚡ Optimalisasi Jaringan & Rate Limiting (Anti "Too Many Requests"):
+- **Relaksasi Rate Limiter Login Sekolah (`throttle:120,1`):**
+  - Mengubah batas percobaan login route dari `throttle:5,1` menjadi `throttle:120,1` per IP per menit.
+  - Mencegah siswa dan guru di satu jaringan Wi-Fi/NAT sekolah saling memblokir (HTTP 429) ketika login bersamaan saat jam sibuk.
+  - Keamanan anti brute-force tetap terjaga ketat secara mandiri di database (`LoginController`), yang memblokir akun secara spesifik (lockout 15 menit) jika terjadi 5x salah password.
+- **Peningkatan Kapasitas Scanner Gerbang Satpam & Guru (`throttle:300,1`):**
+  - Mengubah batas verifikasi scan QR (`POST scan/verify`) dari `throttle:60,1` menjadi `throttle:300,1` (hingga 5 request/detik).
+  - Mengakomodasi pemindaian cepat pada antrean siswa bergerombol, continuous scanning / express mode, dan verifikasi rombongan di gerbang tanpa risiko throttling.
+
 ## [v2.5.2] - 2026-10-26
 
 ### 🚀 Fitur Baru & Peningkatan

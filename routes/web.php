@@ -31,9 +31,10 @@ Route::get('/oauth/callback', [OAuthController::class, 'callback'])->name('oauth
 // Route Auth (Guest)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    // Ganti kedua baris di atas dengan ini:
+    // Rate limit login dilonggarkan ke 120/menit per IP untuk mengakomodasi banyak user dari satu Wi-Fi/NAT sekolah
+    // Proteksi brute-force per akun tetap ditangani mandiri oleh LoginController (lockout 15 menit jika 5x gagal)
     Route::post('/login', [LoginController::class, 'login'])
-        ->middleware('throttle:5,1')
+        ->middleware('throttle:120,1')
         ->name('login.post');
 });
 
@@ -196,10 +197,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('warning/{dispensasi}/send', [Guru\WarningController::class, 'sendWarning'])
             ->name('warning.send');
 
-            // Scan QR Backup - Rate Limiting diperbarui agar tidak terkendala saat check & confirm
+            // Scan QR Guru - Dilonggarkan ke 300/menit agar antrean rombongan/double frame check tidak terblokir
             Route::get('scan', [\App\Http\Controllers\Guru\ScanController::class, 'index'])->name('scan');
             Route::post('scan/verify', [\App\Http\Controllers\Guru\ScanController::class, 'verify'])
-                ->middleware('throttle:60,1')
+                ->middleware('throttle:300,1')
                 ->name('scan.verify');
             Route::post('search-dispensasi', [\App\Http\Controllers\Guru\ScanController::class, 'searchDispensasi'])
                 ->name('search-dispensasi');
@@ -261,7 +262,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:satpam'])->prefix('satpam')->name('satpam.')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('scan', [ScanController::class, 'index'])->name('scan');
-        Route::post('scan/verify', [ScanController::class, 'verify'])->middleware('throttle:60,1')->name('scan.verify');
+        Route::post('scan/verify', [ScanController::class, 'verify'])->middleware('throttle:300,1')->name('scan.verify');
 
         // Konfirmasi Manual
         Route::post('konfirmasi/{dispensasi}/keluar', [DashboardController::class, 'konfirmasiKeluar'])->name('konfirmasi.keluar');
