@@ -927,4 +927,30 @@ class GuruModuleTest extends TestCase
         $response2->assertSee('LAP/GURU2/002');
         $response2->assertDontSee('LAP/GURU1/001');
     }
+
+    public function test_guru_can_render_cetak_struk_airprint_without_server_error(): void
+    {
+        $dispensasi = Dispensasi::create([
+            'siswa_id'    => $this->siswa->id,
+            'guru_id'     => $this->guru->id,
+            'nomor_surat' => 'DISP/STRUK/001',
+            'kategori'    => 'keperluan_pribadi',
+            'alasan'      => 'Beli keperluan sekolah',
+            'tujuan'      => 'Toko ATK',
+            'jam_keluar'  => 'Jam Pelajaran ke-1',
+            'jam_kembali' => 'Jam Pelajaran ke-2',
+            'status'      => 'disetujui',
+            'qr_token'    => str_repeat('k', 64),
+            'approved_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->guruUser)
+            ->get(route('guru.cetak-struk', $dispensasi) . '?autoprint=1');
+
+        $response->assertOk();
+        $response->assertViewIs('guru.cetak-struk');
+        $response->assertSee('DISP/STRUK/001');
+        $response->assertSee('SMK NEGERI 1 BANGSRI');
+        $response->assertSee('Cetak Struk Sekarang (AirPrint / Printer)');
+    }
 }

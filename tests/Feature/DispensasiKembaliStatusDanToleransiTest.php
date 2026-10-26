@@ -165,6 +165,56 @@ class DispensasiKembaliStatusDanToleransiTest extends TestCase
         $this->assertEquals('Selesai (Kembali Lebih Awal)', $dispensasi->status_badge['text']);
     }
 
+    public function test_grace_period_dan_resmi_terlambat_pada_rentang_toleransi_5_menit(): void
+    {
+        $batasKembali = Carbon::parse('2026-10-26 09:20:00', 'Asia/Jakarta');
+        $waktuKeluar = Carbon::parse('2026-10-26 09:00:00', 'Asia/Jakarta');
+
+        $dispensasi = Dispensasi::create([
+            'siswa_id'             => $this->siswa->id,
+            'nomor_surat'          => 'DISP/TEST/GRACE01',
+            'kategori'             => 'izin',
+            'alasan'               => 'Fotokopi modul',
+            'tujuan'               => 'Depan sekolah',
+            'jam_keluar'           => '09:00',
+            'jam_kembali'          => '09:20',
+            'batas_waktu_kembali'  => $batasKembali,
+            'waktu_keluar_aktual'  => $waktuKeluar,
+            'status'               => 'keluar',
+            'qr_token'             => str_repeat('g', 64),
+        ]);
+
+        // 1. Pukul 09:01 (Masih masa izin normal)
+        Carbon::setTestNow(Carbon::parse('2026-10-26 09:01:00', 'Asia/Jakarta'));
+        $this->assertFalse($dispensasi->isCurrentlyInGracePeriod());
+        $this->assertFalse($dispensasi->isOfficiallyLate());
+
+        // 2. Pukul 09:21 (Masuk masa toleransi antrean gerbang 5 menit)
+        Carbon::setTestNow(Carbon::parse('2026-10-26 09:21:00', 'Asia/Jakarta'));
+        $this->assertTrue($dispensasi->isCurrentlyInGracePeriod());
+        $this->assertFalse($dispensasi->isOfficiallyLate());
+        $this->assertEquals(4, $dispensasi->getSisaMenitToleransi());
+        $this->assertEquals('09:25 WIB', $dispensasi->batas_toleransi_formatted);
+
+        // Dashboard siswa pada 09:21 menampilkan banner toleransi, BUKAN terlambat resmi
+        $responseDashboard = $this->actingAs($this->siswa->user)->get(route('siswa.dashboard'));
+        $responseDashboard->assertOk();
+        $responseDashboard->assertSee('Masa Toleransi Antrean');
+        $responseDashboard->assertSee('09:25 WIB');
+        $responseDashboard->assertDontSee('Peringatan: Anda Resmi Dinyatakan Terlambat!');
+
+        // 3. Pukul 09:26 (Melewati batas toleransi 09:25 -> Resmi dinyatakan terlambat)
+        Carbon::setTestNow(Carbon::parse('2026-10-26 09:26:00', 'Asia/Jakarta'));
+        $this->assertFalse($dispensasi->isCurrentlyInGracePeriod());
+        $this->assertTrue($dispensasi->isOfficiallyLate());
+
+        // Dashboard siswa pada 09:26 menampilkan banner resmi terlambat
+        $responseDashboardLate = $this->actingAs($this->siswa->user)->get(route('siswa.dashboard'));
+        $responseDashboardLate->assertOk();
+        $responseDashboardLate->assertSee('Peringatan: Anda Resmi Dinyatakan Terlambat!');
+        $responseDashboardLate->assertSee('Toleransi Habis');
+    }
+
     protected function tearDown(): void
     {
         Carbon::setTestNow();
