@@ -1,4 +1,4 @@
-const CACHE_NAME = 'didispen-v5';
+const CACHE_NAME = 'didispen-v7';
 
 const STATIC_ASSETS = [
     '/manifest.json',
