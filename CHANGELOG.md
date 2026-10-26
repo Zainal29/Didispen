@@ -33,6 +33,10 @@ Semua pembaruan penting, perbaikan bug, dan peningkatan fitur pada aplikasi DIDI
   - Menambahkan dukungan profil ganda 128-bit UUID dan 16-bit hex (`000018f0-...`, `00002af1-...`, `49535343-...`, dll.) sesuai dump GATT RPP02 pada `bluetooth-printer.blade.php`.
   - Mengintegrasikan deep-link otomatis URL scheme `bluefy://` di Safari/Chrome iOS sehingga guru dapat langsung berpindah ke aplikasi Bluefy hanya dengan 1 ketukan.
   - Memperjelas panduan bagi pengguna iPhone untuk melepas ikatan (*Forget This Device*) dari Settings Bluetooth iOS dan menekan *Cancel* pada pop-up PIN pairing iOS demi kelancaran koneksi GATT murni.
+  - **Robust Writer & Error Recovery (`sendEscPos`):** Memilih method write sesuai karakteristik aktual (`writeWithoutResponse` vs `write`) dilengkapi fallback aman ke `writeValue()` legacy.
+  - **Auto-Retry Koneksi GATT (`connectWithRetry`):** Menyediakan retry otomatis hingga 3 kali dengan jeda 800ms saat koneksi BLE pertama kali di iPhone.
+  - **Proteksi Transmisi Cetak (`isPrinting` Guard):** Mencegah tombol putus koneksi dieksekusi saat transmisi data struk sedang berlangsung.
+  - **Handling Auto-Cutter RPP02:** Menonaktifkan perintah cut fisik (`PRINTER_HAS_CUTTER = false`) untuk mencegah printer thermal POS-58 hang atau mencetak karakter sampah di akhir struk.
 
 
 ---

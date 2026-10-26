@@ -285,9 +285,13 @@
 
     const CHUNK_SIZE = 20;  // 20 byte aman untuk MTU BLE 4.0 standar
     const CHUNK_DELAY = 20; // 20ms memberi jeda buffer printer RPP02
+    const CONNECT_RETRIES = 3;
+    const CONNECT_RETRY_DELAY = 800; // 800ms jeda antar percobaan gatt.connect()
+    const PRINTER_HAS_CUTTER = false; // RPP02 POS-58 umumnya tanpa auto-cutter
 
     let printerDevice = null;
     let writeCharacteristic = null;
+    let isPrinting = false;
 
     const receiptData = @js($receiptData);
 
@@ -364,6 +368,20 @@
      * BLE CONNECTION & DISCOVERY
      * ============================================================
      */
+    async function connectWithRetry(device, retries = CONNECT_RETRIES) {
+        let lastErr;
+        for (let i = 0; i < retries; i++) {
+            try {
+                return await device.gatt.connect();
+            } catch (e) {
+                lastErr = e;
+                console.warn(`[RPP02] gatt.connect() gagal (${i + 1}/${retries}):`, e.message);
+                if (i < retries - 1) await new Promise(r => setTimeout(r, CONNECT_RETRY_DELAY));
+            }
+        }
+        throw lastErr;
+    }
+
     async function connectToDevice(device) {
         printerDevice = device;
 
@@ -374,7 +392,7 @@
         setStatus('Menghubungkan ke ' + devName + '...');
         setPrintStatus('Menghubungkan ke ' + devName + '...', 'info');
 
-        const server = await printerDevice.gatt.connect();
+        const server = await connectWithRetry(printerDevice);
         let foundChar = null;
 
         // Cari profile GATT RPP02 secara berurutan
@@ -425,6 +443,10 @@
 
     async function handleConnectClick() {
         if (printerDevice && printerDevice.gatt && printerDevice.gatt.connected) {
+            if (isPrinting) {
+                setPrintStatus('Sedang mencetak, tunggu sebentar sebelum memutuskan.', 'warning');
+                return;
+            }
             try {
                 printerDevice.gatt.disconnect();
             } catch (e) {}
@@ -535,7 +557,7 @@
 
     /*
      * ============================================================
-     * ESC/POS TRANSMISSION (DENGAN CHUNKING)
+     * ESC/POS TRANSMISSION (DENGAN CHUNKING & ROBUST WRITER)
      * ============================================================
      */
     async function sendEscPos(data) {
@@ -543,19 +565,33 @@
             throw new Error('Printer belum terhubung.');
         }
 
-        const canWriteNoResponse = writeCharacteristic.properties && writeCharacteristic.properties.writeWithoutResponse;
+        const props = writeCharacteristic.properties || {};
+
+        // Pilih writer sesuai properti karakteristik + ketersediaan method
+        let writer;
+        if (props.writeWithoutResponse && typeof writeCharacteristic.writeValueWithoutResponse === 'function') {
+            writer = (chunk) => writeCharacteristic.writeValueWithoutResponse(chunk);
+        } else if (props.write && typeof writeCharacteristic.writeValueWithResponse === 'function') {
+            writer = (chunk) => writeCharacteristic.writeValueWithResponse(chunk);
+        } else if (typeof writeCharacteristic.writeValue === 'function') {
+            writer = (chunk) => writeCharacteristic.writeValue(chunk);
+        } else {
+            throw new Error('Printer tidak mendukung method write yang dikenali.');
+        }
 
         for (let i = 0; i < data.length; i += CHUNK_SIZE) {
             const chunk = data.slice(i, i + CHUNK_SIZE);
-
-            if (canWriteNoResponse && typeof writeCharacteristic.writeValueWithoutResponse === 'function') {
-                await writeCharacteristic.writeValueWithoutResponse(chunk);
-            } else if (typeof writeCharacteristic.writeValueWithResponse === 'function') {
-                await writeCharacteristic.writeValueWithResponse(chunk);
-            } else {
-                await writeCharacteristic.writeValue(chunk);
+            try {
+                await writer(chunk);
+            } catch (e) {
+                // Fallback sekali ke writeValue legacy jika method khusus gagal
+                console.warn('[RPP02] Writer utama gagal, fallback ke writeValue():', e.message);
+                if (typeof writeCharacteristic.writeValue === 'function') {
+                    await writeCharacteristic.writeValue(chunk);
+                } else {
+                    throw e;
+                }
             }
-
             if (CHUNK_DELAY > 0) {
                 await new Promise(resolve => setTimeout(resolve, CHUNK_DELAY));
             }
@@ -704,7 +740,7 @@
             textBytes('- TERIMA KASIH -\n'),
             bold(false),
             feed(4),
-            cut()
+            ...(PRINTER_HAS_CUTTER ? [cut()] : [feed(2)])
         );
 
         return concatBytes(...parts);
@@ -726,6 +762,7 @@
             return;
         }
 
+        isPrinting = true;
         try {
             printBtn.disabled = true;
             testBtn.disabled = true;
@@ -744,6 +781,7 @@
             setStatus('Gagal mencetak: ' + error.message);
             setPrintStatus('Gagal mencetak: ' + error.message, 'error');
         } finally {
+            isPrinting = false;
             const connected = !!(printerDevice && printerDevice.gatt && printerDevice.gatt.connected && writeCharacteristic);
             setConnectedState(connected);
         }
@@ -755,6 +793,7 @@
             return;
         }
 
+        isPrinting = true;
         try {
             printBtn.disabled = true;
             testBtn.disabled = true;
@@ -778,7 +817,7 @@
                 textBytes('--------------------------------\n'),
                 textBytes('Printer siap digunakan!\n'),
                 feed(4),
-                cut()
+                ...(PRINTER_HAS_CUTTER ? [cut()] : [feed(2)])
             );
 
             await sendEscPos(data);
@@ -790,6 +829,7 @@
             setStatus('Gagal test print: ' + error.message);
             setPrintStatus('Gagal test print: ' + error.message, 'error');
         } finally {
+            isPrinting = false;
             const connected = !!(printerDevice && printerDevice.gatt && printerDevice.gatt.connected && writeCharacteristic);
             setConnectedState(connected);
         }
