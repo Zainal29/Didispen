@@ -509,13 +509,11 @@
                         <p class="text-rose-700 text-sm font-medium">{{ $dispensasi->rejected_at->isoFormat('D MMMM Y, HH:mm') }} WIB</p>
                     </div>
                     @endif
-                @elseif(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai', 'kadaluarsa']))
-                    @if($dispensasi->approved_at)
+                @elseif(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai', 'kadaluarsa']) || $dispensasi->guru)
                     <div>
                         <p class="text-slate-400 text-[10px] font-bold uppercase mb-1 tracking-wider">{{ $dispensasi->dibuat_manual_oleh_guru ? 'Diterbitkan Pada' : 'Disetujui Pada' }}</p>
-                        <p class="text-slate-700 text-sm font-medium">{{ $dispensasi->approved_at->isoFormat('D MMMM Y, HH:mm') }} WIB</p>
+                        <p class="text-slate-700 text-sm font-medium">{{ ($dispensasi->approved_at ?? $dispensasi->created_at)->isoFormat('D MMMM Y, HH:mm') }} WIB</p>
                     </div>
-                    @endif
                 @endif
             </div>
         </div>
@@ -539,22 +537,19 @@
                     @if($dispensasi->guru)
                         <p class="text-[11px] text-slate-600 mt-0.5">Oleh: {{ $dispensasi->guru->nama_lengkap }}</p>
                     @endif
-                    @if($dispensasi->rejected_at)
-                        <p class="text-[10px] text-slate-500 mt-0.5">{{ $dispensasi->rejected_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                    @endif
+                    <p class="text-[10px] text-slate-500 mt-0.5">{{ ($dispensasi->rejected_at ?? $dispensasi->updated_at)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                     @if($dispensasi->catatan_admin)
                         <p class="text-xs text-rose-600 mt-0.5">Alasan: {{ $dispensasi->catatan_admin }}</p>
                     @endif
                 </div>
-                @endif
-                @if($dispensasi->approved_at)
+                @elseif(in_array($dispensasi->status, ['disetujui', 'keluar', 'selesai']) || $dispensasi->approved_at)
                 <div class="relative pl-6">
                     <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-xs"></div>
                     <p class="text-xs font-bold text-slate-800">{{ $dispensasi->dibuat_manual_oleh_guru ? 'Dibuat Manual & Disetujui' : 'Disetujui Guru Piket' }}</p>
                     @if($dispensasi->guru)
                         <p class="text-[11px] text-slate-600 mt-0.5">Oleh: {{ $dispensasi->guru->nama_lengkap }}</p>
                     @endif
-                    <p class="text-[10px] text-slate-500 mt-0.5">{{ $dispensasi->approved_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                    <p class="text-[10px] text-slate-500 mt-0.5">{{ ($dispensasi->approved_at ?? $dispensasi->created_at)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                 </div>
                 @endif
                 @if($dispensasi->status === 'kadaluarsa')
