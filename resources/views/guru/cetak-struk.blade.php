@@ -123,18 +123,20 @@
         <div class="row"><span>Jam Kembali</span><span>: {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek) }}</span></div>
     </div>
 
-    @if(!empty($dispensasi->qr_code))
-        <div class="qr-section">
-            <p style="margin: 0 0 5px 0; font-weight: bold;">QR CODE VALIDASI</p>
-            <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code">
-            <p style="margin: 5px 0 0 0; font-size: 9px;">Scan di Pos Satpam</p>
-        </div>
-    @else
-        <div class="qr-section">
-            <p>QR Code Tidak Ditemukan</p>
+    <div class="qr-section">
+        <p style="margin: 0 0 5px 0; font-weight: bold;">QR CODE VALIDASI</p>
+        @if(!empty($dispensasi->qr_code) && file_exists(storage_path('app/public/' . $dispensasi->qr_code)))
+            <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code" style="max-width: 45mm; height: auto;">
+        @elseif($dispensasi->qr_token)
+            <div style="display: flex; justify-content: center; margin: 4px auto;">
+                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(140)->margin(0)->generate(json_encode(['token' => $dispensasi->qr_token])) !!}
+            </div>
+        @else
+            <p>QR Code Belum Tersedia</p>
             <p>Status: {{ strtoupper($dispensasi->status) }}</p>
-        </div>
-    @endif
+        @endif
+        <p style="margin: 5px 0 0 0; font-size: 9px;">Scan di Pos Satpam</p>
+    </div>
 
     <div class="section" style="text-align: right; margin-top: 15px;">
         <p>Bangsri, {{ now()->format('d/m/Y') }}</p>

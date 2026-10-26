@@ -676,9 +676,7 @@
                         @if($dispensasi->guru)
                             <p class="text-[11px] text-slate-600 mt-0.5">Oleh: {{ $dispensasi->guru->nama_lengkap }}</p>
                         @endif
-                        @if($dispensasi->rejected_at)
-                            <p class="text-[10px] text-slate-500 mt-0.5">{{ $dispensasi->rejected_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                        @endif
+                        <p class="text-[10px] text-slate-500 mt-0.5">{{ ($dispensasi->rejected_at ?? $dispensasi->updated_at)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                         @if($dispensasi->catatan_admin)
                             <p class="text-xs text-rose-600 mt-0.5">Alasan: {{ $dispensasi->catatan_admin }}</p>
                         @endif
@@ -692,9 +690,7 @@
                         @if($dispensasi->guru)
                             <p class="text-[11px] text-slate-600 mt-0.5">Oleh: {{ $dispensasi->guru->nama_lengkap }}</p>
                         @endif
-                        @if($dispensasi->approved_at)
-                            <p class="text-[10px] text-slate-500 mt-0.5">{{ $dispensasi->approved_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
-                        @endif
+                        <p class="text-[10px] text-slate-500 mt-0.5">{{ ($dispensasi->approved_at ?? $dispensasi->created_at)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                     </div>
                     @endif
                     @if($dispensasi->waktu_keluar_aktual)
