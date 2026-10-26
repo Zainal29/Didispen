@@ -95,29 +95,42 @@
     @endif
 
     {{-- STATUS NOTIFICATION BANNERS --}}
+    {{-- STATUS NOTIFICATION BANNERS --}}
     @php
-        $isTerlambatDetail = $dispensasi->status === 'keluar' && $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
+        $inGracePeriodDetail = $dispensasi->isCurrentlyInGracePeriod();
+        $isOfficiallyLateDetail = $dispensasi->isOfficiallyLate();
         $terlambatText = $dispensasi->getLateDurationText();
     @endphp
 
-    @if($isTerlambatDetail)
+    @if($isOfficiallyLateDetail)
         <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 sm:p-5">
             <div class="flex items-start gap-3 sm:gap-4">
                 <div class="w-10 h-10 rounded-xl bg-rose-100 border border-rose-200 flex items-center justify-center flex-shrink-0 text-rose-600">
                     <i class="ti ti-alert-triangle text-xl"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h3 class="text-rose-900 font-bold text-sm mb-1">PERINGATAN: ANDA TERLAMBAT!</h3>
+                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-200 text-rose-900 border border-rose-300">
+                            Toleransi Habis
+                        </span>
+                        <h3 class="text-rose-900 font-bold text-sm">PERINGATAN: ANDA RESMI TERLAMBAT!</h3>
+                    </div>
                     <p class="text-rose-700 text-xs sm:text-sm mb-3">
-                        Anda telah melewati batas waktu kembali selama
+                        Masa toleransi antrean gerbang telah habis. Anda telah melewati batas waktu kembali selama
                         <span class="bg-rose-100 px-2 py-0.5 rounded-md font-bold text-rose-900 border border-rose-200">{{ $terlambatText }}</span>
                     </p>
                     <div class="bg-white/80 rounded-xl p-3 mb-4 border border-rose-100">
-                        <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                             <div>
                                 <p class="text-rose-600 text-[10px] font-bold uppercase mb-0.5">Batas Kembali</p>
                                 <p class="font-bold text-rose-900 flex items-center gap-1">
                                     <i class="ti ti-clock"></i>{{ \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') }} WIB
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-rose-600 text-[10px] font-bold uppercase mb-0.5">Batas Toleransi Habis</p>
+                                <p class="font-bold text-rose-900 flex items-center gap-1">
+                                    <i class="ti ti-shield-x"></i>{{ $dispensasi->batas_toleransi_formatted }}
                                 </p>
                             </div>
                             <div>
@@ -134,6 +147,44 @@
                 </div>
             </div>
         </div>
+    @elseif($inGracePeriodDetail)
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5">
+            <div class="flex items-start gap-3 sm:gap-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center flex-shrink-0 text-amber-700 animate-pulse">
+                    <i class="ti ti-hourglass-empty text-xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
+                            Masa Toleransi Antrean
+                        </span>
+                        <h3 class="text-amber-900 font-bold text-sm">PERHATIAN: MELEWATI BATAS WAKTU</h3>
+                    </div>
+                    <p class="text-amber-800 text-xs sm:text-sm mb-2">
+                        Batas izin kembali telah terlewati. Saat ini Anda sedang dalam <strong>masa toleransi antrean gerbang (5 menit)</strong> sisa <span class="bg-amber-200/80 px-2 py-0.5 rounded-md font-bold text-amber-950 border border-amber-300">{{ $dispensasi->getSisaMenitToleransi() }} menit</span>.
+                    </p>
+                    <div class="bg-white/80 rounded-xl p-3 mb-3 border border-amber-100">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <p class="text-amber-700 text-[10px] font-bold uppercase mb-0.5">Batas Kembali Normal</p>
+                                <p class="font-bold text-amber-900 flex items-center gap-1">
+                                    <i class="ti ti-clock"></i>{{ \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') }} WIB
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-amber-700 text-[10px] font-bold uppercase mb-0.5">Batas Akhir Toleransi (5 Menit)</p>
+                                <p class="font-bold text-amber-900 flex items-center gap-1">
+                                    <i class="ti ti-shield-check text-amber-700"></i>{{ $dispensasi->batas_toleransi_formatted }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-amber-700 font-medium">
+                        *Segera temui Satpam di pos gerbang dan tunjukkan QR Code sebelum pukul <strong>{{ $dispensasi->batas_toleransi_formatted }}</strong> agar kepulangan Anda tidak dicatat sebagai pelanggaran terlambat resmi.
+                    </p>
+                </div>
+            </div>
+        </div>
     @elseif($dispensasi->status === 'keluar' && $dispensasi->batas_waktu_kembali)
         <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center flex-shrink-0 text-amber-700">
@@ -141,9 +192,11 @@
             </div>
             <div class="flex-1 min-w-0">
                 <p class="text-amber-900 font-bold text-xs sm:text-sm">Sedang Keluar - Harap Kembali Tepat Waktu</p>
-                <p class="text-amber-700 text-xs mt-0.5">
-                    Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') }} WIB</strong>
-                </p>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-amber-800 mt-0.5">
+                    <span>Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') }} WIB</strong></span>
+                    <span>•</span>
+                    <span class="text-amber-700 font-medium">Toleransi antrean 5 mnt (s.d. {{ $dispensasi->batas_toleransi_formatted }})</span>
+                </div>
             </div>
         </div>
     @elseif($dispensasi->isNotReturned())
@@ -443,6 +496,11 @@
                             @php $waktuKembali = \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->tanggal_izin?->dayOfWeek ?? $dispensasi->created_at?->dayOfWeek); @endphp
                             @if($waktuKembali !== '-' && $waktuKembali !== $dispensasi->jam_kembali)
                                 <p class="text-amber-700 text-xs mt-1 flex items-center gap-1"><i class="ti ti-clock text-[11px]"></i>{{ $waktuKembali }}</p>
+                            @endif
+                            @if($dispensasi->batas_toleransi_formatted)
+                                <p class="text-amber-800 text-[11px] mt-1.5 pt-1.5 border-t border-amber-200/60 flex items-center gap-1 font-medium">
+                                    <i class="ti ti-shield-check text-xs text-amber-700"></i>Toleransi s.d. {{ $dispensasi->batas_toleransi_formatted }} (5 mnt)
+                                </p>
                             @endif
                         @endif
                     </div>
@@ -862,7 +920,7 @@
                     </div>
                     <div>
                         <p class="text-[10px] font-bold text-slate-500 uppercase mb-0.5">Waktu Persetujuan</p>
-                        <p class="font-semibold text-slate-800 text-xs">{{ $dispensasi->updated_at->isoFormat('dddd, D MMMM Y, HH:mm') }} WIB</p>
+                        <p class="font-semibold text-slate-800 text-xs">{{ ($dispensasi->approved_at ?? $dispensasi->updated_at)->isoFormat('dddd, D MMMM Y, HH:mm') }} WIB</p>
                     </div>
                 </div>
             </div>
@@ -889,7 +947,7 @@
                             <div class="w-2.5 h-2.5 rounded-full bg-rose-500 mt-1 flex-shrink-0"></div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-xs font-bold text-rose-600">Ditolak oleh Guru Piket</p>
-                                <p class="text-[11px] text-slate-500">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                                <p class="text-[11px] text-slate-500">{{ ($dispensasi->rejected_at ?? $dispensasi->updated_at)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                             </div>
                         </div>
                     @elseif($dispensasi->guru)
@@ -897,7 +955,7 @@
                             <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 flex-shrink-0"></div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-xs font-bold text-slate-900">Disetujui oleh Guru Piket</p>
-                                <p class="text-[11px] text-slate-500">{{ $dispensasi->updated_at->isoFormat('D MMM Y, HH:mm') }} WIB</p>
+                                <p class="text-[11px] text-slate-500">{{ ($dispensasi->approved_at ?? $dispensasi->created_at)->isoFormat('D MMM Y, HH:mm') }} WIB</p>
                                 <p class="text-[11px] text-slate-600 mt-0.5">Oleh: {{ $dispensasi->guru->nama_lengkap }}</p>
                             </div>
                         </div>

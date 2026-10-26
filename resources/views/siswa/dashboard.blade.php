@@ -220,17 +220,56 @@
 </div>
 @endif
 
-{{-- Banner Terlambat (Hanya muncul jika terlambat) --}}
-@if($isTerlambat)
+{{-- Banner Masa Toleransi Antrean Gerbang (Muncul saat 09:21 - 09:25) --}}
+@if($inGracePeriod && isset($dispensasiAktif))
+<div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
+    <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 animate-pulse">
+            <i class="ti ti-hourglass-empty text-xl"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
+                    Masa Toleransi Antrean
+                </span>
+                <h3 class="text-amber-900 font-bold text-sm">Perhatian: Melewati Batas Waktu!</h3>
+            </div>
+            <p class="text-amber-800 text-xs sm:text-sm mb-2 leading-relaxed">
+                Batas waktu kembali dispensasi <strong class="text-amber-950">({{ $dispensasiAktif->nomor_surat }})</strong> telah terlewati. Saat ini Anda berada dalam <strong>masa toleransi antrean gerbang (5 menit)</strong> sisa <span class="bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded-md font-bold text-xs">{{ $sisaMenitToleransi }} menit</span>.
+            </p>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-amber-800 mb-3 bg-white/70 px-3 py-2 rounded-xl border border-amber-200/80">
+                <span>Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasiAktif->batas_waktu_kembali)->format('H:i') }} WIB</strong></span>
+                <span>•</span>
+                <span>Batas toleransi: <strong>{{ $dispensasiAktif->batas_toleransi_formatted }}</strong></span>
+            </div>
+            <p class="text-[11px] text-amber-700 mb-3 font-medium">
+                *Segera temui Satpam di gerbang untuk scan kembali sebelum batas toleransi habis agar tidak resmi dinyatakan terlambat.
+            </p>
+            <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
+               class="inline-flex items-center px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
+                <i class="ti ti-qrcode mr-1.5"></i>Tunjukkan QR Code Sekarang
+            </a>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Banner Terlambat Resmi (Hanya muncul jika masa toleransi sudah habis / lewat 09:25) --}}
+@if($isTerlambat && isset($dispensasiAktif))
 <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
     <div class="flex items-start gap-3">
         <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
             <i class="ti ti-alert-triangle text-xl"></i>
         </div>
         <div class="flex-1 min-w-0">
-            <h3 class="text-rose-900 font-bold text-sm mb-1">Peringatan: Anda Terlambat!</h3>
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-200 text-rose-900 border border-rose-300">
+                    Toleransi Habis
+                </span>
+                <h3 class="text-rose-900 font-bold text-sm">Peringatan: Anda Resmi Dinyatakan Terlambat!</h3>
+            </div>
             <p class="text-rose-700 text-xs sm:text-sm mb-2 leading-relaxed">
-                Anda telah melewati batas waktu kembali dispensasi
+                Masa toleransi antrean gerbang telah habis. Anda telah melewati batas waktu kembali dispensasi
                 <strong class="text-rose-900">({{ $dispensasiAktif->nomor_surat }})</strong>
                 selama
                 <span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md font-semibold">
@@ -241,10 +280,11 @@
                     @endif
                 </span>
             </p>
-            <p class="text-xs text-rose-600 mb-3 flex items-center gap-1">
-                <i class="ti ti-clock"></i>
-                Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasiAktif->batas_waktu_kembali)->format('H:i') }} WIB</strong>
-            </p>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-rose-700 mb-3 bg-white/70 px-3 py-2 rounded-xl border border-rose-200/80">
+                <span>Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasiAktif->batas_waktu_kembali)->format('H:i') }} WIB</strong></span>
+                <span>•</span>
+                <span>Batas toleransi berakhir: <strong>{{ $dispensasiAktif->batas_toleransi_formatted }}</strong></span>
+            </div>
             <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
                class="inline-flex items-center px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
                 <i class="ti ti-qrcode mr-1.5"></i>Lihat QR Code
@@ -360,9 +400,16 @@
                         Izin sampai jam pulang sekolah (Tidak perlu scan kembali & bebas peringatan terlambat).
                     </p>
                 @else
-                    <p class="text-xs text-slate-600 mt-1 flex items-center gap-1">
-                        <i class="ti ti-info-circle text-blue-500"></i>Harap kembali sebelum pukul {{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali) }}
-                    </p>
+                    <div class="mt-2 pt-2 border-t border-blue-200/60 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                        <span class="text-slate-700 flex items-center gap-1">
+                            <i class="ti ti-clock text-blue-600"></i>
+                            Batas kembali: <strong>{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasiAktif->jam_kembali) }} WIB</strong>
+                        </span>
+                        <span class="text-amber-800 flex items-center gap-1 font-medium bg-amber-100/70 border border-amber-200 px-2 py-0.5 rounded-lg text-[11px]">
+                            <i class="ti ti-shield-check text-amber-700 text-xs"></i>
+                            Toleransi antrean s.d. <strong>{{ $dispensasiAktif->batas_toleransi_formatted }}</strong> (5 mnt)
+                        </span>
+                    </div>
                 @endif
             </div>
         </div>

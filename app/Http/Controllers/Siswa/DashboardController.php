@@ -43,12 +43,17 @@ class DashboardController extends Controller
             ->first();
 
         $isTerlambat = false;
+        $inGracePeriod = false;
+        $sisaMenitToleransi = 0;
         $terlambatJam = 0;
         $terlambatMenit = 0;
 
         if ($dispensasiAktif && $dispensasiAktif->status === 'keluar' && $dispensasiAktif->batas_waktu_kembali) {
-            $isTerlambat = $dispensasiAktif->isOverdue();
-            if ($isTerlambat) {
+            if ($dispensasiAktif->isCurrentlyInGracePeriod()) {
+                $inGracePeriod = true;
+                $sisaMenitToleransi = $dispensasiAktif->getSisaMenitToleransi();
+            } elseif ($dispensasiAktif->isOfficiallyLate()) {
+                $isTerlambat = true;
                 $totalMenit = DispensasiTimeHelper::hitungMenitTerlambat($dispensasiAktif->batas_waktu_kembali);
                 $terlambatJam = floor($totalMenit / 60);
                 $terlambatMenit = $totalMenit % 60;
@@ -212,6 +217,8 @@ class DashboardController extends Controller
             'notifikasiBelumDibaca',
             'dispensasiAktif',
             'isTerlambat',
+            'inGracePeriod',
+            'sisaMenitToleransi',
             'terlambatJam',
             'terlambatMenit',
             'infoPiket',
