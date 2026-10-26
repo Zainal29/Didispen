@@ -14,10 +14,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- PWA & Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('icons/icon-192.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="{{ asset('icons/icon-192.png') }}?v=7">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('icons/icon-192.png') }}?v=7">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}?v=7">
+    <link rel="manifest" href="/manifest.json?v=7">
 
     <meta name="theme-color" content="#2563eb">
     <meta name="mobile-web-app-capable" content="yes">
