@@ -50,12 +50,23 @@ class MonitorPiketDanTerlambat extends Command
                             }
                         }
 
-                        // B. Notifikasi ke Koordinator Guru Piket hari ini (1x sehari di sesi pertama)
+                        // B. Notifikasi ke Koordinator Guru Piket hari ini (1x sehari di sesi pertama, memuat semua sesi hari ini)
                         if ($index === 0 && $jadwal->koordinator && $jadwal->koordinator->status_aktif) {
+                            $semuaSesiHariIni = [];
+                            foreach ($jadwalHariIni as $sesiItem) {
+                                $infoSesi = $piketService->getPetugasAktual($sesiItem, $now);
+                                $semuaSesiHariIni[] = [
+                                    'jadwal'   => $sesiItem,
+                                    'petugas'  => $infoSesi['petugas'] ?? [],
+                                    'conflict' => $infoSesi['conflict'] ?? false,
+                                ];
+                            }
+
                             $waService->notifyKoordinatorPiket(
                                 $jadwal->koordinator,
                                 $jadwal,
-                                $petugasInfo['petugas']
+                                $petugasInfo['petugas'],
+                                $semuaSesiHariIni
                             );
                         }
 

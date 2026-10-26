@@ -8,6 +8,7 @@ use App\Models\JadwalPiket;
 use App\Models\Setting;
 use App\Models\WhatsappLog;
 use App\Services\WhatsappMessageService;
+use App\Services\WhatsAppBot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -253,10 +254,71 @@ class WhatsappBotController extends Controller
     }
 
     /**
-     * Ambil status detail dan QR code dari server Baileys
+     * Ambil status detail dan koneksi nomor WhatsApp
      */
     private function fetchBotStatus(): array
     {
+        $clientId = config('services.sipintu.client_id');
+        $clientSecret = config('services.sipintu.client_secret');
+
+        // Prioritas 1: SiPintu Multi-Session WhatsApp Gateway
+        if (!empty($clientId) && !empty($clientSecret)) {
+            $res = WhatsAppBot::status();
+            if ($res['success']) {
+                $data = $res['data'] ?? [];
+
+                // Format resmi SiPintu Gateway
+                if (isset($data['whatsapp_gateway'])) {
+                    $gw = $data['whatsapp_gateway'];
+                    $app = $data['application'] ?? [];
+                    $isConnected = (bool) ($gw['is_connected'] ?? false);
+                    $isFallback = (bool) ($gw['auto_fallback_to_central'] ?? false);
+                    $assignedPhone = $gw['assigned_phone'] ?? null;
+
+                    return [
+                        'online'         => true,
+                        'connected'      => $isConnected,
+                        'gateway_type'   => 'sipintu',
+                        'status'         => $isConnected ? 'connected' : 'waiting_qr',
+                        'assigned_phone' => $assignedPhone,
+                        'auto_fallback'  => $isFallback,
+                        'user'           => [
+                            'phone' => $assignedPhone ?: ($isFallback ? 'Nomor Pusat SiPintu (Auto-Fallback Aktif)' : 'Belum Ditautkan'),
+                            'name'  => ($app['name'] ?? 'DiDispen') . ' (SiPintu Gateway)',
+                        ],
+                        'qr'             => null,
+                        'qr_image'       => null,
+                        'message'        => $isConnected
+                            ? 'Terhubung ke WhatsApp Gateway SiPintu (' . $assignedPhone . ')'
+                            : 'Nomor khusus belum ditautkan di SiPintu' . ($isFallback ? ' (Pesan dialihkan via Nomor Pusat)' : ''),
+                    ];
+                }
+
+                // Format mock unit test / respon generik
+                return [
+                    'online'    => (bool) ($data['online'] ?? true),
+                    'connected' => (bool) ($data['connected'] ?? false),
+                    'status'    => $data['status'] ?? (($data['connected'] ?? false) ? 'connected' : 'disconnected'),
+                    'user'      => $data['user'] ?? null,
+                    'qr'        => $data['qr'] ?? null,
+                    'qr_image'  => $data['qr_image'] ?? null,
+                    'message'   => $data['message'] ?? 'Bot Gateway Aktif',
+                ];
+            }
+
+            return [
+                'online'        => false,
+                'connected'     => false,
+                'gateway_type'  => 'sipintu',
+                'status'        => 'offline',
+                'user'          => null,
+                'qr'            => null,
+                'qr_image'      => null,
+                'message'       => 'Tidak dapat terhubung ke SiPintu Gateway: ' . ($res['error'] ?? ''),
+            ];
+        }
+
+        // Prioritas 2 (Fallback): Microservice Baileys lokal
         $botUrl = rtrim(Setting::get('wa_bot_url', config('services.whatsapp_bot.url', 'http://127.0.0.1:3789')), '/');
         $apiKey = Setting::get('wa_bot_api_key', config('services.whatsapp_bot.api_key', 'sipintu_wa_secret_key_2026'));
 

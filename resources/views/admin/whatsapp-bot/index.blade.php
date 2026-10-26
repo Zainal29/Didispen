@@ -125,84 +125,140 @@
                                 {{ $botStatus['user']['phone'] ?? 'WhatsApp Terhubung' }}
                             </h3>
                             <p class="text-xs text-slate-600 mt-0.5" id="connectedNameText">
-                                {{ $botStatus['user']['name'] ?? 'Akun Bot Sekolah' }} &bull; Microservice: {{ $settings['wa_bot_url'] }}
+                                {{ $botStatus['user']['name'] ?? 'Akun Bot Sekolah' }} &bull; Gateway: {{ config('services.sipintu.url') ?: 'https://sipintu.smkn1bangsri.sch.id' }}
                             </p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2.5 shrink-0">
-                        <form action="{{ route('admin.whatsapp-bot.disconnect') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin memutuskan perangkat WhatsApp ini? Anda perlu melakukan scan QR ulang.')">
-                            @csrf
-                            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-2 shadow-xs">
-                                <i class="ti ti-logout"></i>
-                                <span>Putuskan Sesi / Ganti Nomor</span>
-                            </button>
-                        </form>
+                        @if(($botStatus['gateway_type'] ?? '') === 'sipintu')
+                            <a href="{{ rtrim(config('services.sipintu.url') ?: 'https://sipintu.smkn1bangsri.sch.id', '/') }}/admin/whatsapp-gateway" target="_blank"
+                                class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center gap-2 shadow-xs">
+                                <i class="ti ti-external-link"></i>
+                                <span>Kelola Nomor di SiPintu</span>
+                            </a>
+                        @else
+                            <form action="{{ route('admin.whatsapp-bot.disconnect') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin memutuskan perangkat WhatsApp ini? Anda perlu melakukan scan QR ulang.')">
+                                @csrf
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-2 shadow-xs">
+                                    <i class="ti ti-logout"></i>
+                                    <span>Putuskan Sesi / Ganti Nomor</span>
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>
 
             {{-- KONDISI 2: MENUNGGU SCAN QR CODE (WAITING QR) --}}
             <div id="stateWaitingQr" class="{{ (!$botStatus['connected'] && $botStatus['online']) ? '' : 'hidden' }}">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                    <div class="md:col-span-5 flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                        <div class="relative w-64 h-64 bg-white rounded-xl shadow-xs border border-slate-200 flex items-center justify-center overflow-hidden p-2">
-                            <img id="qrImageElement" src="{{ $botStatus['qr_image'] ?? '' }}" alt="QR Code WhatsApp" class="w-full h-full object-contain {{ empty($botStatus['qr_image']) ? 'hidden' : '' }}">
-                            <div id="qrLoadingPlaceholder" class="{{ !empty($botStatus['qr_image']) ? 'hidden' : '' }} text-center p-4">
-                                <i class="ti ti-loader-2 animate-spin text-3xl text-blue-600 mb-2"></i>
-                                <p class="text-xs text-slate-500">Mempersiapkan QR Code...</p>
+                @if(($botStatus['gateway_type'] ?? '') === 'sipintu')
+                    <div class="p-6 rounded-2xl bg-gradient-to-r from-amber-50/70 via-white to-blue-50/50 border border-amber-200">
+                        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                            <div class="flex items-start gap-4">
+                                <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shadow-sm shrink-0">
+                                    <i class="ti ti-qrcode"></i>
+                                </div>
+                                <div class="space-y-1.5 max-w-xl">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-200 text-amber-900">
+                                            <i class="ti ti-clock"></i> Menunggu Scan QR di SiPintu
+                                        </span>
+                                        @if($botStatus['auto_fallback'] ?? true)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                <i class="ti ti-shield-check"></i> Auto-Fallback ke Nomor Pusat SiPintu: AKTIF
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <h3 class="text-base font-bold text-slate-900">
+                                        Tautkan Nomor WhatsApp Khusus DiDispen di Dashboard SiPintu
+                                    </h3>
+                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                        DiDispen telah terhubung ke <strong>Multi-Session WhatsApp Gateway SiPintu</strong>. Untuk memasangkan nomor WhatsApp khusus aplikasi ini, silakan scan QR Code langsung dari menu WhatsApp Gateway di SiPintu.
+                                    </p>
+                                    @if($botStatus['auto_fallback'] ?? true)
+                                        <div class="text-[11px] text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1.5">
+                                            <i class="ti ti-info-circle text-emerald-600 text-sm"></i>
+                                            <span><strong>Pesan Tetap Terkirim:</strong> Selama nomor khusus belum discan, seluruh pesan WhatsApp otomatis dialihkan dan terkirim via <strong>Nomor WhatsApp Pusat SiPintu</strong>.</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 w-full lg:w-auto">
+                                <a href="{{ rtrim(config('services.sipintu.url') ?: 'https://sipintu.smkn1bangsri.sch.id', '/') }}/admin/whatsapp-gateway" target="_blank"
+                                    class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20 active:scale-95">
+                                    <i class="ti ti-external-link text-sm"></i>
+                                    <span>Buka Menu Scan QR di SiPintu</span>
+                                </a>
+                                <button type="button" onclick="pollBotStatus(true)" id="btnRefreshQr" class="px-4 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
+                                    <i class="ti ti-refresh text-slate-500" id="iconRefreshQr"></i>
+                                    <span>Cek Status</span>
+                                </button>
                             </div>
                         </div>
-                        <div class="mt-2.5 flex items-center justify-between w-64 px-1 text-[11px] text-slate-500">
-                            <span class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                <span>Auto-refresh aktif</span>
-                            </span>
-                            <button type="button" onclick="pollBotStatus(true)" id="btnRefreshQr" class="text-blue-700 hover:text-blue-800 font-semibold flex items-center gap-1 transition">
-                                <i class="ti ti-refresh" id="iconRefreshQr"></i>
-                                <span>Muat Ulang QR</span>
-                            </button>
-                        </div>
-                        <div class="mt-2 w-64 text-center">
-                            <form action="{{ route('admin.whatsapp-bot.disconnect') }}" method="POST" onsubmit="return confirm('QR Code belum muncul? Klik OK untuk menghapus cache sesi lama dan memaksa WhatsApp server mengirimkan QR Code baru.')">
-                                @csrf
-                                <button type="submit" class="text-[11px] text-slate-400 hover:text-rose-600 underline transition inline-flex items-center gap-1">
-                                    <i class="ti ti-refresh text-[10px]"></i>
-                                    <span>QR tidak kunjung muncul? Reset & Buat QR Baru</span>
+                    </div>
+                @else
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                        <div class="md:col-span-5 flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                            <div class="relative w-64 h-64 bg-white rounded-xl shadow-xs border border-slate-200 flex items-center justify-center overflow-hidden p-2">
+                                <img id="qrImageElement" src="{{ $botStatus['qr_image'] ?? '' }}" alt="QR Code WhatsApp" class="w-full h-full object-contain {{ empty($botStatus['qr_image']) ? 'hidden' : '' }}">
+                                <div id="qrLoadingPlaceholder" class="{{ !empty($botStatus['qr_image']) ? 'hidden' : '' }} text-center p-4">
+                                    <i class="ti ti-loader-2 animate-spin text-3xl text-blue-600 mb-2"></i>
+                                    <p class="text-xs text-slate-500">Mempersiapkan QR Code...</p>
+                                </div>
+                            </div>
+                            <div class="mt-2.5 flex items-center justify-between w-64 px-1 text-[11px] text-slate-500">
+                                <span class="flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                    <span>Auto-refresh aktif</span>
+                                </span>
+                                <button type="button" onclick="pollBotStatus(true)" id="btnRefreshQr" class="text-blue-700 hover:text-blue-800 font-semibold flex items-center gap-1 transition">
+                                    <i class="ti ti-refresh" id="iconRefreshQr"></i>
+                                    <span>Muat Ulang QR</span>
                                 </button>
-                            </form>
+                            </div>
+                            <div class="mt-2 w-64 text-center">
+                                <form action="{{ route('admin.whatsapp-bot.disconnect') }}" method="POST" onsubmit="return confirm('QR Code belum muncul? Klik OK untuk menghapus cache sesi lama dan memaksa WhatsApp server mengirimkan QR Code baru.')">
+                                    @csrf
+                                    <button type="submit" class="text-[11px] text-slate-400 hover:text-rose-600 underline transition inline-flex items-center gap-1">
+                                        <i class="ti ti-refresh text-[10px]"></i>
+                                        <span>QR tidak kunjung muncul? Reset & Buat QR Baru</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-7 space-y-4">
+                            <div class="space-y-1">
+                                <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Langkah Menghubungkan</span>
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900">Scan QR Code dengan WhatsApp di HP Anda</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                                    Setelah terhubung, bot akan bekerja di latar belakang untuk mengirimkan notifikasi ke Guru Piket dan Siswa.
+                                </p>
+                            </div>
+
+                            <ol class="space-y-2.5 text-xs text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <li class="flex items-start gap-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+                                    <span>Buka aplikasi <strong>WhatsApp</strong> di smartphone Anda.</span>
+                                </li>
+                                <li class="flex items-start gap-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+                                    <span>Ketuk menu titik tiga (<strong>⋮</strong>) di Android atau tab <strong>Pengaturan</strong> di iPhone.</span>
+                                </li>
+                                <li class="flex items-start gap-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+                                    <span>Pilih <strong>Perangkat Tertaut (Linked Devices)</strong>, lalu ketuk tombol <strong>Tautkan Perangkat</strong>.</span>
+                                </li>
+                                <li class="flex items-start gap-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">4</span>
+                                    <span>Arahkan kamera ke kotak QR Code di samping. Halaman ini akan otomatis berganti status saat berhasil tersambung.</span>
+                                </li>
+                            </ol>
                         </div>
                     </div>
-
-                    <div class="md:col-span-7 space-y-4">
-                        <div class="space-y-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Langkah Menghubungkan</span>
-                            <h3 class="text-base sm:text-lg font-bold text-slate-900">Scan QR Code dengan WhatsApp di HP Anda</h3>
-                            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                                Setelah terhubung, bot akan bekerja di latar belakang untuk mengirimkan notifikasi ke Guru Piket dan Siswa.
-                            </p>
-                        </div>
-
-                        <ol class="space-y-2.5 text-xs text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <li class="flex items-start gap-2.5">
-                                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
-                                <span>Buka aplikasi <strong>WhatsApp</strong> di smartphone Anda.</span>
-                            </li>
-                            <li class="flex items-start gap-2.5">
-                                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
-                                <span>Ketuk menu titik tiga (<strong>⋮</strong>) di Android atau tab <strong>Pengaturan</strong> di iPhone.</span>
-                            </li>
-                            <li class="flex items-start gap-2.5">
-                                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
-                                <span>Pilih <strong>Perangkat Tertaut (Linked Devices)</strong>, lalu ketuk tombol <strong>Tautkan Perangkat</strong>.</span>
-                            </li>
-                            <li class="flex items-start gap-2.5">
-                                <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">4</span>
-                                <span>Arahkan kamera ke kotak QR Code di samping. Halaman ini akan otomatis berganti status saat berhasil tersambung.</span>
-                            </li>
-                        </ol>
-                    </div>
-                </div>
+                @endif
             </div>
 
             {{-- KONDISI 3: SERVER BOT OFFLINE --}}
@@ -884,8 +940,8 @@ document.addEventListener('DOMContentLoaded', function () {
         stateOffline.classList.add('hidden');
 
         if (user) {
-            connectedPhoneText.textContent = user.phone ? ('+' + user.phone) : 'WhatsApp Terhubung';
-            connectedNameText.textContent = (user.name || 'Akun Bot') + ' • Sesi Baileys Aktif';
+            connectedPhoneText.textContent = user.phone ? ((user.phone.startsWith('+') || user.phone.startsWith('Nomor')) ? user.phone : ('+' + user.phone)) : 'WhatsApp Terhubung';
+            connectedNameText.textContent = (user.name || 'Akun Bot') + ' • Sesi Gateway Aktif';
         }
 
         liveStatusBadge.innerHTML = `
