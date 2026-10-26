@@ -307,12 +307,14 @@ class QRScanService
             ];
         }
 
-        // Proteksi double scan: Siswa tidak mungkin kembali kurang dari 60 detik (1 menit) setelah keluar
+        // Proteksi double scan: Berikan jeda 5 detik setelah keluar sebelum bisa scan kembali
         if ($dispensasi->waktu_keluar_aktual && ! app()->runningUnitTests()) {
-            $waktuKeluar = Carbon::parse($dispensasi->waktu_keluar_aktual);
-            $selisih = now()->diffInSeconds($waktuKeluar);
-            if ($selisih < 60) {
-                $sisa = 60 - $selisih;
+            $now = now('Asia/Jakarta');
+            $waktuKeluar = Carbon::parse($dispensasi->waktu_keluar_aktual)->setTimezone('Asia/Jakarta');
+            $selisih = (int) $waktuKeluar->diffInSeconds($now, false);
+
+            if ($selisih >= 0 && $selisih < 5) {
+                $sisa = 5 - $selisih;
                 return [
                     'success' => false,
                     'message' => "Siswa baru saja diverifikasi KELUAR ({$selisih} detik lalu). Mohon tunggu {$sisa} detik lagi sebelum memverifikasi KEMBALI untuk mencegah double scan.",

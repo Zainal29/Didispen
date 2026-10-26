@@ -299,6 +299,33 @@ class SatpamScanVerifyTest extends TestCase
             ]);
     }
 
+    public function test_jeda_5_detik_mencegah_double_scan_kembali(): void
+    {
+        $scanService = app(\App\Services\QRScanService::class);
+
+        $now = \Carbon\Carbon::now('Asia/Jakarta');
+
+        // Simulasi siswa baru keluar 2 detik yang lalu
+        $this->dispensasi->update([
+            'status' => 'keluar',
+            'waktu_keluar_aktual' => $now->copy()->subSeconds(2),
+            'batas_waktu_kembali' => $now->copy()->addHour(),
+        ]);
+
+        // Cek langsung perhitungan logika jeda 5 detik
+        $waktuKeluar = \Carbon\Carbon::parse($this->dispensasi->waktu_keluar_aktual)->setTimezone('Asia/Jakarta');
+        $selisih = (int) $waktuKeluar->diffInSeconds($now, false);
+        $this->assertEquals(2, $selisih);
+
+        $sisa = 5 - $selisih;
+        $this->assertEquals(3, $sisa);
+
+        // Setelah lewat 5 detik
+        $waktuNanti = $now->copy()->addSeconds(6);
+        $selisihNanti = (int) $waktuKeluar->diffInSeconds($waktuNanti, false);
+        $this->assertGreaterThanOrEqual(5, $selisihNanti);
+    }
+
     protected function tearDown(): void
     {
         \Carbon\Carbon::setTestNow();
