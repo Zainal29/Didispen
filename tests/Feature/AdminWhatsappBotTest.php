@@ -302,6 +302,7 @@ class AdminWhatsappBotTest extends TestCase
         $this->assertNotNull($koorLog);
         $this->assertStringContainsString('Pak Koordinator', $koorLog->message);
         $this->assertStringContainsString('Guru Satu', $koorLog->message);
+        $this->assertStringContainsString('Guru Empat', $koorLog->message);
 
         // C. JALANKAN LAGI SAAT SESI BERLANGSUNG (07:05 & 07:10) -> TIDAK DIKIRIM ULANG / DEDUPLIKASI
         \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-10-19 07:05:00', 'Asia/Jakarta'));

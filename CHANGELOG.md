@@ -22,6 +22,10 @@ Semua pembaruan penting, perbaikan bug, dan peningkatan fitur pada aplikasi DIDI
 - **Peningkatan Laporan Admin & PWA Splash:**
   - Penambahan filter dan counting dispensasi kadaluarsa yang tidak scan keluar pada rekapitulasi, cetak PDF, dan ekspor Excel laporan admin.
   - Penyederhanaan transisi splash screen PWA Android agar ikon dan warna status bar tampil proporsional tanpa overlay ganda.
+- **Pembaruan Notifikasi WhatsApp Koordinator Guru Piket (Seluruh Sesi Hari Ini):**
+  - Notifikasi pengingat 1x sehari di pagi hari kepada Koordinator Guru Piket kini merangkum **seluruh sesi dan seluruh petugas piket hari tersebut (dari Sesi 1 sampai selesai KBM/pulang)**.
+  - Setiap sesi dirinci berdasarkan nama sesi, rentang jam dinas (WIB), dan nama petugas aktual (termasuk deteksi otomatis guru pengganti).
+  - Memudahkan Koordinator memegang jadwal komprehensif sejak awal hari guna memastikan pos piket selalu terisi tanpa harus menunggu sesi berganti.
 
 ---
 
