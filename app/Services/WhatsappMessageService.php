@@ -195,31 +195,91 @@ class WhatsappMessageService
     }
 
     /**
-     * Render pesan pengingat untuk Koordinator Guru Piket
+     * Render pesan pengingat untuk Koordinator Guru Piket (seluruh sesi hari ini dari pagi sampai pulang)
      */
-    public function renderKoordinatorPiketContent(string $content, \App\Models\Guru $koordinator, \App\Models\JadwalPiket $jadwal, array $petugasList = []): string
-    {
+    public function renderKoordinatorPiketContent(
+        string $content,
+        \App\Models\Guru $koordinator,
+        \App\Models\JadwalPiket $jadwal,
+        array $petugasList = [],
+        array $semuaSesiList = []
+    ): string {
         $namaHari = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
         $hariStr = is_numeric($jadwal->hari) ? ($namaHari[(int)$jadwal->hari] ?? 'Hari '.$jadwal->hari) : (string)$jadwal->hari;
 
         $jamMulai = $jadwal->jam_mulai ? substr($jadwal->jam_mulai, 0, 5) : '-';
         $jamSelesai = $jadwal->jam_selesai ? substr($jadwal->jam_selesai, 0, 5) : '-';
+        $namaSesi = $jadwal->nama_sesi ?? 'Piket';
+        $daftarPetugasText = '';
 
-        $petugasFormatted = [];
-        foreach ($petugasList as $p) {
-            $guruObj = is_array($p) ? ($p['guru'] ?? null) : $p;
-            if ($guruObj instanceof \App\Models\Guru) {
-                $nama = $guruObj->nama_lengkap ?? $guruObj->nama ?? 'Guru';
-                $status = (is_array($p) && !empty($p['is_pengganti'])) ? ' (Pengganti)' : '';
-                $petugasFormatted[] = "• {$nama}{$status}";
+        if (! empty($semuaSesiList)) {
+            $blokSesi = [];
+            $firstJamMulai = null;
+            $lastJamSelesai = null;
+
+            foreach ($semuaSesiList as $sesiItem) {
+                $sesiJadwal = $sesiItem['jadwal'] ?? null;
+                $sesiPetugas = $sesiItem['petugas'] ?? [];
+
+                if ($sesiJadwal instanceof \App\Models\JadwalPiket) {
+                    $sMulai = $sesiJadwal->jam_mulai ? substr($sesiJadwal->jam_mulai, 0, 5) : '-';
+                    $sSelesai = $sesiJadwal->jam_selesai ? substr($sesiJadwal->jam_selesai, 0, 5) : '-';
+
+                    if (! $firstJamMulai) {
+                        $firstJamMulai = $sMulai;
+                    }
+                    $lastJamSelesai = $sSelesai;
+
+                    $petugasFormatted = [];
+                    foreach ($sesiPetugas as $p) {
+                        $guruObj = is_array($p) ? ($p['guru'] ?? null) : $p;
+                        if ($guruObj instanceof \App\Models\Guru) {
+                            $nama = $guruObj->nama_lengkap ?? $guruObj->nama ?? 'Guru';
+                            $status = (is_array($p) && ! empty($p['is_pengganti'])) ? ' (Pengganti)' : '';
+                            $petugasFormatted[] = "• {$nama}{$status}";
+                        }
+                    }
+
+                    $listText = ! empty($petugasFormatted)
+                        ? implode("\n", $petugasFormatted)
+                        : "• (Belum ada petugas terdaftar)";
+
+                    $sesiTitle = "*{$sesiJadwal->nama_sesi}* ({$sMulai} - {$sSelesai} WIB)";
+                    $blokSesi[] = "{$sesiTitle}:\n{$listText}";
+                }
+            }
+
+            if (! empty($blokSesi)) {
+                $daftarPetugasText = implode("\n\n", $blokSesi);
+                if ($firstJamMulai) {
+                    $jamMulai = $firstJamMulai;
+                }
+                if ($lastJamSelesai) {
+                    $jamSelesai = $lastJamSelesai;
+                }
+                if (count($semuaSesiList) > 1) {
+                    $namaSesi = "Semua Sesi (Sesi 1 s.d. Pulang)";
+                }
             }
         }
-        $daftarPetugasText = !empty($petugasFormatted) ? implode("\n", $petugasFormatted) : '• (Belum ada petugas terdaftar)';
+
+        if (empty($daftarPetugasText)) {
+            $petugasFormatted = [];
+            foreach ($petugasList as $p) {
+                $guruObj = is_array($p) ? ($p['guru'] ?? null) : $p;
+                if ($guruObj instanceof \App\Models\Guru) {
+                    $nama = $guruObj->nama_lengkap ?? $guruObj->nama ?? 'Guru';
+                    $status = (is_array($p) && ! empty($p['is_pengganti'])) ? ' (Pengganti)' : '';
+                    $petugasFormatted[] = "• {$nama}{$status}";
+                }
+            }
+            $daftarPetugasText = ! empty($petugasFormatted) ? implode("\n", $petugasFormatted) : '• (Belum ada petugas terdaftar)';
+        }
 
         $replacements = [
             '{nama_koordinator}' => $koordinator->nama_lengkap ?? $koordinator->nama ?? 'Bapak/Ibu Koordinator',
             '{hari}'             => $hariStr,
-            '{nama_sesi}'        => $jadwal->nama_sesi ?? 'Piket',
+            '{nama_sesi}'        => $namaSesi,
             '{jam_mulai}'        => $jamMulai,
             '{jam_selesai}'      => $jamSelesai,
             '{daftar_petugas}'   => $daftarPetugasText,
@@ -709,7 +769,7 @@ class WhatsappMessageService
     /**
      * 2. Kirim Notifikasi WA ke Koordinator Guru Piket Hari Ini
      */
-    public function notifyKoordinatorPiket(\App\Models\Guru $koordinator, \App\Models\JadwalPiket $jadwal, array $petugasList = []): void
+    public function notifyKoordinatorPiket(\App\Models\Guru $koordinator, \App\Models\JadwalPiket $jadwal, array $petugasList = [], array $semuaSesiList = []): void
     {
         if (! (bool) \App\Models\Setting::get('wa_notify_koordinator_piket', true)) {
             return;
@@ -725,10 +785,10 @@ class WhatsappMessageService
             ?? null;
 
         if (! $content) {
-            $content = "Halo Yth. Bapak/Ibu *{nama_koordinator}*,\n\nIzin mengingatkan bahwa Anda bertugas sebagai *Koordinator Guru Piket* pada hari ini:\nHari: *{hari}*, {tanggal}\nSesi: *{nama_sesi}* ({jam_mulai} - {jam_selesai} WIB)\n\nDaftar Petugas Piket:\n{daftar_petugas}\n\nMohon bantuan Bapak/Ibu untuk mengecek dan memastikan petugas piket telah berada di tempatnya agar pelayanan dispensasi siswa dapat berjalan tertib.\n\nTerima kasih atas kerjasamanya.\n- Admin DIDISPEN SMK N 1 Bangsri";
+            $content = "Halo Yth. Bapak/Ibu *{nama_koordinator}*,\n\nIzin mengingatkan bahwa Anda bertugas sebagai *Koordinator Guru Piket* pada hari ini:\nHari: *{hari}*, {tanggal}\nWaktu Piket: *{jam_mulai} - {jam_selesai} WIB* ({nama_sesi})\n\nDaftar Petugas Piket Hari Ini (Sesi 1 s.d. Selesai):\n{daftar_petugas}\n\nMohon bantuan Bapak/Ibu untuk mengecek dan memastikan petugas piket di setiap sesi telah berada di tempatnya agar pelayanan dispensasi siswa dapat berjalan tertib dari awal hingga selesai KBM.\n\nTerima kasih atas kerjasamanya.\n- Admin DIDISPEN SMK N 1 Bangsri";
         }
 
-        $pesan = $this->renderKoordinatorPiketContent($content, $koordinator, $jadwal, $petugasList);
+        $pesan = $this->renderKoordinatorPiketContent($content, $koordinator, $jadwal, $petugasList, $semuaSesiList);
 
         $this->dispatchBaileysMessage(
             rawPhone: $koordinator->no_telepon,
