@@ -112,21 +112,23 @@ class WhatsappBotController extends Controller
     public function updateSettings(Request $request)
     {
         $validated = $request->validate([
-            'wa_bot_url'                => 'required|url',
-            'wa_bot_api_key'            => 'required|string|max:255',
+            'wa_bot_url'                => 'nullable|url',
+            'wa_bot_api_key'            => 'nullable|string|max:255',
             'wa_satpam_phone'           => 'nullable|string|max:30',
             'wa_piket_reminder_minutes' => 'nullable|integer|min:0|max:120',
         ], [
-            'wa_bot_url.required' => 'URL Server Bot wajib diisi.',
-            'wa_bot_url.url'      => 'Format URL Server Bot tidak valid.',
-            'wa_bot_api_key.required' => 'API Key Server Bot wajib diisi.',
+            'wa_bot_url.url'                    => 'Format URL Server Bot tidak valid.',
             'wa_piket_reminder_minutes.integer' => 'Waktu pengingat harus berupa angka menit.',
             'wa_piket_reminder_minutes.min'     => 'Waktu pengingat minimal 0 menit.',
             'wa_piket_reminder_minutes.max'     => 'Waktu pengingat maksimal 120 menit.',
         ]);
 
-        Setting::set('wa_bot_url', rtrim($validated['wa_bot_url'], '/'));
-        Setting::set('wa_bot_api_key', $validated['wa_bot_api_key']);
+        if (!empty($validated['wa_bot_url'])) {
+            Setting::set('wa_bot_url', rtrim($validated['wa_bot_url'], '/'));
+        }
+        if (!empty($validated['wa_bot_api_key'])) {
+            Setting::set('wa_bot_api_key', $validated['wa_bot_api_key']);
+        }
         Setting::set('wa_bot_enabled', $request->boolean('wa_bot_enabled') ? '1' : '0');
         Setting::set('wa_satpam_phone', preg_replace('/[^0-9]/', '', (string) $request->input('wa_satpam_phone', '')));
         Setting::set('wa_piket_reminder_minutes', (string) ($request->input('wa_piket_reminder_minutes', 15)));
@@ -150,6 +152,12 @@ class WhatsappBotController extends Controller
      */
     public function disconnect()
     {
+        $clientId = config('services.sipintu.client_id');
+        if (!empty($clientId)) {
+            $sipintuUrl = rtrim((string) (config('services.sipintu.url') ?: 'https://sipintu.smkn1bangsri.sch.id'), '/');
+            return back()->with('info', "Pengelolaan nomor WhatsApp terpusat di SiPintu Gateway. Silakan buka menu WhatsApp Gateway di SiPintu ({$sipintuUrl}/admin/whatsapp-gateway) untuk menautkan atau mengganti nomor.");
+        }
+
         $botUrl = rtrim(Setting::get('wa_bot_url', config('services.whatsapp_bot.url', 'http://127.0.0.1:3789')), '/');
         $apiKey = Setting::get('wa_bot_api_key', config('services.whatsapp_bot.api_key', 'sipintu_wa_secret_key_2026'));
 
@@ -169,10 +177,23 @@ class WhatsappBotController extends Controller
     }
 
     /**
-     * Restart Socket Baileys
+     * Restart / Sinkronisasi Socket Baileys / SiPintu Gateway
      */
     public function restart()
     {
+        $clientId = config('services.sipintu.client_id');
+        $clientSecret = config('services.sipintu.client_secret');
+
+        if (!empty($clientId) && !empty($clientSecret)) {
+            $status = WhatsAppBot::status();
+            $connected = $status['data']['whatsapp_gateway']['is_connected'] ?? false;
+            $phone = $status['data']['whatsapp_gateway']['assigned_phone'] ?? null;
+            if ($connected) {
+                return back()->with('success', "Koneksi ke SiPintu Gateway aktif dan siap mengirim (Nomor: +{$phone}).");
+            }
+            return back()->with('success', 'Status koneksi SiPintu Gateway berhasil diperbarui.');
+        }
+
         $botUrl = rtrim(Setting::get('wa_bot_url', config('services.whatsapp_bot.url', 'http://127.0.0.1:3789')), '/');
         $apiKey = Setting::get('wa_bot_api_key', config('services.whatsapp_bot.api_key', 'sipintu_wa_secret_key_2026'));
 

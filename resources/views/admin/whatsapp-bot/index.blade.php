@@ -42,11 +42,11 @@
                 @endif
             </form>
 
-            <form action="{{ route('admin.whatsapp-bot.restart') }}" method="POST" onsubmit="return confirm('Restart socket Baileys?')">
+            <form action="{{ route('admin.whatsapp-bot.restart') }}" method="POST">
                 @csrf
-                <button type="submit" class="uiverse-btn-tactile px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+                <button type="submit" class="uiverse-btn-tactile px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition" title="Sinkronkan status koneksi SiPintu Gateway">
                     <i class="ti ti-refresh text-slate-500"></i>
-                    <span>Restart Socket</span>
+                    <span>Sinkron Status Gateway</span>
                 </button>
             </form>
 
@@ -262,6 +262,7 @@
             </div>
 
             {{-- KONDISI 3: SERVER BOT OFFLINE --}}
+            {{-- KONDISI 3: SERVER BOT OFFLINE --}}
             <div id="stateOffline" class="{{ !$botStatus['online'] ? '' : 'hidden' }}">
                 <div class="p-6 rounded-2xl bg-rose-50 border border-rose-200 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-5">
                     <div class="flex items-start gap-3.5">
@@ -269,21 +270,25 @@
                             <i class="ti ti-alert-triangle text-2xl"></i>
                         </div>
                         <div>
-                            <h3 class="text-sm sm:text-base font-bold text-rose-900">Server Microservice WhatsApp Bot Sedang Offline</h3>
-                            <p class="text-xs text-rose-700 mt-1 leading-relaxed">
-                                Aplikasi tidak dapat menghubungi server Baileys di <code class="bg-rose-100 px-1 py-0.5 rounded font-mono">{{ $settings['wa_bot_url'] }}</code>.
-                                Pastikan server bot dijalankan menggunakan terminal.
-                            </p>
-                            <div class="mt-3 p-2.5 rounded-lg bg-slate-900 text-slate-100 text-xs font-mono inline-block">
-                                cd whatsapp-bot && npm start
-                            </div>
+                            @if(($botStatus['gateway_type'] ?? '') === 'sipintu' || !empty(config('services.sipintu.client_id')))
+                                <h3 class="text-sm sm:text-base font-bold text-rose-900">Koneksi ke SiPintu WhatsApp Gateway Terputus</h3>
+                                <p class="text-xs text-rose-700 mt-1 leading-relaxed">
+                                    DiDispen tidak dapat menghubungi server SiPintu di <code class="bg-rose-100 px-1 py-0.5 rounded font-mono">{{ config('services.sipintu.url') ?: 'https://sipintu.smkn1bangsri.sch.id' }}</code>.
+                                    Pastikan server SiPintu aktif dan jaringan server terhubung ke internet.
+                                </p>
+                            @else
+                                <h3 class="text-sm sm:text-base font-bold text-rose-900">Server Microservice WhatsApp Bot Sedang Offline</h3>
+                                <p class="text-xs text-rose-700 mt-1 leading-relaxed">
+                                    Aplikasi tidak dapat menghubungi server bot di <code class="bg-rose-100 px-1 py-0.5 rounded font-mono">{{ $settings['wa_bot_url'] }}</code>.
+                                </p>
+                            @endif
                         </div>
                     </div>
 
                     <form action="{{ route('admin.whatsapp-bot.restart') }}" method="POST">
                         @csrf
                         <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shrink-0">
-                            <i class="ti ti-refresh"></i> Coba Hubungkan Ulang
+                            <i class="ti ti-refresh"></i> Cek Ulang Koneksi
                         </button>
                     </form>
                 </div>
@@ -296,9 +301,9 @@
         <div class="p-5 border-b border-slate-100">
             <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
                 <i class="ti ti-adjustments text-blue-600"></i>
-                Pengaturan Konfigurasi & Notifikasi Bot
+                Pengaturan Aturan Notifikasi WhatsApp DiDispen
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5">Atur preferensi server, kredensial API, dan pilih jenis notifikasi otomatis yang aktif.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Atur jadwal pengingat piket, nomor WhatsApp satpam gerbang, dan pilih jenis notifikasi otomatis yang aktif.</p>
         </div>
 
         <form action="{{ route('admin.whatsapp-bot.settings') }}" method="POST" class="p-5 sm:p-6 space-y-6">
@@ -320,28 +325,74 @@
                 </label>
             </div>
 
-            {{-- 2. Konfigurasi Server & Kredensial --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="wa_bot_url" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        URL Server Microservice Baileys <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="url" name="wa_bot_url" id="wa_bot_url" value="{{ old('wa_bot_url', $settings['wa_bot_url']) }}" required
-                        placeholder="http://127.0.0.1:3789"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition">
-                    <p class="text-[11px] text-slate-500 mt-1">Default lokal: <code>http://127.0.0.1:3789</code></p>
-                </div>
+            {{-- 2. Informasi Engine Gateway Terpusat (SiPintu Cloud Gateway) --}}
+            @if(!empty(config('services.sipintu.client_id')))
+                <div class="p-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/70 via-white to-indigo-50/50 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl shrink-0 shadow-xs">
+                                <i class="ti ti-cloud-lock"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    Engine: SiPintu Multi-Session WhatsApp Gateway
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        Aktif (Terpusat)
+                                    </span>
+                                </h4>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    Infrastruktur bot, sesi WhatsApp, dan koneksi socket ditangani oleh SiPintu. DiDiSpen hanya menjalankan aturan bisnis notifikasi di bawah.
+                                </p>
+                            </div>
+                        </div>
 
-                <div>
-                    <label for="wa_bot_api_key" class="block text-xs font-bold text-slate-700 mb-1.5">
-                        API Key Server Bot <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" name="wa_bot_api_key" id="wa_bot_api_key" value="{{ old('wa_bot_api_key', $settings['wa_bot_api_key']) }}" required
-                        placeholder="sipintu_wa_secret_key_2026"
-                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition">
-                    <p class="text-[11px] text-slate-500 mt-1">Harus sama persis dengan yang dikonfigurasi di file <code>whatsapp-bot/.env</code></p>
+                        <a href="{{ rtrim(config('services.sipintu.url') ?: 'https://sipintu.smkn1bangsri.sch.id', '/') }}/admin/whatsapp-gateway" target="_blank"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 text-xs font-semibold transition shrink-0 shadow-2xs">
+                            <i class="ti ti-external-link"></i>
+                            <span>Buka Gateway SiPintu</span>
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-xs">
+                        <div class="p-2.5 rounded-lg bg-white border border-slate-200/80">
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Gateway Endpoint</span>
+                            <span class="font-mono font-semibold text-slate-800 text-[11px] truncate block mt-0.5">{{ config('services.sipintu.url') ?: 'https://sipintu.smkn1bangsri.sch.id' }}</span>
+                        </div>
+                        <div class="p-2.5 rounded-lg bg-white border border-slate-200/80">
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Client ID Aplikasi</span>
+                            <span class="font-mono font-semibold text-slate-800 text-[11px] truncate block mt-0.5">{{ config('services.sipintu.client_id') }}</span>
+                        </div>
+                        <div class="p-2.5 rounded-lg bg-white border border-slate-200/80">
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Nomor Bot Terpasang</span>
+                            <span class="font-bold text-emerald-700 text-[11px] truncate block mt-0.5">
+                                {{ $botStatus['assigned_phone'] ? ('+' . $botStatus['assigned_phone']) : ($botStatus['user']['phone'] ?? 'Belum Ditautkan') }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            @else
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="wa_bot_url" class="block text-xs font-bold text-slate-700 mb-1.5">
+                            URL Server Microservice Baileys
+                        </label>
+                        <input type="url" name="wa_bot_url" id="wa_bot_url" value="{{ old('wa_bot_url', $settings['wa_bot_url']) }}"
+                            placeholder="http://127.0.0.1:3789"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition">
+                        <p class="text-[11px] text-slate-500 mt-1">Default lokal: <code>http://127.0.0.1:3789</code></p>
+                    </div>
+
+                    <div>
+                        <label for="wa_bot_api_key" class="block text-xs font-bold text-slate-700 mb-1.5">
+                            API Key Server Bot
+                        </label>
+                        <input type="text" name="wa_bot_api_key" id="wa_bot_api_key" value="{{ old('wa_bot_api_key', $settings['wa_bot_api_key']) }}"
+                            placeholder="sipintu_wa_secret_key_2026"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition">
+                    </div>
+                </div>
+            @endif
 
             {{-- 3. Pengaturan Waktu Pengingat Sesi Piket (Per Sesi) --}}
             <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/40 space-y-2">
