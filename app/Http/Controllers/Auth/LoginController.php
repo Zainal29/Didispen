@@ -173,6 +173,42 @@
         }
 
         if (! $user) {
+            // Cek apakah user sebenarnya terdaftar di role lain (misal guru yang mencoba login di tab siswa)
+            $userInOtherRole = User::where(function ($query) use ($loginInput, $nipFromSchoolEmail) {
+                $query->where('email', $loginInput)
+                    ->orWhere('nis_nip', $loginInput)
+                    ->orWhereHas('guru', function ($guruQuery) use ($loginInput) {
+                        $guruQuery->where('email', $loginInput)
+                            ->orWhere('nip', $loginInput);
+                    })
+                    ->orWhereHas('siswa', function ($siswaQuery) use ($loginInput) {
+                        $siswaQuery->where('nis_nip', $loginInput);
+                    });
+
+                if ($nipFromSchoolEmail) {
+                    $query->orWhere('nis_nip', $nipFromSchoolEmail)
+                        ->orWhereHas('guru', function ($guruQuery) use ($nipFromSchoolEmail) {
+                            $guruQuery->where('nip', $nipFromSchoolEmail);
+                        });
+                }
+            })->first();
+
+            if ($userInOtherRole && $userInOtherRole->role !== $credentials['role']) {
+                $roleLabel = match ($userInOtherRole->role) {
+                    'guru' => 'Guru',
+                    'siswa' => 'Siswa',
+                    'satpam' => 'Satpam',
+                    'admin' => 'Admin',
+                    default => ucfirst($userInOtherRole->role),
+                };
+
+                return back()
+                    ->withErrors([
+                        'email' => "Akun Anda terdaftar sebagai {$roleLabel}. Silakan pilih tab '{$roleLabel}' di atas untuk masuk.",
+                    ])
+                    ->withInput();
+            }
+
             return back()
                 ->withErrors([
                     'email' => $authErrorMessage,
@@ -279,6 +315,11 @@
             $user->password
         );
 
+        // Jika cocok dan password bukan 'password', pastikan password_changed_at tercatat
+        if ($passwordMatched && $credentials['password'] !== 'password' && $user->password_changed_at === null) {
+            $user->update(['password_changed_at' => now()]);
+        }
+
         // FALLBACK SIPINTU GATEWAY (Langkah 5 PERINTAH.MD):
         // Jika gagal verifikasi lokal dan bukan admin, tanyakan langsung ke SiPintu Gateway
         if (! $passwordMatched && $user->role !== 'admin') {
@@ -288,12 +329,25 @@
                 $passwordMatched = true;
                 $newHash = $sipFallback['password_hash'] ?? null;
 
+                $updateData = [
+                    'sipintu_last_synced_at' => now(),
+                ];
+
                 if ($newHash) {
-                    // Update password hash lokal tanpa double hashing
-                    DB::table('users')->where('id', $user->id)->update([
-                        'password' => $newHash,
-                        'sipintu_last_synced_at' => now(),
-                    ]);
+                    $updateData['password'] = $newHash;
+                }
+
+                if ($credentials['password'] !== 'password') {
+                    $updateData['password_changed_at'] = now();
+                }
+
+                DB::table('users')->where('id', $user->id)->update($updateData);
+
+                if (isset($updateData['password'])) {
+                    $user->password = $updateData['password'];
+                }
+                if (isset($updateData['password_changed_at'])) {
+                    $user->password_changed_at = $updateData['password_changed_at'];
                 }
             }
         }
@@ -466,7 +520,8 @@
         try {
             $response = Http::asForm()
                 ->acceptJson()
-                ->timeout(10)
+                ->connectTimeout(3)
+                ->timeout(5)
                 ->post("{$baseUrl}/api/v1/auth/verify-credentials", [
                     'client_id'     => $clientId,
                     'client_secret' => $clientSecret,

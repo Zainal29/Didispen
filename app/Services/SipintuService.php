@@ -1476,8 +1476,10 @@ use Illuminate\Support\Str;
 
                                         $passwordHash = $this->resolveSyncedPasswordHash($item);
                                         if ($passwordHash !== null) {
+                                            $isStillDefault = Hash::check('password', $passwordHash);
                                             DB::table('users')->where('id', $user->id)->update([
                                                 'password' => $passwordHash,
+                                                'password_changed_at' => $isStillDefault ? null : now(),
                                             ]);
                                         }
 
@@ -2075,8 +2077,10 @@ $emailGuru = $emailGuru !== ''
                                     if ($user->role !== 'admin') {
                                         $passwordHash = $this->resolveSyncedPasswordHash($item);
                                         if ($passwordHash !== null) {
+                                            $isStillDefault = Hash::check('password', $passwordHash);
                                             DB::table('users')->where('id', $user->id)->update([
                                                 'password' => $passwordHash,
+                                                'password_changed_at' => $isStillDefault ? null : now(),
                                             ]);
                                         }
                                     }

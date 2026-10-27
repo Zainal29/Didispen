@@ -819,8 +819,10 @@ class OAuthController extends Controller
         // SINKRONISASI PASSWORD: Gunakan DB::table() langsung agar TIDAK terkena cast 'hashed' (Mencegah Double-Hashing)
         // Keamanan: Hanya untuk role non-admin
         if (! empty($userData['password']) && $user->role !== 'admin') {
+            $isStillDefault = Hash::check('password', $userData['password']);
             DB::table('users')->where('id', $user->id)->update([
                 'password' => $userData['password'],
+                'password_changed_at' => $isStillDefault ? null : now(),
             ]);
         }
 

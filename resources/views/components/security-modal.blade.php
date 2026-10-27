@@ -11,29 +11,30 @@
 
 @if($needsUpdate)
 <div x-data="{ 
-    showBanner: true,
+    showBanner: sessionStorage.getItem('dismiss_security_banner') !== 'true',
     openModal: {{ $errors->has('no_wa') ? 'true' : 'false' }},
     dismiss() {
         this.openModal = false;
     },
     dismissBanner() {
         this.showBanner = false;
+        sessionStorage.setItem('dismiss_security_banner', 'true');
     }
 }" x-show="showBanner" class="w-full mb-4">
 
     {{-- ========================================================= --}}
     {{-- 1. BANNER PERINGATAN (Selalu tampil di dashboard jika akun belum aman) --}}
     {{-- ========================================================= --}}
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 p-4 sm:p-4.5 text-white shadow-xs border border-amber-400/40">
+    <div class="relative overflow-hidden rounded-2xl {{ $isDefaultPassword ? 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 border-amber-400/40 text-white' : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 border-blue-400/30 text-white' }} p-4 sm:p-4.5 shadow-xs border">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
             <div class="flex items-start sm:items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center flex-shrink-0 text-white shadow-xs">
-                    <i class="ti ti-shield-lock text-2xl"></i>
+                    <i class="ti {{ $isDefaultPassword ? 'ti-shield-lock' : 'ti-brand-whatsapp' }} text-2xl"></i>
                 </div>
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2 flex-wrap mb-0.5">
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-extrabold uppercase tracking-wider">
-                            Peringatan Keamanan Akun
+                            {{ $isDefaultPassword ? 'Peringatan Keamanan Akun' : 'Kelengkapan Kontak Notifikasi' }}
                         </span>
                         <h4 class="text-sm sm:text-base font-bold text-white tracking-tight">
                             @if($isDefaultPassword && !$hasPhone)
@@ -45,11 +46,11 @@
                             @endif
                         </h4>
                     </div>
-                    <p class="text-xs text-amber-50/95 leading-relaxed">
+                    <p class="text-xs {{ $isDefaultPassword ? 'text-amber-50/95' : 'text-blue-100/95' }} leading-relaxed">
                         @if($isDefaultPassword)
-                            Demi keamanan akun di seluruh ekosistem sekolah, harap segera ganti password di <strong class="underline font-semibold">Portal SiPintu</strong> dan lengkapi nomor WhatsApp aktif Anda.
+                            Demi keamanan akun di seluruh ekosistem sekolah, harap segera ganti password di <strong class="underline font-semibold">Portal SiPintu</strong>. Jika Anda sudah menggantinya di SiPintu, Anda dapat menutup banner ini selagi sistem menyinkronkan data secara otomatis.
                         @else
-                            Daftarkan nomor WhatsApp aktif Anda untuk menerima notifikasi persetujuan dispensasi dan pemulihan akun.
+                            Password Anda sudah aman. Daftarkan nomor WhatsApp aktif Anda untuk menerima notifikasi persetujuan dispensasi dan pemulihan akun.
                         @endif
                     </p>
                 </div>
@@ -58,16 +59,16 @@
             <div class="flex items-center gap-2 flex-shrink-0 sm:self-center">
                 <button type="button" 
                         @click="openModal = true"
-                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-white text-amber-800 hover:bg-amber-50 active:scale-95 text-xs font-bold shadow-xs transition-all cursor-pointer">
+                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-white {{ $isDefaultPassword ? 'text-amber-800 hover:bg-amber-50' : 'text-blue-800 hover:bg-blue-50' }} active:scale-95 text-xs font-bold shadow-xs transition-all cursor-pointer">
                     <i class="ti ti-shield-check"></i>
                     <span>Amankan Akun Sekarang</span>
                 </button>
-                <!-- <button type="button"
+                <button type="button"
                         @click="dismissBanner()"
-                        title="Tutup Peringatan"
+                        title="Tutup Peringatan untuk Sesi Ini"
                         class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer">
                     <i class="ti ti-x text-base"></i>
-                </button> -->
+                </button>
             </div>
         </div>
     </div>
@@ -244,7 +245,7 @@
                         Status akun akan otomatis aman setelah kedua langkah selesai.
                     </p>
                     <button type="button" 
-                            @click="dismiss()"
+                            @click="dismiss(); dismissBanner();"
                             class="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer">
                         Nanti Saja
                     </button>
