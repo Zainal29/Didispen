@@ -22,7 +22,7 @@
                 <form action="{{ route('admin.sipintu.sync-guru') }}" method="POST" class="flex items-center gap-2 w-full sm:w-auto"
                       onsubmit="this.querySelectorAll('button').forEach(b => { b.disabled=true; b.innerHTML='<i class=\'ti ti-loader-2 animate-spin\'></i> Sinkronisasi...'; });">
                     @csrf
-                    <button type="submit" class="flex-1 sm:flex-none min-h-[42px] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                    <button type="submit" class="uiverse-btn-tactile flex-1 sm:flex-none min-h-[42px] bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer">
                         <i class="ti ti-refresh text-base"></i>
                         <span>Sinkron SiPintu</span>
                     </button>
@@ -34,9 +34,9 @@
 
         {{-- FILTER BAR --}}
         <div class="px-5 sm:px-6 py-4 bg-slate-50/50 border-t border-b border-slate-100">
-            <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-end">
-                <div class="md:col-span-4">
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pencarian</label>
+            <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3.5 items-end">
+                <div class="sm:col-span-2 md:col-span-4">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Pencarian</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="ti ti-search text-base"></i></span>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama, NIP, Mapel, atau Alamat..."
@@ -45,7 +45,7 @@
                 </div>
 
                 <div class="md:col-span-3">
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Urutan Berdasarkan</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Urutan Berdasarkan</label>
                     <select name="sort" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
                         @foreach($sortable as $key => $label)
                             <option value="{{ $key }}" {{ $sort == $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -54,18 +54,18 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Arah</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Arah</label>
                     <select name="dir" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
                         <option value="asc" {{ $dir == 'asc' ? 'selected' : '' }}>Naik (A-Z)</option>
                         <option value="desc" {{ $dir == 'desc' ? 'selected' : '' }}>Turun (Z-A)</option>
                     </select>
                 </div>
 
-                <div class="md:col-span-3 flex gap-1.5">
-                    <button type="submit" class="flex-1 min-h-[38px] px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
+                <div class="sm:col-span-2 md:col-span-3 flex gap-1.5">
+                    <button type="submit" class="uiverse-btn-tactile flex-1 min-h-[38px] px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
                         <i class="ti ti-filter text-sm"></i> Filter
                     </button>
-                    <a href="{{ route('admin.guru.index') }}" class="min-h-[38px] min-w-[38px] px-2.5 py-2 bg-white border border-slate-200 text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-50 text-xs font-semibold transition-colors flex items-center justify-center" title="Reset Filter">
+                    <a href="{{ route('admin.guru.index') }}" class="uiverse-btn-tactile min-h-[38px] min-w-[38px] px-2.5 py-2 bg-white border border-slate-200 text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-50 text-xs font-semibold transition-colors flex items-center justify-center" title="Reset Filter">
                         <i class="ti ti-rotate-2 text-base"></i>
                     </a>
                 </div>
@@ -73,7 +73,7 @@
         </div>
 
         {{-- TABLE AREA --}}
-        <div class="overflow-x-auto min-w-0 w-full">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-slate-50/80 text-[11px] uppercase text-slate-400 font-bold tracking-wider border-b border-slate-100">
                     <tr>
@@ -158,11 +158,11 @@
                                 <button type="button"
                                         data-guru="{{ json_encode($g) }}"
                                         onclick="openModalFromButton(this)"
-                                        class="w-8 h-8 inline-flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white bg-blue-50 rounded-xl transition-all shadow-2xs"
+                                        class="uiverse-btn-tactile w-8 h-8 inline-flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white bg-blue-50 rounded-xl transition-all shadow-2xs border border-blue-100"
                                         title="Lihat Data">
                                     <i class="ti ti-eye text-base"></i>
                                 </button>
-                                <button onclick="deleteItem({{ $g->id }}, '{{ addslashes($g->nama_lengkap ?? '') }}')" class="w-8 h-8 inline-flex items-center justify-center text-rose-600 hover:bg-rose-600 hover:text-white bg-rose-50 rounded-xl transition-all shadow-2xs" title="Hapus Data">
+                                <button onclick="deleteItem({{ $g->id }}, '{{ addslashes($g->nama_lengkap ?? '') }}')" class="uiverse-btn-tactile w-8 h-8 inline-flex items-center justify-center text-rose-600 hover:bg-rose-600 hover:text-white bg-rose-50 rounded-xl transition-all shadow-2xs border border-rose-100" title="Hapus Data">
                                     <i class="ti ti-trash text-base"></i>
                                 </button>
                             </div>

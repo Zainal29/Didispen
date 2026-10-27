@@ -23,7 +23,7 @@
                     @endforeach
                 </select>
             </form>
-            <button onclick="openModal()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shadow-blue-500/25">
+            <button onclick="openModal()" class="uiverse-btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shadow-blue-500/25">
                 <i class="ti ti-plus text-base"></i>
                 <span>Tambah Kelas</span>
             </button>
@@ -31,7 +31,7 @@
     </div>
 
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-        <div class="overflow-x-auto min-w-0 w-full sidebar-scroll">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] uppercase text-slate-500 font-bold tracking-wider">
                     <tr>
@@ -61,10 +61,10 @@
                         </td>
                         <td class="p-4 text-center whitespace-nowrap">
                             <div class="inline-flex items-center gap-1">
-                                <button onclick='openModal(@json($k))' class="w-8 h-8 inline-flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                <button onclick='openModal(@json($k))' class="uiverse-btn-tactile w-8 h-8 inline-flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                                     <i class="ti ti-edit text-sm"></i>
                                 </button>
-                                <button onclick="deleteItem({{ $k->id }}, '{{ $k->nama_kelas }}')" class="w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus">
+                                <button onclick="deleteItem({{ $k->id }}, '{{ $k->nama_kelas }}')" class="uiverse-btn-tactile w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus">
                                     <i class="ti ti-trash text-sm"></i>
                                 </button>
                             </div>
@@ -121,8 +121,8 @@
                 </div>
             </div>
             <div class="p-4 sm:p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 flex-shrink-0">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-200 bg-white rounded-xl text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors">Batal</button>
-                <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-xs font-bold transition-colors shadow-sm shadow-blue-500/25">Simpan</button>
+                <button type="button" onclick="closeModal()" class="uiverse-btn-tactile px-4 py-2 border border-slate-200 bg-white rounded-xl text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors">Batal</button>
+                <button type="submit" class="uiverse-btn-tactile px-5 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl text-xs font-bold transition-colors shadow-sm shadow-blue-500/25">Simpan</button>
             </div>
         </form>
     </div>

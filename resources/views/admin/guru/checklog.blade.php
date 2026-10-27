@@ -16,7 +16,7 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto min-w-0 w-full">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-slate-50/80 text-[11px] uppercase text-slate-400 font-bold tracking-wider border-b border-slate-100">
                     <tr>
