@@ -28,13 +28,13 @@
             <form action="{{ route('admin.whatsapp-bot.toggle') }}" method="POST">
                 @csrf
                 @if($settings['wa_bot_enabled'])
-                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5 transition" title="Klik untuk mematikan bot">
+                    <button type="submit" class="uiverse-btn-tactile px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1.5 transition" title="Klik untuk mematikan bot">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         <i class="ti ti-power"></i>
                         <span>Bot: ON (Matikan)</span>
                     </button>
                 @else
-                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold flex items-center gap-1.5 transition" title="Klik untuk menghidupkan bot">
+                    <button type="submit" class="uiverse-btn-tactile px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold flex items-center gap-1.5 transition" title="Klik untuk menghidupkan bot">
                         <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                         <i class="ti ti-power"></i>
                         <span>Bot: OFF (Aktifkan)</span>
@@ -44,14 +44,14 @@
 
             <form action="{{ route('admin.whatsapp-bot.restart') }}" method="POST" onsubmit="return confirm('Restart socket Baileys?')">
                 @csrf
-                <button type="submit" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+                <button type="submit" class="uiverse-btn-tactile px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
                     <i class="ti ti-refresh text-slate-500"></i>
                     <span>Restart Socket</span>
                 </button>
             </form>
 
             <button type="button" onclick="document.getElementById('sectionSettings').scrollIntoView({ behavior: 'smooth' })"
-                class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm shadow-blue-500/25">
+                class="uiverse-btn-tactile px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm shadow-blue-500/25">
                 <i class="ti ti-settings"></i>
                 <span>Pengaturan</span>
             </button>
@@ -777,14 +777,14 @@
             @if($stats['failed'] > 0)
                 <form action="{{ route('admin.whatsapp-bot.retry-all') }}" method="POST" onsubmit="return confirm('Kirim ulang semua pesan gagal?')">
                     @csrf
-                    <button type="submit" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
+                    <button type="submit" class="uiverse-btn-tactile px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition">
                         <i class="ti ti-refresh"></i> Kirim Ulang Gagal ({{ $stats['failed'] }})
                     </button>
                 </form>
             @endif
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="min-w-full divide-y divide-slate-100 text-xs sm:text-sm">
                 <thead class="bg-slate-50/70">
                     <tr>

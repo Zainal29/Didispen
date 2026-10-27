@@ -20,7 +20,7 @@
                 </p>
             </div>
         </div>
-        <button onclick="openModal('add')" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition-all shadow-sm shadow-blue-500/25">
+        <button onclick="openModal('add')" class="uiverse-btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white transition-all shadow-sm shadow-blue-500/25">
             <i class="ti ti-plus text-base"></i>
             <span>Tambah Template Baru</span>
         </button>
@@ -33,7 +33,7 @@
                 $isSatpam = str_contains($tpl->slug, 'satpam');
                 $isPiket = str_contains($tpl->slug, 'piket') || str_contains($tpl->slug, 'tukar');
             @endphp
-            <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md transition-shadow flex flex-col justify-between">
+            <div class="uiverse-card-lift bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md transition-shadow flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-start mb-3 gap-2">
                         <div class="min-w-0">
@@ -66,12 +66,12 @@
                 </div>
 
                 <div class="flex gap-2 pt-3 border-t border-slate-100">
-                    <button onclick="openModal('edit', {{ $tpl->id }})" class="flex-1 min-h-[38px] px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 flex items-center justify-center gap-1.5 transition-colors">
+                    <button onclick="openModal('edit', {{ $tpl->id }})" class="uiverse-btn-tactile flex-1 min-h-[38px] px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 flex items-center justify-center gap-1.5 transition-colors">
                         <i class="ti ti-edit text-sm"></i> Edit
                     </button>
                     <form method="POST" action="{{ route('admin.whatsapp-templates.destroy', $tpl) }}" onsubmit="return confirm('Hapus template ini?')" class="flex-1">
                         @csrf @method('DELETE')
-                        <button type="submit" class="w-full min-h-[38px] px-3 py-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold hover:bg-rose-100 flex items-center justify-center gap-1.5 transition-colors">
+                        <button type="submit" class="uiverse-btn-tactile w-full min-h-[38px] px-3 py-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold hover:bg-rose-100 flex items-center justify-center gap-1.5 transition-colors">
                             <i class="ti ti-trash text-sm"></i> Hapus
                         </button>
                     </form>
@@ -187,13 +187,13 @@
         </div>
 
         <div class="p-4 sm:p-5 border-t border-slate-100 bg-slate-50 flex gap-2 flex-shrink-0">
-            <button type="button" onclick="closeModal()" class="flex-1 min-h-[42px] px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-100 flex items-center justify-center text-xs sm:text-sm transition-colors">
+            <button type="button" onclick="closeModal()" class="uiverse-btn-tactile flex-1 min-h-[42px] px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-100 flex items-center justify-center text-xs sm:text-sm transition-colors">
                 Batal
             </button>
-            <button type="button" onclick="fetchPreview()" class="flex-1 min-h-[42px] px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-200 flex items-center justify-center text-xs sm:text-sm transition-colors gap-1.5">
+            <button type="button" onclick="fetchPreview()" class="uiverse-btn-tactile flex-1 min-h-[42px] px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-200 flex items-center justify-center text-xs sm:text-sm transition-colors gap-1.5">
                 <i class="ti ti-eye text-sm"></i> Preview
             </button>
-            <button type="submit" form="templateForm" class="flex-1 min-h-[42px] px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 flex items-center justify-center text-xs sm:text-sm transition-colors shadow-sm shadow-blue-500/25 gap-1.5">
+            <button type="submit" form="templateForm" class="uiverse-btn-tactile flex-1 min-h-[42px] px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl font-bold flex items-center justify-center text-xs sm:text-sm transition-colors shadow-sm shadow-blue-500/25 gap-1.5">
                 <i class="ti ti-check text-sm"></i> Simpan
             </button>
         </div>
