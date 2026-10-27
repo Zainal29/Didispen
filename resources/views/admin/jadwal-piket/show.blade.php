@@ -18,18 +18,18 @@
         </div>
         <div class="flex items-center gap-2 self-start sm:self-center shrink-0 flex-wrap">
             <a href="{{ route('admin.jadwal-piket.edit', $jadwal) }}"
-               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white transition-colors shadow-2xs">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white transition-colors shadow-2xs">
                 <i class="ti ti-edit text-base"></i>
                 <span>Edit Jadwal</span>
             </a>
             <button type="button"
                     onclick="confirmDeleteJadwal()"
-                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white transition-colors shadow-2xs cursor-pointer">
+                    class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white transition-colors shadow-2xs cursor-pointer">
                 <i class="ti ti-trash text-base"></i>
                 <span>Hapus Jadwal</span>
             </button>
             <a href="{{ route('admin.jadwal-piket.index') }}"
-               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors">
                 <i class="ti ti-arrow-left text-base"></i>
                 <span>Kembali</span>
             </a>
@@ -75,7 +75,7 @@
                 @csrf
                 @method('PATCH')
                 <button type="submit"
-                        class="px-4 py-2 rounded-xl text-xs font-bold transition-colors border {{ $jadwal->is_active ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' }}">
+                        class="uiverse-btn-tactile px-4 py-2 rounded-xl text-xs font-bold transition-colors border {{ $jadwal->is_active ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' }}">
                     <i class="ti {{ $jadwal->is_active ? 'ti-ban mr-1' : 'ti-check mr-1' }}"></i>
                     {{ $jadwal->is_active ? 'Nonaktifkan Jadwal' : 'Aktifkan Jadwal' }}
                 </button>
@@ -204,7 +204,7 @@
                 <i class="ti ti-arrows-exchange text-indigo-600"></i> Riwayat Penggantian Guru Piket ({{ $jadwal->pertukaranJadwalPikets->count() }})
             </h4>
 
-            <div class="overflow-x-auto min-w-0 w-full">
+            <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
                 <table class="w-full text-left text-xs text-slate-600 border-collapse">
                     <thead class="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-100">
                         <tr>

@@ -3,6 +3,23 @@
 @section('title', 'Tambah Jadwal Guru Piket')
 @section('page-title', 'Tambah Jadwal Guru Piket')
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/timepicker-ui@4.6.0/dist/css/main.css">
+<style>
+    /* Penyesuaian tema TimepickerUI agar senada dengan warna brand Digipen */
+    :root {
+        --tp-ui-primary: #2563eb !important;
+        --tp-ui-primary-hover: #1d4ed8 !important;
+        --tp-ui-border-radius: 1rem !important;
+        --tp-ui-font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }
+    .timepicker-ui-modal {
+        border-radius: 1.25rem !important;
+        box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -105,33 +122,69 @@
             </div>
 
             {{-- 3. Waktu Sesi (Jam Mulai & Jam Selesai) --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                        Jam Mulai <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none"><i class="ti ti-clock text-base"></i></span>
-                        <input type="time" name="jam_mulai" id="jam_mulai" required value="{{ old('jam_mulai', '07:00') }}"
-                               class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow">
+            <div class="space-y-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Jam Mulai <span class="text-red-500">*</span>
+                            </label>
+                            <span class="text-[11px] text-blue-600 font-medium cursor-pointer hover:underline" onclick="pickerMulai?.open()">Buka Jam</span>
+                        </div>
+                        <div class="relative group">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-blue-500 pointer-events-none group-focus-within:text-blue-600">
+                                <i class="ti ti-clock text-base"></i>
+                            </span>
+                            <input type="text" name="jam_mulai" id="jam_mulai" required value="{{ old('jam_mulai', '07:00') }}"
+                                   placeholder="07:00" autocomplete="off"
+                                   class="w-full pl-10 pr-10 py-2.5 bg-white hover:bg-slate-50/80 border border-gray-200 rounded-lg text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer">
+                            <button type="button" id="btn_picker_mulai" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors" title="Buka Pemilih Jam">
+                                <i class="ti ti-clock-play text-lg"></i>
+                            </button>
+                        </div>
+                        @error('jam_mulai')
+                            <p class="text-xs text-red-600 mt-1.5 font-medium">{{ $message }}</p>
+                        @enderror
                     </div>
-                    @error('jam_mulai')
-                        <p class="text-xs text-red-600 mt-1.5 font-medium">{{ $message }}</p>
-                    @enderror
+
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Jam Selesai <span class="text-red-500">*</span>
+                            </label>
+                            <span class="text-[11px] text-blue-600 font-medium cursor-pointer hover:underline" onclick="pickerSelesai?.open()">Buka Jam</span>
+                        </div>
+                        <div class="relative group">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-blue-500 pointer-events-none group-focus-within:text-blue-600">
+                                <i class="ti ti-clock text-base"></i>
+                            </span>
+                            <input type="text" name="jam_selesai" id="jam_selesai" required value="{{ old('jam_selesai', '09:30') }}"
+                                   placeholder="09:30" autocomplete="off"
+                                   class="w-full pl-10 pr-10 py-2.5 bg-white hover:bg-slate-50/80 border border-gray-200 rounded-lg text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer">
+                            <button type="button" id="btn_picker_selesai" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors" title="Buka Pemilih Jam">
+                                <i class="ti ti-clock-play text-lg"></i>
+                            </button>
+                        </div>
+                        @error('jam_selesai')
+                            <p class="text-xs text-red-600 mt-1.5 font-medium">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                        Jam Selesai <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none"><i class="ti ti-clock text-base"></i></span>
-                        <input type="time" name="jam_selesai" id="jam_selesai" required value="{{ old('jam_selesai', '09:30') }}"
-                               class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow">
-                    </div>
-                    @error('jam_selesai')
-                        <p class="text-xs text-red-600 mt-1.5 font-medium">{{ $message }}</p>
-                    @enderror
+                {{-- Preset Cepat Jam Piket --}}
+                <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span class="text-[11px] font-semibold text-slate-400 flex items-center gap-1 mr-1">
+                        <i class="ti ti-sparkles text-amber-500"></i> Preset Cepat:
+                    </span>
+                    <button type="button" onclick="setJamPreset('07:00', '09:30')" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 border border-slate-200/60 transition-all hover:scale-102 active:scale-98">
+                        Pagi (07:00 - 09:30)
+                    </button>
+                    <button type="button" onclick="setJamPreset('09:45', '12:15')" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 border border-slate-200/60 transition-all hover:scale-102 active:scale-98">
+                        Siang (09:45 - 12:15)
+                    </button>
+                    <button type="button" onclick="setJamPreset('12:45', '15:30')" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 border border-slate-200/60 transition-all hover:scale-102 active:scale-98">
+                        Sore (12:45 - 15:30)
+                    </button>
                 </div>
             </div>
 
@@ -404,7 +457,82 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // 5. Inisialisasi Timepicker-UI (24h Analog Clock)
+    initTimepickers();
 });
+
+let pickerMulai = null;
+let pickerSelesai = null;
+
+function initTimepickers() {
+    const elMulai = document.getElementById('jam_mulai');
+    const elSelesai = document.getElementById('jam_selesai');
+
+    if (typeof TimepickerUI !== 'undefined') {
+        const pickerConfig = {
+            clock: {
+                type: '24h',
+                incrementMinutes: 5,
+            },
+            ui: {
+                theme: 'basic',
+                animation: true,
+                backdrop: true,
+            },
+            labels: {
+                ok: 'Pilih',
+                cancel: 'Batal',
+                clear: 'Hapus',
+                clockTitle: 'Pilih Jam',
+                hour: 'Jam',
+                minute: 'Menit',
+            }
+        };
+
+        if (elMulai) {
+            pickerMulai = new TimepickerUI(elMulai, {
+                ...pickerConfig,
+                labels: { ...pickerConfig.labels, clockTitle: 'Pilih Jam Mulai' }
+            });
+            pickerMulai.create();
+            document.getElementById('btn_picker_mulai')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                pickerMulai.open();
+            });
+        }
+
+        if (elSelesai) {
+            pickerSelesai = new TimepickerUI(elSelesai, {
+                ...pickerConfig,
+                labels: { ...pickerConfig.labels, clockTitle: 'Pilih Jam Selesai' }
+            });
+            pickerSelesai.create();
+            document.getElementById('btn_picker_selesai')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                pickerSelesai.open();
+            });
+        }
+    }
+}
+
+function setJamPreset(mulai, selesai) {
+    const elMulai = document.getElementById('jam_mulai');
+    const elSelesai = document.getElementById('jam_selesai');
+    if (elMulai) {
+        elMulai.value = mulai;
+        if (pickerMulai) {
+            try { pickerMulai.setValue(mulai); } catch (_) {}
+        }
+    }
+    if (elSelesai) {
+        elSelesai.value = selesai;
+        if (pickerSelesai) {
+            try { pickerSelesai.setValue(selesai); } catch (_) {}
+        }
+    }
+}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/timepicker-ui@4.6.0/dist/index.umd.js"></script>
 @endpush
 @endsection

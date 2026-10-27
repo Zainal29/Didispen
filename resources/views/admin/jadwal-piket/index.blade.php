@@ -19,7 +19,7 @@
 
             <div class="flex items-center gap-2 w-full sm:w-auto">
                 <a href="{{ route('admin.jadwal-piket.create') }}"
-                   class="flex-1 sm:flex-none min-h-[40px] bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
+                   class="uiverse-btn-tactile flex-1 sm:flex-none min-h-[40px] bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
                     <i class="ti ti-plus text-base"></i>
                     <span>Tambah Jadwal</span>
                 </a>
@@ -32,7 +32,7 @@
         <div class="px-5 sm:px-6 py-4 bg-slate-50/50 border-t border-b border-slate-100">
             <form method="GET" action="{{ route('admin.jadwal-piket.index') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3.5 items-end">
                 <div class="md:col-span-4">
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cari Guru</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Cari Guru</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="ti ti-search text-base"></i></span>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama atau NIP guru..."
@@ -41,7 +41,7 @@
                 </div>
 
                 <div class="md:col-span-3">
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Hari</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Hari</label>
                     @php
                         $namaHari = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
                     @endphp
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="md:col-span-3">
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Status</label>
                     <select name="status" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
                         <option value="">Semua Status</option>
                         <option value="aktif" {{ request('status') === 'aktif' ? 'selected' : '' }}>Aktif</option>
@@ -63,11 +63,11 @@
                 </div>
 
                 <div class="md:col-span-2 flex gap-1.5">
-                    <button type="submit" class="flex-1 min-h-[38px] py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-blue-500/20 flex items-center justify-center gap-1 cursor-pointer">
+                    <button type="submit" class="uiverse-btn-tactile flex-1 min-h-[38px] py-2 px-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-1 cursor-pointer">
                         <i class="ti ti-filter text-sm"></i> Filter
                     </button>
                     @if(request()->hasAny(['search', 'hari', 'status']))
-                        <a href="{{ route('admin.jadwal-piket.index') }}" class="min-h-[38px] min-w-[38px] py-2 px-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center" title="Reset Filter">
+                        <a href="{{ route('admin.jadwal-piket.index') }}" class="uiverse-btn-tactile min-h-[38px] min-w-[38px] py-2 px-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center" title="Reset Filter">
                             <i class="ti ti-rotate-2 text-base"></i>
                         </a>
                     @endif

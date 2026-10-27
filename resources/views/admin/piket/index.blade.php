@@ -28,7 +28,7 @@
 
         {{-- Stat Cards --}}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="p-4 rounded-xl bg-slate-50/70 border border-slate-200/70 flex items-center gap-3.5">
+            <div class="uiverse-card-lift p-4 rounded-xl bg-slate-50/70 border border-slate-200/70 flex items-center gap-3.5">
                 <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
                     <i class="ti ti-users text-lg"></i>
                 </div>
@@ -38,7 +38,7 @@
                 </div>
             </div>
 
-            <div class="p-4 rounded-xl bg-slate-50/70 border border-slate-200/70 flex items-center gap-3.5">
+            <div class="uiverse-card-lift p-4 rounded-xl bg-slate-50/70 border border-slate-200/70 flex items-center gap-3.5">
                 <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
                     <i class="ti ti-file-text text-lg"></i>
                 </div>
@@ -48,7 +48,7 @@
                 </div>
             </div>
 
-            <div class="p-4 rounded-xl bg-slate-50/70 border border-slate-200/70 flex items-center gap-3.5">
+            <div class="uiverse-card-lift p-4 rounded-xl bg-slate-50/70 border border-slate-200/70 flex items-center gap-3.5">
                 <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
                     <i class="ti ti-award text-lg"></i>
                 </div>
@@ -75,7 +75,7 @@
             </span>
         </div>
 
-        <div class="overflow-x-auto min-w-0 w-full">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left border-collapse text-sm">
                 <thead class="bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-200/80">
                     <tr>
@@ -143,7 +143,7 @@
             </span>
         </div>
 
-        <div class="overflow-x-auto min-w-0 w-full">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left border-collapse text-sm">
                 <thead class="bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-200/80">
                     <tr>
