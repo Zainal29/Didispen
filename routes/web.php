@@ -245,6 +245,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
         Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead'])->name('notifikasi.read');
         Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.readAll');
+        Route::delete('notifikasi/clear-all', [NotifikasiController::class, 'clearAll'])->name('notifikasi.clearAll');
+        Route::delete('notifikasi/{notifikasi}', [NotifikasiController::class, 'destroy'])->name('notifikasi.destroy');
 
         Route::post('pengajuan/{dispensasi}/upload-foto-bukti', [\App\Http\Controllers\Siswa\PengajuanController::class, 'uploadFotoBukti'])->name('pengajuan.upload-foto-bukti');
         Route::delete('pengajuan/{dispensasi}/hapus-foto-bukti', [\App\Http\Controllers\Siswa\PengajuanController::class, 'hapusFotoBukti'])->name('pengajuan.hapus-foto-bukti');

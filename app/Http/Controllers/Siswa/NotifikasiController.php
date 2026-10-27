@@ -37,4 +37,22 @@ class NotifikasiController extends Controller
 
         return redirect()->back()->with('success', 'Semua notifikasi ditandai sudah dibaca.');
     }
+
+    public function destroy(Notifikasi $notifikasi)
+    {
+        if ($notifikasi->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $notifikasi->delete();
+
+        return redirect()->back()->with('success', 'Notifikasi berhasil dihapus.');
+    }
+
+    public function clearAll()
+    {
+        Notifikasi::where('user_id', auth()->id())->delete();
+
+        return redirect()->back()->with('success', 'Semua notifikasi berhasil dihapus.');
+    }
 }
