@@ -12,10 +12,10 @@ class WhatsAppBot
      * 
      * @param string $phone Nomor tujuan (format 0812... atau 62812...)
      * @param string $message Isi pesan WhatsApp
-     * @param bool $sync false = antrean background SiPintu (202 Accepted), true = kirim langsung (200 OK)
+     * @param bool $sync true = kirim langsung via socket WA (200 OK, rekomendasi), false = antrean background SiPintu (202 Accepted)
      * @return array ['success' => bool, 'data' => ?array, 'error' => ?string]
      */
-    public static function send(string $phone, string $message, bool $sync = false): array
+    public static function send(string $phone, string $message, bool $sync = true): array
     {
         $baseUrl = rtrim((string) (config('services.sipintu.url') ?: config('services.sipintu.api_url') ?: 'https://sipintu.smkn1bangsri.sch.id'), '/');
         $url = $baseUrl . '/api/v1/whatsapp/send';
@@ -35,7 +35,7 @@ class WhatsAppBot
                 'X-Client-Secret' => $clientSecret,
                 'Accept'          => 'application/json',
                 'Content-Type'    => 'application/json',
-            ])->timeout(12)->post($url, [
+            ])->timeout(20)->post($url, [
                 'phone'   => $phone,
                 'message' => $message,
                 'sync'    => $sync,
