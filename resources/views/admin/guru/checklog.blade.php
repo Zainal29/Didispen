@@ -4,6 +4,8 @@
 
 @section('content')
 <div class="space-y-5">
+    @include('components.alert')
+
     <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 overflow-hidden">
         <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
             <div>
@@ -24,7 +26,8 @@
                         <th class="p-3.5 text-left">Tujuan & Keterangan</th>
                         <th class="p-3.5 text-left">Waktu Keluar</th>
                         <th class="p-3.5 text-left">Waktu Kembali</th>
-                        <th class="p-3.5 pr-5 text-left">Status</th>
+                        <th class="p-3.5 text-left">Status</th>
+                        <th class="p-3.5 pr-5 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
@@ -50,7 +53,7 @@
                         <td class="p-3.5 font-mono text-slate-500 whitespace-nowrap">
                             {{ $log->jam_kembali ? $log->jam_kembali->timezone('Asia/Jakarta')->format('d/m/Y H:i') . ' WIB' : '-' }}
                         </td>
-                        <td class="p-3.5 pr-5 whitespace-nowrap">
+                        <td class="p-3.5 whitespace-nowrap">
                             @if($log->status === 'keluar')
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                                     <span class="w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping"></span>
@@ -62,10 +65,21 @@
                                 </span>
                             @endif
                         </td>
+                        <td class="p-3.5 pr-5 text-center whitespace-nowrap">
+                            <form action="{{ route('admin.guru.checklog.destroy', $log) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data checklog ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        class="uiverse-btn-tactile w-8 h-8 inline-flex items-center justify-center text-rose-600 hover:bg-rose-600 hover:text-white bg-rose-50 rounded-xl transition-all shadow-2xs border border-rose-100 cursor-pointer" 
+                                        title="Hapus Checklog">
+                                    <i class="ti ti-trash text-base"></i>
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="p-12 text-center text-slate-400">
+                        <td colspan="6" class="p-12 text-center text-slate-400">
                             <i class="ti ti-clipboard-list text-4xl mb-2 text-slate-300 block"></i>
                             <p class="text-xs font-semibold">Belum ada data log keluar/masuk guru.</p>
                         </td>

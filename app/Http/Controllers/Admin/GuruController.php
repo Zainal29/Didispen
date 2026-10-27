@@ -114,4 +114,11 @@ class GuruController extends Controller
 
         return view('admin.guru.checklog', compact('logs'));
     }
+
+    public function destroyChecklog(GuruChecklog $log)
+    {
+        $log->delete();
+
+        return redirect()->route('admin.guru.checklog')->with('success', 'Data checklog guru berhasil dihapus.');
+    }
 }

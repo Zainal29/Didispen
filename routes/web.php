@@ -118,6 +118,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('audit-log/clear', [Admin\AuditLogController::class, 'clear'])->name('audit.clear');
                 Route::delete('audit-log/{auditLog}', [Admin\AuditLogController::class, 'destroy'])->name('audit.destroy');
                 Route::get('guru/checklog', [Admin\GuruController::class, 'checklog'])->name('guru.checklog');
+                Route::delete('guru/checklog/{log}', [Admin\GuruController::class, 'destroyChecklog'])->name('guru.checklog.destroy');
 
                 // Sinkronisasi SiPintu Gateway
                 Route::post('sipintu/sync-siswa', [Admin\SipintuSyncController::class, 'syncSiswa'])->name('sipintu.sync-siswa');
