@@ -32,33 +32,35 @@
     @endif
 
     {{-- TAB FILTER ARSIP (Preline Segmented Controls + Tactile Pills) --}}
-    <div class="p-1 bg-slate-200/70 rounded-2xl inline-flex items-center gap-1.5 shadow-inner max-w-full overflow-x-auto">
-        <a href="{{ request()->fullUrlWithQuery(['arsip' => 'aktif']) }}"
-           class="uiverse-btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $arsipFilter === 'aktif' ? 'bg-white text-blue-700 shadow-sm shadow-slate-300' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
-            <i class="ti ti-circle-check text-base text-emerald-500"></i>
-            <span>Dispensasi Aktif</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $arsipFilter === 'aktif' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : 'bg-slate-200 text-slate-700' }}">
-                {{ $countAktif }}
-            </span>
-        </a>
+    <div class="w-full overflow-x-auto min-w-0 touch-pan-x pb-1 scrollbar-none">
+        <div class="p-1 bg-slate-200/80 rounded-2xl inline-flex items-center gap-1.5 shadow-inner min-w-max">
+            <a href="{{ request()->fullUrlWithQuery(['arsip' => 'aktif']) }}"
+               class="uiverse-btn-tactile shrink-0 whitespace-nowrap inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $arsipFilter === 'aktif' ? 'bg-white text-blue-700 shadow-sm shadow-slate-300' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
+                <i class="ti ti-circle-check text-base text-emerald-500"></i>
+                <span><span class="hidden sm:inline">Dispensasi </span>Aktif</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $arsipFilter === 'aktif' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : 'bg-slate-200 text-slate-700' }}">
+                    {{ $countAktif }}
+                </span>
+            </a>
 
-        <a href="{{ request()->fullUrlWithQuery(['arsip' => 'arsip']) }}"
-           class="uiverse-btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $arsipFilter === 'arsip' ? 'bg-white text-amber-700 shadow-sm shadow-slate-300' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
-            <i class="ti ti-archive text-base text-amber-500"></i>
-            <span>Arsip (Terhapus)</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $arsipFilter === 'arsip' ? 'bg-amber-50 text-amber-800 border border-amber-200/60' : 'bg-slate-200 text-slate-700' }}">
-                {{ $countArsip }}
-            </span>
-        </a>
+            <a href="{{ request()->fullUrlWithQuery(['arsip' => 'arsip']) }}"
+               class="uiverse-btn-tactile shrink-0 whitespace-nowrap inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $arsipFilter === 'arsip' ? 'bg-white text-amber-700 shadow-sm shadow-slate-300' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
+                <i class="ti ti-archive text-base text-amber-500"></i>
+                <span>Arsip<span class="hidden sm:inline"> (Terhapus)</span></span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $arsipFilter === 'arsip' ? 'bg-amber-50 text-amber-800 border border-amber-200/60' : 'bg-slate-200 text-slate-700' }}">
+                    {{ $countArsip }}
+                </span>
+            </a>
 
-        <a href="{{ request()->fullUrlWithQuery(['arsip' => 'semua']) }}"
-           class="uiverse-btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $arsipFilter === 'semua' ? 'bg-white text-slate-900 shadow-sm shadow-slate-300' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
-            <i class="ti ti-layers-linked text-base text-slate-500"></i>
-            <span>Semua Data</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $arsipFilter === 'semua' ? 'bg-slate-100 text-slate-800 border border-slate-300' : 'bg-slate-200 text-slate-700' }}">
-                {{ $countSemua }}
-            </span>
-        </a>
+            <a href="{{ request()->fullUrlWithQuery(['arsip' => 'semua']) }}"
+               class="uiverse-btn-tactile shrink-0 whitespace-nowrap inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $arsipFilter === 'semua' ? 'bg-white text-slate-900 shadow-sm shadow-slate-300' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
+                <i class="ti ti-layers-linked text-base text-slate-500"></i>
+                <span>Semua Data</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $arsipFilter === 'semua' ? 'bg-slate-100 text-slate-800 border border-slate-300' : 'bg-slate-200 text-slate-700' }}">
+                    {{ $countSemua }}
+                </span>
+            </a>
+        </div>
     </div>
 
     {{-- MAIN CARD: FILTER & TABLE (Preline Modern Card) --}}
