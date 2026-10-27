@@ -10,6 +10,7 @@ use App\Models\WhatsappLog;
 use App\Services\WhatsappMessageService;
 use App\Services\WhatsAppBot;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class WhatsappBotController extends Controller
@@ -87,9 +88,9 @@ class WhatsappBotController extends Controller
     /**
      * Endpoint AJAX Polling Status & QR Code (Real-time di browser)
      */
-    public function statusAjax()
+    public function statusAjax(Request $request)
     {
-        $botStatus = $this->fetchBotStatus();
+        $botStatus = $this->fetchBotStatus($request->boolean('refresh'));
         return response()->json($botStatus);
     }
 
@@ -181,6 +182,8 @@ class WhatsappBotController extends Controller
      */
     public function restart()
     {
+        Cache::forget('wa_bot_status_cache');
+
         $clientId = config('services.sipintu.client_id');
         $clientSecret = config('services.sipintu.client_secret');
 
@@ -275,10 +278,34 @@ class WhatsappBotController extends Controller
     }
 
     /**
-     * Ambil status detail dan koneksi nomor WhatsApp
+     * Ambil status detail dan koneksi nomor WhatsApp (dengan caching 10 detik agar cepat dan tahan lonjakan request)
      */
-    private function fetchBotStatus(): array
+    private function fetchBotStatus(bool $force = false): array
     {
+        if ($force) {
+            Cache::forget('wa_bot_status_cache');
+        }
+
+        return Cache::remember('wa_bot_status_cache', 10, function () {
+            return $this->resolveBotStatus();
+        });
+    }
+
+    private function resolveBotStatus(): array
+    {
+        $default = [
+            'online'         => false,
+            'connected'      => false,
+            'gateway_type'   => 'sipintu',
+            'status'         => 'offline',
+            'assigned_phone' => null,
+            'auto_fallback'  => false,
+            'user'           => null,
+            'qr'             => null,
+            'qr_image'       => null,
+            'message'        => 'Gateway tidak aktif',
+        ];
+
         $clientId = config('services.sipintu.client_id');
         $clientSecret = config('services.sipintu.client_secret');
 
@@ -296,7 +323,7 @@ class WhatsappBotController extends Controller
                     $isFallback = (bool) ($gw['auto_fallback_to_central'] ?? false);
                     $assignedPhone = $gw['assigned_phone'] ?? null;
 
-                    return [
+                    return array_merge($default, [
                         'online'         => true,
                         'connected'      => $isConnected,
                         'gateway_type'   => 'sipintu',
@@ -312,22 +339,25 @@ class WhatsappBotController extends Controller
                         'message'        => $isConnected
                             ? 'Terhubung ke WhatsApp Gateway SiPintu (' . $assignedPhone . ')'
                             : 'Nomor khusus belum ditautkan di SiPintu' . ($isFallback ? ' (Pesan dialihkan via Nomor Pusat)' : ''),
-                    ];
+                    ]);
                 }
 
                 // Format mock unit test / respon generik
-                return [
-                    'online'    => (bool) ($data['online'] ?? true),
-                    'connected' => (bool) ($data['connected'] ?? false),
-                    'status'    => $data['status'] ?? (($data['connected'] ?? false) ? 'connected' : 'disconnected'),
-                    'user'      => $data['user'] ?? null,
-                    'qr'        => $data['qr'] ?? null,
-                    'qr_image'  => $data['qr_image'] ?? null,
-                    'message'   => $data['message'] ?? 'Bot Gateway Aktif',
-                ];
+                $isConnected = (bool) ($data['connected'] ?? false);
+                return array_merge($default, [
+                    'online'         => (bool) ($data['online'] ?? true),
+                    'connected'      => $isConnected,
+                    'gateway_type'   => 'sipintu',
+                    'status'         => $data['status'] ?? ($isConnected ? 'connected' : 'disconnected'),
+                    'assigned_phone' => $data['assigned_phone'] ?? null,
+                    'user'           => $data['user'] ?? null,
+                    'qr'             => $data['qr'] ?? null,
+                    'qr_image'       => $data['qr_image'] ?? null,
+                    'message'        => $data['message'] ?? 'Bot Gateway Aktif',
+                ]);
             }
 
-            return [
+            return array_merge($default, [
                 'online'        => false,
                 'connected'     => false,
                 'gateway_type'  => 'sipintu',
@@ -336,7 +366,7 @@ class WhatsappBotController extends Controller
                 'qr'            => null,
                 'qr_image'      => null,
                 'message'       => 'Tidak dapat terhubung ke SiPintu Gateway: ' . ($res['error'] ?? ''),
-            ];
+            ]);
         }
 
         // Prioritas 2 (Fallback): Microservice Baileys lokal
@@ -345,41 +375,41 @@ class WhatsappBotController extends Controller
 
         try {
             $response = Http::withHeaders(['x-api-key' => $apiKey])
+                ->connectTimeout(2)
                 ->timeout(3)
                 ->get("{$botUrl}/status");
 
             if ($response->successful()) {
                 $data = $response->json();
-                return [
-                    'online'    => true,
-                    'connected' => $data['connected'] ?? false,
-                    'status'    => $data['status'] ?? ($data['connected'] ? 'connected' : 'disconnected'),
-                    'user'      => $data['user'] ?? null,
-                    'qr'        => $data['qr'] ?? null,
-                    'qr_image'  => $data['qr_image'] ?? null,
-                    'message'   => $data['message'] ?? 'Bot Baileys Aktif',
-                ];
+                $isConnected = (bool) ($data['connected'] ?? false);
+                return array_merge($default, [
+                    'online'         => true,
+                    'connected'      => $isConnected,
+                    'gateway_type'   => 'baileys',
+                    'status'         => $data['status'] ?? ($isConnected ? 'connected' : 'disconnected'),
+                    'assigned_phone' => $data['assigned_phone'] ?? null,
+                    'user'           => $data['user'] ?? null,
+                    'qr'             => $data['qr'] ?? null,
+                    'qr_image'       => $data['qr_image'] ?? null,
+                    'message'        => $data['message'] ?? 'Bot Baileys Aktif',
+                ]);
             }
 
-            return [
-                'online'    => true,
-                'connected' => false,
-                'status'    => 'error',
-                'user'      => null,
-                'qr'        => null,
-                'qr_image'  => null,
-                'message'   => 'Server Bot merespon dengan HTTP ' . $response->status(),
-            ];
+            return array_merge($default, [
+                'online'       => true,
+                'connected'    => false,
+                'gateway_type' => 'baileys',
+                'status'       => 'error',
+                'message'      => 'Server Bot merespon dengan HTTP ' . $response->status(),
+            ]);
         } catch (\Throwable $e) {
-            return [
-                'online'    => false,
-                'connected' => false,
-                'status'    => 'offline',
-                'user'      => null,
-                'qr'        => null,
-                'qr_image'  => null,
-                'message'   => 'Tidak dapat terhubung ke Bot Baileys di ' . $botUrl,
-            ];
+            return array_merge($default, [
+                'online'       => false,
+                'connected'    => false,
+                'gateway_type' => 'baileys',
+                'status'       => 'offline',
+                'message'      => 'Tidak dapat terhubung ke Bot Baileys di ' . $botUrl,
+            ]);
         }
     }
 }

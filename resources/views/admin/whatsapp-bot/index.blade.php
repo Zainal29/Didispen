@@ -90,12 +90,12 @@
                         Status: Dijeda (OFF)
                     </span>
                 @endif
-                @if($botStatus['connected'])
+                @if(!empty($botStatus['connected']))
                     <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         Terhubung ke WhatsApp
                     </span>
-                @elseif($botStatus['online'])
+                @elseif(!empty($botStatus['online']))
                     <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
                         <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                         Menunggu Scan QR
@@ -111,7 +111,7 @@
 
         <div class="p-5 sm:p-6" id="qrContentArea">
             {{-- KONDISI 1: BOT SUDAH TERHUBUNG (CONNECTED) --}}
-            <div id="stateConnected" class="{{ $botStatus['connected'] ? '' : 'hidden' }}">
+            <div id="stateConnected" class="{{ !empty($botStatus['connected']) ? '' : 'hidden' }}">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-emerald-50/60 border border-emerald-200">
                     <div class="flex items-center gap-4">
                         <div class="w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-3xl shadow-sm shrink-0">
@@ -151,7 +151,7 @@
             </div>
 
             {{-- KONDISI 2: MENUNGGU SCAN QR CODE (WAITING QR) --}}
-            <div id="stateWaitingQr" class="{{ (!$botStatus['connected'] && $botStatus['online']) ? '' : 'hidden' }}">
+            <div id="stateWaitingQr" class="{{ (empty($botStatus['connected']) && !empty($botStatus['online'])) ? '' : 'hidden' }}">
                 @if(($botStatus['gateway_type'] ?? '') === 'sipintu')
                     <div class="p-6 rounded-2xl bg-gradient-to-r from-amber-50/70 via-white to-blue-50/50 border border-amber-200">
                         <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
@@ -262,8 +262,7 @@
             </div>
 
             {{-- KONDISI 3: SERVER BOT OFFLINE --}}
-            {{-- KONDISI 3: SERVER BOT OFFLINE --}}
-            <div id="stateOffline" class="{{ !$botStatus['online'] ? '' : 'hidden' }}">
+            <div id="stateOffline" class="{{ empty($botStatus['online']) ? '' : 'hidden' }}">
                 <div class="p-6 rounded-2xl bg-rose-50 border border-rose-200 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-5">
                     <div class="flex items-start gap-3.5">
                         <div class="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl shrink-0">
@@ -366,7 +365,7 @@
                         <div class="p-2.5 rounded-lg bg-white border border-slate-200/80">
                             <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Nomor Bot Terpasang</span>
                             <span class="font-bold text-emerald-700 text-[11px] truncate block mt-0.5">
-                                {{ $botStatus['assigned_phone'] ? ('+' . $botStatus['assigned_phone']) : ($botStatus['user']['phone'] ?? 'Belum Ditautkan') }}
+                                {{ !empty($botStatus['assigned_phone']) ? ('+' . $botStatus['assigned_phone']) : ($botStatus['user']['phone'] ?? 'Belum Ditautkan') }}
                             </span>
                         </div>
                     </div>
@@ -950,6 +949,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const liveStatusBadge = document.getElementById('liveStatusBadge');
 
     let isPolling = true;
+    let isCurrentlyConnected = {{ !empty($botStatus['connected']) ? 'true' : 'false' }};
+    let pollTimer = null;
+
+    function scheduleNextPoll() {
+        if (pollTimer) clearTimeout(pollTimer);
+        // Polling adaptif: 30 detik saat terhubung, 6 detik saat menunggu scan QR / offline
+        const delay = isCurrentlyConnected ? 30000 : 6000;
+        pollTimer = setTimeout(async () => {
+            if (!document.hidden && isPolling) {
+                await window.pollBotStatus(false);
+            }
+            scheduleNextPoll();
+        }, delay);
+    }
 
     window.pollBotStatus = async function(manual = false) {
         if (!isPolling && !manual) return;
@@ -958,11 +971,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (manual && icon) icon.classList.add('animate-spin');
 
         try {
-            const res = await fetch(statusUrl, {
+            const url = manual ? `${statusUrl}?refresh=1` : statusUrl;
+            const res = await fetch(url, {
                 headers: { 'Accept': 'application/json' }
             });
 
             if (!res.ok) {
+                isCurrentlyConnected = false;
                 renderOffline();
                 return;
             }
@@ -970,13 +985,17 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await res.json();
 
             if (!data.online) {
+                isCurrentlyConnected = false;
                 renderOffline();
             } else if (data.connected) {
+                isCurrentlyConnected = true;
                 renderConnected(data.user);
             } else {
+                isCurrentlyConnected = false;
                 renderWaitingQr(data.qr_image);
             }
         } catch (e) {
+            isCurrentlyConnected = false;
             renderOffline();
         } finally {
             if (manual && icon) {
@@ -1038,8 +1057,8 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
-    // Interval polling setiap 3 detik
-    setInterval(() => window.pollBotStatus(false), 3000);
+    // Jalankan timer polling adaptif
+    scheduleNextPoll();
 });
 </script>
 @endpush
