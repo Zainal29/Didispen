@@ -26,14 +26,14 @@
             </div>
         </div>
 
-        {{-- QUICK FILTER TABS / PRESET BUTTONS --}}
+        {{-- QUICK FILTER TABS / PRESET BUTTONS (Preline Responsive Segmented Tabs) --}}
         @php
             $qParams = request()->except(['status', 'page']);
         @endphp
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-1 touch-pan-x text-xs">
             {{-- 1. Semua Realisasi (Default) --}}
             <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'realisasi'])) }}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ ($currentStatus === 'realisasi' || empty($currentStatus)) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold shrink-0 border {{ ($currentStatus === 'realisasi' || empty($currentStatus)) ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
                 <i class="ti ti-list-check"></i>
                 <span>Semua Realisasi</span>
                 <span class="ml-1 px-1.5 py-0.2 rounded-md text-[10px] {{ ($currentStatus === 'realisasi' || empty($currentStatus)) ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700' }}">
@@ -43,7 +43,7 @@
 
             {{-- 2. Sedang Keluar --}}
             <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'keluar'])) }}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ $currentStatus === 'keluar' ? 'bg-sky-600 text-white border-sky-600 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold shrink-0 border {{ $currentStatus === 'keluar' ? 'bg-sky-600 text-white border-sky-600 shadow-md shadow-sky-500/25' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
                 <i class="ti ti-door-exit"></i>
                 <span>Sedang Keluar</span>
                 <span class="ml-1 px-1.5 py-0.2 rounded-md text-[10px] {{ $currentStatus === 'keluar' ? 'bg-sky-500 text-white' : 'bg-sky-100 text-sky-800' }}">
@@ -53,7 +53,7 @@
 
             {{-- 3. Kembali Tepat Waktu / Lebih Awal --}}
             <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'selesai_awal'])) }}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ $currentStatus === 'selesai_awal' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold shrink-0 border {{ $currentStatus === 'selesai_awal' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/25' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
                 <i class="ti ti-circle-check"></i>
                 <span>Kembali Lebih Awal / Tepat</span>
                 <span class="ml-1 px-1.5 py-0.2 rounded-md text-[10px] {{ $currentStatus === 'selesai_awal' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-800' }}">
@@ -63,7 +63,7 @@
 
             {{-- 4. Terlambat Kembali --}}
             <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'terlambat'])) }}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ $currentStatus === 'terlambat' ? 'bg-amber-600 text-white border-amber-600 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold shrink-0 border {{ $currentStatus === 'terlambat' ? 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-500/25' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
                 <i class="ti ti-alarm"></i>
                 <span>Terlambat Kembali</span>
                 <span class="ml-1 px-1.5 py-0.2 rounded-md text-[10px] {{ $currentStatus === 'terlambat' ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-800' }}">
@@ -73,7 +73,7 @@
 
             {{-- 5. Kadaluarsa (Tidak Scan Kembali) --}}
             <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'tidak_kembali'])) }}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ $currentStatus === 'tidak_kembali' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold shrink-0 border {{ $currentStatus === 'tidak_kembali' ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-500/25' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
                 <i class="ti ti-alert-triangle"></i>
                 <span>Tidak Scan Kembali</span>
                 <span class="ml-1 px-1.5 py-0.2 rounded-md text-[10px] {{ $currentStatus === 'tidak_kembali' ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-800' }}">
@@ -83,7 +83,7 @@
 
             {{-- 5b. Kadaluarsa (Tidak Scan Keluar) --}}
             <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'tidak_scan_keluar'])) }}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ $currentStatus === 'tidak_scan_keluar' ? 'bg-orange-600 text-white border-orange-600 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold shrink-0 border {{ $currentStatus === 'tidak_scan_keluar' ? 'bg-orange-600 text-white border-orange-600 shadow-md shadow-orange-500/25' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
                 <i class="ti ti-door-off"></i>
                 <span>Tidak Scan Keluar</span>
                 <span class="ml-1 px-1.5 py-0.2 rounded-md text-[10px] {{ $currentStatus === 'tidak_scan_keluar' ? 'bg-orange-500 text-white' : 'bg-orange-100 text-orange-800' }}">
@@ -93,7 +93,7 @@
 
             {{-- 6. Sampai Pulang --}}
             <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'sampai_pulang'])) }}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ $currentStatus === 'sampai_pulang' ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold shrink-0 border {{ $currentStatus === 'sampai_pulang' ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-500/25' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' }}">
                 <i class="ti ti-home-check"></i>
                 <span>Izin Sampai Pulang</span>
                 <span class="ml-1 px-1.5 py-0.2 rounded-md text-[10px] {{ $currentStatus === 'sampai_pulang' ? 'bg-purple-500 text-white' : 'bg-purple-100 text-purple-800' }}">
@@ -103,7 +103,7 @@
 
             {{-- 7. Semua Riwayat (Audit) --}}
             <a href="{{ route('admin.laporan.index', array_merge($qParams, ['status' => 'semua'])) }}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 border {{ $currentStatus === 'semua' ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200' }}">
+               class="uiverse-btn-tactile inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold shrink-0 border {{ $currentStatus === 'semua' ? 'bg-slate-800 text-white border-slate-800 shadow-md shadow-slate-700/25' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200' }}">
                 <i class="ti ti-archive"></i>
                 <span>Semua (Audit)</span>
                 <span class="ml-1 px-1.5 py-0.2 rounded-md text-[10px] {{ $currentStatus === 'semua' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-600' }}">
@@ -120,8 +120,8 @@
             <form method="GET" action="{{ route('admin.laporan.index') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 {{-- Status Selector --}}
                 <div class="lg:col-span-2">
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Status Realisasi</label>
-                    <select name="status" class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none cursor-pointer">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Status Realisasi</label>
+                    <select name="status" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
                         <option value="realisasi" {{ ($currentStatus === 'realisasi' || empty($currentStatus)) ? 'selected' : '' }}>Semua Realisasi Siswa Keluar (Default)</option>
                         <option value="keluar" {{ $currentStatus === 'keluar' ? 'selected' : '' }}>Sedang Keluar (Belum Kembali)</option>
                         <option value="selesai_awal" {{ $currentStatus === 'selesai_awal' ? 'selected' : '' }}>Selesai (Kembali Lebih Awal / Tepat)</option>
@@ -141,8 +141,8 @@
 
                 {{-- Jurusan --}}
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Jurusan</label>
-                    <select name="jurusan_id" class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none cursor-pointer">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Jurusan</label>
+                    <select name="jurusan_id" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer">
                         <option value="">Semua Jurusan</option>
                         @foreach($jurusanList as $j)
                             <option value="{{ $j->id }}" {{ request('jurusan_id') == $j->id ? 'selected' : '' }}>{{ $j->nama_jurusan }}</option>
@@ -152,27 +152,27 @@
 
                 {{-- Tanggal Dari --}}
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Dari Tanggal</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Dari Tanggal</label>
                     <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}"
-                           class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none">
+                           class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
                 </div>
 
                 {{-- Tanggal Sampai --}}
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Sampai Tanggal</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Sampai Tanggal</label>
                     <input type="date" name="tanggal_sampai" value="{{ request('tanggal_sampai') }}"
-                           class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none">
+                           class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
                 </div>
 
                 {{-- Submit & Reset Buttons --}}
                 <div class="flex items-end gap-1.5">
                     <button type="submit"
-                            class="flex-1 h-10 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl px-3 text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                            class="uiverse-btn-tactile flex-1 h-10 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl px-3 text-xs font-bold shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
                         <i class="ti ti-filter text-sm"></i>
                         <span>Filter</span>
                     </button>
                     <a href="{{ route('admin.laporan.index') }}"
-                       class="h-10 px-3 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center transition-colors"
+                       class="uiverse-btn-tactile h-10 px-3 bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center transition-colors"
                        title="Reset Filter ke Default">
                         <i class="ti ti-refresh text-sm"></i>
                     </a>
@@ -185,21 +185,21 @@
             <div class="flex items-center gap-2 flex-wrap">
                 {{-- Tombol Export PDF --}}
                 <a href="{{ route('admin.laporan.pdf', request()->all()) }}"
-                   class="min-h-[38px] bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs shadow-rose-500/20">
+                   class="uiverse-btn-tactile min-h-[38px] bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-rose-500/20">
                     <i class="ti ti-file-type-pdf text-base"></i>
                     <span>Ekspor PDF</span>
                 </a>
 
                 {{-- Tombol Export CSV / Excel --}}
                 <a href="{{ route('admin.laporan.excel', request()->all()) }}"
-                   class="min-h-[38px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs shadow-emerald-500/20">
+                   class="uiverse-btn-tactile min-h-[38px] bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-500/20">
                     <i class="ti ti-file-spreadsheet text-base"></i>
                     <span>Ekspor Excel (.xls)</span>
                 </a>
 
                 {{-- Tombol Cetak Browser Langsung --}}
                 <button type="button" onclick="window.print()"
-                        class="min-h-[38px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border border-slate-200">
+                        class="uiverse-btn-tactile min-h-[38px] bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-200 shadow-2xs">
                     <i class="ti ti-printer text-base"></i>
                     <span>Cetak Langsung</span>
                 </button>
@@ -214,7 +214,7 @@
         </div>
 
         {{-- TABLE AREA --}}
-        <div class="overflow-x-auto min-w-0 w-full">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left border-collapse text-xs">
                 <thead class="bg-slate-50/80 text-[11px] uppercase text-slate-400 font-bold tracking-wider border-b border-slate-200/80">
                     <tr>

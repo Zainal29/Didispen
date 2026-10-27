@@ -412,7 +412,7 @@
 
     {{-- Bottom Action Buttons --}}
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <a href="{{ route('admin.semua.pengajuan') }}" class="min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-xl text-slate-700 text-xs sm:text-sm font-bold hover:bg-slate-50 transition-colors gap-2">
+        <a href="{{ route('admin.semua.pengajuan') }}" class="uiverse-btn-tactile min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-xl text-slate-700 text-xs sm:text-sm font-bold hover:bg-slate-50 transition-colors gap-2">
             <i class="ti ti-arrow-left text-base"></i>
             <span>Kembali ke Daftar</span>
         </a>
@@ -421,20 +421,20 @@
             @if($dispensasi->trashed())
                 <button type="button"
                         onclick="confirmRestore({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}')"
-                        class="min-h-[44px] px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs">
+                        class="uiverse-btn-tactile min-h-[44px] px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs">
                     <i class="ti ti-rotate-clockwise text-base"></i>
                     <span>Pulihkan Dispensasi</span>
                 </button>
                 <button type="button"
                         onclick="confirmForceDelete({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}', '{{ addslashes($dispensasi->siswa?->nama_lengkap ?? '-') }}')"
-                        class="min-h-[44px] px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs">
+                        class="uiverse-btn-tactile min-h-[44px] px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs">
                     <i class="ti ti-trash-x text-base"></i>
                     <span>Hapus Permanen</span>
                 </button>
             @else
                 <button type="button"
                         onclick="confirmSoftDelete({{ $dispensasi->id }}, '{{ $dispensasi->nomor_surat }}', '{{ addslashes($dispensasi->siswa?->nama_lengkap ?? '-') }}')"
-                        class="min-h-[44px] px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs">
+                        class="uiverse-btn-tactile min-h-[44px] px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-xs">
                     <i class="ti ti-archive text-base"></i>
                     <span>Pindahkan ke Arsip</span>
                 </button>

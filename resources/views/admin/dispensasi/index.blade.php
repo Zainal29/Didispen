@@ -31,54 +31,61 @@
         </div>
     @endif
 
-    {{-- TAB FILTER ARSIP (AKTIF / ARSIP / SEMUA) --}}
-    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+    {{-- TAB FILTER ARSIP (Preline Segmented Controls + Tactile Pills) --}}
+    <div class="p-1 bg-slate-200/70 rounded-2xl inline-flex items-center gap-1.5 shadow-inner max-w-full overflow-x-auto">
         <a href="{{ request()->fullUrlWithQuery(['arsip' => 'aktif']) }}"
-           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs {{ $arsipFilter === 'aktif' ? 'bg-blue-600 text-white shadow-blue-500/20' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80' }}">
-            <i class="ti ti-circle-check text-base"></i>
-            <span>Aktif</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $arsipFilter === 'aktif' ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600' }}">
+           class="uiverse-btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $arsipFilter === 'aktif' ? 'bg-white text-blue-700 shadow-sm shadow-slate-300' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
+            <i class="ti ti-circle-check text-base text-emerald-500"></i>
+            <span>Dispensasi Aktif</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $arsipFilter === 'aktif' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : 'bg-slate-200 text-slate-700' }}">
                 {{ $countAktif }}
             </span>
         </a>
 
         <a href="{{ request()->fullUrlWithQuery(['arsip' => 'arsip']) }}"
-           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs {{ $arsipFilter === 'arsip' ? 'bg-amber-600 text-white shadow-amber-500/20' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80' }}">
-            <i class="ti ti-archive text-base"></i>
+           class="uiverse-btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $arsipFilter === 'arsip' ? 'bg-white text-amber-700 shadow-sm shadow-slate-300' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
+            <i class="ti ti-archive text-base text-amber-500"></i>
             <span>Arsip (Terhapus)</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $arsipFilter === 'arsip' ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-800' }}">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $arsipFilter === 'arsip' ? 'bg-amber-50 text-amber-800 border border-amber-200/60' : 'bg-slate-200 text-slate-700' }}">
                 {{ $countArsip }}
             </span>
         </a>
 
         <a href="{{ request()->fullUrlWithQuery(['arsip' => 'semua']) }}"
-           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs {{ $arsipFilter === 'semua' ? 'bg-slate-800 text-white shadow-slate-700/20' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80' }}">
-            <i class="ti ti-layers-linked text-base"></i>
+           class="uiverse-btn-tactile inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $arsipFilter === 'semua' ? 'bg-white text-slate-900 shadow-sm shadow-slate-300' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
+            <i class="ti ti-layers-linked text-base text-slate-500"></i>
             <span>Semua Data</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $arsipFilter === 'semua' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600' }}">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold {{ $arsipFilter === 'semua' ? 'bg-slate-100 text-slate-800 border border-slate-300' : 'bg-slate-200 text-slate-700' }}">
                 {{ $countSemua }}
             </span>
         </a>
     </div>
 
-    {{-- MAIN CARD: FILTER & TABLE --}}
+    {{-- MAIN CARD: FILTER & TABLE (Preline Modern Card) --}}
     <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 overflow-hidden">
         
         {{-- Filter Section --}}
-        <div class="p-5 border-b border-slate-100 bg-slate-50/40">
+        <div class="p-5 border-b border-slate-100 bg-slate-50/50">
             <div class="flex items-center justify-between mb-3.5">
                 <div class="flex items-center gap-2">
                     <span class="w-1.5 h-3.5 bg-blue-600 rounded-full"></span>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600">Penyaringan Data Pengajuan</h3>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Penyaringan Data Pengajuan</h3>
                 </div>
+                @if(request()->hasAny(['status', 'jurusan_id', 'kelas_id', 'tanggal_dari']))
+                    <a href="{{ route('admin.semua.pengajuan', ['arsip' => $arsipFilter]) }}" 
+                       class="inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-semibold transition-colors">
+                        <i class="ti ti-x text-xs"></i>
+                        <span>Reset Filter</span>
+                    </a>
+                @endif
             </div>
 
             <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 <input type="hidden" name="arsip" value="{{ $arsipFilter }}">
 
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Status</label>
-                    <select name="status" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Status</label>
+                    <select name="status" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                         <option value="">Semua Status</option>
                         @foreach(['menunggu','disetujui','ditolak','keluar','selesai','dibatalkan','kadaluarsa'] as $s)
                             <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
@@ -87,8 +94,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Jurusan</label>
-                    <select name="jurusan_id" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Jurusan</label>
+                    <select name="jurusan_id" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                         <option value="">Semua Jurusan</option>
                         @foreach($jurusans as $j)
                             <option value="{{ $j->id }}" {{ request('jurusan_id') == $j->id ? 'selected' : '' }}>{{ $j->nama_jurusan }}</option>
@@ -97,8 +104,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Kelas</label>
-                    <select name="kelas_id" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Kelas</label>
+                    <select name="kelas_id" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                         <option value="">Semua Kelas</option>
                         @foreach($kelas as $k)
                             <option value="{{ $k->id }}" {{ request('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
@@ -107,12 +114,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Dari Tanggal</label>
-                    <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Dari Tanggal</label>
+                    <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" class="w-full h-10 border border-slate-200 rounded-xl px-3 text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                 </div>
 
                 <div class="flex items-end">
-                    <button type="submit" class="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 text-xs font-bold transition-all shadow-sm shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
+                    <button type="submit" class="uiverse-btn-tactile w-full h-10 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl px-4 text-xs font-bold shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
                         <i class="ti ti-filter text-sm"></i>
                         <span>Terapkan Filter</span>
                     </button>
@@ -120,7 +127,7 @@
             </form>
         </div>
 
-        {{-- Table Area --}}
+        {{-- Table Area (Preline Data Table Pattern) --}}
         <div class="overflow-x-auto min-w-0 w-full">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-slate-50/80 text-[11px] uppercase text-slate-400 font-bold tracking-wider border-b border-slate-100">
@@ -140,9 +147,9 @@
                     @php
                         $isTrashed = $d->trashed();
                     @endphp
-                    <tr class="hover:bg-slate-50/70 transition-colors {{ $isTrashed ? 'bg-amber-50/30' : '' }}">
+                    <tr class="hover:bg-slate-50/80 transition-colors {{ $isTrashed ? 'bg-amber-50/30' : '' }}">
                         <td class="p-3.5 pl-5 font-mono text-xs text-slate-700 font-bold whitespace-nowrap">
-                            <div>{{ $d->nomor_surat }}</div>
+                            <div class="text-slate-900 font-mono">{{ $d->nomor_surat }}</div>
                             @if($d->isRombongan())
                                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mt-1">
                                     <i class="ti ti-users text-xs"></i> Rombongan
@@ -157,16 +164,26 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="p-3.5 font-bold text-slate-900">{{ $d->siswa?->nama_lengkap ?? '-' }}</td>
-                        <td class="p-3.5 text-slate-600 whitespace-nowrap">{{ $d->siswa?->kelas?->nama_kelas ?? '-' }}</td>
-                        <td class="p-3.5 capitalize text-slate-600 whitespace-nowrap">{{ str_replace('_', ' ', $d->kategori) }}</td>
-                        <td class="p-3.5 text-slate-600 max-w-xs">{{ Str::limit($d->tujuan, 35) }}</td>
+                        <td class="p-3.5 whitespace-nowrap">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0 border border-blue-100">
+                                    {{ strtoupper(substr($d->siswa?->nama_lengkap ?? '?', 0, 2)) }}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-900 leading-tight">{{ $d->siswa?->nama_lengkap ?? '-' }}</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5 font-mono">NIS: {{ $d->siswa?->nisn ?? $d->siswa?->nis ?? '-' }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-3.5 text-slate-600 whitespace-nowrap font-medium">{{ $d->siswa?->kelas?->nama_kelas ?? '-' }}</td>
+                        <td class="p-3.5 capitalize text-slate-600 whitespace-nowrap font-medium">{{ str_replace('_', ' ', $d->kategori) }}</td>
+                        <td class="p-3.5 text-slate-600 max-w-xs leading-relaxed">{{ Str::limit($d->tujuan, 38) }}</td>
                         <td class="p-3.5 whitespace-nowrap">
                             <div class="flex flex-col gap-1 items-start">
                                 @php
                                     $badge = $d->status_badge;
                                 @endphp
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold border {{ $badge['class'] }}">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border {{ $badge['class'] }}">
                                     <span class="w-1.5 h-1.5 rounded-full {{ $badge['dot'] }}"></span>
                                     {{ $badge['text'] }}
                                 </span>
@@ -177,12 +194,12 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="p-3.5 text-slate-600 whitespace-nowrap">{{ $d->guru?->nama_lengkap ?? '-' }}</td>
+                        <td class="p-3.5 text-slate-600 whitespace-nowrap font-medium">{{ $d->guru?->nama_lengkap ?? '-' }}</td>
                         <td class="p-3.5 pr-5 text-center whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1.5">
                                 {{-- LIHAT DETAIL --}}
                                 <a href="{{ route('admin.semua.pengajuan.show', $d->id) }}"
-                                   class="inline-flex items-center justify-center w-8 h-8 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl transition-all shadow-2xs"
+                                   class="uiverse-btn-tactile inline-flex items-center justify-center w-8 h-8 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl transition-all shadow-2xs border border-blue-100/60"
                                    title="Lihat Detail">
                                     <i class="ti ti-eye text-base"></i>
                                 </a>
@@ -191,7 +208,7 @@
                                     {{-- PULIHKAN DARI ARSIP --}}
                                     <button type="button"
                                             onclick="confirmRestore({{ $d->id }}, '{{ $d->nomor_surat }}')"
-                                            class="inline-flex items-center justify-center w-8 h-8 bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white rounded-xl transition-all shadow-2xs"
+                                            class="uiverse-btn-tactile inline-flex items-center justify-center w-8 h-8 bg-emerald-50 hover:bg-emerald-600 text-emerald-600 hover:text-white rounded-xl transition-all shadow-2xs border border-emerald-100/60"
                                             title="Pulihkan dari Arsip">
                                         <i class="ti ti-rotate-clockwise-2 text-base"></i>
                                     </button>
@@ -199,7 +216,7 @@
                                     {{-- HAPUS PERMANEN --}}
                                     <button type="button"
                                             onclick="confirmForceDelete({{ $d->id }}, '{{ $d->nomor_surat }}', '{{ addslashes($d->siswa?->nama_lengkap ?? '-') }}')"
-                                            class="inline-flex items-center justify-center w-8 h-8 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white rounded-xl transition-all shadow-2xs"
+                                            class="uiverse-btn-tactile inline-flex items-center justify-center w-8 h-8 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white rounded-xl transition-all shadow-2xs border border-rose-100/60"
                                             title="Hapus Permanen">
                                         <i class="ti ti-trash-x text-base"></i>
                                     </button>
@@ -207,7 +224,7 @@
                                     {{-- SOFT DELETE (PINDAHKAN KE ARSIP) --}}
                                     <button type="button"
                                             onclick="confirmSoftDelete({{ $d->id }}, '{{ $d->nomor_surat }}', '{{ addslashes($d->siswa?->nama_lengkap ?? '-') }}')"
-                                            class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 hover:bg-amber-600 text-amber-600 hover:text-white rounded-xl transition-all shadow-2xs"
+                                            class="uiverse-btn-tactile inline-flex items-center justify-center w-8 h-8 bg-amber-50 hover:bg-amber-600 text-amber-600 hover:text-white rounded-xl transition-all shadow-2xs border border-amber-100/60"
                                             title="Pindahkan ke Arsip">
                                         <i class="ti ti-archive text-base"></i>
                                     </button>

@@ -21,23 +21,23 @@
             </div>
         </div>
 
-        {{-- KARTU STATISTIK --}}
+        {{-- KARTU STATISTIK (Preline KPI widgets with Uiverse hover lifts) --}}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Temuan</p>
-                <p class="text-xl font-extrabold text-slate-900 mt-0.5">{{ $stats['total'] }}</p>
+            <div class="uiverse-card-lift bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Temuan</p>
+                <p class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 tracking-tight">{{ $stats['total'] }}</p>
             </div>
-            <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-200/80">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-amber-600">Menunggu Tindak Lanjut</p>
-                <p class="text-xl font-extrabold text-amber-600 mt-0.5">{{ $stats['menunggu'] }}</p>
+            <div class="uiverse-card-lift bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200/80 shadow-2xs">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700">Menunggu Aksi</p>
+                <p class="text-xl sm:text-2xl font-black text-amber-600 mt-0.5 tracking-tight">{{ $stats['menunggu'] }}</p>
             </div>
-            <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-200/80">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600">Sedang Ditangani</p>
-                <p class="text-xl font-extrabold text-blue-600 mt-0.5">{{ $stats['ditindaklanjuti'] }}</p>
+            <div class="uiverse-card-lift bg-blue-50/60 p-3.5 rounded-2xl border border-blue-200/80 shadow-2xs">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-blue-700">Sedang Ditangani</p>
+                <p class="text-xl sm:text-2xl font-black text-blue-600 mt-0.5 tracking-tight">{{ $stats['ditindaklanjuti'] }}</p>
             </div>
-            <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-200/80">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Selesai / Sanksi</p>
-                <p class="text-xl font-extrabold text-emerald-600 mt-0.5">{{ $stats['selesai'] }}</p>
+            <div class="uiverse-card-lift bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-200/80 shadow-2xs">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Selesai / Sanksi</p>
+                <p class="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5 tracking-tight">{{ $stats['selesai'] }}</p>
             </div>
         </div>
 
@@ -69,11 +69,11 @@
             <input type="date" name="tanggal" value="{{ request('tanggal') }}"
                    class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:bg-white focus:border-blue-500">
 
-            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-xs">
+            <button type="submit" class="uiverse-btn-tactile px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20">
                 Filter
             </button>
             @if(request()->anyFilled(['q', 'status', 'kategori', 'tanggal']))
-                <a href="{{ route('admin.laporan-satpam.index') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition">
+                <a href="{{ route('admin.laporan-satpam.index') }}" class="uiverse-btn-tactile px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition">
                     Reset
                 </a>
             @endif
@@ -82,7 +82,7 @@
 
     {{-- TABEL LAPORAN --}}
     <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-[10px] font-bold">
