@@ -173,7 +173,7 @@
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-900 leading-tight">{{ $d->siswa?->nama_lengkap ?? '-' }}</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5 font-mono">NIS: {{ $d->siswa?->nisn ?? $d->siswa?->nis ?? '-' }}</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5 font-mono">NIS: {{ $d->siswa?->nis_nip ?? $d->siswa?->user?->nis_nip ?? $d->siswa?->nis ?? '-' }}</p>
                                 </div>
                             </div>
                         </td>

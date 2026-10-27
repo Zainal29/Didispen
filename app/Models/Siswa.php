@@ -73,4 +73,14 @@ class Siswa extends Model
         // ✅ CASTING STRING AGAR AMAN DARI NILAI NULL
         return strtoupper((string) ($value ?? ''));
     }
+
+    public function getNisAttribute(): ?string
+    {
+        return $this->nis_nip ?: ($this->user?->nis_nip ?: null);
+    }
+
+    public function getNisnAttribute(): ?string
+    {
+        return $this->nis_nip ?: ($this->user?->nis_nip ?: null);
+    }
 }
