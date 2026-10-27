@@ -81,10 +81,57 @@
             background-color: #cbd5e1;
             border-radius: 9999px;
         }
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background-color: #94a3b8;
+        /* Preline UI & Uiverse.io Tactile Micro-Interactions */
+        .uiverse-btn-tactile {
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+        .uiverse-btn-tactile:hover {
+            transform: translateY(-1.5px);
+        }
+        .uiverse-btn-tactile:active {
+            transform: translateY(1px) scale(0.98);
+        }
+        .uiverse-card-lift {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+            will-change: transform, box-shadow;
+        }
+        .uiverse-card-lift:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+        }
+        .uiverse-glow-blue {
+            box-shadow: 0 0 16px -2px rgba(37, 99, 235, 0.35);
+        }
+        .uiverse-glow-emerald {
+            box-shadow: 0 0 16px -2px rgba(16, 185, 129, 0.35);
+        }
+        .uiverse-glow-amber {
+            box-shadow: 0 0 16px -2px rgba(245, 158, 11, 0.35);
+        }
+        .uiverse-glow-rose {
+            box-shadow: 0 0 16px -2px rgba(244, 63, 94, 0.35);
         }
     </style>
+
+    <!-- Timepicker-UI Global Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/timepicker-ui@4.6.0/dist/css/main.css">
+    <style>
+        :root {
+            --tp-ui-primary: #2563eb !important;
+            --tp-ui-primary-hover: #1d4ed8 !important;
+            --tp-ui-border-radius: 1rem !important;
+            --tp-ui-font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        }
+        .timepicker-ui-modal {
+            border-radius: 1.25rem !important;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
+        }
+    </style>
+
+    @stack('styles')
+</head>
 <body class="h-full bg-slate-50 text-slate-800 antialiased font-sans" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
 
     {{-- =========================================================
@@ -355,6 +402,41 @@
             @yield('content')
         </main>
     </div>
+
+    <!-- Preline UI & Timepicker-UI Framework Integration -->
+    <script src="https://cdn.jsdelivr.net/npm/preline@2.7.0/dist/preline.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timepicker-ui@4.6.0/dist/index.umd.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof TimepickerUI !== 'undefined') {
+                document.querySelectorAll('input.admin-timepicker, input.timepicker-input').forEach(input => {
+                    const picker = new TimepickerUI(input, {
+                        clock: { type: '24h', incrementMinutes: 5 },
+                        ui: { theme: 'basic', animation: true, backdrop: true },
+                        labels: {
+                            ok: 'Pilih',
+                            cancel: 'Batal',
+                            clear: 'Hapus',
+                            clockTitle: input.dataset.clockTitle || 'Pilih Waktu',
+                            hour: 'Jam',
+                            minute: 'Menit'
+                        }
+                    });
+                    picker.create();
+
+                    if (input.id) {
+                        const triggerBtn = document.querySelector(`[data-timepicker-trigger="${input.id}"]`);
+                        if (triggerBtn) {
+                            triggerBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                picker.open();
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 
     @stack('scripts')
 </body>

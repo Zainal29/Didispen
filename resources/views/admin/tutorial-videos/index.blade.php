@@ -18,14 +18,14 @@
             </div>
         </div>
         <a href="{{ route('admin.tutorial-videos.create') }}"
-           class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shadow-blue-500/25">
+           class="uiverse-btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shadow-blue-500/25">
             <i class="ti ti-plus text-base"></i>
             <span>Tambah Video</span>
         </a>
     </div>
 
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-        <div class="overflow-x-auto min-w-0 w-full sidebar-scroll">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] uppercase text-slate-500 font-bold tracking-wider">
                     <tr>
@@ -66,7 +66,7 @@
                         <td class="p-4 text-center whitespace-nowrap">
                             <div class="inline-flex items-center gap-1">
                                 <a href="{{ route('admin.tutorial-videos.edit', $video) }}"
-                                   class="w-8 h-8 inline-flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                   class="uiverse-btn-tactile w-8 h-8 inline-flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                                     <i class="ti ti-edit text-sm"></i>
                                 </a>
                                 <form action="{{ route('admin.tutorial-videos.destroy', $video) }}"
@@ -74,7 +74,7 @@
                                       onsubmit="return confirm('Hapus video ini?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus">
+                                    <button type="submit" class="uiverse-btn-tactile w-8 h-8 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus">
                                         <i class="ti ti-trash text-sm"></i>
                                     </button>
                                 </form>

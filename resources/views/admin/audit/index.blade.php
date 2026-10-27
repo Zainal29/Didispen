@@ -23,13 +23,13 @@
                 {{-- Tombol Test Koneksi --}}
                 <form method="POST" action="{{ route('admin.sipintu.test-sync') }}">
                     @csrf
-                    <button type="submit" class="min-h-[40px] px-3.5 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs">
-                        <i class="ti ti-plug text-sm"></i> Test Koneksi SiPintu
+                    <button type="submit" class="uiverse-btn-tactile min-h-[40px] px-3.5 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs">
+                        <i class="ti ti-plug text-sm text-blue-600"></i> Test Koneksi SiPintu
                     </button>
                 </form>
 
                 {{-- Tombol Bersihkan Log --}}
-                <button type="button" onclick="openClearLogsModal()" class="min-h-[40px] px-3.5 py-2 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs">
+                <button type="button" onclick="openClearLogsModal()" class="uiverse-btn-tactile min-h-[40px] px-3.5 py-2 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs">
                     <i class="ti ti-trash text-sm"></i> Bersihkan Log
                 </button>
             </div>
@@ -64,11 +64,11 @@
                 @endforeach
             </select>
 
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition flex items-center justify-center gap-1.5 shadow-sm shadow-blue-500/25">
+            <button type="submit" class="uiverse-btn-tactile px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm shadow-blue-500/25">
                 <i class="ti ti-filter text-sm"></i> Filter
             </button>
             @if(request()->anyFilled(['search', 'date_from', 'date_to', 'filter_type', 'action']))
-                <a href="{{ route('admin.audit.index') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center">
+                <a href="{{ route('admin.audit.index') }}" class="uiverse-btn-tactile px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center">
                     Reset
                 </a>
             @endif
@@ -77,7 +77,7 @@
 
     {{-- STATS CARDS --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-4 flex items-center justify-between">
+        <div class="uiverse-card-lift bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-4 flex items-center justify-between">
             <div>
                 <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Total Aktivitas</p>
                 <p class="text-xl sm:text-2xl font-black text-slate-900 mt-1">{{ number_format($stats['total']) }}</p>
@@ -87,7 +87,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-4 flex items-center justify-between">
+        <div class="uiverse-card-lift bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-4 flex items-center justify-between">
             <div>
                 <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Sinkronisasi</p>
                 <p class="text-xl sm:text-2xl font-black text-slate-900 mt-1">{{ number_format($stats['sync']) }}</p>
@@ -97,7 +97,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-4 flex items-center justify-between">
+        <div class="uiverse-card-lift bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-4 flex items-center justify-between">
             <div>
                 <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Aktivitas Admin</p>
                 <p class="text-xl sm:text-2xl font-black text-slate-900 mt-1">{{ number_format($stats['admin']) }}</p>
@@ -107,7 +107,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-4 flex items-center justify-between">
+        <div class="uiverse-card-lift bg-white rounded-2xl shadow-2xs border border-slate-200/80 p-4 flex items-center justify-between">
             <div>
                 <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Aktivitas Satpam</p>
                 <p class="text-xl sm:text-2xl font-black text-slate-900 mt-1">{{ number_format($stats['satpam']) }}</p>
@@ -120,7 +120,7 @@
 
     {{-- TABLE --}}
     <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 overflow-hidden">
-        <div class="overflow-x-auto min-w-0 w-full sidebar-scroll">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] uppercase text-slate-500 font-bold tracking-wider">
                     <tr>
@@ -215,7 +215,7 @@
                         <td class="p-4 text-center whitespace-nowrap">
                             <button type="button"
                                     onclick="confirmDeleteSingleLog({{ $log->id }})"
-                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors shadow-2xs"
+                                    class="uiverse-btn-tactile inline-flex items-center justify-center w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors shadow-2xs"
                                     title="Hapus log ini">
                                 <i class="ti ti-trash text-sm"></i>
                             </button>

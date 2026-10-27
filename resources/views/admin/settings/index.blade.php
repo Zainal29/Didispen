@@ -51,16 +51,30 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Jam Mulai Cetak</label>
-                        <div class="relative">
-                            <input type="time" name="print_start_time" value="{{ old('print_start_time', $print_start_time ?? '06:00') }}" required
-                                   class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm text-slate-800 transition">
+                        <div class="relative group">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-blue-500 pointer-events-none group-focus-within:text-blue-600">
+                                <i class="ti ti-clock text-base"></i>
+                            </span>
+                            <input type="text" name="print_start_time" id="print_start_time" value="{{ old('print_start_time', $print_start_time ?? '06:00') }}" required
+                                   autocomplete="off" data-clock-title="Pilih Jam Mulai Cetak"
+                                   class="admin-timepicker w-full pl-10 pr-10 py-2.5 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-semibold text-slate-800 transition cursor-pointer">
+                            <button type="button" data-timepicker-trigger="print_start_time" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors" title="Buka Jam">
+                                <i class="ti ti-clock-play text-base"></i>
+                            </button>
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Jam Akhir Cetak</label>
-                        <div class="relative">
-                            <input type="time" name="print_end_time" value="{{ old('print_end_time', $print_end_time ?? '17:00') }}" required
-                                   class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm text-slate-800 transition">
+                        <div class="relative group">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-blue-500 pointer-events-none group-focus-within:text-blue-600">
+                                <i class="ti ti-clock text-base"></i>
+                            </span>
+                            <input type="text" name="print_end_time" id="print_end_time" value="{{ old('print_end_time', $print_end_time ?? '17:00') }}" required
+                                   autocomplete="off" data-clock-title="Pilih Jam Akhir Cetak"
+                                   class="admin-timepicker w-full pl-10 pr-10 py-2.5 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-semibold text-slate-800 transition cursor-pointer">
+                            <button type="button" data-timepicker-trigger="print_end_time" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors" title="Buka Jam">
+                                <i class="ti ti-clock-play text-base"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -117,18 +131,45 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Mulai Buka Pengajuan</label>
-                        <input type="time" name="dispensasi_start_time" value="{{ old('dispensasi_start_time', $dispensasi_start_time ?? '07:00') }}" required
-                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm text-slate-800 transition">
+                        <div class="relative group">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-blue-500 pointer-events-none group-focus-within:text-blue-600">
+                                <i class="ti ti-clock text-base"></i>
+                            </span>
+                            <input type="text" name="dispensasi_start_time" id="dispensasi_start_time" value="{{ old('dispensasi_start_time', $dispensasi_start_time ?? '07:00') }}" required
+                                   autocomplete="off" data-clock-title="Mulai Buka Pengajuan"
+                                   class="admin-timepicker w-full pl-10 pr-10 py-2.5 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-semibold text-slate-800 transition cursor-pointer">
+                            <button type="button" data-timepicker-trigger="dispensasi_start_time" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors" title="Buka Jam">
+                                <i class="ti ti-clock-play text-base"></i>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Tutup (Senin - Kamis)</label>
-                        <input type="time" name="dispensasi_end_time" value="{{ old('dispensasi_end_time', $dispensasi_end_time ?? '15:00') }}" required
-                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm text-slate-800 transition">
+                        <div class="relative group">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-blue-500 pointer-events-none group-focus-within:text-blue-600">
+                                <i class="ti ti-clock text-base"></i>
+                            </span>
+                            <input type="text" name="dispensasi_end_time" id="dispensasi_end_time" value="{{ old('dispensasi_end_time', $dispensasi_end_time ?? '15:00') }}" required
+                                   autocomplete="off" data-clock-title="Tutup (Senin - Kamis)"
+                                   class="admin-timepicker w-full pl-10 pr-10 py-2.5 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-semibold text-slate-800 transition cursor-pointer">
+                            <button type="button" data-timepicker-trigger="dispensasi_end_time" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors" title="Buka Jam">
+                                <i class="ti ti-clock-play text-base"></i>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Tutup (Khusus Jumat)</label>
-                        <input type="time" name="dispensasi_end_time_friday" value="{{ old('dispensasi_end_time_friday', $dispensasi_end_time_friday ?? '14:00') }}" required
-                               class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm text-slate-800 transition">
+                        <div class="relative group">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-blue-500 pointer-events-none group-focus-within:text-blue-600">
+                                <i class="ti ti-clock text-base"></i>
+                            </span>
+                            <input type="text" name="dispensasi_end_time_friday" id="dispensasi_end_time_friday" value="{{ old('dispensasi_end_time_friday', $dispensasi_end_time_friday ?? '14:00') }}" required
+                                   autocomplete="off" data-clock-title="Tutup (Khusus Jumat)"
+                                   class="admin-timepicker w-full pl-10 pr-10 py-2.5 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-semibold text-slate-800 transition cursor-pointer">
+                            <button type="button" data-timepicker-trigger="dispensasi_end_time_friday" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-blue-600 transition-colors" title="Buka Jam">
+                                <i class="ti ti-clock-play text-base"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

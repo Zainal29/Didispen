@@ -21,7 +21,7 @@
             </div>
 
             <button onclick="document.getElementById('formBeriAkses').scrollIntoView({ behavior: 'smooth' })"
-                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition-all shadow-sm shadow-blue-500/25">
+                    class="uiverse-btn-tactile w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white shadow-md shadow-blue-500/25 cursor-pointer">
                 <i class="ti ti-user-plus text-base"></i>
                 <span>Beri Hak Super Admin</span>
             </button>
@@ -120,7 +120,7 @@
                 <div class="md:col-span-4 flex items-end pt-0 md:pt-6">
                     <button type="submit"
                             id="btnSubmitSuperadmin"
-                            class="w-full min-h-[42px] bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm shadow-blue-500/25 flex items-center justify-center gap-2">
+                            class="uiverse-btn-tactile w-full min-h-[42px] bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer">
                         <i class="ti ti-shield-check text-base"></i>
                         <span>Jadikan Super Admin</span>
                     </button>
@@ -169,7 +169,7 @@
             </form>
         </div>
 
-        <div class="overflow-x-auto min-w-0 w-full sidebar-scroll">
+        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -245,7 +245,7 @@
                             @else
                                 <button type="button"
                                         onclick="cabutSuperadmin({{ $adminUser->id }}, '{{ addslashes($adminUser->name) }}')"
-                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-rose-600 text-xs font-bold transition-colors shadow-2xs"
+                                        class="uiverse-btn-tactile inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-colors shadow-2xs"
                                         title="Cabut status Super Admin">
                                     <i class="ti ti-user-minus text-xs"></i> Cabut
                                 </button>

@@ -30,9 +30,9 @@
             <button
                 type="button"
                 id="btn-connect-printer"
-                class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-sm active:scale-95 shrink-0"
+                class="group relative overflow-hidden inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95 shrink-0"
             >
-                <i class="ti ti-bluetooth text-sm"></i>
+                <i class="ti ti-bluetooth text-sm transition-transform duration-200 group-hover:scale-110"></i>
                 <span>Hubungkan</span>
             </button>
         </div>
@@ -62,15 +62,16 @@
     {{-- AKSI CETAK --}}
     <div class="p-4 sm:p-5">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {{-- CETAK BUKTI BLE LANGSUNG --}}
+            {{-- CETAK BUKTI BLE LANGSUNG (Uiverse-inspired Tactile Button) --}}
             <button
                 type="button"
                 id="btn-print-bluetooth"
                 disabled
-                class="group inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[46px] bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-100 disabled:text-slate-400 disabled:border disabled:border-slate-200 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl transition-all shadow-sm active:scale-[0.98]"
+                class="group relative overflow-hidden inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[48px] bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 disabled:from-slate-100 disabled:via-slate-100 disabled:to-slate-100 disabled:text-slate-400 disabled:border disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow-emerald-500/25 active:scale-[0.98]"
             >
-                <i class="ti ti-receipt text-base"></i>
-                <span>Cetak Bukti (Bluetooth Langsung)</span>
+                <span class="absolute inset-0 w-full h-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></span>
+                <i class="ti ti-receipt text-base transition-transform duration-200 group-hover:scale-110"></i>
+                <span class="tracking-wide">Cetak Bukti (Bluetooth Langsung)</span>
             </button>
 
             {{-- TEST PRINT BLE --}}
@@ -78,9 +79,9 @@
                 type="button"
                 id="btn-test-print"
                 disabled
-                class="group inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[46px] bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 disabled:text-slate-300 disabled:border disabled:border-slate-100 disabled:cursor-not-allowed text-slate-700 text-xs font-semibold rounded-xl transition-all active:scale-[0.98]"
+                class="group relative inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[48px] bg-slate-100 hover:bg-slate-200/80 disabled:bg-slate-50 disabled:text-slate-300 disabled:border disabled:border-slate-100 disabled:cursor-not-allowed text-slate-700 text-xs font-semibold rounded-xl border border-slate-200/70 transition-all active:scale-[0.98]"
             >
-                <i class="ti ti-test-pipe text-base"></i>
+                <i class="ti ti-test-pipe text-base transition-transform duration-200 group-hover:rotate-12"></i>
                 <span>Test Print BLE</span>
             </button>
         </div>
@@ -348,18 +349,18 @@
 
         if (statusDot) {
             statusDot.className = connected
-                ? 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse'
-                : 'w-2 h-2 rounded-full bg-slate-300';
+                ? 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 animate-pulse'
+                : 'w-2.5 h-2.5 rounded-full bg-slate-300';
         }
 
         if (!connectBtn) return;
 
         if (connected) {
             connectBtn.innerHTML = '<i class="ti ti-unlink text-sm"></i><span>Putuskan</span>';
-            connectBtn.className = 'inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-xl transition-all active:scale-95 shrink-0';
+            connectBtn.className = 'group relative overflow-hidden inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-xl transition-all active:scale-95 shrink-0';
         } else {
-            connectBtn.innerHTML = '<i class="ti ti-bluetooth text-sm"></i><span>Hubungkan</span>';
-            connectBtn.className = 'inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-xl transition-all shadow-sm active:scale-95 shrink-0';
+            connectBtn.innerHTML = '<i class="ti ti-bluetooth text-sm transition-transform duration-200 group-hover:scale-110"></i><span>Hubungkan</span>';
+            connectBtn.className = 'group relative overflow-hidden inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95 shrink-0';
         }
     }
 
@@ -766,6 +767,7 @@
         try {
             printBtn.disabled = true;
             testBtn.disabled = true;
+            printBtn.innerHTML = '<i class="ti ti-loader-2 animate-spin text-base"></i><span>Mencetak Bukti...</span>';
 
             setStatus('Mengirim ke printer...');
             setPrintStatus('Mengirim data bukti dispensasi...', 'info');
@@ -782,6 +784,7 @@
             setPrintStatus('Gagal mencetak: ' + error.message, 'error');
         } finally {
             isPrinting = false;
+            printBtn.innerHTML = '<i class="ti ti-receipt text-base transition-transform duration-200 group-hover:scale-110"></i><span class="tracking-wide">Cetak Bukti (Bluetooth Langsung)</span>';
             const connected = !!(printerDevice && printerDevice.gatt && printerDevice.gatt.connected && writeCharacteristic);
             setConnectedState(connected);
         }
@@ -797,6 +800,7 @@
         try {
             printBtn.disabled = true;
             testBtn.disabled = true;
+            testBtn.innerHTML = '<i class="ti ti-loader-2 animate-spin text-base"></i><span>Mengirim Test...</span>';
 
             setStatus('Mengirim test print...');
             setPrintStatus('Mengirim data test print...', 'info');
@@ -830,6 +834,7 @@
             setPrintStatus('Gagal test print: ' + error.message, 'error');
         } finally {
             isPrinting = false;
+            testBtn.innerHTML = '<i class="ti ti-test-pipe text-base transition-transform duration-200 group-hover:rotate-12"></i><span>Test Print BLE</span>';
             const connected = !!(printerDevice && printerDevice.gatt && printerDevice.gatt.connected && writeCharacteristic);
             setConnectedState(connected);
         }
