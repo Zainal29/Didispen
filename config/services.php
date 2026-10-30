@@ -36,9 +36,9 @@ return [
     ],
 
     'sipintu' => [
-        'base_url' => env('SIPINTU_BASE_URL', env('SIPINTU_API_URL', 'http://localhost:8000')),
-        'url' => env('SIPINTU_BASE_URL', env('SIPINTU_API_URL', 'http://localhost:8000')),
-        'api_url' => env('SIPINTU_BASE_URL', env('SIPINTU_API_URL', 'http://localhost:8000')),
+        'base_url' => env('SIPINTU_URL', env('SIPINTU_BASE_URL', env('SIPINTU_API_URL', 'https://sipintu.smkn1bangsri.sch.id'))),
+        'url' => rtrim(env('SIPINTU_URL', env('SIPINTU_BASE_URL', env('SIPINTU_API_URL', 'https://sipintu.smkn1bangsri.sch.id'))), '/'),
+        'api_url' => rtrim(env('SIPINTU_URL', env('SIPINTU_BASE_URL', env('SIPINTU_API_URL', 'https://sipintu.smkn1bangsri.sch.id'))), '/'),
         'client_id' => env('SIPINTU_CLIENT_ID'),
         'client_secret' => env('SIPINTU_CLIENT_SECRET'),
         'redirect_uri' => env('SIPINTU_REDIRECT_URI', env('APP_URL', 'http://localhost:8000') . '/oauth/callback'),

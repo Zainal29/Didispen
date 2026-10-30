@@ -561,7 +561,13 @@
             </div>
         </div>
 
-        <div class="p-4 sm:p-6">
+        {{-- HINT SCROLL MOBILE --}}
+        <div class="px-4 py-2 bg-blue-50/60 border-b border-blue-100/70 text-blue-700 text-xs sm:hidden flex items-center gap-1.5 font-medium">
+            <i class="ti ti-arrows-horizontal text-blue-600 animate-pulse text-base"></i>
+            <span>Geser tabel ke samping untuk melihat jadwal & alur bot</span>
+        </div>
+
+        <div class="p-3 sm:p-6">
             @php
                 $hariNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
                 $todayIso = now('Asia/Jakarta')->dayOfWeekIso;
@@ -576,7 +582,7 @@
                     <p class="text-xs text-slate-500 mt-0.5">Silakan tambahkan data sesi dan penugasan guru piket terlebih dahulu.</p>
                 </div>
             @else
-                <div class="w-full overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-2xs touch-pan-x">
+                <div class="w-full table-scroll-container border border-slate-200 rounded-xl bg-white shadow-2xs">
                     <table class="w-full min-w-[960px] text-left text-xs text-slate-800 border-collapse">
                         <thead>
                             <tr class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
@@ -586,7 +592,7 @@
                                 <th class="py-3 px-4 border-r border-slate-200 w-56 whitespace-nowrap">Pengaturan Sesi Piket</th>
                                 <th class="py-3 px-4 border-r border-slate-200 min-w-[200px]">Guru Piket Bertugas</th>
                                 <th class="py-3 px-4 border-r border-slate-200 w-48 whitespace-nowrap">No. HP Guru</th>
-                                <th class="py-3 px-3 text-center w-36 whitespace-nowrap bg-slate-100 z-10 border-l border-slate-200">Alur Notifikasi Bot</th>
+                                <th class="py-3 px-3 text-center w-40 whitespace-nowrap bg-slate-100 border-l border-slate-200">Alur Notifikasi Bot</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200">
@@ -834,16 +840,22 @@
             @endif
         </div>
 
-        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
-            <table class="min-w-full divide-y divide-slate-100 text-xs sm:text-sm">
-                <thead class="bg-slate-50/70">
+        {{-- HINT SCROLL MOBILE --}}
+        <div class="px-4 py-2 bg-blue-50/60 border-b border-blue-100/70 text-blue-700 text-xs sm:hidden flex items-center gap-1.5 font-medium">
+            <i class="ti ti-arrows-horizontal text-blue-600 animate-pulse text-base"></i>
+            <span>Geser tabel ke samping untuk melihat detail riwayat pesan & aksi</span>
+        </div>
+
+        <div class="table-scroll-container">
+            <table class="w-full min-w-[920px] divide-y divide-slate-100 text-xs sm:text-sm text-left border-collapse">
+                <thead class="bg-slate-50/80 text-[11px] uppercase text-slate-500 font-bold tracking-wider border-b border-slate-100">
                     <tr>
-                        <th class="px-4 py-3 text-left font-bold text-slate-700">Waktu</th>
-                        <th class="px-4 py-3 text-left font-bold text-slate-700">Penerima</th>
-                        <th class="px-4 py-3 text-left font-bold text-slate-700">Kategori</th>
-                        <th class="px-4 py-3 text-left font-bold text-slate-700">Isi Pesan / Keterangan</th>
-                        <th class="px-4 py-3 text-left font-bold text-slate-700">Status</th>
-                        <th class="px-4 py-3 text-right font-bold text-slate-700">Aksi</th>
+                        <th class="px-4 py-3.5 text-left whitespace-nowrap min-w-[140px]">Waktu</th>
+                        <th class="px-4 py-3.5 text-left whitespace-nowrap min-w-[190px]">Penerima</th>
+                        <th class="px-4 py-3.5 text-left whitespace-nowrap min-w-[160px]">Kategori</th>
+                        <th class="px-4 py-3.5 text-left min-w-[300px]">Isi Pesan / Keterangan</th>
+                        <th class="px-4 py-3.5 text-left whitespace-nowrap min-w-[110px]">Status</th>
+                        <th class="px-4 py-3.5 text-right whitespace-nowrap min-w-[90px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -886,7 +898,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 max-w-md">
+                            <td class="px-4 py-3 min-w-[300px] max-w-md">
                                 <div class="text-xs text-slate-700 whitespace-pre-line line-clamp-2" title="{{ $log->message }}">
                                     {{ \Illuminate\Support\Str::limit($log->message, 120) }}
                                 </div>

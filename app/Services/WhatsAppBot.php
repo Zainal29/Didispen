@@ -29,6 +29,14 @@ class WhatsAppBot
             ];
         }
 
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        if (empty($cleanPhone)) {
+            return [
+                'success' => false,
+                'error'   => 'Nomor telepon tujuan kosong atau mengandung format yang tidak valid.',
+            ];
+        }
+
         try {
             $response = Http::withHeaders([
                 'X-Client-ID'     => $clientId,
@@ -36,7 +44,7 @@ class WhatsAppBot
                 'Accept'          => 'application/json',
                 'Content-Type'    => 'application/json',
             ])->timeout(20)->post($url, [
-                'phone'   => $phone,
+                'phone'   => $cleanPhone,
                 'message' => $message,
                 'sync'    => $sync,
             ]);

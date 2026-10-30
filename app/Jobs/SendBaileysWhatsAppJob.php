@@ -58,7 +58,10 @@ class SendBaileysWhatsAppJob implements ShouldQueue
                 'error_message' => $result['error'] ?? 'Pengiriman via SiPintu Gateway gagal.',
             ]);
 
-            throw new \RuntimeException($result['error'] ?? 'Pengiriman via SiPintu Gateway gagal.');
+            if (config('queue.default') !== 'sync') {
+                throw new \RuntimeException($result['error'] ?? 'Pengiriman via SiPintu Gateway gagal.');
+            }
+            return;
         }
 
         // 2. Fallback: Microservice Baileys lokal (jika SiPintu belum dikonfigurasi)
@@ -87,13 +90,18 @@ class SendBaileysWhatsAppJob implements ShouldQueue
                     'status'        => 'failed',
                     'error_message' => 'HTTP ' . $response->status() . ': ' . $response->body(),
                 ]);
+                if (config('queue.default') !== 'sync') {
+                    throw new \RuntimeException('HTTP ' . $response->status() . ': ' . $response->body());
+                }
             }
         } catch (\Throwable $e) {
             $log->update([
                 'status'        => 'failed',
                 'error_message' => $e->getMessage(),
             ]);
-            throw $e;
+            if (config('queue.default') !== 'sync') {
+                throw $e;
+            }
         }
     }
 }

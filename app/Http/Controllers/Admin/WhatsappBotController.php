@@ -270,11 +270,21 @@ class WhatsappBotController extends Controller
             referenceKey: null // tanpa kunci deduplikasi agar bisa dites berkali-kali
         );
 
-        if (! $log || $log->status === 'failed') {
-            return back()->with('error', 'Nomor tujuan tidak valid atau fitur WA Bot sedang dinonaktifkan.');
+        if (! $log) {
+            return back()->with('error', 'Fitur WA Bot sedang dinonaktifkan.');
         }
 
-        return back()->with('success', 'Pesan uji coba berhasil dikirim ke antrean Queue Worker.');
+        $log->refresh();
+
+        if ($log->status === 'sent') {
+            return back()->with('success', "Pesan uji coba berhasil terkirim langsung ke {$log->phone} via SiPintu WhatsApp Gateway.");
+        }
+
+        if ($log->status === 'failed') {
+            return back()->with('error', 'Gagal mengirim pesan: ' . ($log->error_message ?? 'Nomor tujuan tidak valid atau server gateway gagal.'));
+        }
+
+        return back()->with('success', 'Pesan uji coba berhasil dikirim ke antrean pengiriman.');
     }
 
     /**
