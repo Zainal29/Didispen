@@ -104,8 +104,8 @@
             </div>
 
             {{-- TAMPILAN MATRIKS SEKOLAH PERSIS DOKUMEN RESMI --}}
-            <div class="p-4 sm:p-6">
-                <div class="w-full overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-2xs touch-pan-x">
+            <div class="p-3 sm:p-6">
+                <div class="w-full table-scroll-container border border-slate-200 rounded-xl bg-white shadow-2xs">
                     <table class="w-full min-w-[960px] text-left text-xs text-slate-800 border-collapse">
                         <thead>
                             <tr class="bg-slate-100/80 text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
@@ -115,7 +115,7 @@
                                 <th class="py-3 px-4 border-r border-slate-200 w-60 whitespace-nowrap">Pengaturan Sesi Piket</th>
                                 <th class="py-3 px-4 border-r border-slate-200 min-w-[200px]">Guru Piket</th>
                                 <th class="py-3 px-4 border-r border-slate-200 w-48 whitespace-nowrap">No. HP</th>
-                                <th class="py-3 px-3 text-center w-24 whitespace-nowrap sticky right-0 bg-slate-100 z-10 border-l border-slate-200">Aksi</th>
+                                <th class="py-3 px-3 text-center w-28 whitespace-nowrap bg-slate-100 border-l border-slate-200">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200">
@@ -229,7 +229,7 @@
                                             @endif
                                         </td>
 
-                                        <td class="py-2.5 px-3 text-center sticky right-0 bg-white/95 backdrop-blur-xs border-l border-slate-200">
+                                        <td class="py-2.5 px-3 text-center bg-white border-l border-slate-200 whitespace-nowrap">
                                             <div class="inline-flex items-center gap-1">
                                                 <a href="{{ route('admin.jadwal-piket.show', $sesi) }}" class="w-7 h-7 inline-flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg" title="Lihat">
                                                     <i class="ti ti-eye text-sm"></i>
@@ -260,16 +260,16 @@
             </div>
         @else
             {{-- DESKTOP TABLE VIEW (md and up) --}}
-            <div class="hidden md:block overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-700">
+            <div class="hidden md:block table-scroll-container">
+                <table class="w-full min-w-[850px] text-left text-xs text-slate-700">
                     <thead class="bg-slate-50/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
                         <tr>
-                            <th class="py-3.5 px-4 pl-5">Hari & Sesi</th>
-                            <th class="py-3.5 px-4">Koordinator</th>
-                            <th class="py-3.5 px-4">Periode Berlaku</th>
-                            <th class="py-3.5 px-4">Guru Bertugas & No HP</th>
-                            <th class="py-3.5 px-4 text-center">Status</th>
-                            <th class="py-3.5 px-4 pr-5 text-right">Aksi</th>
+                            <th class="py-3.5 px-4 pl-5 whitespace-nowrap min-w-[170px]">Hari & Sesi</th>
+                            <th class="py-3.5 px-4 whitespace-nowrap min-w-[170px]">Koordinator</th>
+                            <th class="py-3.5 px-4 whitespace-nowrap min-w-[150px]">Periode Berlaku</th>
+                            <th class="py-3.5 px-4 min-w-[200px]">Guru Bertugas & No HP</th>
+                            <th class="py-3.5 px-4 text-center whitespace-nowrap min-w-[90px]">Status</th>
+                            <th class="py-3.5 px-4 pr-5 text-right whitespace-nowrap min-w-[90px]">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">

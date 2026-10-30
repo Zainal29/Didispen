@@ -81,6 +81,29 @@
             background-color: #cbd5e1;
             border-radius: 9999px;
         }
+        /* Custom smooth horizontal table scrollbar */
+        .table-scroll-container {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+            touch-action: pan-x pan-y;
+        }
+        .table-scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+        .table-scroll-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 9999px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
         /* Preline UI & Uiverse.io Tactile Micro-Interactions */
         .uiverse-btn-tactile {
             position: relative;
@@ -262,7 +285,7 @@
     {{-- =========================================================
         MAIN AREA (Header + Content)
     ========================================================== --}}
-    <div class="flex flex-col min-h-screen lg:pl-64">
+    <div class="flex flex-col min-h-screen lg:pl-64 w-full max-w-full min-w-0 overflow-x-hidden">
 
         {{-- STICKY TOPBAR --}}
         <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-3 flex items-center justify-between gap-4 shadow-2xs">
@@ -398,7 +421,7 @@
         </header>
 
         {{-- PAGE CONTENT --}}
-        <main class="flex-1 p-4 sm:p-6 lg:p-7 min-w-0">
+        <main class="flex-1 p-4 sm:p-6 lg:p-7 min-w-0 w-full max-w-full">
             @yield('content')
         </main>
     </div>

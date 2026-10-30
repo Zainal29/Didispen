@@ -120,35 +120,41 @@
 
     {{-- TABLE --}}
     <div class="bg-white rounded-2xl shadow-2xs border border-slate-200/80 overflow-hidden">
-        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
-            <table class="w-full text-left border-collapse">
+        {{-- HINT SCROLL MOBILE --}}
+        <div class="px-4 py-2 bg-blue-50/60 border-b border-blue-100/70 text-blue-700 text-xs sm:hidden flex items-center gap-1.5 font-medium">
+            <i class="ti ti-arrows-horizontal text-blue-600 animate-pulse text-base"></i>
+            <span>Geser tabel ke samping untuk melihat seluruh kolom audit aktivitas</span>
+        </div>
+
+        <div class="table-scroll-container">
+            <table class="w-full min-w-[1040px] text-left border-collapse">
                 <thead class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] uppercase text-slate-500 font-bold tracking-wider">
                     <tr>
-                        <th class="p-4 text-left">Waktu</th>
-                        <th class="p-4 text-left">User</th>
-                        <th class="p-4 text-left">Role</th>
-                        <th class="p-4 text-left">Aksi</th>
-                        <th class="p-4 text-left">Tabel</th>
-                        <th class="p-4 text-center">Record ID</th>
-                        <th class="p-4 text-left">IP</th>
-                        <th class="p-4 text-left">Status</th>
-                        <th class="p-4 text-center">Aksi</th>
+                        <th class="p-4 text-left whitespace-nowrap min-w-[130px]">Waktu</th>
+                        <th class="p-4 text-left whitespace-nowrap min-w-[190px]">User</th>
+                        <th class="p-4 text-left whitespace-nowrap min-w-[90px]">Role</th>
+                        <th class="p-4 text-left whitespace-nowrap min-w-[120px]">Aksi</th>
+                        <th class="p-4 text-left whitespace-nowrap min-w-[120px]">Tabel</th>
+                        <th class="p-4 text-center whitespace-nowrap min-w-[100px]">Record ID</th>
+                        <th class="p-4 text-left whitespace-nowrap min-w-[130px]">IP</th>
+                        <th class="p-4 text-left whitespace-nowrap min-w-[120px]">Status</th>
+                        <th class="p-4 text-center whitespace-nowrap min-w-[80px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
                     @forelse($logs as $log)
                     <tr class="hover:bg-slate-50/60 transition-colors">
-                        <td class="p-4">
+                        <td class="p-4 whitespace-nowrap">
                             <div class="font-mono text-xs font-semibold text-slate-800">{{ $log->created_at->timezone('Asia/Jakarta')->format('d-m-Y') }}</div>
                             <div class="text-[11px] text-slate-400 font-mono mt-0.5">{{ $log->created_at->timezone('Asia/Jakarta')->format('H:i:s') }} WIB</div>
                         </td>
-                        <td class="p-4">
+                        <td class="p-4 min-w-[190px]">
                             <div class="font-bold text-xs sm:text-sm text-slate-900">{{ $log->user->name ?? 'System' }}</div>
                             @if($log->user)
                                 <div class="text-[11px] text-slate-400">{{ $log->user->email ?? '-' }}</div>
                             @endif
                         </td>
-                        <td class="p-4">
+                        <td class="p-4 whitespace-nowrap">
                             @if($log->user)
                                 @php
                                     $roleBadge = [
@@ -166,19 +172,19 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="p-4">
+                        <td class="p-4 whitespace-nowrap">
                             <span class="font-semibold text-xs text-slate-800 capitalize">{{ str_replace('_', ' ', $log->action) }}</span>
                         </td>
-                        <td class="p-4 font-mono text-xs text-slate-500">
+                        <td class="p-4 font-mono text-xs text-slate-500 whitespace-nowrap">
                             {{ $log->table_name ?? '-' }}
                         </td>
-                        <td class="p-4 text-center font-mono text-xs text-slate-600">
+                        <td class="p-4 text-center font-mono text-xs text-slate-600 whitespace-nowrap">
                             {{ $log->record_id ?? '-' }}
                         </td>
-                        <td class="p-4 font-mono text-xs text-slate-500">
+                        <td class="p-4 font-mono text-xs text-slate-500 whitespace-nowrap">
                             {{ $log->ip_address ?? '-' }}
                         </td>
-                        <td class="p-4">
+                        <td class="p-4 whitespace-nowrap">
                             @if(isset($log->new_value['status']))
                                 @php
                                     $rawStatus = (string) $log->new_value['status'];

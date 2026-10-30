@@ -18,26 +18,32 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto min-w-0 w-full touch-pan-x">
-            <table class="w-full text-left border-collapse">
+        {{-- HINT SCROLL MOBILE --}}
+        <div class="px-4 py-2 bg-blue-50/60 border-b border-blue-100/70 text-blue-700 text-xs sm:hidden flex items-center gap-1.5 font-medium">
+            <i class="ti ti-arrows-horizontal text-blue-600 animate-pulse text-base"></i>
+            <span>Geser tabel ke samping untuk melihat detail aktivitas & perizinan guru</span>
+        </div>
+
+        <div class="table-scroll-container">
+            <table class="w-full min-w-[850px] text-left border-collapse">
                 <thead class="bg-slate-50/80 text-[11px] uppercase text-slate-400 font-bold tracking-wider border-b border-slate-100">
                     <tr>
-                        <th class="p-3.5 pl-5 text-left">Nama Guru</th>
-                        <th class="p-3.5 text-left">Tujuan & Keterangan</th>
-                        <th class="p-3.5 text-left">Waktu Keluar</th>
-                        <th class="p-3.5 text-left">Waktu Kembali</th>
-                        <th class="p-3.5 text-left">Status</th>
-                        <th class="p-3.5 pr-5 text-center">Aksi</th>
+                        <th class="p-3.5 pl-5 text-left whitespace-nowrap min-w-[190px]">Nama Guru</th>
+                        <th class="p-3.5 text-left min-w-[240px]">Tujuan & Keterangan</th>
+                        <th class="p-3.5 text-left whitespace-nowrap min-w-[140px]">Waktu Keluar</th>
+                        <th class="p-3.5 text-left whitespace-nowrap min-w-[140px]">Waktu Kembali</th>
+                        <th class="p-3.5 text-left whitespace-nowrap min-w-[120px]">Status</th>
+                        <th class="p-3.5 pr-5 text-center whitespace-nowrap min-w-[80px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
                     @forelse($logs as $log)
                     <tr class="hover:bg-slate-50/70 transition-colors {{ $log->status === 'keluar' ? 'bg-rose-50/30' : '' }}">
-                        <td class="p-3.5 pl-5">
+                        <td class="p-3.5 pl-5 min-w-[190px]">
                             <div class="font-bold text-slate-900">{{ $log->guru->nama_lengkap }}</div>
                             <div class="text-[11px] text-slate-500 mt-0.5">{{ $log->guru->mata_pelajaran ?? 'Guru Pengajar' }}</div>
                         </td>
-                        <td class="p-3.5 max-w-sm">
+                        <td class="p-3.5 min-w-[240px] max-w-sm">
                             <div class="font-semibold text-slate-800">{{ $log->tujuan }}</div>
                             <div class="text-[11px] text-slate-500 italic mt-0.5">"{{ Str::limit($log->alasan, 65) }}"</div>
                             @if($log->lokasi)
