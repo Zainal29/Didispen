@@ -17,8 +17,8 @@ Schedule::command('dispensasi:auto-complete')
     ->everyFifteenMinutes()
     ->withoutOverlapping();
 
-// Hapus riwayat dispensasi lama (30 hari) + FOTO-nya otomatis terhapus via Model Hook
-Schedule::command('dispensasi:cleanup-history')->dailyAt('00:00');
+// Hapus riwayat dispensasi lama dinonaktifkan agar rekap data sekolah tetap tersimpan utuh
+// Schedule::command('dispensasi:cleanup-history')->dailyAt('00:00');
 
 // Backup otomatis pembersihan foto verifikasi & bukti untuk dispensasi yang sudah selesai
 Schedule::command('dispensasi:cleanup-foto')->dailyAt('02:00');
