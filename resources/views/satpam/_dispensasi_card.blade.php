@@ -5,6 +5,7 @@
         'terlambat' => 'border-rose-200 bg-rose-50/30',
         'selesai' => 'border-emerald-200 bg-emerald-50/30',
         'dihubungi' => 'border-purple-200 bg-purple-50/30',
+        'kadaluarsa' => $dispensasi->isNotReturned() ? 'border-rose-200 bg-rose-50/30' : 'border-orange-200 bg-orange-50/30',
         default => 'border-slate-200 bg-slate-50/30'
     };
 
@@ -18,17 +19,17 @@
     class="bg-white rounded-2xl border {{ $statusColor }} shadow-xs overflow-hidden transition-all hover:border-slate-300"
     data-dispensasi="{{ $dispensasi->id }}"
     data-status="{{ $status }}"
-    data-overdue="{{ $isOverdue ? 'true' : 'false' }}"
+    data-overdue="{{ ($isOverdue || $dispensasi->isNotReturned()) ? 'true' : 'false' }}"
     data-warned="{{ $isWarned ? 'true' : 'false' }}"
     @if($deadlineStr && in_array($status, ['keluar', 'terlambat']))
         data-deadline="{{ $deadlineStr }}"
     @endif
 >
     {{-- Header Kartu --}}
-    <div class="px-4 py-3.5 border-b border-slate-100 {{ $isOverdue ? 'bg-rose-50/60' : 'bg-white' }}">
+    <div class="px-4 py-3.5 border-b border-slate-100 cursor-pointer select-none transition-colors hover:bg-slate-50/80 {{ ($isOverdue || $dispensasi->isNotReturned()) ? 'bg-rose-50/60' : 'bg-white' }}" onclick="this.nextElementSibling.classList.toggle('hidden')">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
             <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                <div class="flex items-center gap-1.5 mb-1 flex-wrap badge-row">
                     <p class="font-mono font-bold text-slate-800 text-xs sm:text-sm tracking-tight break-all">{{ $dispensasi->nomor_surat }}</p>
                     @if($dispensasi->isRombongan())
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
@@ -41,9 +42,17 @@
                             <span>Individu</span>
                         </span>
                     @endif
-                    @if($isOverdue)
+                    @if($dispensasi->isNotReturned())
+                        <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-rose-100 text-rose-700 uppercase">
+                            <i class="ti ti-alert-triangle mr-1"></i>TIDAK KEMBALI
+                        </span>
+                    @elseif($isOverdue)
                         <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-rose-100 text-rose-700 uppercase">
                             <i class="ti ti-alert-triangle mr-1"></i>TERLAMBAT
+                        </span>
+                    @elseif($dispensasi->isReturnedLate())
+                        <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-100 text-amber-800 uppercase">
+                            <i class="ti ti-clock-exclamation mr-1"></i>TERLAMBAT KEMBALI
                         </span>
                     @endif
                     @if($isWarned)
@@ -60,6 +69,7 @@
 
             <div class="flex flex-wrap sm:flex-col items-start sm:items-end gap-1.5 flex-shrink-0">
                 <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}"
+                   onclick="event.stopPropagation();"
                    class="inline-flex items-center justify-center w-8 h-8 min-h-[32px] bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-2xs transition-colors"
                    title="Lihat Detail Dispensasi">
                     <i class="ti ti-eye text-sm"></i>
@@ -86,7 +96,19 @@
                 @elseif($status === 'dibatalkan' || $dispensasi->status === 'dibatalkan')
                     <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">Dibatalkan</span>
                 @elseif($status === 'kadaluarsa' || $dispensasi->status === 'kadaluarsa')
-                    <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-orange-50 text-orange-700 border border-orange-200">Kadaluarsa</span>
+                    @if($dispensasi->isNotReturned())
+                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            <i class="ti ti-alert-triangle mr-1"></i>Kadaluarsa (Tidak Kembali)
+                        </span>
+                    @elseif($dispensasi->isNotScannedOut())
+                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
+                            <i class="ti ti-clock-cancel mr-1"></i>Kadaluarsa (Tidak Scan Keluar)
+                        </span>
+                    @else
+                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
+                            Kadaluarsa
+                        </span>
+                    @endif
                 @endif
 
                 @if($deadlineStr && in_array($status, ['keluar', 'terlambat']))
@@ -144,7 +166,17 @@
         </div>
         @endif
 
-        @if(in_array($status, ['keluar', 'terlambat', 'dihubungi']))
+        @if($dispensasi->catatan_admin)
+            <div class="p-2.5 rounded-xl border {{ $dispensasi->isNotReturned() ? 'bg-rose-50/70 border-rose-200 text-rose-800' : 'bg-orange-50/70 border-orange-200 text-orange-800' }} text-[11px] flex items-start gap-1.5">
+                <i class="ti ti-info-circle {{ $dispensasi->isNotReturned() ? 'text-rose-600' : 'text-orange-600' }} mt-0.5 flex-shrink-0"></i>
+                <div class="flex-1">
+                    <p class="font-bold text-[10px] uppercase {{ $dispensasi->isNotReturned() ? 'text-rose-700' : 'text-orange-700' }}">Catatan Sistem / Status</p>
+                    <p class="mt-0.5 leading-relaxed">{{ $dispensasi->catatan_admin }}</p>
+                </div>
+            </div>
+        @endif
+
+        @if(in_array($status, ['keluar', 'terlambat', 'dihubungi', 'kadaluarsa']) && ($isOverdue || $dispensasi->isNotReturned() || in_array($status, ['keluar', 'terlambat'])))
             @if(!empty($dispensasi->siswa->no_telepon))
                 @php
                     /** @var \App\Services\WhatsappMessageService $waService */
@@ -209,14 +241,16 @@
 </div>
 
 <script>
-function handleWaContacted(dispensasiId, waLink) {
-    fetch(`/satpam/dispensasi/${dispensasiId}/wa-contacted`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        keepalive: true
-    }).finally(() => window.open(waLink, '_blank'));
+if (typeof window.handleWaContacted !== 'function') {
+    window.handleWaContacted = function(dispensasiId, waLink) {
+        fetch(`/satpam/dispensasi/${dispensasiId}/wa-contacted`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
+            },
+            keepalive: true
+        }).finally(() => window.open(waLink, '_blank'));
+    };
 }
 </script>

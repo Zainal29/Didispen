@@ -16,12 +16,6 @@
 
 @php
     $currentFilter = $filter ?? 'semua';
-    $terlambatCount = 0;
-    foreach($siswaKeluar as $d) {
-        if ($d->batas_waktu_kembali && now()->greaterThan($d->batas_waktu_kembali)) {
-            $terlambatCount++;
-        }
-    }
 @endphp
 
 {{-- ============ HERO HEADER (CLEAN WHITE CARD MINIMALIS) ============ --}}
@@ -57,6 +51,9 @@
         </div>
     </div>
 </div>
+
+{{-- MODAL & BANNER DISPENSASI MANUAL GURU PIKET (SISWA TANPA HP) --}}
+@include('satpam._modal_manual_guru')
 
 {{-- ============ GURU PIKET HARI INI ============ --}}
 <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 mb-4 shadow-xs">
@@ -202,33 +199,69 @@
 {{-- STATISTIK SEBAGAI FILTER UTAMA --}}
 @php
 $cards = [
-    'menunggu'  => ['Menunggu Scan', $menungguKeluar->count(), 'ti-clock-pause', 'amber'],
-    'keluar'    => ['Sedang Keluar', $siswaKeluar->count(), 'ti-walk', 'blue'],
-    'terlambat' => ['Terlambat', $terlambatCount, 'ti-alert-triangle', 'rose'],
-    'selesai'   => ['Selesai', $stats['selesai'] ?? 0, 'ti-checks', 'emerald'],
+    'menunggu'  => [
+        'title' => 'Menunggu Scan',
+        'count' => $stats['menunggu_keluar'] ?? $menungguKeluar->count(),
+        'icon'  => 'ti-clock-pause',
+        'color' => 'amber',
+        'active_btn'    => 'active bg-white border-amber-500 ring-2 ring-amber-500/20 shadow-sm',
+        'inactive_btn'  => 'bg-white border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs',
+        'active_icon'   => 'bg-amber-100 text-amber-800 border border-amber-300',
+        'inactive_icon' => 'bg-amber-50 text-amber-600 border border-amber-200/80',
+    ],
+    'keluar'    => [
+        'title' => 'Sedang Keluar',
+        'count' => $stats['keluar'] ?? $siswaKeluar->count(),
+        'icon'  => 'ti-walk',
+        'color' => 'sky',
+        'active_btn'    => 'active bg-white border-sky-500 ring-2 ring-sky-500/20 shadow-sm',
+        'inactive_btn'  => 'bg-white border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs',
+        'active_icon'   => 'bg-sky-100 text-sky-800 border border-sky-300',
+        'inactive_icon' => 'bg-sky-50 text-sky-600 border border-sky-200/80',
+    ],
+    'terlambat' => [
+        'title' => 'Terlambat',
+        'count' => $stats['terlambat'] ?? $siswaTerlambat->count(),
+        'icon'  => 'ti-alert-triangle',
+        'color' => 'rose',
+        'active_btn'    => 'active bg-white border-rose-500 ring-2 ring-rose-500/20 shadow-sm',
+        'inactive_btn'  => 'bg-white border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs',
+        'active_icon'   => 'bg-rose-100 text-rose-800 border border-rose-300',
+        'inactive_icon' => 'bg-rose-50 text-rose-600 border border-rose-200/80',
+    ],
+    'selesai'   => [
+        'title' => 'Selesai',
+        'count' => $stats['selesai'] ?? $selesai->count(),
+        'icon'  => 'ti-checks',
+        'color' => 'emerald',
+        'active_btn'    => 'active bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm',
+        'inactive_btn'  => 'bg-white border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs',
+        'active_icon'   => 'bg-emerald-100 text-emerald-800 border border-emerald-300',
+        'inactive_icon' => 'bg-emerald-50 text-emerald-600 border border-emerald-200/80',
+    ],
 ];
 @endphp
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-3">
     @foreach($cards as $key => $card)
         @php
             $isActive = $currentFilter === $key;
-            $color = $card[3];
         @endphp
         <button type="button"
-                onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
+                onclick="switchFilter('{{ $key }}', '{{ $card['color'] }}', event)"
                 data-filter="{{ $key }}"
-                class="stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[48px] transition-all w-full active:scale-[0.99]
-                {{ $isActive
-                    ? 'active bg-white border-' . $color . '-500 ring-2 ring-' . $color . '-500/20 shadow-sm'
-                    : 'bg-white border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs' }}">
+                data-color="{{ $card['color'] }}"
+                data-active-btn="{{ $card['active_btn'] }}"
+                data-inactive-btn="{{ $card['inactive_btn'] }}"
+                data-active-icon="{{ $card['active_icon'] }}"
+                data-inactive-icon="{{ $card['inactive_icon'] }}"
+                class="stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[48px] transition-all w-full active:scale-[0.99] {{ $isActive ? $card['active_btn'] : $card['inactive_btn'] }}">
             <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors
-                    {{ $isActive ? 'bg-' . $color . '-500 text-white' : 'bg-' . $color . '-50 text-' . $color . '-600 border border-' . $color . '-100' }}">
-                    <i class="ti {{ $card[2] }} text-base"></i>
+                <div class="icon-box w-9 h-9 rounded-xl flex items-center justify-center transition-colors {{ $isActive ? $card['active_icon'] : $card['inactive_icon'] }}">
+                    <i class="ti {{ $card['icon'] }} text-base"></i>
                 </div>
-                <span class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{{ $card[1] }}</span>
+                <span class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{{ $card['count'] }}</span>
             </div>
-            <p class="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $card[0] }}</p>
+            <p class="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $card['title'] }}</p>
         </button>
     @endforeach
 </div>
@@ -253,7 +286,9 @@ $cards = [
                 : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200 shadow-2xs' }}">
         <i class="ti ti-brand-whatsapp mr-1.5 text-base"></i>Dihubungi ({{ $dihubungi->count() }})
     </button>
-</div>{{-- ============ CONTENT SECTIONS ============ --}}
+</div>
+
+{{-- ============ CONTENT SECTIONS ============ --}}
 <div id="content-area" class="fade-in">
 
     {{-- SECTION: MENUNGGU --}}
@@ -277,7 +312,7 @@ $cards = [
         <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i class="ti ti-walk text-sky-500 mr-2 text-base"></i>Sedang Keluar</h3>
         @if($siswaKeluar->count() > 0)
             @foreach($siswaKeluar as $dispensasi)
-                @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp
+                @php $isOverdue = $dispensasi->isOverdue(); @endphp
                 @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue])
             @endforeach
         @else
@@ -292,106 +327,11 @@ $cards = [
     {{-- SECTION: TERLAMBAT --}}
     <div id="section-terlambat" class="space-y-3 {{ $currentFilter !== 'terlambat' ? 'hidden' : '' }}">
         <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i class="ti ti-alert-triangle text-rose-500 mr-2 text-base"></i>Siswa Terlambat</h3>
-        @php $renderedTerlambat = 0; @endphp
-
-        @foreach($siswaKeluar as $dispensasi)
-            @php
-                $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali);
-                if (!$isOverdue) continue;
-                $renderedTerlambat++;
-                $lateMinutes = \App\Helpers\DispensasiTimeHelper::hitungMenitTerlambat($dispensasi->batas_waktu_kembali);
-                $lateText = \App\Helpers\DispensasiTimeHelper::formatDurasiTerlambat($lateMinutes, short: true);
-            @endphp
-            <div class="bg-white rounded-2xl border border-rose-200 shadow-xs overflow-hidden" data-dispensasi="{{ $dispensasi->id }}" data-status="terlambat" data-overdue="true" data-deadline="{{ $dispensasi->batas_waktu_kembali->format('Y-m-d H:i:s') }}">
-                <div class="px-4 py-3.5 bg-rose-50/70 border-b border-rose-100">
-                    <div class="flex justify-between items-start gap-2">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <p class="font-mono font-semibold text-slate-700 text-xs">{{ $dispensasi->nomor_surat }}</p>
-                                @if($dispensasi->isRombongan())
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                                        <i class="ti ti-users text-xs"></i>
-                                        <span>Rombongan</span>
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                        <i class="ti ti-user text-xs"></i>
-                                        <span>Individu</span>
-                                    </span>
-                                @endif
-                                <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-rose-100 text-rose-700 uppercase">
-                                    <i class="ti ti-alert-triangle mr-1"></i>TERLAMBAT {{ $lateText }}
-                                </span>
-                                @if($dispensasi->is_warned)
-                                    <span class="px-2 py-0.5 rounded-md text-[9px] font-bold bg-purple-100 text-purple-700 uppercase">
-                                        <i class="ti ti-phone-call mr-1"></i>DIHUBUNGI
-                                    </span>
-                                @endif
-                            </div>
-                            <p class="font-bold text-slate-900 text-sm truncate">{{ $dispensasi->siswa->nama_lengkap }}</p>
-                            <p class="text-[10px] text-slate-500 truncate">{{ $dispensasi->siswa->kelas?->nama_kelas ?? '-' }} • {{ $dispensasi->siswa->kelas?->jurusan?->nama_jurusan ?? '-' }}</p>
-                        </div>
-                        <a href="{{ route('satpam.dispensasi.detail', $dispensasi) }}" class="inline-flex items-center justify-center w-8 h-8 min-h-[32px] bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-2xs transition-colors flex-shrink-0">
-                            <i class="ti ti-eye text-sm"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="p-4 space-y-3 bg-slate-50/50">
-                    <div class="grid grid-cols-2 gap-3 text-xs">
-                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
-                            <p class="text-slate-400 text-[9px] font-bold uppercase mb-1">Jam Keluar</p>
-                            <p class="font-semibold text-slate-800">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_keluar, $dispensasi->created_at?->dayOfWeek) }}</p>
-                        </div>
-                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
-                            <p class="text-slate-400 text-[9px] font-bold uppercase mb-1">Jam Kembali</p>
-                            <p class="font-semibold text-rose-700">{{ \App\Helpers\TimeHelper::getWaktuAktual($dispensasi->jam_kembali, $dispensasi->created_at?->dayOfWeek) }}</p>
-                        </div>
-                    </div>
-                    @if(!empty($dispensasi->siswa->no_telepon))
-                        @php
-                            $hp = preg_replace('/[^0-9]/', '', $dispensasi->siswa->no_telepon);
-                            if (str_starts_with($hp, '0')) $hp = '62' . substr($hp, 1);
-                            $waLink = "https://wa.me/{$hp}?text=" . urlencode("*PERINGATAN KETERLAMBATAN*\n\nYth. *{$dispensasi->siswa->nama_lengkap}*,\nBatas waktu kembali dispensasi Anda telah LEWAT.\n\nLokasi Tujuan: {$dispensasi->tujuan}\nSEGERA KEMBALI ke sekolah.\n\nPetugas Satpam SMKN 1 Bangsri");
-                        @endphp
-                        <div id="wa-section-{{ $dispensasi->id }}" class="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3">
-                            <div class="flex items-center justify-between {{ $dispensasi->is_warned ? 'mb-1' : 'mb-2' }}">
-                                <div>
-                                    <p class="text-[10px] font-bold text-emerald-700 uppercase">Kontak Darurat</p>
-                                    <p class="text-sm font-semibold text-slate-800 font-mono">{{ $dispensasi->siswa->no_telepon }}</p>
-                                </div>
-                                @if($dispensasi->is_warned)
-                                    <div class="inline-flex items-center justify-center w-10 h-10 bg-slate-200 text-slate-500 rounded-xl cursor-not-allowed" title="Sudah dihubungi">
-                                        <i class="ti ti-check text-base"></i>
-                                    </div>
-                                @else
-                                    <button onclick="handleWaContacted({{ $dispensasi->id }}, '{{ $waLink }}')"
-                                            class="inline-flex items-center justify-center w-10 h-10 min-h-[44px] min-w-[44px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-colors">
-                                        <i class="ti ti-brand-whatsapp text-xl"></i>
-                                    </button>
-                                @endif
-                            </div>
-                            @if($dispensasi->is_warned)
-                                <p class="text-[10px] text-green-600 font-medium"><i class="ti ti-circle-check mr-1 text-xs"></i>Sudah dihubungi via WhatsApp</p>
-                            @endif
-                        </div>
-                    @elseif($dispensasi->is_warned)
-                        <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-center justify-between">
-                            <div>
-                                <p class="text-[10px] font-bold text-purple-700 uppercase">Status Kontak</p>
-                                <p class="text-xs font-semibold text-purple-900 mt-0.5"><i class="ti ti-circle-check mr-1 text-xs"></i>Sudah Dihubungi</p>
-                            </div>
-                            <span class="text-xs text-purple-600 font-mono">{{ $dispensasi->warned_at ? \Carbon\Carbon::parse($dispensasi->warned_at)->format('H:i') . ' WIB' : '-' }}</span>
-                        </div>
-                    @endif
-                    <a href="{{ route('satpam.scan') }}"
-                       class="w-full inline-flex justify-center items-center px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors">
-                        <i class="ti ti-qrcode mr-1.5 text-base"></i>Scan QR Code untuk Kembali
-                    </a>
-                </div>
-            </div>
-        @endforeach
-
-        @if($renderedTerlambat === 0)
+        @if($siswaTerlambat->count() > 0)
+            @foreach($siswaTerlambat as $dispensasi)
+                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'terlambat', 'isOverdue' => true])
+            @endforeach
+        @else
             <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-2xs">
                 <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center text-2xl mb-3 shadow-2xs"><i class="ti ti-circle-check"></i></div>
                 <p class="text-slate-800 text-sm font-semibold">Tidak ada siswa yang terlambat hari ini</p>
@@ -435,16 +375,19 @@ $cards = [
     {{-- SECTION: SEMUA --}}
     <div id="section-semua" class="space-y-3 {{ $currentFilter !== 'semua' ? 'hidden' : '' }}">
         <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center"><i class="ti ti-layout-grid text-slate-500 mr-2 text-base"></i>Semua Dispensasi Hari Ini</h3>
-        @if($menungguKeluar->count() > 0 || $siswaKeluar->count() > 0 || (isset($selesai) && $selesai->count() > 0))
-            @foreach($menungguKeluar as $dispensasi)
-                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'menunggu', 'isOverdue' => false])
-            @endforeach
-            @foreach($siswaKeluar as $dispensasi)
-                @php $isOverdue = $dispensasi->batas_waktu_kembali && now()->greaterThan($dispensasi->batas_waktu_kembali); @endphp
-                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'keluar', 'isOverdue' => $isOverdue])
-            @endforeach
-            @foreach($selesai as $dispensasi)
-                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => 'selesai', 'isOverdue' => false])
+        @if($semuaDispensasi->count() > 0)
+            @foreach($semuaDispensasi as $dispensasi)
+                @php
+                    $isOverdue = $dispensasi->isOverdue();
+                    $cardStatus = match($dispensasi->status) {
+                        'disetujui' => 'menunggu',
+                        'keluar' => $isOverdue ? 'terlambat' : 'keluar',
+                        'selesai' => 'selesai',
+                        'kadaluarsa' => 'kadaluarsa',
+                        default => $dispensasi->status
+                    };
+                @endphp
+                @include('satpam._dispensasi_card', ['dispensasi' => $dispensasi, 'status' => $cardStatus, 'isOverdue' => $isOverdue])
             @endforeach
         @else
             <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-2xs">
@@ -457,11 +400,14 @@ $cards = [
 
 </div>
 
-{{-- Loading Overlay --}}
-<div id="loading-overlay" class="hidden fixed inset-0 bg-slate-900/20 backdrop-blur-2xs z-50 flex items-center justify-center">
-    <div class="bg-white rounded-2xl p-4 shadow-lg flex items-center space-x-3 border border-slate-200">
-        <div class="animate-spin rounded-full h-5 w-5 border-2 border-rose-600 border-t-transparent"></div>
-        <span class="text-xs font-semibold text-slate-700">Memuat data...</span>
+{{-- Loading Overlay (Diletakkan di luar content-area agar tidak tertutup animasi fade-out) --}}
+<div id="loading-overlay" class="hidden fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[100] flex items-center justify-center transition-all">
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-2xl flex items-center space-x-3.5 border border-slate-200">
+        <div class="animate-spin rounded-full h-6 w-6 border-2 border-rose-600 border-t-transparent shrink-0"></div>
+        <div>
+            <p class="text-xs font-bold text-slate-800">Memuat data...</p>
+            <p class="text-[10px] text-slate-500">Menyaring daftar dispensasi</p>
+        </div>
     </div>
 </div>
 @endsection
@@ -469,74 +415,99 @@ $cards = [
 @push('scripts')
 <script>
 let currentFilter = '{{ $currentFilter }}';
+let isSwitchingFilter = false;
 
 function switchFilter(filterKey, color, event) {
     if (event) event.preventDefault();
-    if (filterKey === currentFilter) return;
+    if (filterKey === currentFilter || isSwitchingFilter) return;
+
+    isSwitchingFilter = true;
 
     // Reset secondary filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active', 'bg-rose-600', 'bg-purple-600', 'text-white', 'shadow-xs', 'border-transparent');
-        btn.classList.add('bg-white', 'text-slate-700', 'hover:bg-slate-50', 'hover:text-slate-900', 'border-slate-200');
+        btn.className = 'filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-bold border transition-all text-center bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200 shadow-2xs';
     });
 
-    // Reset stat cards
+    // Reset stat cards & icon boxes cleanly using data attributes
     document.querySelectorAll('.stat-card-btn').forEach(card => {
-        card.classList.remove('active', 'ring-2', 'shadow-xs');
-        card.classList.add('border-slate-200');
-        card.className = card.className.replace(/border-\w+-500/g, '');
-        card.className = card.className.replace(/ring-\w+-500\/20/g, '');
-        const iconContainer = card.querySelector('div > div');
-        if (iconContainer) iconContainer.className = iconContainer.className.replace(/bg-\w+-500 text-white/g, '');
+        card.className = `stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[48px] transition-all w-full active:scale-[0.99] ${card.dataset.inactiveBtn}`;
+        const iconBox = card.querySelector('.icon-box');
+        if (iconBox) {
+            iconBox.className = `icon-box w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${card.dataset.inactiveIcon}`;
+        }
     });
 
-    // Set active button
+    // Set active secondary button (jika filterKey adalah semua / dihubungi)
     const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
     if (activeBtn) {
-        activeBtn.classList.remove('bg-white', 'text-slate-700', 'hover:bg-slate-50', 'hover:text-slate-900', 'border-slate-200');
-        activeBtn.classList.add('active', `bg-${color === 'red' ? 'rose' : color}-600`, 'text-white', 'shadow-xs', 'border-transparent');
+        const activeColor = filterKey === 'dihubungi' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-rose-600 hover:bg-rose-700';
+        activeBtn.className = `filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-bold border transition-all text-center active ${activeColor} text-white shadow-xs border-transparent`;
     }
 
+    // Set active stat card & icon box cleanly
     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
     if (activeStatCard) {
-        const c = color === 'red' ? 'rose' : color;
-        activeStatCard.classList.add('active', `border-${c}-500`, `ring-2`, `ring-${c}-500/20`, 'shadow-xs');
-        const iconContainer = activeStatCard.querySelector('div > div');
-        if (iconContainer) iconContainer.classList.add(`bg-${c}-500`, 'text-white');
+        activeStatCard.className = `stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[48px] transition-all w-full active:scale-[0.99] ${activeStatCard.dataset.activeBtn}`;
+        const iconBox = activeStatCard.querySelector('.icon-box');
+        if (iconBox) {
+            iconBox.className = `icon-box w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${activeStatCard.dataset.activeIcon}`;
+        }
     }
 
     const contentArea = document.getElementById('content-area');
     const loading = document.getElementById('loading-overlay');
 
-    contentArea.classList.remove('fade-in');
-    contentArea.classList.add('fade-out');
-    loading.classList.remove('hidden');
+    if (contentArea) {
+        contentArea.classList.remove('fade-in');
+        contentArea.classList.add('fade-out');
+    }
+    if (loading) {
+        loading.classList.remove('hidden');
+    }
 
-    fetch(`{{ url()->current() }}?filter=${filterKey}`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
-    .then(response => response.text())
+    const targetUrl = new URL(window.location.href);
+    targetUrl.searchParams.set('filter', filterKey);
+
+    const startTime = Date.now();
+
+    fetch(targetUrl.toString(), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'text/html'
+        }
+    })
+    .then(r => {
+        if (!r.ok) throw new Error(`HTTP Error ${r.status}`);
+        return r.text();
+    })
     .then(html => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const newContent = doc.getElementById('content-area');
 
-        if (newContent) {
-            setTimeout(() => {
+        // Pastikan loading tampil setidaknya 220ms agar user merasakan feedback animasi perpindahan yang jelas
+        const elapsed = Date.now() - startTime;
+        const delay = Math.max(0, 220 - elapsed);
+
+        setTimeout(() => {
+            if (newContent && contentArea) {
                 contentArea.innerHTML = newContent.innerHTML;
                 contentArea.classList.remove('fade-out');
                 contentArea.classList.add('fade-in');
-                loading.classList.add('hidden');
                 currentFilter = filterKey;
-
-                const newUrl = new URL(window.location);
-                newUrl.searchParams.set('filter', filterKey);
-                window.history.pushState({ filter: filterKey }, '', newUrl);
-            }, 200);
-        }
+                window.history.pushState({ filter: filterKey }, '', targetUrl.toString());
+            } else {
+                window.location.href = targetUrl.toString();
+            }
+            if (loading) loading.classList.add('hidden');
+            isSwitchingFilter = false;
+        }, delay);
     })
-    .catch(error => {
-        console.error('Error:', error);
-        loading.classList.add('hidden');
-        window.location.href = `{{ url()->current() }}?filter=${filterKey}`;
+    .catch(err => {
+        console.error('Error switching filter:', err);
+        if (loading) loading.classList.add('hidden');
+        isSwitchingFilter = false;
+        window.location.href = targetUrl.toString();
     });
 }
 
@@ -544,16 +515,13 @@ window.addEventListener('popstate', function(event) {
     const urlParams = new URLSearchParams(window.location.search);
     const filter = urlParams.get('filter') || 'semua';
     if (filter !== currentFilter) {
-        const btn = document.querySelector(`button[data-filter="${filter}"]`);
-        if (btn) {
-            let color = 'slate';
-            if(filter === 'menunggu') color = 'amber';
-            if(filter === 'keluar') color = 'sky';
-            if(filter === 'terlambat') color = 'rose';
-            if(filter === 'selesai') color = 'emerald';
-            if(filter === 'dihubungi') color = 'purple';
-            switchFilter(filter, color, null);
-        }
+        let color = 'slate';
+        if (filter === 'menunggu') color = 'amber';
+        if (filter === 'keluar') color = 'sky';
+        if (filter === 'terlambat') color = 'rose';
+        if (filter === 'selesai') color = 'emerald';
+        if (filter === 'dihubungi') color = 'purple';
+        switchFilter(filter, color, null);
     }
 });
 
@@ -584,7 +552,7 @@ function handleWaContacted(dispensasiId, waLink) {
                         <p class="text-[10px] text-green-600"><i class="ti ti-circle-check mr-1 text-xs"></i>Sudah dihubungi via WhatsApp</p>
                     `;
                 }
-                const badgeRow = card.querySelector('.flex.items-center.gap-2.mb-1');
+                const badgeRow = card.querySelector('.badge-row, .flex.items-center.gap-1\\.5.mb-1, .flex.items-center.gap-2.mb-1');
                 if (badgeRow && !badgeRow.querySelector('.warned-badge')) {
                     badgeRow.insertAdjacentHTML('beforeend', `<span class="warned-badge px-2 py-0.5 rounded-md text-[9px] font-bold bg-purple-100 text-purple-700 uppercase ml-1"><i class="ti ti-phone-call mr-1"></i>DIHUBUNGI</span>`);
                 }

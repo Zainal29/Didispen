@@ -66,7 +66,6 @@ class DashboardController extends Controller
             'keluar'          => $siswaKeluar->count(),
             'terlambat'       => $siswaTerlambat->count(),
             'selesai'         => $selesai->count(),
-            'kadaluarsa'      => $kadaluarsa->count(),
         ];
 
         $dihubungi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])

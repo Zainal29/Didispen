@@ -415,6 +415,10 @@ class WhatsappMessageService
             return $isOverdue ? 'terlambat' : 'keluar';
         }
 
+        if ($dispensasi->status === 'kadaluarsa') {
+            return $dispensasi->isNotReturned() ? 'terlambat' : 'kadaluarsa';
+        }
+
         return $dispensasi->status ?? 'keluar';
     }
 

@@ -102,7 +102,7 @@
             </div>
 
             {{-- Informasi penting & Aturan Konfirmasi --}}
-            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 space-y-3">
                 <div class="flex items-start gap-3">
                     <div class="w-8 h-8 shrink-0 rounded-xl bg-white border border-amber-200 text-amber-600 flex items-center justify-center shadow-xs">
                         <i class="ti ti-alert-triangle text-base"></i>
@@ -111,6 +111,17 @@
                         <p class="text-sm font-bold text-amber-900">Perhatian Sebelum Mengajukan</p>
                         <p class="mt-1 text-xs text-amber-800 leading-relaxed">
                             Setelah formulir dikirim, permohonan <strong>tidak dapat dibatalkan sendiri</strong>. Anda <strong>wajib langsung menemui Guru Piket</strong> di ruang piket untuk verifikasi. Permohonan tanpa konfirmasi hingga akhir KBM akan otomatis <strong>Kadaluarsa</strong>.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 p-3 bg-rose-50 border border-rose-200 rounded-xl">
+                    <div class="w-7 h-7 shrink-0 rounded-lg bg-rose-600 text-white flex items-center justify-center shadow-xs text-sm">
+                        <i class="ti ti-alert-octagon"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-rose-900 uppercase tracking-wide">Wajib Scan di Pos Satpam</p>
+                        <p class="text-[11px] text-rose-800 mt-0.5 leading-relaxed">
+                            Jika izin berkegiatan <strong>di dalam lingkungan sekolah</strong> (tidak keluar gerbang), Anda <strong>tetap wajib scan keluar di Pos Satpam</strong> agar status dispensasi aktif dan dapat dimonitoring oleh Guru & Wali Kelas.
                         </p>
                     </div>
                 </div>
@@ -2176,6 +2187,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <li>Anda <b>wajib menemui Guru Piket</b> untuk verifikasi dan persetujuan.</li>
                                     <li>QR Code hanya sah berlaku pada tanggal pelaksanaan izin yang dipilih.</li>
                                 </ul>
+                            </div>
+                            <div class="p-3 bg-rose-50 border-2 border-rose-300 rounded-xl text-rose-950 text-xs leading-relaxed shadow-xs">
+                                <p class="font-extrabold mb-1 flex items-center gap-1.5 text-rose-700 uppercase tracking-wide text-[11px]">
+                                    <i class="ti ti-alert-octagon text-rose-600 text-sm"></i> ATURAN WAJIB SCAN DI POS SATPAM:
+                                </p>
+                                <p class="text-rose-900 text-[11px] leading-relaxed">
+                                    Jika Anda mengajukan dispensasi <strong>tetapi tidak keluar dari lingkungan sekolah (berkegiatan di dalam sekolah)</strong>, Anda <strong>TETAP DIWAJIBKAN UNTUK SCAN KELUAR DI POS SATPAM</strong> agar status dispensasi aktif dan dapat dimonitoring secara resmi oleh Guru Piket, Guru Mapel, serta Wali Kelas.
+                                </p>
                             </div>
                             <p class="text-slate-700 text-xs">Pastikan seluruh data dan foto selfie yang Anda sertakan sudah benar.</p>
                         </div>
