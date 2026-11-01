@@ -268,6 +268,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('scan/verify', [ScanController::class, 'verify'])->middleware('throttle:300,1')->name('scan.verify');
 
         // Konfirmasi Manual
+        Route::get('manual-guru-pending', [DashboardController::class, 'getPendingManualGuru'])->name('manual-guru-pending');
         Route::post('konfirmasi/{dispensasi}/keluar', [DashboardController::class, 'konfirmasiKeluar'])->name('konfirmasi.keluar');
         Route::post('konfirmasi/{dispensasi}/kembali', [DashboardController::class, 'konfirmasiKembali'])->name('konfirmasi.kembali');
 

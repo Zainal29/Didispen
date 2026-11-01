@@ -6,6 +6,9 @@
 @section('content')
 <div class="max-w-md mx-auto space-y-4">
 
+    {{-- MODAL & BANNER DISPENSASI MANUAL GURU PIKET (SISWA TANPA HP) --}}
+    @include('satpam._modal_manual_guru')
+
     {{-- Instruksi & Tip Cepat --}}
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5 flex items-center space-x-3.5">
         <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center text-xl flex-shrink-0 shadow-2xs">
@@ -751,6 +754,31 @@ function renderScanDetail(data) {
     // Alerts
     let alertHtml = '';
 
+    // Deteksi Dispensasi Dibuat Manual oleh Guru Piket
+    if (data.dibuat_manual_oleh_guru) {
+        alertHtml += `
+            <div class="p-3.5 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border-2 border-blue-400 rounded-2xl text-xs text-blue-950 shadow-xs flex items-start gap-3">
+                <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                    <i class="ti ti-user-shield text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-extrabold text-blue-950 text-xs uppercase tracking-wide flex items-center gap-1">
+                            <i class="ti ti-bell-ringing animate-bounce text-amber-500"></i> Dibuatkan Manual oleh Guru Piket
+                        </span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-200 text-blue-900 font-mono">
+                            Perlu Verifikasi Gerbang
+                        </span>
+                    </div>
+                    <p class="text-xs text-blue-900 mt-1 leading-snug">
+                        Siswa ini dispensasinya <strong>dibuatkan langsung oleh Guru Piket (${escapeHtml(data.guru || 'Guru Piket')})</strong> di ruang piket.
+                        Mohon untuk <strong>diverifikasi keluar</strong> gerbang sekolah.
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
     // Deteksi Riwayat Scan Keluar (Pembedaan Guru vs Satpam)
     if (data.riwayat_scan && data.riwayat_scan.keluar && data.riwayat_scan.keluar.sudah) {
         const rk = data.riwayat_scan.keluar;
@@ -853,6 +881,12 @@ function renderScanDetail(data) {
             ${photoHtml}
             <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                    ${data.dibuat_manual_oleh_guru ? `
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300 shadow-2xs">
+                            <i class="ti ti-user-shield text-xs"></i>
+                            <span>Manual Guru Piket</span>
+                        </span>
+                    ` : ''}
                     ${(data.tipe_pengajuan === 'rombongan' || data.tipe_pengajuan === 'organisasi') ? `
                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                             <i class="ti ti-users text-xs"></i>
@@ -1006,7 +1040,9 @@ function renderScanDetail(data) {
         <div class="text-center pt-2">
             ${isKeluar ? `
                 <p class="text-sm font-bold text-slate-900">
-                    Setujui siswa ini untuk <span class="text-rose-600 underline decoration-rose-300 font-extrabold">KELUAR</span> dari sekolah?
+                    ${data.dibuat_manual_oleh_guru
+                        ? 'Dispensasi dibuatkan Guru Piket. Verifikasi siswa ini untuk <span class="text-rose-600 underline decoration-rose-300 font-extrabold">KELUAR</span> sekarang?'
+                        : 'Setujui siswa ini untuk <span class="text-rose-600 underline decoration-rose-300 font-extrabold">KELUAR</span> dari sekolah?'}
                 </p>
                 <p class="text-[11px] text-slate-500 mt-0.5">Cocokkan wajah siswa dengan foto sebelum menyetujui.</p>
             ` : isKembali ? `
@@ -1026,6 +1062,13 @@ function renderScanDetail(data) {
 
     // Footer actions
     if (isKeluar) {
+        const btnKeluarText = data.dibuat_manual_oleh_guru
+            ? '<i class="ti ti-shield-check text-base"></i> Verifikasi KELUAR'
+            : '<i class="ti ti-door-exit text-base"></i> Ya, Setujui KELUAR';
+        const btnKeluarClass = data.dibuat_manual_oleh_guru
+            ? 'bg-blue-600 hover:bg-blue-700'
+            : 'bg-rose-600 hover:bg-rose-700';
+
         footer.innerHTML = `
             <button type="button"
                     onclick="closeScanModal()"
@@ -1035,8 +1078,8 @@ function renderScanDetail(data) {
             <button type="button"
                     id="btnConfirmAction"
                     onclick="submitConfirmation('keluar')"
-                    class="flex-1 py-3 px-4 min-h-[44px] rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5">
-                <i class="ti ti-door-exit text-base"></i> Ya, Setujui KELUAR
+                    class="flex-1 py-3 px-4 min-h-[44px] rounded-xl ${btnKeluarClass} active:scale-[0.98] text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5">
+                ${btnKeluarText}
             </button>
         `;
     } else if (isKembali) {
@@ -1381,14 +1424,20 @@ function manualVerify(e) {
                 }
 
                 let tagBadge = '';
+                if (d.dibuat_manual_oleh_guru) {
+                    tagBadge += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                        <i class="ti ti-user-shield text-xs"></i>
+                        <span>Manual Guru Piket</span>
+                    </span>`;
+                }
                 if (d.is_organisasi || d.tipe_pengajuan === 'rombongan') {
-                    tagBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                    tagBadge += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                         <i class="ti ti-users text-xs"></i>
                         <span>Rombongan</span>
                         <span class="text-[9px] bg-purple-200/70 text-purple-800 px-1 rounded-sm ml-0.5 font-mono">${d.total_rombongan} siswa</span>
                     </span>`;
-                } else {
-                    tagBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                } else if (!d.dibuat_manual_oleh_guru) {
+                    tagBadge += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                         <i class="ti ti-user text-xs"></i>
                         <span>Individu</span>
                     </span>`;
@@ -1398,10 +1447,13 @@ function manualVerify(e) {
 
                 let actionSection = '';
                 if (d.status === 'disetujui') {
+                    const btnClass = d.dibuat_manual_oleh_guru ? 'bg-blue-600 hover:bg-blue-700' : 'bg-rose-600 hover:bg-rose-700';
+                    const btnIcon = d.dibuat_manual_oleh_guru ? 'ti-shield-check' : 'ti-door-exit';
+                    const btnLabel = d.dibuat_manual_oleh_guru ? 'Verifikasi KELUAR' : 'Konfirmasi KELUAR';
                     actionSection = `
                         <div class="flex flex-col sm:flex-row items-stretch gap-2 pt-1">
-                            <button onclick="quickAction('keluar', ${d.id})" class="flex-1 px-4 py-2.5 min-h-[42px] bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs flex items-center justify-center">
-                                <i class="ti ti-door-exit mr-1.5 text-base"></i> Konfirmasi KELUAR
+                            <button onclick="quickAction('keluar', ${d.id})" class="flex-1 px-4 py-2.5 min-h-[42px] ${btnClass} text-white text-xs font-bold rounded-xl transition-colors shadow-2xs flex items-center justify-center">
+                                <i class="ti ${btnIcon} mr-1.5 text-base"></i> ${btnLabel}
                             </button>
                             <a href="${d.detail_url || '#'}" class="inline-flex items-center justify-center gap-1 px-3.5 py-2.5 min-h-[42px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors border border-slate-200 shadow-2xs">
                                 <i class="ti ti-eye text-sm"></i>

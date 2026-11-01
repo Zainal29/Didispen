@@ -19,10 +19,27 @@ class ScanController extends Controller
      */
     public function index()
     {
+        $today = now('Asia/Jakarta')->format('Y-m-d');
+        $manualGuruMenunggu = \App\Models\Dispensasi::with([
+                'siswa.kelas.jurusan',
+                'siswa.user',
+                'guru',
+                'anggotaSiswa.kelas.jurusan'
+            ])
+            ->where('dibuat_manual_oleh_guru', true)
+            ->where('status', 'disetujui')
+            ->where(function ($q) use ($today) {
+                $q->whereDate('created_at', $today)
+                  ->orWhereDate('tanggal_izin', $today);
+            })
+            ->latest()
+            ->get();
+
         return view('satpam.scan', [
             'defaultExpressMode' => filter_var(\App\Models\Setting::get('satpam_express_mode', '0'), FILTER_VALIDATE_BOOLEAN),
             'defaultBeepSound'   => filter_var(\App\Models\Setting::get('satpam_beep_sound', '1'), FILTER_VALIDATE_BOOLEAN),
             'defaultWakeLock'    => filter_var(\App\Models\Setting::get('satpam_wake_lock', '1'), FILTER_VALIDATE_BOOLEAN),
+            'manualGuruMenunggu' => $manualGuruMenunggu,
         ]);
     }
 
@@ -178,6 +195,7 @@ class ScanController extends Controller
                     'id' => $dispensasi->id,
                     'nomor_surat' => $dispensasi->nomor_surat,
                     'tipe_pengajuan' => $dispensasi->tipe_pengajuan,
+                    'dibuat_manual_oleh_guru' => (bool) $dispensasi->dibuat_manual_oleh_guru,
                     'nama_organisasi' => null,
                     'tanggal_izin' => $tglIzin,
                     'status' => $dispensasi->status,

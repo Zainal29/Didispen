@@ -16,11 +16,11 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, GuruPiketService $guruPiketService) // <i class="fas fa-check-circle"></i> 1. TAMBAHKAN Request $request
+    public function index(Request $request, GuruPiketService $guruPiketService)
     {
         \App\Services\DispensasiService::autoExpireOverdueDispensasi();
 
-        $today = now()->format('Y-m-d');
+        $today = now('Asia/Jakarta')->format('Y-m-d');
 
         // Informasi Guru Piket
         $infoPiket = $guruPiketService->getInformasiSesi();
@@ -29,44 +29,119 @@ class DashboardController extends Controller
             $adaJadwalHariIni = $guruPiketService->getJadwalUntukTanggal()->isNotEmpty();
         }
 
-        // <i class="fas fa-check-circle"></i> 2. TAMBAHKAN INI: Baca parameter filter dari URL (default: 'semua')
+        // Baca parameter filter dari URL (default: 'semua')
         $filter = $request->get('filter', 'semua');
 
-        $menungguKeluar = Dispensasi::with(['siswa.kelas.jurusan', 'guru'])
-            ->where('status', 'disetujui')
-            ->whereDate('created_at', $today)
+        // Query seluruh permohonan hari ini dalam satu query efisien
+        $semuaDispensasi = Dispensasi::with([
+                'siswa.user',
+                'siswa.kelas.jurusan',
+                'guru',
+                'anggotaSiswa.kelas.jurusan',
+                'anggotaSiswa.user',
+            ])
+            ->where(function ($q) use ($today) {
+                $q->whereDate('created_at', $today)
+                  ->orWhereDate('tanggal_izin', $today);
+            })
             ->latest()
             ->get();
 
-        $siswaKeluar = Dispensasi::with(['siswa.kelas.jurusan', 'guru'])
-            ->where('status', 'keluar')
-            ->whereDate('created_at', $today)
-            ->latest()
-            ->get();
+        $menungguKeluar = $semuaDispensasi->where('status', 'disetujui')->values();
+        $siswaKeluar    = $semuaDispensasi->where('status', 'keluar')->values();
+        $selesai        = $semuaDispensasi->where('status', 'selesai')->values();
+        $kadaluarsa     = $semuaDispensasi->where('status', 'kadaluarsa')->values();
 
-        $selesai = Dispensasi::with(['siswa.kelas.jurusan', 'guru'])
-            ->where('status', 'selesai')
-            ->whereDate('created_at', $today)
-            ->latest()
-            ->get();
+        // Siswa terlambat:
+        // 1. Sedang keluar dan melewati batas waktu kembali (isOverdue)
+        // 2. Sempat keluar tetapi tidak scan kembali / kadaluarsa tidak kembali (isNotReturned)
+        // 3. Selesai tetapi kembali melewati batas jam kembali (isReturnedLate)
+        $siswaTerlambat = $semuaDispensasi->filter(function ($d) {
+            return $d->isTerlambat();
+        })->values();
 
         $stats = [
-            'total' => $menungguKeluar->count() + $siswaKeluar->count() + $selesai->count(),
+            'total'           => $semuaDispensasi->count(),
             'menunggu_keluar' => $menungguKeluar->count(),
-            'keluar' => $siswaKeluar->count(),
-            'selesai' => $selesai->count(),
+            'keluar'          => $siswaKeluar->count(),
+            'terlambat'       => $siswaTerlambat->count(),
+            'selesai'         => $selesai->count(),
+            'kadaluarsa'      => $kadaluarsa->count(),
         ];
 
-      $dihubungi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
-                ->where('is_warned', true)
-                ->whereDate('warned_at', today())
-                ->latest('warned_at')
-                ->limit(50)
-                ->get();
+        $dihubungi = Dispensasi::with(['siswa.user', 'siswa.kelas.jurusan', 'guru'])
+            ->where('is_warned', true)
+            ->whereDate('warned_at', today())
+            ->latest('warned_at')
+            ->limit(50)
+            ->get();
 
+        $manualGuruMenunggu = $menungguKeluar->where('dibuat_manual_oleh_guru', true)->values();
 
-        // <i class="fas fa-check-circle"></i> 3. TAMBAHKAN 'filter' ke dalam compact agar bisa dibaca oleh View
-        return view('satpam.dashboard', compact('stats', 'menungguKeluar', 'siswaKeluar', 'selesai', 'dihubungi', 'filter', 'infoPiket', 'adaJadwalHariIni'));
+        return view('satpam.dashboard', compact(
+            'stats',
+            'semuaDispensasi',
+            'menungguKeluar',
+            'siswaKeluar',
+            'siswaTerlambat',
+            'selesai',
+            'kadaluarsa',
+            'dihubungi',
+            'filter',
+            'infoPiket',
+            'adaJadwalHariIni',
+            'manualGuruMenunggu'
+        ));
+    }
+
+    /**
+     * Ambil data dispensasi yang dibuatkan manual oleh guru piket dan menunggu verifikasi keluar.
+     */
+    public function getPendingManualGuru()
+    {
+        $today = now('Asia/Jakarta')->format('Y-m-d');
+        $items = Dispensasi::with([
+                'siswa.kelas.jurusan',
+                'siswa.user',
+                'guru',
+                'anggotaSiswa.kelas.jurusan',
+                'anggotaSiswa.user',
+            ])
+            ->where('dibuat_manual_oleh_guru', true)
+            ->where('status', 'disetujui')
+            ->where(function ($q) use ($today) {
+                $q->whereDate('created_at', $today)
+                  ->orWhereDate('tanggal_izin', $today);
+            })
+            ->latest()
+            ->get()
+            ->map(function ($d) {
+                return [
+                    'id' => $d->id,
+                    'nomor_surat' => $d->nomor_surat,
+                    'siswa_nama' => $d->siswa?->nama_lengkap ?? 'Tidak Diketahui',
+                    'siswa_nis' => $d->siswa?->user?->nis_nip ?? '-',
+                    'siswa_kelas' => $d->siswa?->kelas?->nama_kelas ?? '-',
+                    'siswa_jurusan' => $d->siswa?->kelas?->jurusan?->nama_jurusan ?? '-',
+                    'foto_verifikasi' => $d->foto_verifikasi ? Storage::url($d->foto_verifikasi) : null,
+                    'guru_nama' => $d->guru?->nama_lengkap ?? 'Guru Piket',
+                    'jam_keluar' => $d->jam_keluar,
+                    'jam_kembali' => $d->jam_kembali,
+                    'is_sampai_pulang' => (bool) $d->sampai_pulang,
+                    'alasan' => $d->alasan,
+                    'tujuan' => $d->tujuan,
+                    'lokasi' => $d->lokasi,
+                    'detail_url' => route('satpam.dispensasi.detail', $d->id),
+                    'tipe_pengajuan' => $d->tipe_pengajuan,
+                    'total_rombongan' => $d->isRombongan() ? ($d->anggotaSiswa->count() + 1) : 1,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'count' => $items->count(),
+            'data' => $items,
+        ]);
     }
 
     /**
@@ -92,7 +167,7 @@ class DashboardController extends Controller
                     'petugasKeluar',
                     'petugasKembali',
                 ])
-                ->whereIn('status', ['disetujui', 'keluar', 'selesai'])
+                ->whereIn('status', ['disetujui', 'keluar', 'selesai', 'kadaluarsa'])
                 ->where(function($q) use ($query) {
                     $q->where('nomor_surat', 'like', "%{$query}%")
                       ->orWhere('id', $query)
@@ -135,6 +210,7 @@ class DashboardController extends Controller
                     'nomor_surat' => $d->nomor_surat,
                     'status' => $d->status,
                     'tipe_pengajuan' => $d->tipe_pengajuan ?? ($isRombongan ? 'rombongan' : 'individu'),
+                    'dibuat_manual_oleh_guru' => (bool)$d->dibuat_manual_oleh_guru,
                     'is_organisasi' => $isRombongan,
                     'nama_organisasi' => $isRombongan ? 'Rombongan' : null,
                     'total_rombongan' => $totalSiswa,
@@ -256,7 +332,7 @@ class DashboardController extends Controller
 
     public function markWaContacted(Dispensasi $dispensasi)
     {
-        if ($dispensasi->status !== 'keluar') {
+        if (!in_array($dispensasi->status, ['keluar', 'kadaluarsa'])) {
             return response()->json(['success' => false, 'message' => 'Dispensasi tidak valid']);
         }
 
