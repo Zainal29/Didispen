@@ -50,6 +50,12 @@
                 </button>
             </form>
 
+            <button type="button" onclick="document.getElementById('sectionLogs').scrollIntoView({ behavior: 'smooth' })"
+                class="uiverse-btn-tactile px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition" title="Lihat riwayat log pengiriman pesan">
+                <i class="ti ti-history text-slate-500"></i>
+                <span>Riwayat Log ({{ $stats['total'] }})</span>
+            </button>
+
             <button type="button" onclick="document.getElementById('sectionSettings').scrollIntoView({ behavior: 'smooth' })"
                 class="uiverse-btn-tactile px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm shadow-blue-500/25">
                 <i class="ti ti-settings"></i>
@@ -805,7 +811,7 @@
     </div>
 
     {{-- FILTER & TABEL RIWAYAT PENGIRIMAN --}}
-    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+    <div id="sectionLogs" class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden scroll-mt-6">
         <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <form method="GET" class="flex flex-wrap items-center gap-2">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama / nomor HP..."
@@ -1007,6 +1013,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderWaitingQr(data.qr_image);
             }
         } catch (e) {
+            console.error('Error polling status WhatsApp:', e);
             isCurrentlyConnected = false;
             renderOffline();
         } finally {
@@ -1017,56 +1024,68 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     function renderConnected(user) {
-        stateConnected.classList.remove('hidden');
-        stateWaitingQr.classList.add('hidden');
-        stateOffline.classList.add('hidden');
+        if (stateConnected) stateConnected.classList.remove('hidden');
+        if (stateWaitingQr) stateWaitingQr.classList.add('hidden');
+        if (stateOffline) stateOffline.classList.add('hidden');
 
         if (user) {
-            connectedPhoneText.textContent = user.phone ? ((user.phone.startsWith('+') || user.phone.startsWith('Nomor')) ? user.phone : ('+' + user.phone)) : 'WhatsApp Terhubung';
-            connectedNameText.textContent = (user.name || 'Akun Bot') + ' • Sesi Gateway Aktif';
+            if (connectedPhoneText) {
+                connectedPhoneText.textContent = user.phone ? ((user.phone.startsWith('+') || user.phone.startsWith('Nomor')) ? user.phone : ('+' + user.phone)) : 'WhatsApp Terhubung';
+            }
+            if (connectedNameText) {
+                connectedNameText.textContent = (user.name || 'Akun Bot') + ' • Sesi Gateway Aktif';
+            }
         }
 
-        liveStatusBadge.innerHTML = `
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Terhubung ke WhatsApp
-            </span>
-        `;
+        if (liveStatusBadge) {
+            liveStatusBadge.innerHTML = `
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Terhubung ke WhatsApp
+                </span>
+            `;
+        }
     }
 
     function renderWaitingQr(qrImage) {
-        stateConnected.classList.add('hidden');
-        stateWaitingQr.classList.remove('hidden');
-        stateOffline.classList.add('hidden');
+        if (stateConnected) stateConnected.classList.add('hidden');
+        if (stateWaitingQr) stateWaitingQr.classList.remove('hidden');
+        if (stateOffline) stateOffline.classList.add('hidden');
 
-        if (qrImage) {
-            qrImageElement.src = qrImage;
-            qrImageElement.classList.remove('hidden');
-            qrLoadingPlaceholder.classList.add('hidden');
-        } else {
-            qrImageElement.classList.add('hidden');
-            qrLoadingPlaceholder.classList.remove('hidden');
+        if (qrImageElement && qrLoadingPlaceholder) {
+            if (qrImage) {
+                qrImageElement.src = qrImage;
+                qrImageElement.classList.remove('hidden');
+                qrLoadingPlaceholder.classList.add('hidden');
+            } else {
+                qrImageElement.classList.add('hidden');
+                qrLoadingPlaceholder.classList.remove('hidden');
+            }
         }
 
-        liveStatusBadge.innerHTML = `
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                Menunggu Scan QR
-            </span>
-        `;
+        if (liveStatusBadge) {
+            liveStatusBadge.innerHTML = `
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    Menunggu Scan QR
+                </span>
+            `;
+        }
     }
 
     function renderOffline() {
-        stateConnected.classList.add('hidden');
-        stateWaitingQr.classList.add('hidden');
-        stateOffline.classList.remove('hidden');
+        if (stateConnected) stateConnected.classList.add('hidden');
+        if (stateWaitingQr) stateWaitingQr.classList.add('hidden');
+        if (stateOffline) stateOffline.classList.remove('hidden');
 
-        liveStatusBadge.innerHTML = `
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                Server Bot Offline
-            </span>
-        `;
+        if (liveStatusBadge) {
+            liveStatusBadge.innerHTML = `
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    Server Bot Offline
+                </span>
+            `;
+        }
     }
 
     // Jalankan timer polling adaptif

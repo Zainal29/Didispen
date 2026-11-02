@@ -94,7 +94,7 @@ class WhatsAppBot
                 'X-Client-ID'     => $clientId,
                 'X-Client-Secret' => $clientSecret,
                 'Accept'          => 'application/json',
-            ])->connectTimeout(3)->timeout(5)->get($url);
+            ])->connectTimeout(8)->timeout(15)->get($url);
 
             if ($response->successful()) {
                 return [
