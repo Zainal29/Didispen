@@ -586,7 +586,7 @@ class WhatsappMessageService
         ?string $recipientName = null,
         ?string $referenceKey = null
     ): ?\App\Models\WhatsappLog {
-        $botEnabled = (bool) \App\Models\Setting::get('wa_bot_enabled', config('services.whatsapp_bot.enabled', true));
+        $botEnabled = (bool) \App\Models\Setting::get('wa_bot_enabled', true);
         if (! $botEnabled) {
             return null;
         }

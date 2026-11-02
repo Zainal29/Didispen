@@ -51,9 +51,9 @@ class WhatsappBotController extends Controller
 
         // Konfigurasi saat ini dari Database (fallback ke config/services.php)
         $settings = [
-            'wa_bot_enabled'               => filter_var(Setting::get('wa_bot_enabled', config('services.whatsapp_bot.enabled', true)), FILTER_VALIDATE_BOOLEAN),
-            'wa_bot_url'                   => Setting::get('wa_bot_url', config('services.whatsapp_bot.url', 'http://127.0.0.1:3789')),
-            'wa_bot_api_key'               => Setting::get('wa_bot_api_key', config('services.whatsapp_bot.api_key', 'sipintu_wa_secret_key_2026')),
+            'wa_bot_enabled'               => filter_var(Setting::get('wa_bot_enabled', true), FILTER_VALIDATE_BOOLEAN),
+            'wa_bot_url'                   => Setting::get('wa_bot_url', config('services.sipintu.url', 'https://sipintu.smkn1bangsri.sch.id')),
+            'wa_bot_api_key'               => Setting::get('wa_bot_api_key', null),
             'wa_notify_piket_bertugas'     => filter_var(Setting::get('wa_notify_piket_bertugas', '1'), FILTER_VALIDATE_BOOLEAN),
             'wa_notify_koordinator_piket'  => filter_var(Setting::get('wa_notify_koordinator_piket', '1'), FILTER_VALIDATE_BOOLEAN),
             'wa_notify_piket_swap'         => filter_var(Setting::get('wa_notify_piket_swap', '1'), FILTER_VALIDATE_BOOLEAN),
@@ -99,7 +99,7 @@ class WhatsappBotController extends Controller
      */
     public function toggle()
     {
-        $current = filter_var(Setting::get('wa_bot_enabled', config('services.whatsapp_bot.enabled', true)), FILTER_VALIDATE_BOOLEAN);
+        $current = filter_var(Setting::get('wa_bot_enabled', true), FILTER_VALIDATE_BOOLEAN);
         $newStatus = ! $current;
         Setting::set('wa_bot_enabled', $newStatus ? '1' : '0');
 
@@ -379,9 +379,9 @@ class WhatsappBotController extends Controller
             ]);
         }
 
-        // Prioritas 2 (Fallback): Microservice Baileys lokal
-        $botUrl = rtrim(Setting::get('wa_bot_url', config('services.whatsapp_bot.url', 'http://127.0.0.1:3789')), '/');
-        $apiKey = Setting::get('wa_bot_api_key', config('services.whatsapp_bot.api_key', 'sipintu_wa_secret_key_2026'));
+        // Fallback jika ada endpoint status lain yang merespons (misal saat mock unit test)
+        $botUrl = rtrim(Setting::get('wa_bot_url', 'http://127.0.0.1:3789'), '/');
+        $apiKey = Setting::get('wa_bot_api_key', null);
 
         try {
             $response = Http::withHeaders(['x-api-key' => $apiKey])
@@ -395,31 +395,19 @@ class WhatsappBotController extends Controller
                 return array_merge($default, [
                     'online'         => true,
                     'connected'      => $isConnected,
-                    'gateway_type'   => 'baileys',
+                    'gateway_type'   => 'sipintu',
                     'status'         => $data['status'] ?? ($isConnected ? 'connected' : 'disconnected'),
                     'assigned_phone' => $data['assigned_phone'] ?? null,
                     'user'           => $data['user'] ?? null,
                     'qr'             => $data['qr'] ?? null,
                     'qr_image'       => $data['qr_image'] ?? null,
-                    'message'        => $data['message'] ?? 'Bot Baileys Aktif',
+                    'message'        => $data['message'] ?? 'Bot Gateway Aktif',
                 ]);
             }
-
-            return array_merge($default, [
-                'online'       => true,
-                'connected'    => false,
-                'gateway_type' => 'baileys',
-                'status'       => 'error',
-                'message'      => 'Server Bot merespon dengan HTTP ' . $response->status(),
-            ]);
         } catch (\Throwable $e) {
-            return array_merge($default, [
-                'online'       => false,
-                'connected'    => false,
-                'gateway_type' => 'baileys',
-                'status'       => 'offline',
-                'message'      => 'Tidak dapat terhubung ke Bot Baileys di ' . $botUrl,
-            ]);
+            // Abaikan jika tidak merespons
         }
+
+        return $default;
     }
 }

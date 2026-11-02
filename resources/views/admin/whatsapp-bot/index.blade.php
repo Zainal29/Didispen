@@ -380,12 +380,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="wa_bot_url" class="block text-xs font-bold text-slate-700 mb-1.5">
-                            URL Server Microservice Baileys
+                            URL Server Gateway WhatsApp
                         </label>
                         <input type="url" name="wa_bot_url" id="wa_bot_url" value="{{ old('wa_bot_url', $settings['wa_bot_url']) }}"
-                            placeholder="http://127.0.0.1:3789"
+                            placeholder="https://sipintu.smkn1bangsri.sch.id"
                             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition">
-                        <p class="text-[11px] text-slate-500 mt-1">Default lokal: <code>http://127.0.0.1:3789</code></p>
+                        <p class="text-[11px] text-slate-500 mt-1">Default: <code>https://sipintu.smkn1bangsri.sch.id</code></p>
                     </div>
 
                     <div>
