@@ -15,7 +15,7 @@ class WhatsAppBot
      * @param bool $sync true = kirim langsung via socket WA (200 OK, rekomendasi), false = antrean background SiPintu (202 Accepted)
      * @return array ['success' => bool, 'data' => ?array, 'error' => ?string]
      */
-    public static function send(string $phone, string $message, bool $sync = true): array
+    public static function send(string $phone, string $message, bool $sync = false): array
     {
         $baseUrl = rtrim((string) (config('services.sipintu.url') ?: config('services.sipintu.api_url') ?: 'https://sipintu.smkn1bangsri.sch.id'), '/');
         $url = $baseUrl . '/api/v1/whatsapp/send';
@@ -48,6 +48,21 @@ class WhatsAppBot
                 'message' => $message,
                 'sync'    => $sync,
             ]);
+
+            // Jika mode sync: true gagal (misal HTTP 502 karena sesi nomor khusus belum discan), otomatis alihkan ke antrean SiPintu (sync=false)
+            if (! $response->successful() && $sync) {
+                Log::warning("[WhatsAppBot] Sync delivery gagal (HTTP {$response->status()}), mencoba antrean SiPintu (sync=false)...");
+                $response = Http::withHeaders([
+                    'X-Client-ID'     => $clientId,
+                    'X-Client-Secret' => $clientSecret,
+                    'Accept'          => 'application/json',
+                    'Content-Type'    => 'application/json',
+                ])->timeout(20)->post($url, [
+                    'phone'   => $cleanPhone,
+                    'message' => $message,
+                    'sync'    => false,
+                ]);
+            }
 
             if ($response->successful()) {
                 return [

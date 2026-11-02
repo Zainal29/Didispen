@@ -40,8 +40,8 @@ class SendBaileysWhatsAppJob implements ShouldQueue
 
         // 1. Utamakan pengiriman via SiPintu Multi-Session WhatsApp Gateway
         if (!empty($clientId) && !empty($clientSecret)) {
-            // Gunakan sync: true agar SiPintu langsung mengirimkan pesan secara instan via socket WA
-            $result = WhatsAppBot::send($log->phone, $log->message, sync: true);
+            // Gunakan sync: false agar SiPintu memproses antrean dan mendukung auto-fallback ke bot pusat jika sesi belum aktif
+            $result = WhatsAppBot::send($log->phone, $log->message, sync: false);
 
             if ($result['success']) {
                 $log->update([
