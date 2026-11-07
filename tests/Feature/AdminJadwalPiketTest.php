@@ -35,9 +35,11 @@ class AdminJadwalPiketTest extends TestCase
         ]);
     }
 
+    private static int $guruSeq = 100000;
+
     private function createGuruUser(string $name = 'Guru Test', bool $active = true): array
     {
-        $unique = rand(100000, 999999);
+        $unique = ++self::$guruSeq;
         $user = User::create([
             'name' => $name,
             'email' => "guru_{$unique}@sch.id",
