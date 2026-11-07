@@ -90,7 +90,7 @@
 
     <div class="relative z-10 flex flex-col items-center w-full">
         <div class="w-14 h-14 bg-white rounded-xl flex items-center justify-center mb-3 shadow-md">
-            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-10 h-10 object-contain" decoding="async">
+            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-11 h-11 object-contain" decoding="async" style="image-rendering: -webkit-optimize-contrast;">
         </div>
 
         <!-- DIBAWAH INI ADALAH TULISAN DIDISPEN DAN TOMBOL YANG SUDAH DIGABUNGKAN -->
@@ -304,7 +304,7 @@
                                 class="w-full flex items-center justify-between p-2.5 rounded-xl border border-blue-100 bg-blue-50/60 hover:bg-blue-100/80 transition-colors text-left group gap-2">
                             <div class="flex items-center gap-2.5 min-w-0 flex-1">
                                 <div class="w-9 h-9 rounded-lg bg-white border border-blue-100 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden p-1">
-                                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo SMK" class="w-full h-full object-contain" decoding="async">
+                                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo SMK" class="w-full h-full object-contain" decoding="async" style="image-rendering: -webkit-optimize-contrast;">
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-1.5 flex-wrap">

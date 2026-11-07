@@ -76,27 +76,34 @@
         };
         $authErrorMessage = "{$credentialLabel} atau password salah.";
 
-        $userQuery = User::where(function ($query) use ($loginInput, $nipFromSchoolEmail) {
-            // Email akun (bisa email sekolah atau email terdaftar)
+        $userQuery = User::where(function ($query) use ($loginInput, $nipFromSchoolEmail, $roleSelected) {
+            // Email akun atau NIP / NIS langsung pada tabel users (sudah terindeks)
             $query->where('email', $loginInput)
-                // NIP / NIS
-                ->orWhere('nis_nip', $loginInput)
+                ->orWhere('nis_nip', $loginInput);
+
+            if ($roleSelected === 'guru' || $roleSelected === 'admin') {
                 // Email atau NIP guru
-                ->orWhereHas('guru', function ($guruQuery) use ($loginInput) {
+                $query->orWhereHas('guru', function ($guruQuery) use ($loginInput) {
                     $guruQuery->where('email', $loginInput)
                         ->orWhere('nip', $loginInput);
-                })
+                });
+
+                // Jika input berupa email sekolah (NIP@smkn1bangsri.sch.id), cek juga berdasarkan NIP langsung
+                if ($nipFromSchoolEmail) {
+                    $query->orWhere('nis_nip', $nipFromSchoolEmail)
+                        ->orWhereHas('guru', function ($guruQuery) use ($nipFromSchoolEmail) {
+                            $guruQuery->where('nip', $nipFromSchoolEmail);
+                        });
+                }
+            } elseif ($roleSelected === 'siswa') {
                 // NIS siswa
-                ->orWhereHas('siswa', function ($siswaQuery) use ($loginInput) {
+                $query->orWhereHas('siswa', function ($siswaQuery) use ($loginInput) {
                     $siswaQuery->where('nis_nip', $loginInput);
                 });
 
-            // Jika input berupa email sekolah (NIP@smkn1bangsri.sch.id), cek juga berdasarkan NIP langsung
-            if ($nipFromSchoolEmail) {
-                $query->orWhere('nis_nip', $nipFromSchoolEmail)
-                    ->orWhereHas('guru', function ($guruQuery) use ($nipFromSchoolEmail) {
-                        $guruQuery->where('nip', $nipFromSchoolEmail);
-                    });
+                if ($nipFromSchoolEmail) {
+                    $query->orWhere('nis_nip', $nipFromSchoolEmail);
+                }
             }
         });
 
@@ -520,8 +527,8 @@
         try {
             $response = Http::asForm()
                 ->acceptJson()
-                ->connectTimeout(3)
-                ->timeout(5)
+                ->connectTimeout(1.5)
+                ->timeout(2)
                 ->post("{$baseUrl}/api/v1/auth/verify-credentials", [
                     'client_id'     => $clientId,
                     'client_secret' => $clientSecret,

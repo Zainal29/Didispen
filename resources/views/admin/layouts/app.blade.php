@@ -65,30 +65,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .app-topbar-fixed {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 40 !important;
-        }
-        @media (min-width: 1024px) {
-            .app-topbar-fixed {
-                left: 16rem !important; /* matches lg:pl-64 */
-            }
-        }
-        .app-topbar-sticky {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 40 !important;
-        }
-        @media (min-width: 1024px) {
-            .app-topbar-sticky {
-                left: 16rem !important;
-            }
-        }
+        /* Topbar normal di atas halaman */
 
         /* Slim sleek scrollbar for sidebar */
         .sidebar-scroll {
@@ -215,9 +192,9 @@
             {{-- Mobile Drawer Header --}}
             <div class="p-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
                 <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/20 overflow-hidden flex items-center justify-center shrink-0">
+                    <div class="w-11 h-11 rounded-xl bg-blue-50/80 border border-blue-100 text-blue-600 shadow-2xs overflow-hidden flex items-center justify-center shrink-0 p-1">
                         @if(file_exists(public_path('images/logo-didispen.png')))
-                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-1">
+                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain" style="image-rendering: -webkit-optimize-contrast;">
                         @else
                             <i class="ti ti-school text-xl"></i>
                         @endif
@@ -269,9 +246,9 @@
     <aside class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200/90 flex-col z-30 shadow-2xs">
         {{-- Desktop Header --}}
         <div class="p-4 border-b border-slate-100 flex items-center space-x-3 shrink-0 bg-white">
-            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/20 overflow-hidden flex items-center justify-center shrink-0">
+            <div class="w-11 h-11 rounded-xl bg-blue-50/80 border border-blue-100 text-blue-600 shadow-2xs overflow-hidden flex items-center justify-center shrink-0 p-1">
                 @if(file_exists(public_path('images/logo-didispen.png')))
-                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-1">
+                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain" style="image-rendering: -webkit-optimize-contrast;">
                 @else
                     <i class="ti ti-school text-xl"></i>
                 @endif
@@ -312,8 +289,8 @@
     ========================================================== --}}
     <div class="flex flex-col min-h-screen lg:pl-64 w-full max-w-full min-w-0" style="overflow-x: clip;">
 
-        {{-- TOPBAR (Fixed - selalu diam di atas, tidak ikut tergulung saat scroll) --}}
-        <header class="app-topbar-fixed fixed top-0 left-0 right-0 lg:left-64 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-4 shadow-xs">
+        {{-- TOPBAR (Normal di atas halaman — ikut tergulung saat scroll agar tidak menghalangi konten) --}}
+        <header class="w-full bg-white border-b border-slate-200/80 px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-4 shadow-xs">
             
             {{-- Left: Mobile Toggle & Page Title --}}
             <div class="flex items-center gap-3 min-w-0">
@@ -444,9 +421,6 @@
 
             </div>
         </header>
-
-        {{-- Spacer agar konten tidak tertutup header yang fixed --}}
-        <div class="h-14 sm:h-16 flex-shrink-0" aria-hidden="true"></div>
 
         {{-- PAGE CONTENT --}}
         <main class="flex-1 p-4 sm:p-6 lg:p-7 min-w-0 w-full max-w-full">
