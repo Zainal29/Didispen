@@ -73,6 +73,31 @@
             transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        .app-topbar-fixed {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 40 !important;
+        }
+        @media (min-width: 1024px) {
+            .app-topbar-fixed {
+                left: 18rem !important; /* matches lg:pl-72 */
+            }
+        }
+        .app-topbar-sticky {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 40 !important;
+        }
+        @media (min-width: 1024px) {
+            .app-topbar-sticky {
+                left: 18rem !important;
+            }
+        }
+
         /* Sembunyikan bottom bar saat keyboard virtual HP terbuka agar tidak ikut keangkat */
         body.keyboard-open .mobile-bottom-nav,
         body.keyboard-open #mobileBottomNav,
@@ -84,7 +109,7 @@
         }
     </style>
 
-<body class="bg-slate-50 text-slate-800 antialiased overflow-x-hidden">
+<body class="bg-slate-50 text-slate-800 antialiased" style="overflow-x: clip;">
 
 @php
     $user    = auth()->user();
@@ -94,10 +119,10 @@
     $navOff  = 'flex items-center w-full px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors';
     $mobOn   = 'text-blue-600';
     $mobOff  = 'text-slate-400';
-    $isPiketActiveUser = $user?->guru ? app(\App\Services\GuruPiketService::class)->isGuruBertugasSaatIni($user->guru) : false;
+    $isPiketActiveUser = $user?->guru ? (app(\App\Services\GuruPiketService::class)->isGuruBertugasSaatIni($user->guru) || app(\App\Services\GuruPiketService::class)->isKoordinatorHariIni($user->guru)) : false;
 @endphp
 
-<div class="min-h-screen overflow-x-hidden max-w-full" x-data="{ sheet: false }">
+<div class="min-h-screen max-w-full" x-data="{ sheet: false }">
 
     {{-- ================================================== --}}
     {{-- SIDEBAR — DESKTOP SAJA                              --}}
@@ -208,11 +233,12 @@
     {{-- ================================================== --}}
     {{-- MAIN AREA                                          --}}
     {{-- ================================================== --}}
-    <div class="flex flex-col min-h-screen lg:pl-72 min-w-0 max-w-full overflow-x-hidden">
+    <div class="flex flex-col min-h-screen lg:pl-72 min-w-0 max-w-full">
 
-        <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200">
-            {{-- Mobile Header --}}
-            <div class="lg:hidden flex items-center justify-between px-4 py-3">
+        {{-- TOPBAR (Fixed - selalu diam di atas, tidak ikut tergulung saat scroll) --}}
+        <header class="app-topbar-fixed fixed top-0 left-0 right-0 lg:left-72 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+            {{-- Mobile Header (h-14) --}}
+            <div class="lg:hidden flex items-center justify-between px-4 h-14">
                 <div class="flex items-center space-x-2.5 min-w-0">
                     <div class="relative">
                         <div class="relative flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 shadow-2xs overflow-hidden flex-shrink-0">
@@ -232,8 +258,8 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>Online
                 </span>
             </div>
-            {{-- Desktop Header --}}
-            <div class="hidden lg:flex items-center justify-between px-6 py-3">
+            {{-- Desktop Header (h-16) --}}
+            <div class="hidden lg:flex items-center justify-between px-6 h-16">
                 <h2 class="text-base font-bold text-slate-900">@yield('page-title', 'Dashboard')</h2>
                 <div class="flex items-center space-x-4">
                     <span class="flex items-center text-xs font-medium text-slate-500">
@@ -252,6 +278,9 @@
                 </div>
             </div>
         </header>
+
+        {{-- Spacer agar konten tidak tertutup header yang fixed --}}
+        <div class="h-14 lg:h-16 flex-shrink-0" aria-hidden="true"></div>
 
         <main class="flex-1 p-3 sm:p-6 pb-28 lg:pb-6 min-w-0 max-w-full">
             @include('components.alert')

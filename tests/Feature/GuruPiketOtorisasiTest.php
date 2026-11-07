@@ -388,4 +388,130 @@ class GuruPiketOtorisasiTest extends TestCase
         $this->assertEquals('disetujui', $dispensasi->status);
         $this->assertEquals($this->guruBiasa->id, $dispensasi->guru_id);
     }
+
+    /**
+     * Test 8: Guru Koordinator Piket hari ini bisa melakukan verifikasi (approve & reject) pengajuan siswa
+     * dan melihat banner khusus koordinator di dashboard guru
+     */
+    public function test_guru_koordinator_bisa_verifikasi_pengajuan_siswa(): void
+    {
+        // Buat User & Guru Koordinator (bukan petugas sesi reguler)
+        $koorUser = User::create([
+            'name'     => 'Guru Koordinator Jumat',
+            'email'    => 'koorjumat@sch.id',
+            'role'     => 'guru',
+            'nis_nip'  => '19750505',
+            'password' => Hash::make('password'),
+        ]);
+        $koorGuru = Guru::create([
+            'user_id'        => $koorUser->id,
+            'nip'            => '19750505',
+            'nama_lengkap'   => 'Dra. Hj. Siti Koordinator, M.Pd.',
+            'mata_pelajaran' => 'Biologi',
+            'status_aktif'   => true,
+            'no_telepon'     => '081234567899',
+        ]);
+
+        // Pasang guru ini sebagai koordinator piket hari Jumat
+        $this->jadwalSesi1->update(['koordinator_guru_id' => $koorGuru->id]);
+
+        $dispensasi = Dispensasi::create([
+            'siswa_id'    => $this->siswa->id,
+            'nomor_surat' => 'DISP/KOOR/001',
+            'kategori'    => 'izin',
+            'alasan'      => 'Dispensasi lomba ilmiah',
+            'tujuan'      => 'Universitas',
+            'jam_keluar'  => '08:00',
+            'jam_kembali' => '11:00',
+            'status'      => 'menunggu',
+        ]);
+
+        // 1. Dashboard Guru Koordinator memuat banner khusus koordinator
+        $responseDashboard = $this->actingAs($koorUser)->get(route('guru.dashboard'));
+        $responseDashboard->assertOk();
+        $responseDashboard->assertSee('Anda adalah guru koordinator hari Jumat. Anda bisa melakukan verifikasi pengajuan siswa.');
+        $responseDashboard->assertSee('Koordinator Guru Piket');
+
+        // 2. Koordinator menyetujui dispensasi
+        $responseApprove = $this->actingAs($koorUser)->post(route('guru.pengajuan.approve', $dispensasi));
+        $responseApprove->assertRedirect(route('guru.pengajuan.index'));
+        $responseApprove->assertSessionHas('success');
+
+        $dispensasi->refresh();
+        $this->assertEquals('disetujui', $dispensasi->status);
+        $this->assertEquals($koorGuru->id, $dispensasi->guru_id);
+
+        // 3. Koordinator menolak dispensasi menunggu lainnya
+        $dispensasi2 = Dispensasi::create([
+            'siswa_id'    => $this->siswa->id,
+            'nomor_surat' => 'DISP/KOOR/002',
+            'kategori'    => 'izin',
+            'alasan'      => 'Alasan kurang jelas',
+            'tujuan'      => 'Warnet',
+            'jam_keluar'  => '08:00',
+            'jam_kembali' => '11:00',
+            'status'      => 'menunggu',
+        ]);
+
+        $responseReject = $this->actingAs($koorUser)->post(route('guru.pengajuan.reject', $dispensasi2), [
+            'catatan_admin' => 'Alasan izin tidak dapat diterima oleh koordinator piket.',
+        ]);
+        $responseReject->assertRedirect(route('guru.pengajuan.index'));
+
+        $dispensasi2->refresh();
+        $this->assertEquals('ditolak', $dispensasi2->status);
+        $this->assertEquals($koorGuru->id, $dispensasi2->guru_id);
+    }
+
+    /**
+     * Test 9: Koordinator piket TIDAK ditampilkan di daftar guru piket pada dashboard siswa, dashboard guru lain, dan satpam
+     */
+    public function test_koordinator_tidak_ditampilkan_di_daftar_piket_siswa_guru_dan_satpam(): void
+    {
+        $koorUser = User::create([
+            'name'     => 'Guru Koordinator Unik',
+            'email'    => 'koorunik@sch.id',
+            'role'     => 'guru',
+            'nis_nip'  => '19760606',
+            'password' => Hash::make('password'),
+        ]);
+        $koorGuru = Guru::create([
+            'user_id'        => $koorUser->id,
+            'nip'            => '19760606',
+            'nama_lengkap'   => 'Budi Koordinator Spesial, M.Si.',
+            'mata_pelajaran' => 'Kimia',
+            'status_aktif'   => true,
+            'no_telepon'     => '089988776655',
+        ]);
+
+        $this->jadwalSesi1->update(['koordinator_guru_id' => $koorGuru->id]);
+
+        // 1. Dashboard Siswa
+        $siswaUser = $this->siswa->user;
+        $responseSiswa = $this->actingAs($siswaUser)->get(route('siswa.dashboard'));
+        $responseSiswa->assertOk();
+        $responseSiswa->assertDontSee('Budi Koordinator Spesial, M.Si.');
+
+        $this->flushSession();
+
+        // 2. Dashboard Guru lain (Guru Biasa)
+        $responseGuru = $this->actingAs($this->guruBiasaUser)->get(route('guru.dashboard'));
+        $responseGuru->assertOk();
+        $responseGuru->assertDontSee('Budi Koordinator Spesial, M.Si.');
+        $responseGuru->assertDontSee('Anda adalah guru koordinator hari');
+
+        $this->flushSession();
+
+        // 3. Dashboard Satpam
+        $satpamUser = User::create([
+            'name'     => 'Petugas Satpam Gerbang',
+            'email'    => 'satpamgerbang@sch.id',
+            'role'     => 'satpam',
+            'nis_nip'  => 'SAT001',
+            'password' => Hash::make('password'),
+        ]);
+        $responseSatpam = $this->actingAs($satpamUser)->get(route('satpam.dashboard'));
+        $responseSatpam->assertOk();
+        $responseSatpam->assertDontSee('Budi Koordinator Spesial, M.Si.');
+    }
 }

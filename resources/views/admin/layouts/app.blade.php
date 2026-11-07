@@ -65,6 +65,31 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        .app-topbar-fixed {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 40 !important;
+        }
+        @media (min-width: 1024px) {
+            .app-topbar-fixed {
+                left: 16rem !important; /* matches lg:pl-64 */
+            }
+        }
+        .app-topbar-sticky {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 40 !important;
+        }
+        @media (min-width: 1024px) {
+            .app-topbar-sticky {
+                left: 16rem !important;
+            }
+        }
+
         /* Slim sleek scrollbar for sidebar */
         .sidebar-scroll {
             scrollbar-width: thin;
@@ -285,10 +310,10 @@
     {{-- =========================================================
         MAIN AREA (Header + Content)
     ========================================================== --}}
-    <div class="flex flex-col min-h-screen lg:pl-64 w-full max-w-full min-w-0 overflow-x-hidden">
+    <div class="flex flex-col min-h-screen lg:pl-64 w-full max-w-full min-w-0" style="overflow-x: clip;">
 
-        {{-- STICKY TOPBAR --}}
-        <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-3 flex items-center justify-between gap-4 shadow-2xs">
+        {{-- TOPBAR (Fixed - selalu diam di atas, tidak ikut tergulung saat scroll) --}}
+        <header class="app-topbar-fixed fixed top-0 left-0 right-0 lg:left-64 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-4 shadow-xs">
             
             {{-- Left: Mobile Toggle & Page Title --}}
             <div class="flex items-center gap-3 min-w-0">
@@ -419,6 +444,9 @@
 
             </div>
         </header>
+
+        {{-- Spacer agar konten tidak tertutup header yang fixed --}}
+        <div class="h-14 sm:h-16 flex-shrink-0" aria-hidden="true"></div>
 
         {{-- PAGE CONTENT --}}
         <main class="flex-1 p-4 sm:p-6 lg:p-7 min-w-0 w-full max-w-full">

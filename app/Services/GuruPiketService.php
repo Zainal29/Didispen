@@ -369,13 +369,81 @@ class GuruPiketService
     }
 
     /**
-     * 8. Validasi Otorisasi Persetujuan / Penolakan Dispensasi oleh Guru
+     * 8. Cek Apakah Guru Adalah Koordinator Piket Hari Ini
+     * True jika:
+     * - Guru berstatus aktif
+     * - Terdaftar sebagai koordinator_guru_id pada jadwal piket aktif di hari yang bersangkutan
+     */
+    public function isKoordinatorHariIni(Guru $guru, CarbonInterface|string|null $datetime = null): bool
+    {
+        if (! $guru->status_aktif) {
+            return false;
+        }
+
+        $dt = $this->toCarbon($datetime);
+        $hariIso = $dt->dayOfWeekIso;
+        $tanggal = $dt->toDateString();
+
+        return JadwalPiket::where('is_active', true)
+            ->where('hari', $hariIso)
+            ->where('koordinator_guru_id', $guru->id)
+            ->whereDate('tanggal_mulai_berlaku', '<=', $tanggal)
+            ->where(function ($query) use ($tanggal) {
+                $query->whereNull('tanggal_selesai_berlaku')
+                    ->orWhereDate('tanggal_selesai_berlaku', '>=', $tanggal);
+            })
+            ->exists();
+    }
+
+    /**
+     * Mengambil Guru Koordinator yang bertugas pada hari ini (jika ada)
+     */
+    public function getKoordinatorHariIni(CarbonInterface|string|null $datetime = null): ?Guru
+    {
+        $dt = $this->toCarbon($datetime);
+        $hariIso = $dt->dayOfWeekIso;
+        $tanggal = $dt->toDateString();
+
+        $jadwal = JadwalPiket::where('is_active', true)
+            ->where('hari', $hariIso)
+            ->whereNotNull('koordinator_guru_id')
+            ->whereDate('tanggal_mulai_berlaku', '<=', $tanggal)
+            ->where(function ($query) use ($tanggal) {
+                $query->whereNull('tanggal_selesai_berlaku')
+                    ->orWhereDate('tanggal_selesai_berlaku', '>=', $tanggal);
+            })
+            ->with('koordinator')
+            ->first();
+
+        return $jadwal?->koordinator;
+    }
+
+    /**
+     * Mengambil Nama Hari dalam Bahasa Indonesia
+     */
+    public function getNamaHariIni(CarbonInterface|string|null $datetime = null): string
+    {
+        $dt = $this->toCarbon($datetime);
+        $map = [
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+            7 => 'Minggu',
+        ];
+
+        return $map[$dt->dayOfWeekIso] ?? 'Hari Ini';
+    }
+
+    /**
+     * 9. Validasi Otorisasi Persetujuan / Penolakan Dispensasi oleh Guru
      * Guru berhak memproses pengajuan dispensasi jika:
      * - Profil guru aktif
      * - Berstatus sedang bertugas pada sesi piket aktif saat ini (isGuruBertugasSaatIni)
+     *   ATAU bertugas sebagai koordinator piket hari ini (isKoordinatorHariIni)
      * - Pengajuan dispensasi berstatus 'menunggu'
-     * Catatan: Pengajuan berstatus menunggu dari sesi sebelumnya yang belum sempat diproses (rollover)
-     * diizinkan untuk disetujui oleh guru piket yang sedang bertugas di sesi aktif saat ini agar siswa tidak terhambat.
      *
      * @return array{allowed: bool, reason: ?string}
      */
@@ -389,19 +457,21 @@ class GuruPiketService
         }
 
         $dt = $this->toCarbon($datetime);
-        $jadwalAktif = $this->getJadwalAktif($dt);
+        $isBertugasAktif = $this->isGuruBertugasSaatIni($guru, $dt);
+        $isKoordinator = $this->isKoordinatorHariIni($guru, $dt);
 
-        if (! $jadwalAktif) {
+        if (! $isBertugasAktif && ! $isKoordinator) {
+            $jadwalAktif = $this->getJadwalAktif($dt);
+            if (! $jadwalAktif) {
+                return [
+                    'allowed' => false,
+                    'reason' => 'Tidak ada sesi jadwal piket yang sedang aktif saat ini. Anda berada dalam mode pemantau.',
+                ];
+            }
+
             return [
                 'allowed' => false,
-                'reason' => 'Tidak ada sesi jadwal piket yang sedang aktif saat ini. Anda berada dalam mode pemantau.',
-            ];
-        }
-
-        if (! $this->isGuruBertugasSaatIni($guru, $dt)) {
-            return [
-                'allowed' => false,
-                'reason' => 'Anda tidak memiliki wewenang untuk memproses pengajuan ini karena tidak sedang bertugas piket pada sesi aktif saat ini.',
+                'reason' => 'Anda tidak memiliki wewenang untuk memproses pengajuan ini karena tidak sedang bertugas piket pada sesi aktif saat ini ataupun sebagai koordinator piket hari ini.',
             ];
         }
 
@@ -419,8 +489,8 @@ class GuruPiketService
     }
 
     /**
-     * 9. Validasi Otorisasi Pembuatan Dispensasi Manual oleh Guru
-     * Hanya guru yang sedang bertugas piket pada sesi aktif yang berhak membuat dispensasi manual.
+     * 10. Validasi Otorisasi Pembuatan Dispensasi Manual oleh Guru
+     * Guru yang sedang bertugas piket pada sesi aktif atau koordinator piket berhak membuat dispensasi manual.
      *
      * @return array{allowed: bool, reason: ?string}
      */
@@ -434,19 +504,21 @@ class GuruPiketService
         }
 
         $dt = $this->toCarbon($datetime);
-        $jadwalAktif = $this->getJadwalAktif($dt);
+        $isBertugasAktif = $this->isGuruBertugasSaatIni($guru, $dt);
+        $isKoordinator = $this->isKoordinatorHariIni($guru, $dt);
 
-        if (! $jadwalAktif) {
+        if (! $isBertugasAktif && ! $isKoordinator) {
+            $jadwalAktif = $this->getJadwalAktif($dt);
+            if (! $jadwalAktif) {
+                return [
+                    'allowed' => false,
+                    'reason' => 'Tidak ada sesi jadwal piket yang sedang aktif saat ini untuk membuat dispensasi manual.',
+                ];
+            }
+
             return [
                 'allowed' => false,
-                'reason' => 'Tidak ada sesi jadwal piket yang sedang aktif saat ini untuk membuat dispensasi manual.',
-            ];
-        }
-
-        if (! $this->isGuruBertugasSaatIni($guru, $dt)) {
-            return [
-                'allowed' => false,
-                'reason' => 'Pembuatan dispensasi manual hanya dapat dilakukan oleh guru piket yang sedang bertugas.',
+                'reason' => 'Pembuatan dispensasi manual hanya dapat dilakukan oleh guru piket yang sedang bertugas atau guru koordinator piket.',
             ];
         }
 

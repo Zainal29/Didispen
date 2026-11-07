@@ -41,6 +41,30 @@
         html {
             scroll-behavior: smooth;
         }
+        .app-topbar-fixed {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 40 !important;
+        }
+        @media (min-width: 1024px) {
+            .app-topbar-fixed {
+                left: 16rem !important; /* matches lg:pl-64 */
+            }
+        }
+        .app-topbar-sticky {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 40 !important;
+        }
+        @media (min-width: 1024px) {
+            .app-topbar-sticky {
+                left: 16rem !important;
+            }
+        }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -223,13 +247,13 @@
         {{-- ================================================== --}}
         <div class="flex flex-col min-h-screen lg:pl-64">
 
-            {{-- TOPBAR --}}
-            <header class="sticky top-0 z-20 bg-white border-b border-slate-200 shadow-2xs px-4 sm:px-6 py-3">
+            {{-- TOPBAR (Fixed - selalu diam di atas, tidak ikut tergulung saat scroll) --}}
+            <header class="app-topbar-fixed fixed top-0 left-0 right-0 lg:left-64 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
 
-                {{-- Topbar MOBILE: ringkas, muat di layar kecil --}}
-                <div class="lg:hidden flex items-center justify-between">
+                {{-- Topbar MOBILE: ringkas, muat di layar kecil (h-14) --}}
+                <div class="lg:hidden flex items-center justify-between px-4 h-14">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
                             @if(file_exists(public_path('images/logo-didispen.png')))
                                 <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-full h-full object-contain">
                             @else
@@ -254,8 +278,8 @@
                     </div>
                 </div>
 
-                {{-- Topbar DESKTOP --}}
-                <div class="hidden lg:flex items-center justify-between">
+                {{-- Topbar DESKTOP (h-16) --}}
+                <div class="hidden lg:flex items-center justify-between px-6 h-16">
                     <h2 class="text-base font-bold text-slate-900">@yield('page-title', 'Dashboard')</h2>
                     <div class="flex items-center gap-4">
                         @if(auth()->user()->isSuperAdmin())
@@ -287,6 +311,9 @@
                     </div>
                 </div>
             </header>
+
+            {{-- Spacer agar konten tidak tertutup header yang fixed --}}
+            <div class="h-14 lg:h-16 flex-shrink-0" aria-hidden="true"></div>
 
             {{-- KONTEN (pb-32 sm:pb-36 lg:pb-6 agar tidak tertutup bottom nav di HP) --}}
             <main class="flex-1 p-4 sm:p-6 pb-32 sm:pb-36 lg:pb-6 page-enter">

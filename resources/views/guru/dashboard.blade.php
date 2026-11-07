@@ -41,7 +41,7 @@
             Panel Guru Piket DIDISPEN. Verifikasi permohonan dispensasi dan pantau aktivitas izin siswa hari ini secara real-time.
         </p>
         <div class="mt-3.5 flex flex-wrap items-center gap-2">
-            @if($isSedangBertugasAktif)
+            @if($isSedangBertugasAktif || (!empty($isKoordinatorHariIni)))
                 <a href="{{ route('guru.pengajuan.create') }}"
                    class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-xs active:scale-95 transition-all">
                     <i class="ti ti-plus mr-1.5"></i>Buat Dispensasi
@@ -61,8 +61,36 @@
     </div>
 </div>
 
-{{-- STATUS BANNER: Sedang Bertugas Aktif vs Mode Pemantau --}}
-@if($isSedangBertugasAktif)
+{{-- STATUS BANNER: Koordinator Piket vs Sedang Bertugas Aktif vs Mode Pemantau --}}
+@if(!empty($isKoordinatorHariIni))
+    <div class="mb-4 bg-indigo-50 border border-indigo-200 rounded-2xl p-4 sm:p-4.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg shadow-xs shrink-0">
+                <i class="ti ti-crown"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                        <i class="ti ti-shield-check text-xs"></i>
+                        Koordinator Guru Piket
+                    </span>
+                    <span class="text-xs font-bold text-slate-800">
+                        Hari {{ $namaHariKoordinator ?? now()->locale('id')->isoFormat('dddd') }}
+                    </span>
+                    @if($isSedangBertugasAktif)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                            Sedang Bertugas Sesi Ini
+                        </span>
+                    @endif
+                </div>
+                <p class="text-xs text-slate-700 mt-0.5">
+                    Anda adalah guru koordinator hari {{ $namaHariKoordinator ?? now()->locale('id')->isoFormat('dddd') }}. Anda bisa melakukan verifikasi pengajuan siswa.
+                </p>
+            </div>
+        </div>
+    </div>
+@elseif($isSedangBertugasAktif)
     <div class="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-4.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-xs shrink-0">
@@ -165,6 +193,10 @@
                         <i class="ti ti-door-exit mr-1.5"></i>Catat Keluar
                     </a>
                 @endif
+            @elseif(!empty($isKoordinatorHariIni))
+                <span class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg inline-flex items-center shadow-2xs">
+                    <i class="ti ti-crown text-indigo-600 mr-1.5 text-sm"></i>Koordinator Piket Hari {{ $namaHariKoordinator ?? now()->locale('id')->isoFormat('dddd') }}
+                </span>
             @else
                 <span class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg inline-flex items-center shadow-2xs">
                     <i class="ti ti-circle-x text-red-500 mr-1.5 text-sm"></i>Anda tidak bertugas pada sesi ini/hari ini.
@@ -474,7 +506,7 @@ $cards = [
                         </a>
 
                             @if($item->status === 'menunggu')
-                                @if($isSedangBertugasAktif)
+                                @if($isSedangBertugasAktif || (!empty($isKoordinatorHariIni)))
                                     <form method="POST" action="{{ route('guru.pengajuan.approve', $item) }}" id="form-approve-{{ $item->id }}" class="inline">
                                         @csrf
                                         <button type="button"
@@ -491,7 +523,7 @@ $cards = [
                                         <i class="ti ti-x mr-1.5 text-sm"></i>Tolak
                                     </button>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 cursor-not-allowed" title="Hanya guru piket aktif yang dapat menyetujui/menolak pengajuan ini">
+                                    <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 cursor-not-allowed" title="Hanya guru piket aktif atau koordinator piket yang dapat menyetujui/menolak pengajuan ini">
                                         <i class="ti ti-lock mr-1 text-xs"></i>Khusus Guru Piket
                                     </span>
                                 @endif

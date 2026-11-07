@@ -34,6 +34,8 @@ class DashboardController extends Controller
         }
 
         $isSedangBertugasAktif = $currentGuru ? $guruPiketService->isGuruBertugasSaatIni($currentGuru) : false;
+        $isKoordinatorHariIni = $currentGuru ? $guruPiketService->isKoordinatorHariIni($currentGuru) : false;
+        $namaHariKoordinator = $guruPiketService->getNamaHariIni();
 
         $incomingSwapCount = 0;
         if ($currentGuru) {
@@ -99,7 +101,7 @@ class DashboardController extends Controller
 
         return view('guru.dashboard', compact(
             'stats', 'filter', 'search', 'menunggu', 'sedangKeluar', 'selesai', 'terlambat', 'disetujui', 'displayData', 'dihubungi',
-            'infoPiket', 'adaJadwalHariIni', 'isPetugasAktual', 'isSedangBertugasAktif', 'incomingSwapCount'
+            'infoPiket', 'adaJadwalHariIni', 'isPetugasAktual', 'isSedangBertugasAktif', 'isKoordinatorHariIni', 'namaHariKoordinator', 'incomingSwapCount'
         ));
     }
 

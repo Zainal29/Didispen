@@ -98,7 +98,7 @@
     <h1 class="text-xl font-bold text-white">DIDISPEN</h1>
             
             <!-- BADGE VERSI DIGESER KE KANAN TANPA MERUSAK POSISI TENGAH TEKS -->
-    <div class="absolute left-[calc(50%+4.5rem)] flex items-center">
+    <!-- <div class="absolute left-[calc(50%+4.5rem)] flex items-center">
         <button type="button" 
                 @click="showChangelogModal = true"
                 class="group flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-900/90 hover:bg-slate-900 text-white border border-slate-700/80 shadow-md backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 text-[10px] font-medium cursor-pointer"
@@ -109,7 +109,7 @@
             </span>
             <span class="px-1 py-0.5 rounded-full text-[9px] font-mono font-bold bg-blue-600/30 text-blue-300 border border-blue-500/30">v2.4</span>
         </button>
-    </div>
+    </div> -->
 </div>
 
 

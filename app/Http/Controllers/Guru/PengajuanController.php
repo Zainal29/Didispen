@@ -51,7 +51,7 @@ class PengajuanController extends Controller
 
         $pengajuan = $query->paginate(15);
         $currentGuru = auth()->user()?->guru;
-        $isSedangBertugasAktif = $currentGuru ? $this->guruPiketService->isGuruBertugasSaatIni($currentGuru) : false;
+        $isSedangBertugasAktif = $currentGuru ? ($this->guruPiketService->isGuruBertugasSaatIni($currentGuru) || $this->guruPiketService->isKoordinatorHariIni($currentGuru)) : false;
 
         return view('guru.pengajuan.index', compact('pengajuan', 'isSedangBertugasAktif'));
     }
@@ -514,7 +514,7 @@ class PengajuanController extends Controller
 
         $dispensasi->load(['siswa.user', 'siswa.kelas.jurusan', 'guru', 'anggotaSiswa.kelas.jurusan', 'anggotaSiswa.user']);
         $currentGuru = auth()->user()?->guru;
-        $isSedangBertugasAktif = $currentGuru ? $this->guruPiketService->isGuruBertugasSaatIni($currentGuru) : false;
+        $isSedangBertugasAktif = $currentGuru ? ($this->guruPiketService->isGuruBertugasSaatIni($currentGuru) || $this->guruPiketService->isKoordinatorHariIni($currentGuru)) : false;
 
         return view('guru.pengajuan.show', compact('dispensasi', 'isSedangBertugasAktif'));
     }
