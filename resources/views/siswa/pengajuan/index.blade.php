@@ -298,7 +298,7 @@
             {{-- Viewfinder Container --}}
             <div class="relative w-full rounded-xl overflow-hidden bg-black aspect-[4/3] flex items-center justify-center border border-gray-300 shadow-inner">
                 {{-- Live Video Stream --}}
-                <video id="videoBukti" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <video id="videoBukti" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
 
                 {{-- Preview Image (Setelah Foto Diambil) --}}
                 <img id="previewImgBukti" class="w-full h-full object-cover hidden" alt="Preview Foto Bukti">

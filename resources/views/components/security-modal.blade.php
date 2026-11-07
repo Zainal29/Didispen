@@ -76,7 +76,8 @@
     {{-- ========================================================= --}}
     {{-- 2. MODAL POP-UP (Otomatis Muncul & Bisa Dibuka dari Banner) --}}
     {{-- ========================================================= --}}
-    <div x-show="openModal" 
+    <div id="securityModal"
+         x-show="openModal" 
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" 

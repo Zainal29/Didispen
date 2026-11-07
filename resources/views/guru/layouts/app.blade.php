@@ -73,30 +73,7 @@
             transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .app-topbar-fixed {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 40 !important;
-        }
-        @media (min-width: 1024px) {
-            .app-topbar-fixed {
-                left: 18rem !important; /* matches lg:pl-72 */
-            }
-        }
-        .app-topbar-sticky {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 40 !important;
-        }
-        @media (min-width: 1024px) {
-            .app-topbar-sticky {
-                left: 18rem !important;
-            }
-        }
+        /* Topbar normal di atas halaman */
 
         /* Sembunyikan bottom bar saat keyboard virtual HP terbuka agar tidak ikut keangkat */
         body.keyboard-open .mobile-bottom-nav,
@@ -104,8 +81,46 @@
         body.keyboard-open #btnLihatJadwal {
             opacity: 0 !important;
             pointer-events: none !important;
-            transform: translateY(120%) !important;
-            transition: transform 0.2s ease, opacity 0.2s ease !important;
+            transform: translateY(140%) !important;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+        }
+
+        /* Sembunyikan bottom bar secara murni & instan via CSS native saat modal, popup, SweetAlert aktif */
+        body.modal-open .mobile-bottom-nav,
+        body.modal-open #mobileBottomNav,
+        body.modal-open #btnLihatJadwal,
+        body.modal-jadwal-open .mobile-bottom-nav,
+        body.modal-jadwal-open #mobileBottomNav,
+        body.modal-jadwal-open #btnLihatJadwal,
+        body.camera-open .mobile-bottom-nav,
+        body.camera-open #mobileBottomNav,
+        body.swal2-shown .mobile-bottom-nav,
+        body.swal2-shown #mobileBottomNav,
+        body:has(.swal2-container) .mobile-bottom-nav,
+        body:has(.swal2-container) #mobileBottomNav,
+        body:has(#loading-overlay:not(.hidden)) .mobile-bottom-nav,
+        body:has(#loading-overlay:not(.hidden)) #mobileBottomNav,
+        body:has(#loading-overlay:not(.hidden)) #btnLihatJadwal,
+        body:has(#modalJadwal:not(.hidden)) .mobile-bottom-nav,
+        body:has(#modalJadwal:not(.hidden)) #mobileBottomNav,
+        body:has(#scanModal:not(.hidden)) .mobile-bottom-nav,
+        body:has(#scanModal:not(.hidden)) #mobileBottomNav,
+        body:has(#photoModal:not(.hidden)) .mobile-bottom-nav,
+        body:has(#photoModal:not(.hidden)) #mobileBottomNav,
+        body:has(#selfieCameraBox:not(.hidden)) .mobile-bottom-nav,
+        body:has(#selfieCameraBox:not(.hidden)) #mobileBottomNav,
+        body:has(#modalTindakLanjut:not([style*="display: none"])) .mobile-bottom-nav,
+        body:has(#modalTindakLanjut:not([style*="display: none"])) #mobileBottomNav,
+        body:has(#securityModal:not([style*="display: none"])) .mobile-bottom-nav,
+        body:has(#securityModal:not([style*="display: none"])) #mobileBottomNav,
+        body:has([id*="loading"]:not(.hidden)) .mobile-bottom-nav,
+        body:has([id*="loading"]:not(.hidden)) #mobileBottomNav,
+        body:has([role="dialog"]:not(.hidden):not([style*="display: none"]):not([style*="display:none"])) .mobile-bottom-nav,
+        body:has([role="dialog"]:not(.hidden):not([style*="display: none"]):not([style*="display:none"])) #mobileBottomNav {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(140%) !important;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
         }
     </style>
 
@@ -113,6 +128,7 @@
 
 @php
     $user    = auth()->user();
+    $isDashboard = request()->routeIs('guru.dashboard');
     $pending = $stats['menunggu'] ?? $stats['pending'] ?? 0;
     $keluar  = isset($siswaKeluar) ? $siswaKeluar->count() : 0;
     $navOn   = 'flex items-center w-full px-3.5 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 shadow-sm shadow-blue-500/20';
@@ -131,9 +147,9 @@
 
         <div class="flex items-center space-x-3 px-5 py-5 border-b border-slate-100">
             <div class="relative">
-               <div class="relative flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 shadow-xs overflow-hidden flex-shrink-0">
+               <div class="relative flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50/80 border border-blue-100 shadow-xs overflow-hidden flex-shrink-0 p-1">
                     @if(file_exists(public_path('images/logo-didispen.png')))
-                        <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                        <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain" style="image-rendering: -webkit-optimize-contrast;">
                     @else
                         <i class="ti ti-school text-blue-600 text-2xl"></i>
                     @endif
@@ -235,17 +251,24 @@
     {{-- ================================================== --}}
     <div class="flex flex-col min-h-screen lg:pl-72 min-w-0 max-w-full">
 
-        {{-- TOPBAR (Fixed - selalu diam di atas, tidak ikut tergulung saat scroll) --}}
-        <header class="app-topbar-fixed fixed top-0 left-0 right-0 lg:left-72 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-            {{-- Mobile Header (h-14) --}}
-            <div class="lg:hidden flex items-center justify-between px-4 h-14">
+        {{-- TOPBAR (Normal di atas halaman — ikut tergulung saat scroll agar tidak menghalangi konten) --}}
+        <header class="w-full bg-white border-b border-slate-200 shadow-xs">
+            {{-- Mobile Header (h-16) --}}
+            <div class="lg:hidden flex items-center justify-between px-4 h-16">
                 <div class="flex items-center space-x-2.5 min-w-0">
+                    @if(!$isDashboard)
+                        <a href="{{ route('guru.dashboard') }}"
+                           class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 flex items-center justify-center transition-colors -ml-1 shrink-0"
+                           title="Kembali ke Dashboard">
+                            <i class="ti ti-arrow-left text-base"></i>
+                        </a>
+                    @endif
                     <div class="relative">
-                        <div class="relative flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 shadow-2xs overflow-hidden flex-shrink-0">
+                        <div class="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-blue-50/80 border border-blue-100 shadow-2xs overflow-hidden flex-shrink-0 p-1">
                             @if(file_exists(public_path('images/logo-didispen.png')))
-                                <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                                <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain" style="image-rendering: -webkit-optimize-contrast;">
                             @else
-                                <i class="ti ti-school text-blue-600 text-base"></i>
+                                <i class="ti ti-school text-blue-600 text-xl"></i>
                             @endif
                         </div>
                     </div>
@@ -279,9 +302,6 @@
             </div>
         </header>
 
-        {{-- Spacer agar konten tidak tertutup header yang fixed --}}
-        <div class="h-14 lg:h-16 flex-shrink-0" aria-hidden="true"></div>
-
         <main class="flex-1 p-3 sm:p-6 pb-28 lg:pb-6 min-w-0 max-w-full">
             @include('components.alert')
             @yield('content')
@@ -290,59 +310,76 @@
     </div>
 
     {{-- ================================================== --}}
-    {{-- BOTTOM NAV — MOBILE (Smooth, Non-Slop, seperti Siswa) --}}
+    {{-- FLOATING BOTTOM NAVIGATION BAR — STYLE IPHONE (GURU) --}}
     {{-- ================================================== --}}
     @php
+        $isGuruDashboardActive = request()->routeIs('guru.dashboard');
+        $isChecklogActive = request()->routeIs('guru.checklog.*');
         $isPengajuanIndexActive = request()->routeIs('guru.pengajuan.index') || request()->routeIs('guru.pengajuan.show');
+        $isScanActive = request()->routeIs('guru.scan');
+        $isProfilActive = request()->routeIs('profil.*');
     @endphp
     <nav id="mobileBottomNav"
-         class="mobile-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transform-gpu transition-all duration-200"
-         style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);">
-        <div class="grid grid-cols-5 h-16 w-full max-w-md mx-auto items-center">
-            {{-- 1. Beranda --}}
-            <a href="{{ route('guru.dashboard') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('guru.dashboard') ? $mobOn : $mobOff }}">
-                <i class="ti ti-smart-home text-xl"></i>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Beranda</span>
-            </a>
-
-            {{-- 2. Keluar/Masuk --}}
-            <a href="{{ route('guru.checklog.index') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('guru.checklog.*') ? $mobOn : $mobOff }}">
-                <i class="ti ti-door-enter text-xl"></i>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Keluar/Masuk</span>
-            </a>
-
-            {{-- 3. FAB: Verifikasi (Elevated Center Button) --}}
-            <div class="relative flex flex-col items-center justify-end h-full pb-1.5">
-                <a href="{{ route('guru.pengajuan.index') }}"
-                   aria-label="Verifikasi Dispensasi"
-                   class="absolute -top-5 w-12 h-12 rounded-full text-white text-xl flex items-center justify-center border-4 border-slate-50 transition-all duration-200 active:scale-95 {{ $isPengajuanIndexActive ? 'bg-blue-600 shadow-lg shadow-blue-500/35 ring-4 ring-blue-500/25 scale-105 fab-active-glow' : 'bg-blue-600 shadow-md hover:bg-blue-700' }}">
-                    <i class="ti ti-clipboard-check"></i>
-                    @if($pending > 0)
-                        <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white">
-                            {{ $pending > 99 ? '99+' : $pending }}
-                        </span>
-                    @endif
+         class="mobile-bottom-nav lg:hidden fixed inset-x-3 sm:inset-x-6 max-w-md mx-auto z-50 transform-gpu transition-all duration-300 ease-out"
+         style="bottom: max(env(safe-area-inset-bottom, 0px) + 10px, 14px);">
+        
+        <div class="relative bg-white/90 backdrop-blur-xl border border-white/80 shadow-[0_12px_36px_-6px_rgba(15,23,42,0.14),0_0_0_1px_rgba(226,232,240,0.85)] rounded-2xl sm:rounded-3xl px-2 py-1.5 ring-1 ring-black/[0.03]">
+            <div class="grid grid-cols-5 h-14 w-full items-center relative">
+                
+                {{-- 1. Beranda --}}
+                <a href="{{ route('guru.dashboard') }}"
+                   class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isGuruDashboardActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isGuruDashboardActive ? 'bg-blue-50/90' : '' }}">
+                        <i class="ti ti-smart-home text-xl transition-transform {{ $isGuruDashboardActive ? 'scale-110' : '' }}"></i>
+                    </div>
+                    <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isGuruDashboardActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Beranda</span>
                 </a>
-                <span class="text-[10px] leading-tight tracking-tight mt-auto {{ $isPengajuanIndexActive ? 'font-bold text-blue-600' : 'font-semibold text-slate-700' }}">Verifikasi</span>
-            </div>
 
-            {{-- 4. Scan QR --}}
-            <a href="{{ route('guru.scan') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('guru.scan') ? $mobOn : $mobOff }}">
-                <i class="ti ti-qrcode text-xl"></i>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Scan QR</span>
-            </a>
+                {{-- 2. Keluar/Masuk --}}
+                <a href="{{ route('guru.checklog.index') }}"
+                   class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isChecklogActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isChecklogActive ? 'bg-blue-50/90' : '' }}">
+                        <i class="ti ti-door-enter text-xl transition-transform {{ $isChecklogActive ? 'scale-110' : '' }}"></i>
+                    </div>
+                    <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isChecklogActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Keluar/Masuk</span>
+                </a>
 
-            {{-- 5. Akun --}}
-            <button type="button" onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
-                    class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('profil.*') ? $mobOn : $mobOff }}">
-                <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 text-[10px] font-bold">
-                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                {{-- 3. Center Action Button: Verifikasi (Elevated FAB) --}}
+                <div class="relative flex flex-col items-center justify-end h-full pb-0.5">
+                    <a href="{{ route('guru.pengajuan.index') }}"
+                       aria-label="Verifikasi Dispensasi"
+                       class="absolute -top-5 w-12 h-12 rounded-full text-white flex items-center justify-center border-[3px] border-white shadow-[0_8px_20px_-3px_rgba(37,99,235,0.45)] transition-all duration-200 active:scale-90 {{ $isPengajuanIndexActive ? 'bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 ring-4 ring-blue-500/25 scale-105 fab-active-glow' : 'bg-gradient-to-tr from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600' }}">
+                        <i class="ti ti-clipboard-check text-xl font-bold"></i>
+                        @if($pending > 0)
+                            <span class="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-xs">
+                                {{ $pending > 99 ? '99+' : $pending }}
+                            </span>
+                        @endif
+                    </a>
+                    <span class="text-[10px] leading-tight tracking-tight mt-auto {{ $isPengajuanIndexActive ? 'font-bold text-blue-600' : 'font-semibold text-slate-700' }}">Verifikasi</span>
                 </div>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Akun</span>
-            </button>
+
+                {{-- 4. Scan QR --}}
+                <a href="{{ route('guru.scan') }}"
+                   class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isScanActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isScanActive ? 'bg-blue-50/90' : '' }}">
+                        <i class="ti ti-qrcode text-xl transition-transform {{ $isScanActive ? 'scale-110' : '' }}"></i>
+                    </div>
+                    <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isScanActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Scan QR</span>
+                </a>
+
+                {{-- 5. Akun (Trigger Bottom Sheet) --}}
+                <button type="button"
+                        onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
+                        class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isProfilActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isProfilActive ? 'bg-blue-50/90' : '' }}">
+                        <div class="w-6 h-6 rounded-full {{ $isProfilActive ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-200 text-slate-700' }} flex items-center justify-center font-bold text-[10px] transition-colors">
+                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                        </div>
+                    </div>
+                    <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isProfilActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Akun</span>
+                </button>
+            </div>
         </div>
     </nav>
 

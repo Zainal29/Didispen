@@ -41,30 +41,7 @@
         html {
             scroll-behavior: smooth;
         }
-        .app-topbar-fixed {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 40 !important;
-        }
-        @media (min-width: 1024px) {
-            .app-topbar-fixed {
-                left: 16rem !important; /* matches lg:pl-64 */
-            }
-        }
-        .app-topbar-sticky {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 40 !important;
-        }
-        @media (min-width: 1024px) {
-            .app-topbar-sticky {
-                left: 16rem !important;
-            }
-        }
+        /* Topbar normal di atas halaman (ikut tergulung saat scroll) */
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -128,19 +105,43 @@
         body.keyboard-open #siswaBottomNav {
             opacity: 0 !important;
             pointer-events: none !important;
-            transform: translateY(120%) !important;
-            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+            transform: translateY(140%) !important;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
         }
 
-        /* Sembunyikan bottom bar saat modal atau sheet terbuka agar tidak menutupi modal */
+        /* Sembunyikan bottom bar secara murni & instan via CSS native saat modal, popup, SweetAlert, atau box kamera terbuka */
         body.modal-open .mobile-bottom-nav,
         body.modal-open #siswaBottomNav,
         body.modal-jadwal-open .mobile-bottom-nav,
-        body.modal-jadwal-open #siswaBottomNav {
+        body.modal-jadwal-open #siswaBottomNav,
+        body.camera-open .mobile-bottom-nav,
+        body.camera-open #siswaBottomNav,
+        body.swal2-shown .mobile-bottom-nav,
+        body.swal2-shown #siswaBottomNav,
+        body:has(.swal2-container) .mobile-bottom-nav,
+        body:has(.swal2-container) #siswaBottomNav,
+        body:has(#uploadModal:not(.hidden)) .mobile-bottom-nav,
+        body:has(#uploadModal:not(.hidden)) #siswaBottomNav,
+        body:has(#piketDashboardModal:not(.hidden)) .mobile-bottom-nav,
+        body:has(#piketDashboardModal:not(.hidden)) #siswaBottomNav,
+        body:has(#photoModal:not(.hidden)) .mobile-bottom-nav,
+        body:has(#photoModal:not(.hidden)) #siswaBottomNav,
+        body:has(#piketModal:not(.hidden)) .mobile-bottom-nav,
+        body:has(#piketModal:not(.hidden)) #siswaBottomNav,
+        body:has(#selfieCameraBox:not(.hidden)) .mobile-bottom-nav,
+        body:has(#selfieCameraBox:not(.hidden)) #siswaBottomNav,
+        body:has(#securityModal:not([style*="display: none"])) .mobile-bottom-nav,
+        body:has(#securityModal:not([style*="display: none"])) #siswaBottomNav,
+        body:has(#loading-overlay:not(.hidden)) .mobile-bottom-nav,
+        body:has(#loading-overlay:not(.hidden)) #siswaBottomNav,
+        body:has([id*="loading"]:not(.hidden)) .mobile-bottom-nav,
+        body:has([id*="loading"]:not(.hidden)) #siswaBottomNav,
+        body:has([role="dialog"]:not(.hidden):not([style*="display: none"]):not([style*="display:none"])) .mobile-bottom-nav,
+        body:has([role="dialog"]:not(.hidden):not([style*="display: none"]):not([style*="display:none"])) #siswaBottomNav {
             opacity: 0 !important;
             pointer-events: none !important;
-            transform: translateY(120%) !important;
-            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+            transform: translateY(140%) !important;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
         }
     </style>
 <body class="bg-slate-50 min-h-screen text-slate-800 antialiased">
@@ -169,9 +170,9 @@
             {{-- Brand --}}
             <div class="p-5 border-b border-slate-200">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                    <div class="w-11 h-11 rounded-xl bg-blue-50/80 border border-blue-100 flex items-center justify-center flex-shrink-0 p-1 shadow-2xs">
                         @if(file_exists(public_path('images/logo-didispen.png')))
-                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-full h-full object-contain">
+                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-full h-full object-contain" style="image-rendering: -webkit-optimize-contrast;">
                         @else
                             <i class="ti ti-school text-blue-600 text-xl"></i>
                         @endif
@@ -247,17 +248,17 @@
         {{-- ================================================== --}}
         <div class="flex flex-col min-h-screen lg:pl-64">
 
-            {{-- TOPBAR (Fixed - selalu diam di atas, tidak ikut tergulung saat scroll) --}}
-            <header class="app-topbar-fixed fixed top-0 left-0 right-0 lg:left-64 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+            {{-- TOPBAR (Normal di atas halaman — ikut tergulung saat scroll agar tidak menghalangi konten) --}}
+            <header class="w-full bg-white border-b border-slate-200 shadow-xs">
 
-                {{-- Topbar MOBILE: ringkas, muat di layar kecil (h-14) --}}
-                <div class="lg:hidden flex items-center justify-between px-4 h-14">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                {{-- Topbar MOBILE: lega & proporsional (h-16) --}}
+                <div class="lg:hidden flex items-center justify-between px-4 h-16">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50/80 border border-blue-100 flex items-center justify-center flex-shrink-0 p-1 shadow-2xs">
                             @if(file_exists(public_path('images/logo-didispen.png')))
-                                <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-full h-full object-contain">
+                                <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo" class="w-full h-full object-contain" style="image-rendering: -webkit-optimize-contrast;">
                             @else
-                                <i class="ti ti-school text-blue-600 text-base"></i>
+                                <i class="ti ti-school text-blue-600 text-xl"></i>
                             @endif
                         </div>
                         <div>
@@ -312,9 +313,6 @@
                 </div>
             </header>
 
-            {{-- Spacer agar konten tidak tertutup header yang fixed --}}
-            <div class="h-14 lg:h-16 flex-shrink-0" aria-hidden="true"></div>
-
             {{-- KONTEN (pb-32 sm:pb-36 lg:pb-6 agar tidak tertutup bottom nav di HP) --}}
             <main class="flex-1 p-4 sm:p-6 pb-32 sm:pb-36 lg:pb-6 page-enter">
                 @include('components.alert')
@@ -324,64 +322,76 @@
     </div>
 
     {{-- ================================================== --}}
-    {{-- BOTTOM NAVIGATION BAR — KHUSUS MOBILE (OPTIMAL UNTUK HP) --}}
+    {{-- FLOATING BOTTOM NAVIGATION BAR — STYLE IPHONE (SISWA) --}}
     {{-- ================================================== --}}
     @php
+        $isDashboardActive = request()->routeIs('siswa.dashboard');
         $isCreateActive = request()->routeIs('siswa.pengajuan.create');
         $isRiwayatActive = (request()->routeIs('siswa.pengajuan.index') || request()->routeIs('siswa.pengajuan.show')) && !$isCreateActive;
+        $isNotifActive = request()->routeIs('siswa.notifikasi.*');
+        $isProfilActive = request()->routeIs('profil.*');
     @endphp
     <nav id="siswaBottomNav"
-         class="mobile-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transform-gpu transition-all duration-200"
-         style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);">
-        <div class="grid grid-cols-5 h-16 w-full max-w-md mx-auto items-center">
-            
-            {{-- 1. Beranda --}}
-            <a href="{{ route('siswa.dashboard') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('siswa.dashboard') ? $mobOn : $mobOff }}">
-                <i class="ti ti-smart-home text-xl"></i>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Beranda</span>
-            </a>
-
-            {{-- 2. Riwayat --}}
-            <a href="{{ route('siswa.pengajuan.index') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ $isRiwayatActive ? $mobOn : $mobOff }}">
-                <i class="ti ti-history text-xl"></i>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Riwayat</span>
-            </a>
-
-            {{-- 3. FAB: Buat Pengajuan (Elevated Center Button) --}}
-            <div class="relative flex flex-col items-center justify-end h-full pb-1.5">
-                <a href="{{ route('siswa.pengajuan.create') }}"
-                   aria-label="Buat Pengajuan Dispensasi"
-                   class="absolute -top-5 w-12 h-12 rounded-full text-white text-xl flex items-center justify-center border-4 border-slate-50 transition-all duration-200 active:scale-95 {{ $isCreateActive ? 'bg-blue-600 shadow-lg shadow-blue-500/35 ring-4 ring-blue-500/25 scale-105 fab-active-glow' : 'bg-blue-600 shadow-md hover:bg-blue-700' }}">
-                    <i class="ti ti-plus"></i>
+         class="mobile-bottom-nav lg:hidden fixed inset-x-3 sm:inset-x-6 max-w-md mx-auto z-50 transform-gpu transition-all duration-300 ease-out"
+         style="bottom: max(env(safe-area-inset-bottom, 0px) + 10px, 14px);">
+        
+        <div class="relative bg-white/90 backdrop-blur-xl border border-white/80 shadow-[0_12px_36px_-6px_rgba(15,23,42,0.14),0_0_0_1px_rgba(226,232,240,0.85)] rounded-2xl sm:rounded-3xl px-2 py-1.5 ring-1 ring-black/[0.03]">
+            <div class="grid grid-cols-5 h-14 w-full items-center relative">
+                
+                {{-- 1. Beranda --}}
+                <a href="{{ route('siswa.dashboard') }}"
+                   class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isDashboardActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isDashboardActive ? 'bg-blue-50/90' : '' }}">
+                        <i class="ti ti-smart-home text-xl transition-transform {{ $isDashboardActive ? 'scale-110' : '' }}"></i>
+                    </div>
+                    <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isDashboardActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Beranda</span>
                 </a>
-                <span class="text-[10px] leading-tight tracking-tight mt-auto {{ $isCreateActive ? 'font-bold text-blue-600' : 'font-semibold text-slate-700' }}">Buat</span>
+
+                {{-- 2. Riwayat --}}
+                <a href="{{ route('siswa.pengajuan.index') }}"
+                   class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isRiwayatActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isRiwayatActive ? 'bg-blue-50/90' : '' }}">
+                        <i class="ti ti-history text-xl transition-transform {{ $isRiwayatActive ? 'scale-110' : '' }}"></i>
+                    </div>
+                    <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isRiwayatActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Riwayat</span>
+                </a>
+
+                {{-- 3. Center Action Button (+) Buat Pengajuan (Elevated) --}}
+                <div class="relative flex flex-col items-center justify-end h-full pb-0.5">
+                    <a href="{{ route('siswa.pengajuan.create') }}"
+                       aria-label="Buat Pengajuan Dispensasi"
+                       class="absolute -top-5 w-12 h-12 rounded-full text-white flex items-center justify-center border-[3px] border-white shadow-[0_8px_20px_-3px_rgba(37,99,235,0.45)] transition-all duration-200 active:scale-90 {{ $isCreateActive ? 'bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 ring-4 ring-blue-500/25 scale-105 fab-active-glow' : 'bg-gradient-to-tr from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600' }}">
+                        <i class="ti ti-plus text-xl font-bold"></i>
+                    </a>
+                    <span class="text-[10px] leading-tight tracking-tight mt-auto {{ $isCreateActive ? 'font-bold text-blue-600' : 'font-semibold text-slate-700' }}">Buat</span>
+                </div>
+
+                {{-- 4. Notifikasi (+Badge) --}}
+                <a href="{{ route('siswa.notifikasi.index') }}"
+                   class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isNotifActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isNotifActive ? 'bg-blue-50/90' : '' }}">
+                        <i class="ti ti-bell text-xl transition-transform {{ $isNotifActive ? 'scale-110' : '' }}"></i>
+                        @if($notif > 0)
+                            <span class="absolute -top-1 -right-2 min-w-[17px] h-[17px] px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-xs">
+                                {{ $notif > 99 ? '99+' : $notif }}
+                            </span>
+                        @endif
+                    </div>
+                    <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isNotifActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Notifikasi</span>
+                </a>
+
+                {{-- 5. Akun (Trigger Bottom Sheet) --}}
+                <button type="button"
+                        onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
+                        class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isProfilActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isProfilActive ? 'bg-blue-50/90' : '' }}">
+                        <div class="w-6 h-6 rounded-full {{ $isProfilActive ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-200 text-slate-700' }} flex items-center justify-center font-bold text-[10px] transition-colors">
+                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                        </div>
+                    </div>
+                    <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isProfilActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Akun</span>
+                </button>
             </div>
-
-            {{-- 4. Notifikasi (+badge) --}}
-            <a href="{{ route('siswa.notifikasi.index') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('siswa.notifikasi.*') ? $mobOn : $mobOff }}">
-                <div class="relative">
-                    <i class="ti ti-bell text-xl"></i>
-                    @if($notif > 0)
-                        <span class="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white">
-                            {{ $notif > 99 ? '99+' : $notif }}
-                        </span>
-                    @endif
-                </div>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Notifikasi</span>
-            </a>
-
-            {{-- 5. Akun --}}
-            <button type="button"
-                    onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
-                    class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-90 {{ request()->routeIs('profil.*') ? $mobOn : $mobOff }}">
-                <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center">
-                    <span class="text-[10px] font-bold text-slate-700">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
-                </div>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Akun</span>
-            </button>
         </div>
     </nav>
 

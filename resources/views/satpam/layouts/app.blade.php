@@ -26,29 +26,40 @@
         [x-cloak] { display: none !important; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .break-words { word-break: break-word; overflow-wrap: break-word; }
-        .app-topbar-fixed {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 40 !important;
+
+        @keyframes fabGlowSatpam {
+            0%, 100% { box-shadow: 0 10px 24px -3px rgba(225, 29, 72, 0.5), 0 0 0 4px rgba(225, 29, 72, 0.2); }
+            50% { box-shadow: 0 14px 28px -3px rgba(225, 29, 72, 0.65), 0 0 0 6px rgba(225, 29, 72, 0.3); }
         }
-        @media (min-width: 1024px) {
-            .app-topbar-fixed {
-                left: 16rem !important; /* matches lg:pl-64 */
-            }
+        .fab-active-glow {
+            animation: fabGlowSatpam 2.5s infinite ease-in-out;
         }
-        .app-topbar-sticky {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 40 !important;
+
+        /* Sembunyikan bottom bar saat keyboard virtual terbuka */
+        body.keyboard-open #mobileBottomNav {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(140%) !important;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
         }
-        @media (min-width: 1024px) {
-            .app-topbar-sticky {
-                left: 16rem !important;
-            }
+
+        /* Sembunyikan bottom bar secara murni & instan via CSS native saat modal, popup, SweetAlert aktif */
+        body.modal-open #mobileBottomNav,
+        body.camera-open #mobileBottomNav,
+        body.swal2-shown #mobileBottomNav,
+        body:has(.swal2-container) #mobileBottomNav,
+        body:has(#loading-overlay:not(.hidden)) #mobileBottomNav,
+        body:has(#scanModal:not(.hidden)) #mobileBottomNav,
+        body:has(#modalManualGuru:not(.hidden)) #mobileBottomNav,
+        body:has(#photoModal:not(.hidden)) #mobileBottomNav,
+        body:has(#modalBuatLaporan:not([style*="display: none"]):not([style*="display:none"])) #mobileBottomNav,
+        body:has(#securityModal:not([style*="display: none"])) #mobileBottomNav,
+        body:has([id*="loading"]:not(.hidden)) #mobileBottomNav,
+        body:has([role="dialog"]:not(.hidden):not([style*="display: none"]):not([style*="display:none"])) #mobileBottomNav {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(140%) !important;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
         }
     </style>
 <body class="bg-slate-50 text-slate-900 antialiased selection:bg-rose-500 selection:text-white min-h-screen">
@@ -83,9 +94,9 @@
     <aside class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex-col z-30 shadow-2xs">
 
         <div class="flex items-center space-x-3 px-5 py-5 border-b border-slate-100">
-            <div class="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex-shrink-0 shadow-2xs">
+            <div class="relative flex items-center justify-center w-12 h-12 rounded-xl bg-rose-50/80 border border-rose-100 text-rose-600 flex-shrink-0 shadow-2xs p-1">
                 @if(file_exists(public_path('images/logo-didispen.png')))
-                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-1">
+                    <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain" style="image-rendering: -webkit-optimize-contrast;">
                 @else
                     <i class="ti ti-shield-check text-xl"></i>
                 @endif
@@ -143,24 +154,31 @@
     {{-- ================================================== --}}
     <div class="flex flex-col min-h-screen lg:pl-64">
 
-        {{-- TOPBAR (Fixed - selalu diam di atas, tidak ikut tergulung saat scroll) --}}
-        <header class="app-topbar-fixed fixed top-0 left-0 right-0 lg:left-64 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
-            {{-- Mobile Header (h-14) --}}
-            <div class="lg:hidden flex items-center justify-between px-4 h-14">
-                <div class="flex items-center space-x-2.5">
-                    <div class="relative flex items-center justify-center w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 flex-shrink-0 shadow-2xs">
+        {{-- TOPBAR (Normal di atas halaman — ikut tergulung saat scroll agar tidak menghalangi konten) --}}
+        <header class="w-full bg-white border-b border-slate-200/90 shadow-xs">
+            {{-- Mobile Header (h-16) --}}
+            <div class="lg:hidden flex items-center justify-between px-4 h-16">
+                <div class="flex items-center space-x-2.5 min-w-0">
+                    @if(!$isDashboard)
+                        <a href="{{ route('satpam.dashboard') }}"
+                           class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 flex items-center justify-center transition-colors -ml-1 shrink-0"
+                           title="Kembali ke Dashboard">
+                            <i class="ti ti-arrow-left text-base"></i>
+                        </a>
+                    @endif
+                    <div class="relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-rose-50/80 border border-rose-100 text-rose-600 flex-shrink-0 shadow-2xs p-1">
                         @if(file_exists(public_path('images/logo-didispen.png')))
-                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain p-0.5">
+                            <img src="{{ asset('images/logo-didispen.png') }}" alt="Logo DIDISPEN" class="w-full h-full object-contain" style="image-rendering: -webkit-optimize-contrast;">
                         @else
-                            <i class="ti ti-shield-check text-base"></i>
+                            <i class="ti ti-shield-check text-xl"></i>
                         @endif
                     </div>
-                    <div>
-                        <h1 class="text-sm font-bold text-slate-900 tracking-tight leading-none">DIDISPEN</h1>
-                        <p class="text-[10px] text-slate-500 font-medium mt-0.5">@yield('page-title', 'Dashboard')</p>
+                    <div class="min-w-0">
+                        <h1 class="text-sm font-bold text-slate-900 tracking-tight leading-none truncate">DIDISPEN</h1>
+                        <p class="text-[10px] text-slate-500 font-medium mt-0.5 truncate">@yield('page-title', 'Dashboard')</p>
                     </div>
                 </div>
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold shrink-0">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Online
                 </span>
             </div>
@@ -185,9 +203,6 @@
             </div>
         </header>
 
-        {{-- Spacer agar konten tidak tertutup header yang fixed --}}
-        <div class="h-14 lg:h-16 flex-shrink-0" aria-hidden="true"></div>
-
         {{-- KONTEN --}}
         <main class="flex-1 p-4 sm:p-6 pb-32 sm:pb-36 lg:pb-8">
             @include('components.alert')
@@ -196,66 +211,80 @@
     </div>
 
     {{-- ================================================== --}}
-    {{-- BOTTOM NAV — MOBILE (HP-FRIENDLY, SELALU DI BAWAH)  --}}
+    {{-- BOTTOM NAV — FLOATING DOCK NAVIGATION (MODERN MOBILE DOCK) --}}
     {{-- ================================================== --}}
     <nav id="mobileBottomNav"
-         class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transform-gpu transition-all duration-200"
-         style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);">
-        <div class="grid grid-cols-5 h-16 w-full max-w-md mx-auto items-center">
+         aria-label="Navigasi Utama Mobile"
+         class="lg:hidden fixed inset-x-3 sm:inset-x-6 max-w-md mx-auto z-50 rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 shadow-[0_12px_36px_-6px_rgba(15,23,42,0.14),0_0_0_1px_rgba(226,232,240,0.85)] transform-gpu transition-all duration-200"
+         style="bottom: max(env(safe-area-inset-bottom, 0px) + 10px, 14px);">
+        <div class="grid grid-cols-5 h-16 w-full items-center px-1.5 sm:px-2">
             {{-- 1. Beranda --}}
             <a href="{{ route('satpam.dashboard') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-95 {{ $isDashboard ? $mobOn : $mobOff }}">
-                <div class="relative">
+               class="flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-all active:scale-95 {{ $isDashboard ? 'text-rose-600 font-bold' : 'text-slate-400 hover:text-slate-600' }}">
+                <div class="relative flex items-center justify-center">
                     <i class="ti ti-smart-home text-xl"></i>
                     @if($countSiswaKeluar > 0)
                         <span class="absolute -top-1 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-xs" title="{{ $countSiswaKeluar }} siswa sedang di luar">
                             {{ $countSiswaKeluar > 99 ? '99+' : $countSiswaKeluar }}
                         </span>
                     @endif
+                    @if($isDashboard)
+                        <span class="absolute -bottom-1 w-1 h-1 rounded-full bg-rose-600"></span>
+                    @endif
                 </div>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Beranda</span>
+                <span class="text-[10px] leading-tight tracking-tight">Beranda</span>
             </a>
 
             {{-- 2. Laporan Temuan --}}
             <a href="{{ route('satpam.laporan.index') }}"
-               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-95 {{ $isLaporan ? $mobOn : $mobOff }}">
-                <div class="relative">
+               class="flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-all active:scale-95 {{ $isLaporan ? 'text-rose-600 font-bold' : 'text-slate-400 hover:text-slate-600' }}">
+                <div class="relative flex items-center justify-center">
                     <i class="ti ti-shield-exclamation text-xl"></i>
                     @if($countLaporanMenunggu > 0)
                         <span class="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-0.5 rounded-full bg-amber-500 text-white text-[8px] font-bold flex items-center justify-center border border-white">
                             {{ $countLaporanMenunggu }}
                         </span>
                     @endif
+                    @if($isLaporan)
+                        <span class="absolute -bottom-1 w-1 h-1 rounded-full bg-rose-600"></span>
+                    @endif
                 </div>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Laporan</span>
+                <span class="text-[10px] leading-tight tracking-tight">Laporan</span>
             </a>
 
-            {{-- 3. Center FAB: Scan QR --}}
-            <div class="relative flex flex-col items-center justify-end h-full pb-1">
+            {{-- 3. Center Elevated FAB: Scan QR --}}
+            <div class="relative flex flex-col items-center justify-center h-full">
                 <a href="{{ route('satpam.scan') }}"
                    aria-label="Scan QR Code"
-                   class="absolute -top-5 w-12 h-12 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xl flex items-center justify-center shadow-lg shadow-rose-600/35 border-4 border-slate-50 active:scale-95 transition-all duration-200 {{ $isScan ? 'ring-4 ring-rose-500/25 scale-105' : '' }}">
-                    <i class="ti ti-qrcode"></i>
+                   class="absolute -top-5 w-12 h-12 rounded-full bg-gradient-to-tr from-rose-600 to-rose-500 text-white text-xl flex items-center justify-center shadow-[0_10px_20px_-3px_rgba(225,29,72,0.45)] border-[3.5px] border-white active:scale-95 transition-all duration-200 {{ $isScan ? 'ring-4 ring-rose-500/25 scale-105 fab-active-glow' : '' }}">
+                    <i class="ti ti-qrcode text-xl"></i>
                 </a>
-                <span class="text-[10px] leading-tight tracking-tight mt-auto {{ $isScan ? 'font-bold text-rose-600' : 'font-semibold text-slate-500' }}">Scan</span>
+                <span class="text-[10px] leading-tight tracking-tight mt-7 {{ $isScan ? 'font-bold text-rose-600' : 'font-medium text-slate-500' }}">Scan</span>
             </div>
 
             {{-- 4. Manual --}}
             <a href="{{ route('satpam.scan') }}#manual"
                id="navManualBtn"
-               class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-95 {{ $mobOff }} hover:text-rose-600">
-                <i class="ti ti-search text-xl"></i>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Manual</span>
+               class="flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-all active:scale-95 text-slate-400 hover:text-slate-600">
+                <div class="relative flex items-center justify-center">
+                    <i class="ti ti-search text-xl"></i>
+                </div>
+                <span class="text-[10px] leading-tight tracking-tight">Manual</span>
             </a>
 
             {{-- 5. Akun --}}
             <button type="button"
                     @click="sheet = true"
-                    class="flex flex-col items-center justify-center gap-1 transition-colors active:scale-95 {{ $isProfil ? $mobOn : $mobOff }}">
-                <div class="w-6 h-6 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold flex items-center justify-center shadow-2xs">
-                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                    class="flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-all active:scale-95 {{ $isProfil ? 'text-rose-600 font-bold' : 'text-slate-400 hover:text-slate-600' }}">
+                <div class="relative flex items-center justify-center">
+                    <div class="w-6 h-6 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold flex items-center justify-center shadow-2xs">
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                    </div>
+                    @if($isProfil)
+                        <span class="absolute -bottom-1 w-1 h-1 rounded-full bg-rose-600"></span>
+                    @endif
                 </div>
-                <span class="text-[10px] font-semibold leading-tight tracking-tight">Akun</span>
+                <span class="text-[10px] leading-tight tracking-tight">Akun</span>
             </button>
         </div>
     </nav>
@@ -320,13 +349,9 @@ document.addEventListener('DOMContentLoaded', function () {
         window.visualViewport.addEventListener('resize', function () {
             const isKeyboardOpen = (window.innerHeight - window.visualViewport.height) > 150;
             if (isKeyboardOpen) {
-                bottomNav.style.transform = 'translateY(100%)';
-                bottomNav.style.opacity = '0';
-                bottomNav.style.pointerEvents = 'none';
+                document.body.classList.add('keyboard-open');
             } else {
-                bottomNav.style.transform = 'translateY(0)';
-                bottomNav.style.opacity = '1';
-                bottomNav.style.pointerEvents = 'auto';
+                document.body.classList.remove('keyboard-open');
             }
         });
     }

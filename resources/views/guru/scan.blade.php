@@ -4,17 +4,28 @@
 @section('content')
 
 <div class="max-w-xl mx-auto space-y-4 w-full min-w-0" x-data="{ activeTab: 'camera' }">
+    {{-- Top Action / Header --}}
+    <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pemindai QR Guru</span>
+        </div>
+        <a href="{{ route('guru.dashboard') }}"
+           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 active:scale-95 text-slate-700 text-xs font-bold shadow-2xs transition-all">
+            <i class="ti ti-arrow-left"></i> Kembali ke Dashboard
+        </a>
+    </div>
+
     {{-- Tab Switcher --}}
     <div class="bg-gray-100/80 p-1 rounded-xl flex items-center gap-1 border border-gray-200">
         <button type="button"
-                @click="activeTab = 'camera'"
+                @click="activeTab = 'camera'; document.body.classList.add('camera-open');"
                 :class="activeTab === 'camera' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600 hover:text-gray-900 font-medium'"
                 class="flex-1 py-2.5 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5">
             <i class="ti ti-qrcode text-base"></i>
             <span>Scan Kamera</span>
         </button>
         <button type="button"
-                @click="activeTab = 'manual'"
+                @click="activeTab = 'manual'; document.body.classList.remove('camera-open');"
                 :class="activeTab === 'manual' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600 hover:text-gray-900 font-medium'"
                 class="flex-1 py-2.5 px-3 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5">
             <i class="ti ti-search text-base"></i>
@@ -762,19 +773,29 @@ function initScanner() {
     html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
     .then(() => {
         isScanning = true;
+        document.body.classList.add('camera-open');
         setStatus('Kamera aktif — siap scan');
     })
     .catch(err => {
         html5QrCode.start({ facingMode: "user" }, config, onScanSuccess)
         .then(() => {
             isScanning = true;
+            document.body.classList.add('camera-open');
             setStatus('Kamera depan aktif');
         })
         .catch(err2 => {
+            document.body.classList.remove('camera-open');
             setStatus('Kamera tidak tersedia — gunakan verifikasi manual', false);
         });
     });
 }
+
+window.addEventListener('beforeunload', function () {
+    document.body.classList.remove('camera-open');
+});
+window.addEventListener('pagehide', function () {
+    document.body.classList.remove('camera-open');
+});
 
 // VERIFIKASI MANUAL - AJAX GURU
 function manualVerify(e) {

@@ -173,7 +173,7 @@
     </div>
 
     {{-- MODAL TINDAK LANJUT GURU --}}
-    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+    <div id="modalTindakLanjut" x-show="modalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
         <div class="min-h-screen px-4 text-center flex items-center justify-center p-0">
             <div x-show="modalOpen" @click="modalOpen = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
 

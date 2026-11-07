@@ -331,72 +331,121 @@
 {{-- STATISTIK SEBAGAI FILTER UTAMA --}}
 @php
 $cards = [
-    'menunggu'  => ['Menunggu',     $stats['menunggu'] ?? 0,  'ti-clock-pause', 'amber'],
-    'disetujui' => ['Disetujui',    $stats['disetujui'] ?? 0, 'ti-circle-check', 'emerald'],
-    'keluar'    => ['Sedang Keluar',$stats['keluar'] ?? 0,    'ti-walk',         'blue'],
-    'selesai'   => ['Selesai',      $stats['selesai'] ?? 0,   'ti-checks',       'slate'],
+    'menunggu'  => [
+        'title'         => 'Menunggu',
+        'count'         => $stats['menunggu'] ?? 0,
+        'icon'          => 'ti-clock-pause',
+        'color'         => 'amber',
+        'active_btn'    => 'active bg-white border-amber-500 ring-2 ring-amber-500/20 shadow-sm',
+        'inactive_btn'  => 'bg-white border-slate-200 shadow-xs hover:border-slate-300',
+        'active_icon'   => 'bg-amber-500 text-white border border-amber-600',
+        'inactive_icon' => 'bg-amber-50 text-amber-600 border border-amber-200/80',
+    ],
+    'disetujui' => [
+        'title'         => 'Disetujui',
+        'count'         => $stats['disetujui'] ?? 0,
+        'icon'          => 'ti-circle-check',
+        'color'         => 'emerald',
+        'active_btn'    => 'active bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm',
+        'inactive_btn'  => 'bg-white border-slate-200 shadow-xs hover:border-slate-300',
+        'active_icon'   => 'bg-emerald-500 text-white border border-emerald-600',
+        'inactive_icon' => 'bg-emerald-50 text-emerald-600 border border-emerald-200/80',
+    ],
+    'keluar'    => [
+        'title'         => 'Sedang Keluar',
+        'count'         => $stats['keluar'] ?? 0,
+        'icon'          => 'ti-walk',
+        'color'         => 'blue',
+        'active_btn'    => 'active bg-white border-blue-500 ring-2 ring-blue-500/20 shadow-sm',
+        'inactive_btn'  => 'bg-white border-slate-200 shadow-xs hover:border-slate-300',
+        'active_icon'   => 'bg-blue-500 text-white border border-blue-600',
+        'inactive_icon' => 'bg-blue-50 text-blue-600 border border-blue-200/80',
+    ],
+    'selesai'   => [
+        'title'         => 'Selesai',
+        'count'         => $stats['selesai'] ?? 0,
+        'icon'          => 'ti-checks',
+        'color'         => 'slate',
+        'active_btn'    => 'active bg-white border-slate-600 ring-2 ring-slate-600/20 shadow-sm',
+        'inactive_btn'  => 'bg-white border-slate-200 shadow-xs hover:border-slate-300',
+        'active_icon'   => 'bg-slate-700 text-white border border-slate-800',
+        'inactive_icon' => 'bg-slate-100 text-slate-600 border border-slate-200',
+    ],
 ];
 @endphp
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-3">
     @foreach($cards as $key => $card)
         @php
             $isActive = $filter === $key;
-            $color = $card[3];
-            $iconBg = match($color) {
-                'amber'   => 'bg-amber-50 text-amber-600 border border-amber-200/80',
-                'emerald' => 'bg-emerald-50 text-emerald-600 border border-emerald-200/80',
-                'blue'    => 'bg-blue-50 text-blue-600 border border-blue-200/80',
-                'slate'   => 'bg-slate-100 text-slate-600 border border-slate-200',
-                default   => 'bg-slate-50 text-slate-600 border border-slate-200',
-            };
         @endphp
         <button type="button"
-                onclick="switchFilter('{{ $key }}', '{{ $color }}', event)"
+                onclick="switchFilter('{{ $key }}', '{{ $card['color'] }}', event)"
                 data-filter="{{ $key }}"
-                class="stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[44px] transition-all w-full
-                {{ $isActive
-                    ? 'active bg-white border-blue-600 ring-2 ring-blue-600/10 shadow-sm'
-                    : 'bg-white border-slate-200 shadow-xs hover:border-slate-300' }}">
+                data-color="{{ $card['color'] }}"
+                data-active-btn="{{ $card['active_btn'] }}"
+                data-inactive-btn="{{ $card['inactive_btn'] }}"
+                data-active-icon="{{ $card['active_icon'] }}"
+                data-inactive-icon="{{ $card['inactive_icon'] }}"
+                class="stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[44px] transition-all w-full {{ $isActive ? $card['active_btn'] : $card['inactive_btn'] }}">
             <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors {{ $iconBg }}">
-                    <i class="ti {{ $card[2] }} text-lg"></i>
+                <div class="stat-icon w-9 h-9 rounded-xl flex items-center justify-center transition-colors {{ $isActive ? $card['active_icon'] : $card['inactive_icon'] }}">
+                    <i class="ti {{ $card['icon'] }} text-lg"></i>
                 </div>
-                <span class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{{ $card[1] }}</span>
+                <span class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{{ $card['count'] }}</span>
             </div>
-            <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{{ $card[0] }}</p>
+            <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{{ $card['title'] }}</p>
         </button>
     @endforeach
 </div>
 
 {{-- SECONDARY FILTER BUTTONS --}}
-<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-    <button type="button"
-            onclick="switchFilter('semua', 'blue', event)"
-            data-filter="semua"
-            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center shadow-xs
-            {{ $filter === 'semua'
-                ? 'active bg-blue-600 text-white shadow-xs border-transparent hover:bg-blue-700'
-                : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200' }}">
-        <i class="ti ti-layers-intersect mr-1.5 {{ $filter === 'semua' ? 'text-white' : 'text-blue-600' }}"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
-    </button>
-    <button type="button"
-            onclick="switchFilter('terlambat', 'red', event)"
-            data-filter="terlambat"
-            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center shadow-xs
-            {{ $filter === 'terlambat'
-                ? 'active bg-rose-600 text-white shadow-xs border-transparent hover:bg-rose-700'
-                : 'bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 border-slate-200' }}">
-        <i class="ti ti-alert-triangle mr-1.5 {{ $filter === 'terlambat' ? 'text-white' : 'text-rose-500' }}"></i>Terlambat ({{ $stats['terlambat'] ?? count($terlambat ?? []) }})
-    </button>
-    <button type="button"
-            onclick="switchFilter('dihubungi', 'purple', event)"
-            data-filter="dihubungi"
-            class="filter-btn px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center shadow-xs col-span-2 sm:col-span-1
-            {{ $filter === 'dihubungi'
-                ? 'active bg-emerald-600 text-white shadow-xs border-transparent hover:bg-emerald-700'
-                : 'bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 border-slate-200' }}">
-        <i class="ti ti-brand-whatsapp mr-1.5 {{ $filter === 'dihubungi' ? 'text-white' : 'text-emerald-600' }}"></i>Dihubungi ({{ count($dihubungi ?? []) }})
-    </button>
+<div class="space-y-2 mb-4">
+    <div class="grid grid-cols-2 gap-2">
+        <button type="button"
+                onclick="switchFilter('semua', 'blue', event)"
+                data-filter="semua"
+                data-icon="ti-layers-intersect"
+                data-active-btn="active bg-blue-600 text-white shadow-xs border-transparent hover:bg-blue-700"
+                data-inactive-btn="bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200 shadow-2xs"
+                data-active-icon="text-white"
+                data-inactive-icon="text-blue-600"
+                class="filter-btn w-full px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center
+                {{ $filter === 'semua'
+                    ? 'active bg-blue-600 text-white shadow-xs border-transparent hover:bg-blue-700'
+                    : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200 shadow-2xs' }}">
+            <i class="ti ti-layers-intersect mr-1.5 {{ $filter === 'semua' ? 'text-white' : 'text-blue-600' }}"></i>Tampilkan Semua ({{ $stats['total'] ?? 0 }})
+        </button>
+        <button type="button"
+                onclick="switchFilter('terlambat', 'rose', event)"
+                data-filter="terlambat"
+                data-icon="ti-alert-triangle"
+                data-active-btn="active bg-rose-600 text-white shadow-xs border-transparent hover:bg-rose-700"
+                data-inactive-btn="bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 border-slate-200 shadow-2xs"
+                data-active-icon="text-white"
+                data-inactive-icon="text-rose-500"
+                class="filter-btn w-full px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center
+                {{ $filter === 'terlambat'
+                    ? 'active bg-rose-600 text-white shadow-xs border-transparent hover:bg-rose-700'
+                    : 'bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 border-slate-200 shadow-2xs' }}">
+            <i class="ti ti-alert-triangle mr-1.5 {{ $filter === 'terlambat' ? 'text-white' : 'text-rose-500' }}"></i>Terlambat ({{ $stats['terlambat'] ?? count($terlambat ?? []) }})
+        </button>
+    </div>
+    <div>
+        <button type="button"
+                onclick="switchFilter('dihubungi', 'emerald', event)"
+                data-filter="dihubungi"
+                data-icon="ti-brand-whatsapp"
+                data-active-btn="active bg-emerald-600 text-white shadow-xs border-transparent hover:bg-emerald-700"
+                data-inactive-btn="bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 border-slate-200 shadow-2xs"
+                data-active-icon="text-white"
+                data-inactive-icon="text-emerald-600"
+                class="filter-btn w-full px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center
+                {{ $filter === 'dihubungi'
+                    ? 'active bg-emerald-600 text-white shadow-xs border-transparent hover:bg-emerald-700'
+                    : 'bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 border-slate-200 shadow-2xs' }}">
+            <i class="ti ti-brand-whatsapp mr-1.5 {{ $filter === 'dihubungi' ? 'text-white' : 'text-emerald-600' }}"></i>Dihubungi ({{ count($dihubungi ?? []) }})
+        </button>
+    </div>
 </div>
 
 {{-- DAFTAR DISPENSASI --}}
@@ -556,10 +605,10 @@ $cards = [
 </div>
 
 {{-- Loading Overlay --}}
-<div id="loading-overlay" class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-    <div class="bg-white rounded-xl p-4 shadow-lg flex items-center space-x-3 border border-gray-200">
+<div id="loading-overlay" class="hidden fixed inset-0 bg-black/40 backdrop-blur-xs z-[70] flex items-center justify-center">
+    <div class="bg-white rounded-xl p-4 shadow-xl flex items-center space-x-3 border border-slate-200">
         <div class="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-        <span class="text-xs font-semibold text-gray-800">Memuat data...</span>
+        <span class="text-xs font-semibold text-slate-800">Memuat data...</span>
     </div>
 </div>
 
@@ -593,73 +642,55 @@ function escapeAlertHtml(value) {
 let currentFilter = '{{ $filter }}';
 let isFilterFetching = false;
 
-const statCardColors = {
-    'menunggu': 'amber',
-    'disetujui': 'emerald',
-    'keluar': 'blue',
-    'selesai': 'slate'
-};
-
 function switchFilter(filterKey, color, event) {
     if (event) event.preventDefault();
     if (filterKey === currentFilter || isFilterFetching) return;
 
     isFilterFetching = true;
 
-    // Reset tombol secondary filter
-    const filterColorClasses = [
-        'active', 'text-white', 'shadow-sm', 'border-transparent',
-        'bg-blue-600', 'bg-red-600', 'bg-purple-600', 'bg-amber-600', 'bg-emerald-600', 'bg-sky-600', 'bg-gray-600',
-        'hover:bg-blue-700', 'hover:bg-red-700', 'hover:bg-purple-700', 'hover:bg-amber-700', 'hover:bg-emerald-700', 'hover:bg-sky-700', 'hover:bg-gray-700'
-    ];
-
+    // Reset seluruh secondary filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove(...filterColorClasses);
-        btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
-
+        if (btn.dataset.inactiveBtn) {
+            btn.className = `filter-btn w-full px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center ${btn.dataset.inactiveBtn}`;
+        }
         const icon = btn.querySelector('i');
-        if (icon) {
-            icon.classList.remove('text-white');
-            const btnFilter = btn.getAttribute('data-filter');
-            if (btnFilter === 'semua') icon.classList.add('text-blue-500');
-            else if (btnFilter === 'terlambat') icon.classList.add('text-red-500');
-            else if (btnFilter === 'dihubungi') icon.classList.add('text-purple-500');
+        if (icon && btn.dataset.icon && btn.dataset.inactiveIcon) {
+            icon.className = `ti ${btn.dataset.icon} mr-1.5 ${btn.dataset.inactiveIcon}`;
         }
     });
 
-    // Reset kartu statistik
+    // Reset seluruh stat cards & icon boxes
     document.querySelectorAll('.stat-card-btn').forEach(card => {
-        const key = card.getAttribute('data-filter');
-        const c = statCardColors[key] || 'gray';
-        card.classList.remove('active', 'border-amber-500', 'border-emerald-500', 'border-sky-500', 'border-gray-500', 'ring-2', 'ring-amber-500/20', 'ring-emerald-500/20', 'ring-sky-500/20', 'ring-gray-500/20', 'shadow-sm');
-        card.classList.add('bg-white', 'border-gray-200', 'hover:border-gray-300');
-        const iconContainer = card.querySelector('div > div');
-        if (iconContainer) {
-            iconContainer.className = `w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-${c}-100 text-${c}-600`;
+        if (card.dataset.inactiveBtn) {
+            card.className = `stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[44px] transition-all w-full ${card.dataset.inactiveBtn}`;
+        }
+        const iconBox = card.querySelector('.stat-icon');
+        if (iconBox && card.dataset.inactiveIcon) {
+            iconBox.className = `stat-icon w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${card.dataset.inactiveIcon}`;
         }
     });
 
-    // Aktifkan secondary filter jika ada
+    // Aktifkan secondary filter jika filterKey adalah semua / terlambat / dihubungi
     const activeBtn = document.querySelector(`button.filter-btn[data-filter="${filterKey}"]`);
     if (activeBtn) {
-        activeBtn.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50', 'hover:text-gray-900', 'border-gray-200');
-        activeBtn.classList.add('active', `bg-${color}-600`, 'text-white', 'shadow-sm', 'border-transparent', `hover:bg-${color}-700`);
-        const activeIcon = activeBtn.querySelector('i');
-        if (activeIcon) {
-            activeIcon.classList.remove('text-blue-500', 'text-red-500', 'text-purple-500');
-            activeIcon.classList.add('text-white');
+        if (activeBtn.dataset.activeBtn) {
+            activeBtn.className = `filter-btn w-full px-3 py-2.5 min-h-[44px] inline-flex items-center justify-center rounded-xl text-xs font-semibold border transition-all text-center ${activeBtn.dataset.activeBtn}`;
+        }
+        const icon = activeBtn.querySelector('i');
+        if (icon && activeBtn.dataset.icon && activeBtn.dataset.activeIcon) {
+            icon.className = `ti ${activeBtn.dataset.icon} mr-1.5 ${activeBtn.dataset.activeIcon}`;
         }
     }
 
-    // Aktifkan kartu statistik jika ada
+    // Aktifkan kartu statistik jika filterKey adalah menunggu / disetujui / keluar / selesai
     const activeStatCard = document.querySelector(`button.stat-card-btn[data-filter="${filterKey}"]`);
-    if (activeStatCard && statCardColors[filterKey]) {
-        const c = statCardColors[filterKey];
-        activeStatCard.classList.remove('border-gray-200', 'hover:border-gray-300');
-        activeStatCard.classList.add('active', `border-${c}-500`, 'ring-2', `ring-${c}-500/20`, 'shadow-sm');
-        const iconContainer = activeStatCard.querySelector('div > div');
-        if (iconContainer) {
-            iconContainer.className = `w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-${c}-500 text-white`;
+    if (activeStatCard) {
+        if (activeStatCard.dataset.activeBtn) {
+            activeStatCard.className = `stat-card-btn text-left rounded-2xl border p-3.5 sm:p-4 min-h-[44px] transition-all w-full ${activeStatCard.dataset.activeBtn}`;
+        }
+        const iconBox = activeStatCard.querySelector('.stat-icon');
+        if (iconBox && activeStatCard.dataset.activeIcon) {
+            iconBox.className = `stat-icon w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${activeStatCard.dataset.activeIcon}`;
         }
     }
 
@@ -718,14 +749,7 @@ window.addEventListener('popstate', function(event) {
     const urlParams = new URLSearchParams(window.location.search);
     const filter = urlParams.get('filter') || 'semua';
     if (filter !== currentFilter) {
-        let color = 'blue';
-        if(filter === 'menunggu') color = 'amber';
-        if(filter === 'disetujui') color = 'emerald';
-        if(filter === 'keluar') color = 'sky';
-        if(filter === 'selesai') color = 'gray';
-        if(filter === 'terlambat') color = 'red';
-        if(filter === 'dihubungi') color = 'purple';
-        switchFilter(filter, color, null);
+        switchFilter(filter, null, null);
     }
 });
 

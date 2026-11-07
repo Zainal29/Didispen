@@ -1447,6 +1447,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function stopSelfieCamera() {
+        document.body.classList.remove('camera-open');
         if (selfieStream) {
             selfieStream.getTracks().forEach(track => {
                 try { track.stop(); } catch (err) {}
@@ -1480,6 +1481,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (selfiePreviewBox) selfiePreviewBox.classList.add('hidden');
         if (selfieCameraBox) selfieCameraBox.classList.remove('hidden');
         if (selfieCameraLoading) selfieCameraLoading.classList.remove('hidden');
+        document.body.classList.add('camera-open');
 
         const isSecureEnv = (window.isSecureContext === true) || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !isSecureEnv) {

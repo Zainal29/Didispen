@@ -10,14 +10,21 @@
     @include('satpam._modal_manual_guru')
 
     {{-- Instruksi & Tip Cepat --}}
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5 flex items-center space-x-3.5">
-        <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center text-xl flex-shrink-0 shadow-2xs">
-            <i class="ti ti-qrcode"></i>
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5 flex items-center justify-between gap-3">
+        <div class="flex items-center space-x-3.5 min-w-0">
+            <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center text-xl flex-shrink-0 shadow-2xs">
+                <i class="ti ti-qrcode"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-bold text-slate-900">Scan QR Pos Gerbang</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Arahkan kamera ke QR Code pada layar HP siswa.</p>
+            </div>
         </div>
-        <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-bold text-slate-900">Scan QR Pos Gerbang</h3>
-            <p class="text-xs text-slate-500 mt-0.5">Arahkan kamera ke QR Code pada layar HP siswa.</p>
-        </div>
+        <a href="{{ route('satpam.dashboard') }}"
+           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold transition-all shrink-0">
+            <i class="ti ti-arrow-left"></i>
+            <span>Kembali</span>
+        </a>
     </div>
 
     {{-- ========================================================= --}}
@@ -1589,19 +1596,29 @@ function initScanner() {
     html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
     .then(() => {
         isScanning = true;
+        document.body.classList.add('camera-open');
         setStatus('Kamera aktif — siap scan');
     })
     .catch(err => {
         html5QrCode.start({ facingMode: "user" }, config, onScanSuccess)
         .then(() => {
             isScanning = true;
+            document.body.classList.add('camera-open');
             setStatus('Kamera depan aktif');
         })
         .catch(err2 => {
+            document.body.classList.remove('camera-open');
             setStatus('Kamera tidak tersedia — gunakan verifikasi manual', false);
         });
     });
 }
+
+window.addEventListener('beforeunload', function () {
+    document.body.classList.remove('camera-open');
+});
+window.addEventListener('pagehide', function () {
+    document.body.classList.remove('camera-open');
+});
 
 document.addEventListener("DOMContentLoaded", function() {
     updateExpressUI();

@@ -788,7 +788,7 @@ $cards = [
             <input type="hidden" id="dispensasiId">
 
             <div class="relative w-full rounded-2xl overflow-hidden bg-black aspect-[4/3] flex items-center justify-center border border-slate-300 shadow-inner">
-                <video id="videoBukti" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <video id="videoBukti" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
                 <img id="previewImgBukti" class="w-full h-full object-cover hidden" alt="Preview Foto Bukti">
                 <canvas id="canvasBukti" class="hidden"></canvas>
 
