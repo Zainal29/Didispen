@@ -82,7 +82,7 @@
 </div>
 
 {{-- Modal Form Tambah / Edit Template --}}
-<div id="templateModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+<div id="templateModal" class="hidden fixed inset-0 bg-slate-950/75 z-[80] flex items-center justify-center p-4 backdrop-blur-xs">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90dvh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
         <div class="p-5 sm:p-6 border-b border-slate-100 flex justify-between items-center flex-shrink-0 bg-slate-50/50">
             <div>
@@ -227,6 +227,7 @@ function openModal(mode, id = null) {
     const title = document.getElementById('modalTitle');
 
     modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
     document.getElementById('previewArea').innerHTML = '<span class="text-slate-400 italic">Klik tombol "Preview" di bawah untuk melihat simulasi pesan terisi variabel.</span>';
 
     if (mode === 'edit' && id) {
@@ -249,6 +250,7 @@ function openModal(mode, id = null) {
 
 function closeModal() {
     document.getElementById('templateModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
 }
 
 function fetchPreview() {

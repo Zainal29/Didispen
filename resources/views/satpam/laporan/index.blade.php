@@ -197,7 +197,7 @@
     {{-- ================================================== --}}
     {{-- MODAL BUAT LAPORAN TEMUAN GERBANG                   --}}
     {{-- ================================================== --}}
-    <div id="modalBuatLaporan" x-show="modalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+    <div id="modalBuatLaporan" x-show="modalOpen" x-cloak class="fixed inset-0 z-[80] overflow-y-auto" role="dialog" aria-modal="true">
         <div class="min-h-screen px-4 text-center flex items-center justify-center p-0">
             <div x-show="modalOpen"
                  x-transition:enter="ease-out duration-200"
@@ -207,7 +207,7 @@
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
                  @click="modalOpen = false"
-                 class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+                 class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity"></div>
 
             <div x-show="modalOpen"
                  x-transition:enter="ease-out duration-200"

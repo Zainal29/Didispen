@@ -124,7 +124,7 @@
 </div>
 
 {{-- Modal Edit Satpam --}}
-<div id="editModal" class="fixed inset-0 bg-slate-950/60 hidden items-center justify-center p-4 z-50 backdrop-blur-xs">
+<div id="editModal" class="fixed inset-0 bg-slate-950/75 hidden items-center justify-center p-4 z-[80] backdrop-blur-xs">
     <div class="bg-white rounded-3xl max-w-md w-full max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden border border-slate-200/80">
         <div class="bg-gradient-to-r from-slate-900 to-blue-950 px-6 py-4 flex justify-between items-center shrink-0 border-b border-slate-800 text-white">
             <h3 class="text-sm font-bold text-white flex items-center gap-2">
@@ -220,12 +220,14 @@ function openEditModal(id, name, email, nis_nip) {
     form.action = `{{ url('admin/satpam') }}/${id}`;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
 }
 
 function closeEditModal() {
     const modal = document.getElementById('editModal');
     modal.classList.remove('flex');
     modal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
 }
 
 document.addEventListener('keydown', function(e) {

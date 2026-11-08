@@ -196,9 +196,9 @@
     </form>
 
     {{-- MODAL TINDAK LANJUT WALI KELAS --}}
-    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-[80] overflow-y-auto" role="dialog" aria-modal="true">
         <div class="min-h-screen px-4 text-center flex items-center justify-center p-0">
-            <div x-show="modalOpen" @click="modalOpen = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+            <div x-show="modalOpen" @click="modalOpen = false" class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity"></div>
 
             <div x-show="modalOpen"
                  class="relative bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-lg p-5 sm:p-6 border border-slate-100 my-8">

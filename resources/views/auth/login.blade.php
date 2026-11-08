@@ -213,7 +213,7 @@
 
                             <button type="submit" :disabled="loading" class="w-full h-10 mt-1 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20">
                                 <i x-show="loading" class="ti ti-loader-2 animate-spin text-base"></i>
-                                <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
+                                <span x-text="loading ? 'Memproses...' : 'Masuk & Ajukan Dispensasi'"></span>
                             </button>
                         </form>
                     </div>
@@ -252,7 +252,7 @@
 
                             <button type="submit" :disabled="loading" class="w-full h-10 mt-1 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20">
                                 <i x-show="loading" class="ti ti-loader-2 animate-spin text-base"></i>
-                                <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
+                                <span x-text="loading ? 'Memproses...' : 'Masuk & Verifikasi Izin'"></span>
                             </button>
                         </form>
                     </div>
@@ -291,7 +291,7 @@
 
                             <button type="submit" :disabled="loading" class="w-full h-10 mt-1 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20">
                                 <i x-show="loading" class="ti ti-loader-2 animate-spin text-base"></i>
-                                <span x-text="loading ? 'Memproses...' : 'Masuk ke Sistem'"></span>
+                                <span x-text="loading ? 'Memproses...' : 'Masuk & Buka Scanner'"></span>
                             </button>
                         </form>
                     </div>
@@ -444,7 +444,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h3 class="font-bold text-sm sm:text-base text-white">Catatan Pembaruan Sistem</h3>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 font-mono">v2.5.0</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30 font-mono">v2.6.0</span>
                         </div>
                         <p class="text-slate-400 text-xs mt-0.5">Riwayat peningkatan fitur & stabilitas DIDISPEN</p>
                     </div>
@@ -457,14 +457,56 @@
             <!-- BODY LIST -->
             <div class="p-4 sm:p-5 overflow-y-auto space-y-5 text-xs text-slate-700">
                 
-                <!-- VERSI 2.5.0 -->
+                <!-- VERSI 2.6.0 -->
                 <div class="relative pl-6 border-l-2 border-blue-500 space-y-2.5">
                     <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-600 border-2 border-white shadow-xs"></div>
                     
                     <div class="flex items-center justify-between gap-2 flex-wrap">
                         <div class="flex items-center gap-2">
-                            <span class="font-bold text-slate-900 text-sm">Versi 2.5.0</span>
+                            <span class="font-bold text-slate-900 text-sm">Versi 2.6.0</span>
                             <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Terbaru</span>
+                        </div>
+                        <span class="text-slate-600 text-[11px] font-medium">8 November 2026</span>
+                    </div>
+
+                    <p class="text-slate-600 text-[11px] leading-relaxed">
+                        Revitalisasi antarmuka portal siswa dengan conversational UI ramah Gen Z, dock navigasi bawah frosted glassmorphism ultra-bersih, serta tombol masuk berbasis aksi peran.
+                    </p>
+
+                    <div class="space-y-2 pt-1">
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="ti ti-messages text-blue-600 mt-0.5 flex-shrink-0 text-base"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Gaya Bahasa Komunikatif & Ramah Siswa (Tanpa Emoji Teks)</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Seluruh teks pada portal siswa disesuaikan menjadi komunikatif dan santun ("kamu", "di-ACC", "beres") dengan dukungan icon Tabler yang rapi dan profesional.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="ti ti-layout-navbar text-indigo-600 mt-0.5 flex-shrink-0 text-base"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Dock Navigasi Frosted Glassmorphism</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Penghapusan border aura luar pada dock HP siswa digantikan efek kaca buram (frosted glass) estetik dengan breathing pulse halus pada tombol tambah.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <i class="ti ti-login text-emerald-600 mt-0.5 flex-shrink-0 text-base"></i>
+                            <div>
+                                <p class="font-bold text-slate-800">Tombol Masuk Berbasis Aksi & Peran</p>
+                                <p class="text-slate-500 text-[11px] mt-0.5">Tombol login kini disesuaikan: Siswa ("Masuk & Ajukan Dispensasi"), Guru ("Masuk & Verifikasi Izin"), dan Satpam ("Masuk & Buka Scanner").</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VERSI 2.5.0 -->
+                <div class="relative pl-6 border-l-2 border-slate-200 space-y-2.5">
+                    <div class="absolute -left-[7px] top-0.5 w-3 h-3 rounded-full bg-slate-400 border-2 border-white"></div>
+                    
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-800 text-xs">Versi 2.5.0</span>
                         </div>
                         <span class="text-slate-600 text-[11px] font-medium">23 Oktober 2026</span>
                     </div>

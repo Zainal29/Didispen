@@ -190,8 +190,8 @@
 </div>
 
 {{-- MODAL DETAIL / FORM GURU --}}
-<div id="modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+<div id="modal" class="hidden fixed inset-0 z-[80] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
 
     <div class="relative min-h-screen flex items-center justify-center p-4">
         <div class="relative z-10 w-full max-w-lg bg-white rounded-3xl text-left shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col my-8 border border-slate-200/80">
@@ -291,6 +291,7 @@ function openModal(data = null) {
     const form = document.getElementById('form');
 
     modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
 
     if (data) {
         title.innerHTML = '<i class="ti ti-user text-blue-400"></i> Detail Guru: ' + (data.nama_lengkap || '');
@@ -307,6 +308,7 @@ function openModal(data = null) {
 
 function closeModal() {
     document.getElementById('modal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
 }
 
 document.addEventListener('keydown', function(e) {

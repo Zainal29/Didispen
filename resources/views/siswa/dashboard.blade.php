@@ -17,16 +17,16 @@
             Halo, {{ auth()->user()->name }}!
         </h2>
         <p class="text-xs sm:text-sm text-blue-100/90 mt-1 max-w-xl leading-relaxed">
-            Sistem Digital Dispensasi SMKN 1 Bangsri. Ajukan dan pantau izin dispensasi Anda secara real-time.
+            Semangat belajarnya hari ini! Mau izin dispensasi? Ajukan dan pantau langsung izin kamu dari sini.
         </p>
         <div class="mt-3.5 flex flex-wrap items-center gap-2">
             <a href="{{ route('siswa.notifikasi.index') }}"
                class="inline-flex items-center px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-colors">
-                <i class="ti ti-bell mr-1.5 text-amber-300"></i>{{ $notifikasiBelumDibaca ?? 0 }} Notifikasi Baru
+                <i class="ti ti-bell mr-1.5 text-amber-300"></i>{{ $notifikasiBelumDibaca ?? 0 }} Notif Baru
             </a>
             <a href="{{ route('siswa.pengajuan.create') }}"
                class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 text-xs font-bold shadow-xs active:scale-95 transition-all">
-                <i class="ti ti-plus mr-1.5"></i>Buat Pengajuan
+                <i class="ti ti-plus mr-1.5"></i>Ajukan Izin
             </a>
         </div>
     </div>
@@ -43,7 +43,7 @@
             <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2 flex-wrap mb-1">
                     <h3 class="text-sm sm:text-base font-bold text-slate-900">
-                        Pengajuan Menunggu Persetujuan Guru Piket
+                        Izin Kamu Lagi Dicek Guru Piket Nih
                     </h3>
                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold border border-amber-200">
                         <i class="ti ti-hourglass-low text-[11px]"></i> Kadaluarsa: {{ $dispensasiMenunggu->getBatasWaktuExpiredText() }}
@@ -62,7 +62,7 @@
                     @endif
                 </div>
                 <p class="text-xs text-amber-900 leading-relaxed">
-                    Pengajuan <span class="font-mono font-semibold text-slate-800">#{{ $dispensasiMenunggu->nomor_surat }}</span> Anda <strong>akan segera kadaluarsa</strong> jika tidak disetujui hingga {{ $dispensasiMenunggu->sampai_pulang ? 'jam KBM usai' : 'batas izin berakhir' }} (pukul <strong>{{ $dispensasiMenunggu->getBatasWaktuExpiredText() }}</strong>). Segera temui Guru Piket di ruang piket untuk menyelesaikan prosesnya.
+                    Pengajuan <span class="font-mono font-semibold text-slate-800">#{{ $dispensasiMenunggu->nomor_surat }}</span> kamu <strong>bakal hangus</strong> kalau belum di-ACC sampai {{ $dispensasiMenunggu->sampai_pulang ? 'jam KBM usai' : 'batas izin berakhir' }} (pukul <strong>{{ $dispensasiMenunggu->getBatasWaktuExpiredText() }}</strong>). Yuk buruan temui Guru Piket di ruang piket ya!
                 </p>
             </div>
         </div>
@@ -73,32 +73,33 @@
                     onclick="openPiketDashboardModal()"
                     class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all">
                 <i class="ti ti-brand-whatsapp text-sm"></i>
-                <span>Hubungi Guru Piket Via WhatsApp</span>
+                <span>Chat Guru Piket via WhatsApp</span>
             </button>
             @endif
             <a href="{{ route('siswa.pengajuan.show', $dispensasiMenunggu) }}"
                class="inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 text-xs font-bold transition-all shadow-xs gap-1.5"
                title="Lihat Detail Pengajuan">
-                <span>Lihat Detail</span>
+                <span>Cek Detail</span>
                 <i class="ti ti-arrow-right"></i>
             </a>
         </div>
     </div>
 </div>
 
+@push('modals')
 {{-- MODAL HUBUNGI GURU PIKET DI DASHBOARD --}}
 <div id="piketDashboardModal"
-     class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 flex items-center justify-center p-4">
-    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150">
+     class="hidden fixed inset-0 z-[90] overflow-y-auto bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[90vh] flex flex-col transform transition-all animate-in fade-in zoom-in-95 duration-150">
         {{-- Header Modal --}}
-        <div class="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">
                     <i class="ti ti-brand-whatsapp text-base"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-slate-900">Hubungi Guru Piket Via WhatsApp</h3>
-                    <p class="text-[11px] text-slate-500">Daftar Guru Piket yang sedang bertugas pada sesi ini</p>
+                    <h3 class="text-sm font-bold text-slate-900">Chat Guru Piket via WhatsApp</h3>
+                    <p class="text-[11px] text-slate-500">Pilih Bapak/Ibu Guru Piket yang lagi bertugas buat verifikasi izin kamu</p>
                 </div>
             </div>
             <button type="button" onclick="closePiketDashboardModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
@@ -107,7 +108,7 @@
         </div>
 
         {{-- Body Modal --}}
-        <div class="p-5 space-y-4">
+        <div class="p-5 space-y-4 overflow-y-auto">
             @if(!empty($daftarGuruPiket) && $daftarGuruPiket->isNotEmpty())
                 <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                     @foreach($daftarGuruPiket as $item)
@@ -152,7 +153,7 @@
                                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
                                        title="Hubungi {{ $guru->nama_lengkap }} via WhatsApp">
                                         <i class="ti ti-brand-whatsapp text-sm"></i>
-                                        <span>Hubungi WA</span>
+                                        <span>Chat WA</span>
                                     </a>
                                 @else
                                     <button type="button" disabled class="px-3 py-2 rounded-xl bg-slate-200 text-slate-400 text-xs font-semibold cursor-not-allowed">
@@ -183,7 +184,7 @@
                            rel="noopener noreferrer"
                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all">
                             <i class="ti ti-brand-whatsapp text-sm"></i>
-                            <span>Hubungi WA</span>
+                            <span>Chat WA</span>
                         </a>
                     @endif
                 </div>
@@ -192,8 +193,8 @@
             <div class="p-3.5 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2.5">
                 <i class="ti ti-info-circle text-blue-600 mt-0.5 text-base flex-shrink-0"></i>
                 <div class="text-xs text-blue-900 leading-relaxed">
-                    <p class="font-semibold">Format pesan WhatsApp sudah disiapkan sistem.</p>
-                    <p class="mt-0.5 text-blue-700">Silakan kirim pesan tersebut kepada salah satu Guru Piket di atas untuk mempercepat verifikasi pengajuan dispensasi Anda.</p>
+                    <p class="font-semibold">Format chat WhatsApp udah otomatis disiapin sistem.</p>
+                    <p class="mt-0.5 text-blue-700">Tinggal kirim chat ke salah satu Guru Piket di atas biar dispensasi kamu cepet di-ACC ya!</p>
                 </div>
             </div>
 
@@ -211,13 +212,14 @@
         </div>
 
         {{-- Footer Modal --}}
-        <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
             <button type="button" onclick="closePiketDashboardModal()" class="w-full sm:w-auto py-2 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition-colors">
                 Tutup
             </button>
         </div>
     </div>
 </div>
+@endpush
 @endif
 
 {{-- Banner Masa Toleransi Antrean Gerbang (Muncul saat 09:21 - 09:25) --}}
@@ -232,10 +234,10 @@
                 <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
                     Masa Toleransi Antrean
                 </span>
-                <h3 class="text-amber-900 font-bold text-sm">Perhatian: Melewati Batas Waktu!</h3>
+                <h3 class="text-amber-900 font-bold text-sm">Waktunya Balik ke Sekolah!</h3>
             </div>
             <p class="text-amber-800 text-xs sm:text-sm mb-2 leading-relaxed">
-                Batas waktu kembali dispensasi <strong class="text-amber-950">({{ $dispensasiAktif->nomor_surat }})</strong> telah terlewati. Saat ini Anda berada dalam <strong>masa toleransi antrean gerbang (5 menit)</strong> sisa <span class="bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded-md font-bold text-xs">{{ $sisaMenitToleransi }} menit</span>.
+                Batas waktu izin kamu <strong class="text-amber-950">({{ $dispensasiAktif->nomor_surat }})</strong> udah lewat nih. Kamu lagi di <strong>masa toleransi gerbang</strong> sisa <span class="bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded-md font-bold text-xs">{{ $sisaMenitToleransi }} menit</span>.
             </p>
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-amber-800 mb-3 bg-white/70 px-3 py-2 rounded-xl border border-amber-200/80">
                 <span>Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasiAktif->batas_waktu_kembali)->format('H:i') }} WIB</strong></span>
@@ -243,11 +245,11 @@
                 <span>Batas toleransi: <strong>{{ $dispensasiAktif->batas_toleransi_formatted }}</strong></span>
             </div>
             <p class="text-[11px] text-amber-700 mb-3 font-medium">
-                *Segera temui Satpam di gerbang untuk scan kembali sebelum batas toleransi habis agar tidak resmi dinyatakan terlambat.
+                *Yuk langsung ke pos gerbang buat scan QR sebelum toleransi habis, biar gak kena catatan terlambat!
             </p>
             <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
                class="inline-flex items-center px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
-                <i class="ti ti-qrcode mr-1.5"></i>Tunjukkan QR Code Sekarang
+                <i class="ti ti-qrcode mr-1.5"></i>Buka QR Code Sekarang
             </a>
         </div>
     </div>
@@ -266,10 +268,12 @@
                 <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-200 text-rose-900 border border-rose-300">
                     Toleransi Habis
                 </span>
-                <h3 class="text-rose-900 font-bold text-sm">Peringatan: Anda Resmi Dinyatakan Terlambat!</h3>
+                <h3 class="text-rose-900 font-bold text-sm">
+                    <span class="sr-only">Peringatan: Anda Resmi Dinyatakan Terlambat!</span>Waduh, Kamu Resmi Dicatat Terlambat!
+                </h3>
             </div>
             <p class="text-rose-700 text-xs sm:text-sm mb-2 leading-relaxed">
-                Masa toleransi antrean gerbang telah habis. Anda telah melewati batas waktu kembali dispensasi
+                Masa toleransi antrean gerbang udah habis nih. Kamu melewati batas waktu kembali izin
                 <strong class="text-rose-900">({{ $dispensasiAktif->nomor_surat }})</strong>
                 selama
                 <span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md font-semibold">
@@ -278,7 +282,7 @@
                     @else
                         {{ $terlambatMenit }} menit
                     @endif
-                </span>
+                </span>. Segera temui Satpam di gerbang dan lapor ke Guru Piket ya.
             </p>
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-rose-700 mb-3 bg-white/70 px-3 py-2 rounded-xl border border-rose-200/80">
                 <span>Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasiAktif->batas_waktu_kembali)->format('H:i') }} WIB</strong></span>
@@ -287,7 +291,7 @@
             </div>
             <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
                class="inline-flex items-center px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
-                <i class="ti ti-qrcode mr-1.5"></i>Lihat QR Code
+                <i class="ti ti-qrcode mr-1.5"></i>Buka QR Code
             </a>
         </div>
     </div>
@@ -305,7 +309,7 @@
                     Aktif
                 </span>
                 <h3 class="text-sm font-bold text-slate-900 flex items-center">
-                    <i class="ti ti-circle-check text-emerald-600 mr-1.5 text-base"></i>Dispensasi Disetujui
+                    <i class="ti ti-circle-check text-emerald-600 mr-1.5 text-base"></i>Sip, Izin Kamu Udah di-ACC!
                 </h3>
                 @if($dispensasiAktif->isRombongan())
                     <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
@@ -348,7 +352,7 @@
         <div class="mt-3.5 flex gap-2">
             <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
                class="flex-1 inline-flex items-center justify-center px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
-                <i class="ti ti-qrcode mr-1.5 text-sm"></i>Lihat QR Code
+                <i class="ti ti-qrcode mr-1.5 text-sm"></i>Buka QR Code Tiket
             </a>
             @php
                 $maxLimitAktif = \App\Helpers\PrintHelper::maxStudentLimit();
@@ -365,10 +369,10 @@
 
         @if(empty($dispensasiAktif->waktu_keluar_aktual) && (!auth()->user()->siswa || auth()->user()->siswa->id === $dispensasiAktif->siswa_id))
         <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
-            <span class="text-[11px] text-slate-500">Tidak jadi izin keluar?</span>
+            <span class="text-[11px] text-slate-500">Gak jadi izin keluar?</span>
             <button type="button" onclick="confirmBatalKeluar('{{ route('siswa.pengajuan.batal', $dispensasiAktif) }}')"
                     class="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-colors">
-                <i class="ti ti-ban text-[11px]"></i> Batalkan Dispensasi
+                <i class="ti ti-ban text-[11px]"></i> Batalkan Izin
             </button>
         </div>
         @endif
@@ -384,7 +388,7 @@
             </div>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="font-bold text-slate-900 text-sm">Anda Sedang di Luar Sekolah</h3>
+                    <h3 class="font-bold text-slate-900 text-sm">Kamu Lagi di Luar Sekolah Nih</h3>
                     @if($dispensasiAktif->isRombongan())
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                             <i class="ti ti-users mr-1"></i>Rombongan
@@ -397,7 +401,7 @@
                 @if($dispensasiAktif->isSampaiPulang())
                     <p class="text-xs text-emerald-700 font-semibold mt-1 flex items-center gap-1">
                         <i class="ti ti-circle-check text-emerald-600 text-sm"></i>
-                        Izin sampai jam pulang sekolah (Tidak perlu scan kembali & bebas peringatan terlambat).
+                        Izin sampai jam pulang sekolah (Gak perlu scan kembali & bebas peringatan terlambat).
                     </p>
                 @else
                     <div class="mt-2 pt-2 border-t border-blue-200/60 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
@@ -417,7 +421,7 @@
         {{-- BAGIAN FOTO BUKTI (DENGAN KAMERA LANGSUNG) --}}
         <div class="mt-4 pt-4 border-t border-blue-200/80">
             <p class="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5">
-                <i class="ti ti-camera text-blue-600 text-sm"></i> Foto Bukti Kegiatan
+                <i class="ti ti-camera text-blue-600 text-sm"></i> Foto Bukti Kegiatan Kamu
             </p>
 
             @if($dispensasiAktif->foto_bukti)
@@ -448,10 +452,10 @@
                     <div>
                         <p class="text-xs font-bold {{ $isTerlambat ? 'text-rose-700' : 'text-amber-800' }} flex items-center gap-1.5">
                             <i class="ti ti-alert-circle text-sm"></i>
-                            {{ $isTerlambat ? 'Wajib Upload Foto Bukti!' : 'Belum ada foto bukti' }}
+                            {{ $isTerlambat ? 'Wajib Upload Foto Bukti Nih!' : 'Belum ada foto bukti' }}
                         </p>
                         <p class="text-[11px] text-slate-500 mt-0.5">
-                            Ambil foto langsung menggunakan kamera sebagai bukti kegiatan
+                            Ambil foto langsung sekarang pakai kamera sebagai bukti kegiatan kamu ya
                         </p>
                     </div>
                     <button onclick="openUploadModal({{ $dispensasiAktif->id }})"
@@ -470,7 +474,7 @@
                         </div>
                         <div class="min-w-0">
                             <p class="text-xs font-bold text-emerald-950">Dispensasi Sampai Pulang Sekolah</p>
-                            <p class="text-[11px] text-slate-500">Tidak perlu scan kembali ke Satpam. Otomatis selesai di akhir jadwal KBM.</p>
+                            <p class="text-[11px] text-slate-500">Gak perlu scan kembali ke Satpam. Otomatis beres di akhir jadwal KBM.</p>
                         </div>
                     </div>
                     <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
@@ -482,7 +486,7 @@
                 <div class="mt-3">
                     <a href="{{ route('siswa.pengajuan.show', $dispensasiAktif) }}"
                        class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors">
-                        <i class="ti ti-qrcode mr-1.5 text-sm"></i>Lihat QR Code (Untuk Scan Kembali)
+                        <i class="ti ti-qrcode mr-1.5 text-sm"></i>Buka QR Code (Buat Scan Kembali)
                     </a>
                 </div>
             @endif
@@ -498,9 +502,9 @@
                 <i class="ti ti-circle-check text-xl"></i>
             </div>
             <div class="flex-1 min-w-0">
-                <h3 class="font-bold text-slate-900 text-sm">Dispensasi Selesai</h3>
+                <h3 class="font-bold text-slate-900 text-sm">Dispensasi Beres!</h3>
                 <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
-                    Anda telah kembali ke sekolah pukul {{ $dispensasiAktif->waktu_kembali_aktual ? \Carbon\Carbon::parse($dispensasiAktif->waktu_kembali_aktual)->format('H:i') : '-' }} WIB.
+                    Kamu udah balik ke sekolah pukul {{ $dispensasiAktif->waktu_kembali_aktual ? \Carbon\Carbon::parse($dispensasiAktif->waktu_kembali_aktual)->format('H:i') : '-' }} WIB. Selamat lanjut belajar di kelas ya!
                 </p>
             </div>
         </div>
@@ -755,22 +759,24 @@ $cards = [
             <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-3">
                 <i class="ti ti-inbox text-3xl"></i>
             </div>
-            <p class="text-slate-800 font-bold text-sm mb-1">Belum ada pengajuan dispensasi</p>
-            <p class="text-xs text-slate-500 mb-4">Buat pengajuan pertama Anda untuk memulai.</p>
+            <p class="text-slate-800 font-bold text-sm mb-1">Belum ada riwayat izin nih</p>
+            <p class="text-xs text-slate-500 mb-4">Kamu belum punya pengajuan izin dispensasi. Tetap semangat belajar di kelas ya!</p>
             <a href="{{ route('siswa.pengajuan.create') }}"
                class="inline-flex items-center px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-colors">
-                <i class="ti ti-plus mr-1.5 text-sm"></i>Buat Pengajuan Pertama
+                <i class="ti ti-plus mr-1.5 text-sm"></i>Ajukan Izin Baru
             </a>
         </div>
     @endif
 </div>
 
+@push('modals')
 {{-- MODAL AMBIL FOTO BUKTI LANGSUNG KAMERA --}}
-<div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
-        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+<div id="uploadModal" class="hidden fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="relative bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+        {{-- Header Modal --}}
+        <div class="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
                     <i class="ti ti-camera text-base"></i>
                 </div>
                 <div>
@@ -783,11 +789,11 @@ $cards = [
             </button>
         </div>
 
-        <form id="uploadForm" class="p-5 flex flex-col gap-4">
+        <form id="uploadForm" class="p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 overflow-y-auto">
             @csrf
             <input type="hidden" id="dispensasiId">
 
-            <div class="relative w-full rounded-2xl overflow-hidden bg-black aspect-[4/3] flex items-center justify-center border border-slate-300 shadow-inner">
+            <div class="relative w-full rounded-2xl overflow-hidden bg-black aspect-[4/3] max-h-[42vh] sm:max-h-[50vh] flex items-center justify-center border border-slate-300 shadow-inner shrink-0">
                 <video id="videoBukti" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
                 <img id="previewImgBukti" class="w-full h-full object-cover hidden" alt="Preview Foto Bukti">
                 <canvas id="canvasBukti" class="hidden"></canvas>
@@ -810,26 +816,26 @@ $cards = [
                         <i class="ti ti-alert-triangle text-2xl"></i>
                     </div>
                     <p class="text-xs font-bold mb-1">Kamera Tidak Dapat Diakses</p>
-                    <p class="text-[11px] text-slate-300 mb-3 max-w-xs leading-relaxed">Pastikan izin akses kamera telah diizinkan pada peramban Anda.</p>
+                    <p class="text-[11px] text-slate-300 mb-3 max-w-xs leading-relaxed">Pastikan izin akses kamera udah diizinkan di browser kamu ya.</p>
                     <button type="button" onclick="retryBuktiCamera()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1">
                         <i class="ti ti-rotate text-sm"></i> Coba Lagi
                     </button>
                 </div>
             </div>
 
-            <div class="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2">
+            <div class="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 shrink-0">
                 <i class="ti ti-shield-check text-emerald-600 text-base flex-shrink-0"></i>
                 <span>Foto diambil seketika dengan stempel waktu otomatis untuk mencegah penggunaan foto lama.</span>
             </div>
 
-            <div id="controlsCameraBukti" class="flex gap-2">
+            <div id="controlsCameraBukti" class="flex gap-2 shrink-0">
                 <button type="button" onclick="closeUploadModal()" class="w-1/3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs transition-colors">Batal</button>
                 <button type="button" id="btnSnapBukti" class="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl font-bold text-xs shadow-xs flex items-center justify-center gap-2 transition-all">
                     <i class="ti ti-camera text-base"></i> Jepret Foto Bukti
                 </button>
             </div>
 
-            <div id="controlsPreviewBukti" class="hidden flex gap-2">
+            <div id="controlsPreviewBukti" class="hidden flex gap-2 shrink-0">
                 <button type="button" id="btnRetakeBukti" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs transition-colors flex items-center justify-center gap-1.5">
                     <i class="ti ti-rotate text-sm"></i> Foto Ulang
                 </button>
@@ -840,6 +846,7 @@ $cards = [
         </form>
     </div>
 </div>
+@endpush
 
 @push('scripts')
 <script>
@@ -898,14 +905,23 @@ function retryBuktiCamera() { startBuktiCamera(currentFacingModeBukti); }
 function openUploadModal(id) {
     document.getElementById('dispensasiId').value = id;
     capturedBuktiBlob = null;
-    document.getElementById('uploadModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden', 'modal-open', 'camera-open');
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.scrollTop = 0;
+        modal.classList.remove('hidden');
+    }
     startBuktiCamera(currentFacingModeBukti);
 }
 
 function closeUploadModal() {
     stopBuktiCamera();
     capturedBuktiBlob = null;
-    document.getElementById('uploadModal').classList.add('hidden');
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    document.body.classList.remove('overflow-hidden', 'modal-open', 'camera-open');
 }
 
 btnFlipBukti.addEventListener('click', function() {
@@ -977,7 +993,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
 async function hapusFoto(id) {
     const result = await Swal.fire({
         title: 'Hapus Foto Bukti?',
-        text: 'Foto bukti akan dihapus permanen. Anda harus upload ulang sebelum kembali.',
+        text: 'Foto bukti bakal dihapus permanen. Kamu harus upload ulang sebelum kembali ya.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
@@ -1016,7 +1032,7 @@ async function hapusFoto(id) {
             Swal.fire('Gagal', data.message || 'Terjadi kesalahan saat menghapus foto.', 'error');
         }
     } catch (err) {
-        Swal.fire('Error', 'Gagal menghapus foto. Periksa koneksi Anda.', 'error');
+        Swal.fire('Error', 'Gagal menghapus foto. Coba cek koneksi internet kamu ya.', 'error');
     }
 }
 
@@ -1032,7 +1048,7 @@ function showPreview(url, nomorSurat) {
 function confirmBatalKeluar(url) {
     Swal.fire({
         title: 'Batalkan Dispensasi?',
-        text: 'Apakah Anda yakin tidak jadi keluar sekolah? Status dispensasi akan diubah menjadi Dibatalkan dan QR Code tidak lagi dapat digunakan.',
+        text: 'Yakin gak jadi izin keluar sekolah? Status izin bakal diubah jadi Dibatalkan dan QR Code gak bisa dipakai lagi.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#e11d48',
@@ -1099,6 +1115,8 @@ function openPiketDashboardModal() {
     if (_dashboardPiketSecondsLeft <= 0) return;
     const modal = document.getElementById('piketDashboardModal');
     if (modal) {
+        document.body.classList.add('overflow-hidden', 'modal-open');
+        modal.scrollTop = 0;
         modal.classList.remove('hidden');
         _updateDashboardCountdown();
     }
@@ -1106,7 +1124,10 @@ function openPiketDashboardModal() {
 
 function closePiketDashboardModal() {
     const modal = document.getElementById('piketDashboardModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden', 'modal-open');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {

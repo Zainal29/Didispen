@@ -370,7 +370,7 @@
 
                 {{-- 5. Akun (Trigger Bottom Sheet) --}}
                 <button type="button"
-                        onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
+                        onclick="openAccountSheet()"
                         class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isProfilActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
                     <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isProfilActive ? 'bg-blue-50/90' : '' }}">
                         <div class="w-6 h-6 rounded-full {{ $isProfilActive ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-200 text-slate-700' }} flex items-center justify-center font-bold text-[10px] transition-colors">
@@ -385,11 +385,11 @@
 
 {{-- BOTTOM SHEET AKUN --}}
 <div id="accountSheet"
-     class="lg:hidden fixed inset-0 z-[60] flex items-end translate-y-full transition-transform duration-300">
+     class="lg:hidden fixed inset-0 z-[60] flex items-end translate-y-full pointer-events-none invisible transition-all duration-300">
 
     {{-- Overlay --}}
     <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-xs"
-         onclick="this.parentElement.classList.add('translate-y-full')"></div>
+         onclick="closeAccountSheet()"></div>
 
     {{-- Sheet --}}
     <div class="relative bg-white rounded-t-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
@@ -513,7 +513,7 @@
 
                 {{-- Tutup --}}
                 <button type="button"
-                        onclick="document.getElementById('accountSheet').classList.add('translate-y-full')"
+                        onclick="closeAccountSheet()"
                         class="w-full mt-2 min-h-[42px] px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
                     Tutup
                 </button>
@@ -524,6 +524,26 @@
 </div>
 
 <script>
+function openAccountSheet() {
+    const sheet = document.getElementById('accountSheet');
+    if (!sheet) return;
+    sheet.classList.remove('invisible', 'pointer-events-none');
+    requestAnimationFrame(() => {
+        sheet.classList.remove('translate-y-full');
+    });
+    document.body.classList.add('overflow-hidden', 'modal-open');
+}
+
+function closeAccountSheet() {
+    const sheet = document.getElementById('accountSheet');
+    if (!sheet) return;
+    sheet.classList.add('translate-y-full');
+    setTimeout(() => {
+        sheet.classList.add('invisible', 'pointer-events-none');
+    }, 300);
+    document.body.classList.remove('overflow-hidden', 'modal-open');
+}
+
 (function() {
     function handleViewportResize() {
         if (!window.visualViewport) return;

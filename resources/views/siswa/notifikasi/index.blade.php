@@ -12,7 +12,7 @@
                 <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
                     <i class="ti ti-bell text-slate-500 text-lg"></i>Notifikasi
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5">Informasi terbaru pengajuan dispensasi Anda.</p>
+                <p class="text-xs text-slate-500 mt-0.5">Kabar dan update terbaru seputar izin dispensasi kamu.</p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
                 @if($notifikasi->where('is_read', false)->count() > 0)
@@ -117,8 +117,8 @@
                     <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-3 border border-slate-200">
                         <i class="ti ti-bell-off"></i>
                     </div>
-                    <p class="text-slate-800 font-bold text-sm mb-1">Belum Ada Notifikasi</p>
-                    <p class="text-xs text-slate-500 max-w-sm mx-auto">Notifikasi mengenai pengajuan dispensasi Anda akan muncul di sini secara otomatis.</p>
+                    <p class="text-slate-800 font-bold text-sm mb-1">Belum Ada Notif Nih</p>
+                    <p class="text-xs text-slate-500 max-w-sm mx-auto">Update terbaru mengenai izin dispensasi kamu bakal muncul di sini otomatis.</p>
                 </div>
             @endforelse
         </div>

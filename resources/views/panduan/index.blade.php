@@ -468,10 +468,10 @@
 </div>
 
 {{-- MODAL VIDEO TUTORIAL --}}
-<div id="videoModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="video-modal-title" role="dialog" aria-modal="true">
+<div id="videoModal" class="hidden fixed inset-0 z-[80] overflow-y-auto" aria-labelledby="video-modal-title" role="dialog" aria-modal="true">
     <div class="flex items-center justify-center min-h-screen p-4 text-center sm:block sm:p-0">
         {{-- Overlay --}}
-        <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeVideoModal()"></div>
+        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeVideoModal()"></div>
 
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 

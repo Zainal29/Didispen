@@ -67,19 +67,17 @@
             background: #94a3b8;
         }
 
-        /* Smooth page entrance animation */
+        /* Smooth page entrance animation (murni opacity tanpa transform agar tidak mengurung modal fixed) */
         @keyframes pageFadeIn {
             from {
                 opacity: 0;
-                transform: translateY(8px);
             }
             to {
                 opacity: 1;
-                transform: none;
             }
         }
         .page-enter {
-            animation: pageFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: pageFadeIn 0.2s ease-out;
         }
 
         /* FAB Active subtle breathing animation */
@@ -93,6 +91,13 @@
         }
         .fab-active-glow {
             animation: softPulse 2.8s ease-in-out infinite;
+        }
+
+        /* Bottom Nav Frosted Glassmorphism */
+        .glass-nav-blur {
+            background-color: rgba(255, 255, 255, 0.78);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: blur(20px) saturate(180%);
         }
 
         /* Smooth transitions for interactive controls */
@@ -334,33 +339,42 @@
     <nav id="siswaBottomNav"
          class="mobile-bottom-nav lg:hidden fixed inset-x-3 sm:inset-x-6 max-w-md mx-auto z-50 transform-gpu transition-all duration-300 ease-out"
          style="bottom: max(env(safe-area-inset-bottom, 0px) + 10px, 14px);">
-        
-        <div class="relative bg-white/90 backdrop-blur-xl border border-white/80 shadow-[0_12px_36px_-6px_rgba(15,23,42,0.14),0_0_0_1px_rgba(226,232,240,0.85)] rounded-2xl sm:rounded-3xl px-2 py-1.5 ring-1 ring-black/[0.03]">
+
+        <div class="relative glass-nav-blur border border-white/80 shadow-[0_12px_36px_-6px_rgba(15,23,42,0.14),0_0_0_1px_rgba(226,232,240,0.85)] rounded-2xl sm:rounded-3xl px-2 py-1.5 ring-1 ring-black/[0.03]">
             <div class="grid grid-cols-5 h-14 w-full items-center relative">
                 
                 {{-- 1. Beranda --}}
                 <a href="{{ route('siswa.dashboard') }}"
                    class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isDashboardActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
-                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isDashboardActive ? 'bg-blue-50/90' : '' }}">
-                        <i class="ti ti-smart-home text-xl transition-transform {{ $isDashboardActive ? 'scale-110' : '' }}"></i>
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isDashboardActive ? 'bg-blue-50/90 shadow-[0_0_12px_rgba(37,99,235,0.2)]' : '' }}">
+                        <i class="ti ti-smart-home text-xl transition-transform {{ $isDashboardActive ? 'scale-110 drop-shadow-[0_2px_6px_rgba(37,99,235,0.35)]' : '' }}"></i>
                     </div>
                     <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isDashboardActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Beranda</span>
+                    @if($isDashboardActive)
+                        <span class="absolute bottom-0.5 w-1 h-1 rounded-full bg-blue-600 shadow-[0_0_6px_rgba(37,99,235,0.9)]"></span>
+                    @endif
                 </a>
 
                 {{-- 2. Riwayat --}}
                 <a href="{{ route('siswa.pengajuan.index') }}"
                    class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isRiwayatActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
-                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isRiwayatActive ? 'bg-blue-50/90' : '' }}">
-                        <i class="ti ti-history text-xl transition-transform {{ $isRiwayatActive ? 'scale-110' : '' }}"></i>
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isRiwayatActive ? 'bg-blue-50/90 shadow-[0_0_12px_rgba(37,99,235,0.2)]' : '' }}">
+                        <i class="ti ti-history text-xl transition-transform {{ $isRiwayatActive ? 'scale-110 drop-shadow-[0_2px_6px_rgba(37,99,235,0.35)]' : '' }}"></i>
                     </div>
                     <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isRiwayatActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Riwayat</span>
+                    @if($isRiwayatActive)
+                        <span class="absolute bottom-0.5 w-1 h-1 rounded-full bg-blue-600 shadow-[0_0_6px_rgba(37,99,235,0.9)]"></span>
+                    @endif
                 </a>
 
-                {{-- 3. Center Action Button (+) Buat Pengajuan (Elevated) --}}
+                {{-- 3. Center Action Button (+) Buat Pengajuan (Elevated with Aura) --}}
                 <div class="relative flex flex-col items-center justify-end h-full pb-0.5">
+                    {{-- Soft pulse aura halo around FAB --}}
+                    <div class="absolute -top-5 w-12 h-12 rounded-full bg-blue-500/35 blur-md pointer-events-none animate-pulse"></div>
+
                     <a href="{{ route('siswa.pengajuan.create') }}"
                        aria-label="Buat Pengajuan Dispensasi"
-                       class="absolute -top-5 w-12 h-12 rounded-full text-white flex items-center justify-center border-[3px] border-white shadow-[0_8px_20px_-3px_rgba(37,99,235,0.45)] transition-all duration-200 active:scale-90 {{ $isCreateActive ? 'bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 ring-4 ring-blue-500/25 scale-105 fab-active-glow' : 'bg-gradient-to-tr from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600' }}">
+                       class="relative -top-5 w-12 h-12 rounded-full text-white flex items-center justify-center border-[3px] border-white shadow-[0_8px_24px_-2px_rgba(37,99,235,0.5),0_0_12px_rgba(59,130,246,0.35)] transition-all duration-200 active:scale-90 {{ $isCreateActive ? 'bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-600 ring-4 ring-blue-500/25 scale-105 fab-active-glow' : 'bg-gradient-to-tr from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600' }}">
                         <i class="ti ti-plus text-xl font-bold"></i>
                     </a>
                     <span class="text-[10px] leading-tight tracking-tight mt-auto {{ $isCreateActive ? 'font-bold text-blue-600' : 'font-semibold text-slate-700' }}">Buat</span>
@@ -369,8 +383,8 @@
                 {{-- 4. Notifikasi (+Badge) --}}
                 <a href="{{ route('siswa.notifikasi.index') }}"
                    class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isNotifActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
-                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isNotifActive ? 'bg-blue-50/90' : '' }}">
-                        <i class="ti ti-bell text-xl transition-transform {{ $isNotifActive ? 'scale-110' : '' }}"></i>
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isNotifActive ? 'bg-blue-50/90 shadow-[0_0_12px_rgba(37,99,235,0.2)]' : '' }}">
+                        <i class="ti ti-bell text-xl transition-transform {{ $isNotifActive ? 'scale-110 drop-shadow-[0_2px_6px_rgba(37,99,235,0.35)]' : '' }}"></i>
                         @if($notif > 0)
                             <span class="absolute -top-1 -right-2 min-w-[17px] h-[17px] px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-xs">
                                 {{ $notif > 99 ? '99+' : $notif }}
@@ -378,18 +392,24 @@
                         @endif
                     </div>
                     <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isNotifActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Notifikasi</span>
+                    @if($isNotifActive)
+                        <span class="absolute bottom-0.5 w-1 h-1 rounded-full bg-blue-600 shadow-[0_0_6px_rgba(37,99,235,0.9)]"></span>
+                    @endif
                 </a>
 
                 {{-- 5. Akun (Trigger Bottom Sheet) --}}
                 <button type="button"
-                        onclick="document.getElementById('accountSheet').classList.remove('translate-y-full')"
+                        onclick="openAccountSheet()"
                         class="relative flex flex-col items-center justify-center h-full rounded-xl transition-all duration-200 active:scale-90 {{ $isProfilActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600' }}">
-                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isProfilActive ? 'bg-blue-50/90' : '' }}">
+                    <div class="relative flex items-center justify-center w-8 h-7 rounded-lg transition-colors {{ $isProfilActive ? 'bg-blue-50/90 shadow-[0_0_12px_rgba(37,99,235,0.2)]' : '' }}">
                         <div class="w-6 h-6 rounded-full {{ $isProfilActive ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-200 text-slate-700' }} flex items-center justify-center font-bold text-[10px] transition-colors">
                             {{ strtoupper(substr($user->name, 0, 1)) }}
                         </div>
                     </div>
                     <span class="text-[10px] leading-tight tracking-tight mt-0.5 {{ $isProfilActive ? 'font-bold text-blue-600' : 'font-medium text-slate-500' }}">Akun</span>
+                    @if($isProfilActive)
+                        <span class="absolute bottom-0.5 w-1 h-1 rounded-full bg-blue-600 shadow-[0_0_6px_rgba(37,99,235,0.9)]"></span>
+                    @endif
                 </button>
             </div>
         </div>
@@ -398,8 +418,8 @@
     {{-- ================================================== --}}
     {{-- BOTTOM SHEET AKUN (muncul saat tombol Akun ditekan) --}}
     {{-- ================================================== --}}
-    <div id="accountSheet" class="lg:hidden fixed inset-0 z-[60] flex items-end translate-y-full transition-transform duration-300">
-        <div class="absolute inset-0 bg-slate-900/60" onclick="this.parentElement.classList.add('translate-y-full')"></div>
+    <div id="accountSheet" class="lg:hidden fixed inset-0 z-[60] flex items-end translate-y-full pointer-events-none invisible transition-all duration-300">
+        <div class="absolute inset-0 bg-slate-900/60" onclick="closeAccountSheet()"></div>
         <div class="relative bg-white rounded-t-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
             <div class="p-6">
                 {{-- Handle drag indicator --}}
@@ -428,7 +448,7 @@
                             <i class="ti ti-logout w-5 mr-3 text-rose-500 text-lg"></i> Keluar dari Akun
                         </button>
                     </form>
-                    <button type="button" onclick="document.getElementById('accountSheet').classList.add('translate-y-full')"
+                    <button type="button" onclick="closeAccountSheet()"
                             class="w-full mt-2 min-h-[44px] px-4 py-3 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
                         Tutup
                     </button>
@@ -438,6 +458,26 @@
     </div>
 
     <script>
+    function openAccountSheet() {
+        const sheet = document.getElementById('accountSheet');
+        if (!sheet) return;
+        sheet.classList.remove('invisible', 'pointer-events-none');
+        requestAnimationFrame(() => {
+            sheet.classList.remove('translate-y-full');
+        });
+        document.body.classList.add('overflow-hidden', 'modal-open');
+    }
+
+    function closeAccountSheet() {
+        const sheet = document.getElementById('accountSheet');
+        if (!sheet) return;
+        sheet.classList.add('translate-y-full');
+        setTimeout(() => {
+            sheet.classList.add('invisible', 'pointer-events-none');
+        }, 300);
+        document.body.classList.remove('overflow-hidden', 'modal-open');
+    }
+
     (function() {
         function handleViewportResize() {
             if (!window.visualViewport) return;

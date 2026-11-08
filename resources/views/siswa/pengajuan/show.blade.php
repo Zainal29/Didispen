@@ -62,7 +62,7 @@
                                 Guru Piket Belum Merespons
                             </h3>
                             <p class="text-xs text-slate-500 mt-0.5">
-                                Anda dapat menghubungi Guru Piket yang sedang bertugas melalui WhatsApp.
+                                Kamu bisa langsung chat Guru Piket yang lagi bertugas lewat WhatsApp.
                             </p>
                         </div>
 
@@ -113,11 +113,11 @@
                         <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-200 text-rose-900 border border-rose-300">
                             Toleransi Habis
                         </span>
-                        <h3 class="text-rose-900 font-bold text-sm">PERINGATAN: ANDA RESMI TERLAMBAT!</h3>
+                        <h3 class="text-rose-900 font-bold text-sm">WADUH, KAMU RESMI DICATAT TERLAMBAT!</h3>
                     </div>
                     <p class="text-rose-700 text-xs sm:text-sm mb-3">
-                        Masa toleransi antrean gerbang telah habis. Anda telah melewati batas waktu kembali selama
-                        <span class="bg-rose-100 px-2 py-0.5 rounded-md font-bold text-rose-900 border border-rose-200">{{ $terlambatText }}</span>
+                        Masa toleransi antrean gerbang udah habis nih. Kamu melewati batas waktu kembali selama
+                        <span class="bg-rose-100 px-2 py-0.5 rounded-md font-bold text-rose-900 border border-rose-200">{{ $terlambatText }}</span>. Segera temui Satpam di gerbang dan lapor ke Guru Piket ya.
                     </p>
                     <div class="bg-white/80 rounded-xl p-3 mb-4 border border-rose-100">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -161,7 +161,7 @@
                         <h3 class="text-amber-900 font-bold text-sm">PERHATIAN: MELEWATI BATAS WAKTU</h3>
                     </div>
                     <p class="text-amber-800 text-xs sm:text-sm mb-2">
-                        Batas izin kembali telah terlewati. Saat ini Anda sedang dalam <strong>masa toleransi antrean gerbang (5 menit)</strong> sisa <span class="bg-amber-200/80 px-2 py-0.5 rounded-md font-bold text-amber-950 border border-amber-300">{{ $dispensasi->getSisaMenitToleransi() }} menit</span>.
+                        Batas izin kembali udah lewat nih. Saat ini kamu lagi di <strong>masa toleransi antrean gerbang (5 menit)</strong> sisa <span class="bg-amber-200/80 px-2 py-0.5 rounded-md font-bold text-amber-950 border border-amber-300">{{ $dispensasi->getSisaMenitToleransi() }} menit</span>.
                     </p>
                     <div class="bg-white/80 rounded-xl p-3 mb-3 border border-amber-100">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -180,7 +180,7 @@
                         </div>
                     </div>
                     <p class="text-[11px] text-amber-700 font-medium">
-                        *Segera temui Satpam di pos gerbang dan tunjukkan QR Code sebelum pukul <strong>{{ $dispensasi->batas_toleransi_formatted }}</strong> agar kepulangan Anda tidak dicatat sebagai pelanggaran terlambat resmi.
+                        *Yuk langsung temui Satpam di pos gerbang buat scan QR sebelum pukul <strong>{{ $dispensasi->batas_toleransi_formatted }}</strong> biar kepulangan kamu gak dicatat terlambat!
                     </p>
                 </div>
             </div>
@@ -191,7 +191,7 @@
                 <i class="ti ti-clock text-xl"></i>
             </div>
             <div class="flex-1 min-w-0">
-                <p class="text-amber-900 font-bold text-xs sm:text-sm">Sedang Keluar - Harap Kembali Tepat Waktu</p>
+                <p class="text-amber-900 font-bold text-xs sm:text-sm">Lagi di Luar - Jangan Lupa Balik Tepat Waktu Ya!</p>
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-amber-800 mt-0.5">
                     <span>Batas kembali: <strong>{{ \Carbon\Carbon::parse($dispensasi->batas_waktu_kembali)->format('H:i') }} WIB</strong></span>
                     <span>•</span>
@@ -208,7 +208,7 @@
                 <div class="flex-1 min-w-0">
                     <h3 class="text-sm font-bold text-rose-900">Dispensasi Ditutup: Tidak Kembali ke Sekolah</h3>
                     <p class="text-xs text-rose-700 mt-1 leading-relaxed">
-                        Anda tercatat keluar dari sekolah namun <strong>tidak melakukan scan kembali di pos gerbang Satpam</strong> hingga kegiatan belajar mengajar berakhir. Status ditutup otomatis dengan catatan peringatan.
+                        Kamu tercatat keluar dari sekolah tapi <strong>gak scan kembali di pos Satpam</strong> sampai jam KBM selesai. Status otomatis ditutup dengan catatan peringatan.
                     </p>
                 </div>
             </div>
@@ -222,7 +222,7 @@
                 <div class="flex-1 min-w-0">
                     <h3 class="text-sm font-bold text-amber-900">Dispensasi Selesai (Kembali Terlambat)</h3>
                     <p class="text-xs text-amber-800 mt-1 leading-relaxed">
-                        Dispensasi telah selesai, namun Anda kembali melewati batas waktu yang ditentukan selama <strong>{{ $dispensasi->getLateDurationText() }}</strong> (Kembali pukul {{ $dispensasi->waktu_kembali_aktual?->format('H:i') }} WIB, Batas waktu: {{ $dispensasi->batas_waktu_kembali?->format('H:i') }} WIB).
+                        Dispensasi sudah selesai, tapi kamu kembali melewati batas waktu izin selama <strong>{{ $dispensasi->getLateDurationText() }}</strong> (Kembali pukul {{ $dispensasi->waktu_kembali_aktual?->format('H:i') }} WIB, Batas waktu: {{ $dispensasi->batas_waktu_kembali?->format('H:i') }} WIB).
                     </p>
                 </div>
             </div>
@@ -250,19 +250,19 @@
                 <div class="flex-1 min-w-0">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                         <h3 class="text-sm font-bold text-amber-900">
-                            Pengajuan Ini Akan Segera Kadaluarsa
+                            Pengajuan Ini Akan Segera Kadaluarsa Nih
                         </h3>
                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 self-start sm:self-auto">
                             <i class="ti ti-hourglass-empty text-xs"></i> Kadaluarsa: {{ $dispensasi->getBatasWaktuExpiredText() }}
                         </span>
                     </div>
                     <p class="text-xs text-amber-800 mt-1.5 leading-relaxed">
-                        Permohonan dispensasi Anda masih <strong>menunggu persetujuan</strong> dari Guru Piket. Pengajuan ini <strong>akan kadaluarsa</strong> jika tidak disetujui hingga batas izin berakhir (pukul <strong>{{ $dispensasi->getBatasWaktuExpiredText() }}</strong>). Segera temui Guru Piket di ruang piket untuk menyelesaikan proses permohonan.
+                        Izin dispensasi kamu masih <strong>menunggu di-ACC</strong> Guru Piket nih. Izin ini <strong>bakal hangus</strong> kalau belum disetujui sampai batas izin berakhir (pukul <strong>{{ $dispensasi->getBatasWaktuExpiredText() }}</strong>). Yuk buruan temui Guru Piket di ruang piket ya!
                     </p>
                     @if(!empty($popupEligible))
                     <div class="mt-3">
                         <button type="button" onclick="openPiketPopup()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold shadow-xs transition-colors">
-                            <i class="ti ti-brand-whatsapp text-sm"></i> Hubungi Guru Piket via WhatsApp
+                            <i class="ti ti-brand-whatsapp text-sm"></i> Chat Guru Piket via WhatsApp
                         </button>
                     </div>
                     @endif
@@ -317,11 +317,11 @@
                         <div class="shrink-0">
                             @if($dispensasi->siswa_id === auth()->user()->siswa?->id)
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white shadow-xs whitespace-nowrap">
-                                    <i class="ti ti-crown text-xs"></i> <span class="hidden sm:inline">Anda: </span>Pemohon
+                                    <i class="ti ti-crown text-xs"></i> <span class="hidden sm:inline">Kamu: </span>Pemohon
                                 </span>
                             @else
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-200 text-slate-700 whitespace-nowrap">
-                                    <i class="ti ti-user-check text-xs"></i> <span class="hidden sm:inline">Anda: </span>Anggota
+                                    <i class="ti ti-user-check text-xs"></i> <span class="hidden sm:inline">Kamu: </span>Anggota
                                 </span>
                             @endif
                         </div>
@@ -364,7 +364,7 @@
                                             <div class="flex items-center gap-1.5 flex-wrap">
                                                 <span class="font-bold text-slate-900 leading-snug break-words">{{ $dispensasi->siswa->nama_lengkap }}</span>
                                                 @if($isKetuaViewing)
-                                                    <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-600 text-white flex-shrink-0">Anda</span>
+                                                    <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-600 text-white flex-shrink-0">Kamu</span>
                                                 @endif
                                             </div>
                                             <p class="text-[11px] text-slate-500 font-mono mt-0.5">NIS: {{ $dispensasi->siswa->user->nis_nip ?? $dispensasi->siswa->nis_nip ?? '-' }}</p>
@@ -408,7 +408,7 @@
                                                 <div class="flex items-center gap-1.5 flex-wrap">
                                                     <span class="font-medium text-slate-900 leading-snug break-words">{{ $ang->nama_lengkap }}</span>
                                                     @if($isCurrentAnggota)
-                                                        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-600 text-white flex-shrink-0">Anda</span>
+                                                        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-600 text-white flex-shrink-0">Kamu</span>
                                                     @endif
                                                 </div>
                                                 <p class="text-[11px] text-slate-500 font-mono mt-0.5">NIS: {{ $ang->user->nis_nip ?? $ang->nis_nip ?? '-' }}</p>
@@ -526,7 +526,7 @@
                 @if($dispensasi->dibuat_manual_oleh_guru)
                     <div class="mt-4 bg-purple-50 border border-purple-200 rounded-xl p-3.5">
                         <p class="text-purple-700 text-[10px] font-bold uppercase mb-1 flex items-center gap-1.5"><i class="ti ti-user-circle"></i>Dibuat Manual oleh Guru Piket</p>
-                        <p class="text-purple-900 text-xs sm:text-sm font-medium">Pengajuan dispensasi ini dibuat langsung oleh {{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }} untuk Anda.</p>
+                        <p class="text-purple-900 text-xs sm:text-sm font-medium">Dispensasi ini dibuatkan langsung oleh {{ $dispensasi->guru?->nama_lengkap ?? 'Guru Piket' }} buat kamu.</p>
                     </div>
                 @endif
                 @if($dispensasi->catatan_admin)
@@ -553,7 +553,7 @@
                                 <i class="ti ti-check text-2xl"></i>
                             </div>
                             <p class="text-emerald-900 font-bold text-sm mb-1">QR Code Aktif</p>
-                            <p class="text-emerald-700 text-xs mb-3">Tunjukkan QR Code ini kepada petugas Satpam di pos gerbang untuk konfirmasi keluar.</p>
+                            <p class="text-emerald-700 text-xs mb-3">Tunjukkan QR Code ini ke Pak Satpam di pos gerbang buat konfirmasi keluar ya.</p>
                             <div class="mb-3 py-1.5 px-3 bg-white/80 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center justify-center gap-1.5">
                                 <i class="ti ti-info-circle text-emerald-600"></i>
                                 <span>Scan keluar sebelum batas izin berakhir (<strong>{{ $dispensasi->getBatasWaktuExpiredText() }}</strong>).</span>
@@ -565,10 +565,10 @@
 
                             @if(empty($dispensasi->waktu_keluar_aktual))
                             <div class="mt-4 pt-3 border-t border-emerald-200/60 text-center">
-                                <p class="text-xs text-slate-500 mb-2">Tidak jadi izin keluar sekolah?</p>
+                                <p class="text-xs text-slate-500 mb-2">Gak jadi izin keluar sekolah?</p>
                                 <button type="button" onclick="confirmBatalKeluar('{{ route('siswa.pengajuan.batal', $dispensasi) }}')"
                                         class="w-full inline-flex items-center justify-center min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-bold text-rose-600 bg-white hover:bg-rose-50 active:bg-rose-100 border border-rose-200 transition-colors gap-1.5">
-                                    <i class="ti ti-ban text-sm"></i> Batalkan Dispensasi Ini
+                                    <i class="ti ti-ban text-sm"></i> Batalkan Izin Ini
                                 </button>
                             </div>
                             @endif
@@ -590,7 +590,7 @@
                             </div>
                             <p class="text-emerald-900 font-bold text-sm mb-1">Dispensasi Sedang Berjalan (Sampai Pulang)</p>
                             <p class="text-emerald-700 text-xs max-w-sm mx-auto leading-relaxed">
-                                Anda telah diverifikasi keluar sekolah oleh Satpam. Karena izin dispensasi ini <strong>sampai jam pulang sekolah</strong>, Anda <strong>tidak perlu melakukan scan kembali</strong> ke Satpam.
+                                Kamu udah diverifikasi keluar sekolah oleh Satpam. Karena izin dispensasi ini <strong>sampai jam pulang sekolah</strong>, kamu <strong>gak perlu scan kembali</strong> ke Satpam.
                             </p>
                             <div class="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-[11px] font-bold">
                                 <i class="ti ti-check"></i> Bebas Kewajiban Scan Kembali
@@ -602,7 +602,7 @@
                                 <i class="ti ti-walk text-2xl"></i>
                             </div>
                             <p class="text-sky-900 font-bold text-sm mb-1">Sedang Keluar</p>
-                            <p class="text-sky-700 text-xs mb-4">Tunjukkan QR Code yang sama kepada Satpam saat Anda kembali.</p>
+                            <p class="text-sky-700 text-xs mb-4">Tunjukkan QR Code ini ke Pak Satpam saat kamu balik ke sekolah ya.</p>
                             @if($dispensasi->qr_code)
                                 <div class="bg-white p-3 rounded-2xl inline-block border border-slate-200 shadow-sm">
                                     <img src="{{ asset('storage/' . $dispensasi->qr_code) }}" alt="QR Code" class="w-44 h-44 object-contain mx-auto">
@@ -838,7 +838,7 @@
                 @if(auth()->user()->siswa && auth()->user()->siswa->id !== $dispensasi->siswa_id)
                 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
                     <h3 class="text-sm font-bold text-slate-900 mb-4 flex items-center justify-between border-b border-slate-200 pb-3">
-                        <span class="flex items-center gap-1.5"><i class="ti ti-user-check text-blue-600"></i>Data Anda (Anggota)</span>
+                        <span class="flex items-center gap-1.5"><i class="ti ti-user-check text-blue-600"></i>Data Kamu (Anggota)</span>
                         <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Anggota</span>
                     </h3>
                     <div class="space-y-3">
@@ -1220,8 +1220,8 @@
                 <div class="flex items-start gap-2.5">
                     <i class="ti ti-info-circle text-blue-600 mt-0.5 text-base"></i>
                     <div class="text-xs text-blue-900 leading-relaxed">
-                        <p class="font-bold">Pesan WhatsApp sudah disiapkan oleh sistem.</p>
-                        <p class="mt-0.5 text-blue-700">Silakan klik tombol WhatsApp pada guru piket yang ingin Anda hubungi.</p>
+                        <p class="font-bold">Chat WhatsApp udah otomatis disiapin sistem.</p>
+                        <p class="mt-0.5 text-blue-700">Tinggal klik tombol WhatsApp pada Guru Piket yang mau kamu hubungi ya.</p>
                     </div>
                 </div>
             </div>
@@ -1422,7 +1422,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function confirmBatalKeluar(url) {
     Swal.fire({
         title: 'Batalkan Dispensasi?',
-        text: 'Apakah Anda yakin tidak jadi keluar sekolah? Status dispensasi akan diubah menjadi Dibatalkan dan QR Code tidak lagi dapat digunakan.',
+        text: 'Yakin gak jadi izin keluar sekolah? Status izin bakal diubah jadi Dibatalkan dan QR Code gak bisa dipakai lagi.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#e11d48',

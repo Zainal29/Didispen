@@ -4,6 +4,31 @@ Semua pembaruan penting, perbaikan bug, dan peningkatan fitur pada aplikasi DIDI
 
 ---
 
+## [v2.6.0] - 2026-11-08
+
+### 🚀 Revitalisasi Antarmuka Siswa & Pengalaman Pengguna (Conversational UI & Frosted Glass Dock)
+- **Transformasi Gaya Bahasa Interaktif & Ramah Gen Z (Tanpa Emoji Teks):**
+  - Mengubah seluruh tone of voice antarmuka portal siswa (`resources/views/siswa/*`) dari bahasa kaku/formal ("Anda", "Pengajuan Menunggu Persetujuan Guru Piket", "Dispensasi Disetujui") menjadi gaya percakapan yang akrab, santun, dan suportif ("kamu", "Izin Kamu Lagi Dicek Guru Piket Nih", "Sip, Izin Kamu Udah di-ACC!", "Dispensasi Beres!").
+  - Menghindari penggunaan teks emoji agar tampilan tetap berkelas dan profesional untuk institusi pendidikan, namun memperkuat ekspresi visual menggunakan integrasi Tabler Icons (`ti ti-*`) yang konsisten.
+  - Penyelarasan dialog konfirmasi SweetAlert, banner edukasi kedisiplinan, instruksi perizinan, form pengajuan, modal WhatsApp guru piket, dan halaman detail riwayat pengajuan dengan bahasa yang komunikatif dan bersahabat.
+- **Redesain Dock Navigasi Siswa (Frosted Glassmorphism Clean Look):**
+  - Menghapus efek border halo/aura warna-warni tebal pada kapsul navigasi bawah (*dock navigation*) di perangkat mobile.
+  - Menerapkan efek kaca buram *ultra-clean frosted glassmorphism* (`backdrop-filter: blur(20px) saturate(180%)`, latar semi-transparan `rgba(255, 255, 255, 0.78)`), memberikan kesan modern, rapi, dan estetis tanpa silau.
+  - Mempertahankan efek *breathing glow* lembut khusus pada Floating Action Button (FAB) tombol tambah pengajuan tengah (`+`) serta titik indikator tab aktif agar navigasi tetap intuitif.
+- **Diferensiasi Tombol Masuk Berbasis Aksi & Peran pada Halaman Login:**
+  - Mengganti teks tombol seragam "Masuk ke Sistem" dengan label kontekstual spesifik untuk masing-masing peran:
+    - **Siswa:** `Masuk & Ajukan Dispensasi` (tetap mengarahkan ke Dashboard Siswa agar dapat memantau status dispensasi aktif terlebih dahulu sebelum membuat izin baru).
+    - **Guru Piket:** `Masuk & Verifikasi Izin`.
+    - **Satpam:** `Masuk & Buka Scanner`.
+- **Audit & Penataan Arsitektur Modal Seluruh Portal (Fix Viewport Trap & Z-Index Collision):**
+  - Memperbaiki bug modal upload foto bukti yang terpotong di tengah halaman dan tidak menutupi topbar dengan menghapus `transform` pada CSS animasi `.page-enter` layout siswa (menghilangkan *containing block trap* W3C).
+  - Memindahkan modal ke slot stack `@push('modals')` langsung di root sebelum penutup `</body>` dengan prioritas z-index tertinggi (`z-[100]`/`z-[90]`/`z-[80]`) dan backdrop gelap pekat `bg-slate-950/80 backdrop-blur-xs`.
+  - Mengamankan bottom sheet profil akun (`#accountSheet`) dengan proteksi `pointer-events-none invisible` saat tersembunyi agar tidak menumpuk di atas modal aktif.
+  - Menetapkan batas tinggi rasio live camera (`max-h-[42vh] sm:max-h-[50vh]`) serta penguncian scroll layar (`body overflow-hidden modal-open`) agar seluruh tombol aksi foto bukti selalu terlihat langsung di viewport pertama HP tanpa perlu scroll.
+  - Menyelaraskan elevasi z-index dan mekanisme penguncian scroll pada modal di seluruh portal (Guru, Satpam, Admin, Panduan, dan Security Modal).
+
+---
+
 ## [v2.5.3] - 2026-10-27
 
 ### ⚡ Optimalisasi Jaringan & Rate Limiting (Anti "Too Many Requests"):

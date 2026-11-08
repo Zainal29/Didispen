@@ -35,7 +35,7 @@
                             <i class="ti ti-alert-circle text-base"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-sm font-bold text-rose-900">Periksa kembali data Anda</p>
+                            <p class="text-sm font-bold text-rose-900">Cek lagi data kamu ya</p>
                             <ul class="mt-1.5 text-xs text-rose-700 list-disc list-inside space-y-0.5">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -77,7 +77,7 @@
                             </button>
                         </div>
                         <p class="mt-1 text-xs text-sky-800 leading-relaxed">
-                            Anda membuka halaman ini melalui browser aplikasi (WhatsApp/Instagram). Jika kamera terasa lambat atau halaman memuat ulang (reload), silakan ketuk tanda titik tiga (<strong>⋮</strong> atau <strong>⋯</strong>) di pojok kanan atas lalu pilih <strong>"Buka di Browser / Chrome"</strong> agar stabil tanpa kendala batas memori.
+                            Kamu lagi buka halaman ini lewat browser aplikasi (WhatsApp/Instagram). Kalau kamera terasa lambat atau halaman memuat ulang (reload), silakan ketuk tanda titik tiga (<strong>⋮</strong> atau <strong>⋯</strong>) di pojok kanan atas lalu pilih <strong>"Buka di Browser / Chrome"</strong> ya biar stabil dan lancar.
                         </p>
                     </div>
                 </div>
@@ -92,7 +92,7 @@
                         </div>
                         <div class="min-w-0">
                             <p class="text-xs sm:text-sm font-bold text-emerald-950">Data Formulir Dipulihkan Otomatis</p>
-                            <p class="text-[11px] text-emerald-800 truncate sm:whitespace-normal">Isian pengajuan dan foto Anda sebelumnya tersimpan aman di perangkat.</p>
+                            <p class="text-[11px] text-emerald-800 truncate sm:whitespace-normal">Isian izin dan foto selfie kamu sebelumnya tersimpan aman di perangkat.</p>
                         </div>
                     </div>
                     <button type="button" id="btnClearDraft" class="shrink-0 text-xs font-bold text-emerald-700 hover:text-emerald-900 underline px-2 py-1">
@@ -110,7 +110,7 @@
                     <div class="min-w-0">
                         <p class="text-sm font-bold text-amber-900">Perhatian Sebelum Mengajukan</p>
                         <p class="mt-1 text-xs text-amber-800 leading-relaxed">
-                            Setelah formulir dikirim, permohonan <strong>tidak dapat dibatalkan sendiri</strong>. Anda <strong>wajib langsung menemui Guru Piket</strong> di ruang piket untuk verifikasi. Permohonan tanpa konfirmasi hingga akhir KBM akan otomatis <strong>Kadaluarsa</strong>.
+                            Setelah formulir dikirim, izin <strong>gak bisa dibatalkan sendiri</strong> ya. Kamu <strong>wajib langsung menemui Guru Piket</strong> di ruang piket buat verifikasi. Permohonan tanpa konfirmasi hingga akhir KBM bakal otomatis <strong>Kadaluarsa</strong>.
                         </p>
                     </div>
                 </div>
@@ -121,7 +121,7 @@
                     <div class="min-w-0">
                         <p class="text-xs font-bold text-rose-900 uppercase tracking-wide">Wajib Scan di Pos Satpam</p>
                         <p class="text-[11px] text-rose-800 mt-0.5 leading-relaxed">
-                            Jika izin berkegiatan <strong>di dalam lingkungan sekolah</strong> (tidak keluar gerbang), Anda <strong>tetap wajib scan keluar di Pos Satpam</strong> agar status dispensasi aktif dan dapat dimonitoring oleh Guru & Wali Kelas.
+                            Kalau izin berkegiatan <strong>di dalam lingkungan sekolah</strong> (gak keluar gerbang), kamu <strong>tetap wajib scan di Pos Satpam</strong> ya biar status izin aktif dan bisa dipantau Guru & Wali Kelas.
                         </p>
                     </div>
                 </div>
@@ -436,7 +436,7 @@
                         </div>
                         <div>
                             <h2 class="text-sm font-bold text-slate-900">Data Siswa Pemohon</h2>
-                            <p class="text-[11px] text-slate-500">Data ini diambil otomatis dari akun Anda.</p>
+                            <p class="text-[11px] text-slate-500">Data ini otomatis diambil dari akun kamu.</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">
@@ -481,7 +481,7 @@
                         </div>
                         <div>
                             <h2 class="text-sm font-bold text-slate-900">Detail Pengajuan</h2>
-                            <p class="text-[11px] text-slate-500">Jelaskan keperluan Anda secara singkat dan jelas.</p>
+                            <p class="text-[11px] text-slate-500">Tulis keperluan izin kamu secara singkat dan jelas ya.</p>
                         </div>
                     </div>
 
@@ -511,13 +511,13 @@
                                 <span class="text-[11px] text-slate-400 whitespace-nowrap">Minimal 10, maks 500 karakter.</span>
                             </div>
                             <textarea name="alasan" id="alasan" required minlength="10" maxlength="500" rows="3"
-                                placeholder="Jelaskan alasan pengajuan Anda..."
+                                placeholder="Tulis alasan izin kamu di sini..."
                                 class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all resize-y @error('alasan') border-rose-500 bg-rose-50 @enderror">{{ old('alasan') }}</textarea>
                             <div class="flex items-center justify-between gap-3 mt-1.5">
                                 @error('alasan')
                                     <p class="text-xs text-rose-600 flex items-center gap-1"><i class="ti ti-alert-circle"></i>{{ $message }}</p>
                                 @else
-                                    <p class="text-[11px] text-slate-400">Tuliskan informasi yang mudah dipahami Guru Piket.</p>
+                                    <p class="text-[11px] text-slate-400">Tulis alasan yang jelas biar gampang dipahami Guru Piket ya.</p>
                                 @enderror
                                 <p class="text-[11px] font-semibold text-slate-500 whitespace-nowrap" id="charCounter"><span id="charCount">0</span> / 500</p>
                             </div>
@@ -629,7 +629,7 @@
                                 <i class="ti ti-alert-triangle text-amber-600 text-base mt-0.5"></i>
                                 <div class="space-y-2">
                                     <p class="text-xs font-bold text-amber-950">Akses kamera live tidak tersedia pada browser ini</p>
-                                    <p class="text-[11px] text-amber-800 leading-relaxed">Jangan khawatir, Anda dapat mengambil foto selfie menggunakan kamera bawaan perangkat Anda melalui tombol di bawah:</p>
+                                    <p class="text-[11px] text-amber-800 leading-relaxed">Tenang, kamu bisa ambil foto selfie pakai kamera bawaan HP kamu lewat tombol di bawah ini:</p>
                                     <div class="pt-1">
                                         <button type="button" id="btnFallbackNativeCamera" class="min-h-[44px] px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-sm">
                                             <i class="ti ti-camera text-base"></i> Buka Kamera Perangkat
@@ -653,7 +653,7 @@
                         </div>
                         <div>
                             <h2 class="text-sm font-bold text-slate-900">Tujuan & Lokasi</h2>
-                            <p class="text-[11px] text-slate-500">Informasi tujuan perjalanan Anda.</p>
+                            <p class="text-[11px] text-slate-500">Tulis tujuan lokasi kegiatan kamu.</p>
                         </div>
                     </div>
                     <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -786,11 +786,11 @@
                         <div id="infoJam" class="mt-3 rounded-xl border border-blue-100 bg-blue-50/60 px-3.5 py-3 text-xs text-blue-900">
                             <span x-show="!sampaiPulang" class="flex items-start gap-1.5">
                                 <i class="ti ti-info-circle text-blue-600 mt-0.5 shrink-0 text-sm"></i>
-                                <span>Pilihan jam kembali tertentu: Anda wajib melakukan scan kembali di pos satpam tepat waktu. Melewati batas waktu akan memicu peringatan keterlambatan.</span>
+                                <span>Pilihan jam kembali tertentu: Kamu wajib scan kembali di pos satpam tepat waktu ya. Kalau telat bakal kena peringatan keterlambatan.</span>
                             </span>
                             <span x-show="sampaiPulang" class="text-emerald-800 font-medium flex items-start gap-1.5">
                                 <i class="ti ti-circle-check text-emerald-600 mt-0.5 shrink-0 text-sm"></i>
-                                <span>Mode Sampai Pulang: Cukup scan keluar satu kali di pos satpam saat meninggalkan sekolah. Anda tidak perlu scan kembali saat jam pulang sekolah tiba.</span>
+                                <span>Mode Sampai Pulang: Cukup scan keluar sekali di pos satpam saat keluar sekolah. Kamu gak perlu scan kembali pas jam pulang sekolah.</span>
                             </span>
                         </div>
                     </div>
@@ -1244,7 +1244,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showSingleAlert({
                     icon: 'warning',
                     title: 'Jadwal Hari Ini Telah Berakhir',
-                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.<br>Anda tidak dapat memilih jam untuk hari ini yang sudah berlalu. Silakan ajukan untuk tanggal lain.</span>`,
+                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.<br>Kamu gak bisa pilih jam yang udah lewat nih. Silakan ajukan buat tanggal lain ya.</span>`,
                     confirmButtonText: 'Mengerti'
                 });
             }
@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showSingleAlert({
                     icon: 'warning',
                     title: 'Jam Tidak Valid',
-                    html: `Jam Keluar (<strong>${val} WIB</strong>) tidak dapat dipilih karena waktu tersebut sudah lewat.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>. Anda tidak dapat memilih jam yang sudah berlalu.</span>`,
+                    html: `Jam Keluar (<strong>${val} WIB</strong>) tidak dapat dipilih karena waktu tersebut sudah lewat.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>. Kamu gak bisa pilih jam yang udah lewat nih.</span>`,
                     confirmButtonText: 'Pilih Jam Lain'
                 });
             }
@@ -1518,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showSingleAlert({
                     icon: 'warning',
                     title: 'Jadwal Hari Ini Telah Berakhir',
-                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.<br>Anda tidak dapat memilih jam untuk hari ini yang sudah lewat.</span>`,
+                    html: `Kegiatan Belajar Mengajar (KBM) hari ini (<strong>${bounds.start} - ${bounds.end} WIB</strong>) telah berakhir.<br><span class="text-xs text-slate-500 mt-2 block">Waktu saat ini: <strong>${currentTime} WIB</strong>.<br>Kamu gak bisa pilih jam yang udah lewat nih.</span>`,
                     confirmButtonText: 'Mengerti'
                 });
             }
@@ -1650,7 +1650,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 Swal.fire({
                                     icon: 'info',
                                     title: 'Buka Kamera Perangkat',
-                                    text: 'Live kamera tidak dapat diakses langsung pada browser ini. Silakan gunakan kamera bawaan perangkat Anda.',
+                                    text: 'Live kamera gak bisa diakses langsung di browser ini. Yuk pakai kamera bawaan HP kamu.',
                                     confirmButtonColor: '#2563eb',
                                     confirmButtonText: '<i class="ti ti-camera mr-1.5"></i> Buka Kamera'
                                 }).then(function (result) {
@@ -2185,9 +2185,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i class="ti ti-alert-triangle text-amber-600 text-sm"></i> PERHATIKAN ATURAN:
                                 </p>
                                 <ul class="list-disc list-inside space-y-1 text-amber-800 mt-1">
-                                    <li>Setelah diajukan, permohonan <b>tidak dapat dibatalkan sendiri</b> oleh siswa.</li>
-                                    <li>Anda <b>wajib menemui Guru Piket</b> untuk verifikasi dan persetujuan.</li>
-                                    <li>QR Code hanya sah berlaku pada tanggal pelaksanaan izin yang dipilih.</li>
+                                    <li>Setelah diajukan, izin <b>gak bisa dibatalkan sendiri</b> oleh siswa ya.</li>
+                                    <li>Kamu <b>wajib langsung temui Guru Piket</b> buat verifikasi dan persetujuan.</li>
+                                    <li>QR Code hanya berlaku pada tanggal pelaksanaan izin yang dipilih.</li>
                                 </ul>
                             </div>
                             <div class="p-3 bg-rose-50 border-2 border-rose-300 rounded-xl text-rose-950 text-xs leading-relaxed shadow-xs">
@@ -2195,10 +2195,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i class="ti ti-alert-octagon text-rose-600 text-sm"></i> ATURAN WAJIB SCAN DI POS SATPAM:
                                 </p>
                                 <p class="text-rose-900 text-[11px] leading-relaxed">
-                                    Jika Anda mengajukan dispensasi <strong>tetapi tidak keluar dari lingkungan sekolah (berkegiatan di dalam sekolah)</strong>, Anda <strong>TETAP DIWAJIBKAN UNTUK SCAN KELUAR DI POS SATPAM</strong> agar status dispensasi aktif dan dapat dimonitoring secara resmi oleh Guru Piket, Guru Mapel, serta Wali Kelas.
+                                    Kalau kamu izin berkegiatan <strong>di dalam sekolah (gak keluar gerbang)</strong>, kamu <strong>TETAP WAJIB SCAN DI POS SATPAM</strong> ya biar status izin aktif dan bisa dipantau resmi oleh Guru Piket & Wali Kelas.
                                 </p>
                             </div>
-                            <p class="text-slate-700 text-xs">Pastikan seluruh data dan foto selfie yang Anda sertakan sudah benar.</p>
+                            <p class="text-slate-700 text-xs">Pastikan semua data dan foto selfie yang kamu sertakan udah bener ya.</p>
                         </div>
                     `,
                     icon: 'warning',

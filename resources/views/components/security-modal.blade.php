@@ -15,12 +15,19 @@
     openModal: {{ $errors->has('no_wa') ? 'true' : 'false' }},
     dismiss() {
         this.openModal = false;
+        document.body.classList.remove('overflow-hidden', 'modal-open');
     },
     dismissBanner() {
         this.showBanner = false;
         sessionStorage.setItem('dismiss_security_banner', 'true');
     }
-}" x-show="showBanner" class="w-full mb-4">
+}" x-init="$watch('openModal', val => {
+    if (val) {
+        document.body.classList.add('overflow-hidden', 'modal-open');
+    } else {
+        document.body.classList.remove('overflow-hidden', 'modal-open');
+    }
+})" x-show="showBanner" class="w-full mb-4">
 
     {{-- ========================================================= --}}
     {{-- 1. BANNER PERINGATAN (Selalu tampil di dashboard jika akun belum aman) --}}
@@ -79,7 +86,7 @@
     <div id="securityModal"
          x-show="openModal" 
          x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto"
+         class="fixed inset-0 z-[80] overflow-y-auto"
          role="dialog" 
          aria-modal="true">
         
@@ -91,7 +98,7 @@
              x-transition:leave="ease-in duration-200"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+             class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity"
              @click="dismiss()"></div>
 
         {{-- Posisi Tengah Layar --}}

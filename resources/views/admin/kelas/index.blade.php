@@ -85,7 +85,7 @@
 </div>
 
 {{-- MODAL --}}
-<div id="modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 p-4 flex items-center justify-center backdrop-blur-xs">
+<div id="modal" class="hidden fixed inset-0 bg-slate-950/75 z-[80] p-4 flex items-center justify-center backdrop-blur-xs">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90dvh] flex flex-col overflow-hidden border border-slate-200">
         <form id="form" method="POST" class="flex flex-col min-h-0 flex-1">
             @csrf
@@ -132,6 +132,7 @@
 <script>
 function openModal(data = null) {
     document.getElementById('modal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
     if (data) {
         document.getElementById('modalTitle').textContent = 'Edit Kelas';
         document.getElementById('form').action = `/admin/kelas/${data.id}`;
@@ -146,7 +147,10 @@ function openModal(data = null) {
         document.getElementById('form').reset();
     }
 }
-function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+function closeModal() {
+    document.getElementById('modal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
 
 function deleteItem(id, name) {
     Swal.fire({
